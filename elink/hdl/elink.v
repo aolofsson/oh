@@ -22,12 +22,9 @@ module elink (/*AUTOARG*/
    txo_data_n, embox_full, embox_not_empty, ecfg_cclk_div,
    ecfg_cclk_en, ecfg_cclk_pllcfg,
    // Inputs
-   s1_axi_wvalid, s1_axi_wstrb, s1_axi_wdata, s1_axi_rready,
-   s1_axi_bready, s1_axi_awvalid, s1_axi_awprot, s1_axi_awaddr,
-   s1_axi_arvalid, s1_axi_arprot, s1_axi_aresetn, s1_axi_araddr,
-   s1_axi_aclk, mi_readback_data, clk, hw_reset, rxi_lclk_p,
-   rxi_lclk_n, rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n,
-   txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n
+   hw_reset, rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n,
+   rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
+   txi_rd_wait_p, txi_rd_wait_n
    );
    parameter COREID   = `CFG_COREID;
    parameter DW       = 32;
@@ -85,7 +82,7 @@ module elink (/*AUTOARG*/
    wire [31:0]	     embox_data_out;
    wire [5:0] 	     emon_zero_flag;   
    wire [31:0] 	     emon_data_out;
-   
+   wire [DW-1:0]     mi_readback_data;
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
@@ -128,23 +125,7 @@ module elink (/*AUTOARG*/
    wire			s1_axi_wready;		// From axi_slave_memif of axi_slave_memif.v
    // End of automatics
 
-   /*AUTOINPUT*/
-   // Beginning of automatic inputs (from unused autoinst inputs)
-   input		clk;			// To elink_rx of elink_rx.v, ...
-   input [DW-1:0]	mi_readback_data;	// To axi_slave_memif of axi_slave_memif.v
-   input		s1_axi_aclk;		// To axi_slave_memif of axi_slave_memif.v
-   input [AW-1:0]	s1_axi_araddr;		// To axi_slave_memif of axi_slave_memif.v
-   input		s1_axi_aresetn;		// To axi_slave_memif of axi_slave_memif.v
-   input [2:0]		s1_axi_arprot;		// To axi_slave_memif of axi_slave_memif.v
-   input		s1_axi_arvalid;		// To axi_slave_memif of axi_slave_memif.v
-   input [AW-1:0]	s1_axi_awaddr;		// To axi_slave_memif of axi_slave_memif.v
-   input [2:0]		s1_axi_awprot;		// To axi_slave_memif of axi_slave_memif.v
-   input		s1_axi_awvalid;		// To axi_slave_memif of axi_slave_memif.v
-   input		s1_axi_bready;		// To axi_slave_memif of axi_slave_memif.v
-   input		s1_axi_rready;		// To axi_slave_memif of axi_slave_memif.v
-   input [DW-1:0]	s1_axi_wdata;		// To axi_slave_memif of axi_slave_memif.v
-   input [3:0]		s1_axi_wstrb;		// To axi_slave_memif of axi_slave_memif.v
-   input		s1_axi_wvalid;		// To axi_slave_memif of axi_slave_memif.v
+ 
    // End of automatics
    
    /*****************************/
