@@ -19,8 +19,8 @@
  ########################################################################
 -------------------------------------------------------------
  ESYSRESET        ***Elink reset***
- [0]              0  - elink in reset 
-                  1  - elink NOT in reset
+ [0]              0  - elink active 
+                  1  - elink in reset
 -------------------------------------------------------------
  ESYSCFGTX        ***Elink transmitter configuration***
  [0]              0  - link TX disable
@@ -51,14 +51,14 @@
   -------------------------------------------------------------
  ESYSCFGCLK       ***Epiphany clock frequency setting*** 
  [3:0]            Output divider
-                  0000 - CLock turned off
+                  000  - DC
                   0001 - CLKIN/64
                   0010 - CLKIN/32
                   0011 - CLKIN/16
                   0100 - CLKIN/8
                   0101 - CLKIN/4
                   0110 - CLKIN/2
-                  0111 - CLKIN/1
+                  0111 - CLKIN/1 (full speed)
                   1XXX - RESERVED
  [7:4]            PLL settings (TBD)
  -------------------------------------------------------------
@@ -80,7 +80,7 @@
    -------------------------------------------------------------
  ESYSDATAOUT    ***Data on eLink output pins
  [7:0]          tx_data[7:0]         
- [8]            tx_fram
+ [8]            tx_frame
  [9]            rx_wait_rd
  [10]           rx_wait_wr
  ########################################################################
@@ -98,13 +98,15 @@
 
 module ecfg (/*AUTOARG*/
    // Outputs
-   mi_data_out, ecfg_sw_reset, ecfg_tx_enable, ecfg_tx_mmu_mode,
-   ecfg_tx_gpio_mode, ecfg_tx_ctrl_mode, ecfg_tx_clkdiv,
-   ecfg_rx_enable, ecfg_rx_mmu_mode, ecfg_rx_gpio_mode,
-   ecfg_rx_loopback_mode, ecfg_cclk_en, ecfg_cclk_div,
-   ecfg_cclk_pllcfg, ecfg_coreid, ecfg_dataout,
+   mi_data_out, mi_data_sel, ecfg_sw_reset, ecfg_reset,
+   ecfg_tx_enable, ecfg_tx_mmu_mode, ecfg_tx_gpio_mode,
+   ecfg_tx_ctrl_mode, ecfg_tx_clkdiv, ecfg_rx_enable,
+   ecfg_rx_mmu_mode, ecfg_rx_gpio_mode, ecfg_rx_loopback_mode,
+   ecfg_cclk_en, ecfg_cclk_div, ecfg_cclk_pllcfg, ecfg_coreid,
+   ecfg_gpio_dataout,
    // Inputs
-   param_coreid, clk, reset, mi_access, mi_write, mi_addr, mi_data_in
+   param_coreid, clk, hw_reset, mi_access, mi_write, mi_addr,
+   mi_data_in
    );
    //Register file parameters
 
@@ -129,18 +131,20 @@ parameter RFAW   = 5;   //Number of registers=2^RFAW
    /*SIMPLE MEMORY INTERFACE    */
    /*****************************/
    input              clk;   
-   input              reset;
+   input              hw_reset;
    input              mi_access;
    input              mi_write;
    input  [19:0]      mi_addr;
    input  [31:0]      mi_data_in;
    output [31:0]      mi_data_out;
-
+   output 	      mi_data_sel;
+  
    /*****************************/
    /*ELINK CONTROL SIGNALS      */
    /*****************************/
    //RESET
    output 	      ecfg_sw_reset;
+   output 	      ecfg_reset;
 
    //tx
    output 	     ecfg_tx_enable;         //enable signal for TX  
@@ -164,22 +168,20 @@ parameter RFAW   = 5;   //Number of registers=2^RFAW
    output [11:0]     ecfg_coreid;            //core-id of fpga elink
 
    //gpio
-   output [11:0]     ecfg_dataout;          //data for elink outputs {rd_wait,wr_wait,frame,data[7:0}
-
-
-   /*------------------------BODY CODE---------------------------------------*/
+   output [11:0]     ecfg_gpio_dataout;      //data for elink outputs {rd_wait,wr_wait,frame,data[7:0}
    
    //registers
    reg [11:0] 	ecfg_cfgtx_reg;
    reg [4:0] 	ecfg_cfgrx_reg;
    reg [7:0] 	ecfg_cfgclk_reg;
    reg [11:0] 	ecfg_coreid_reg;
-   wire [31:0] 	ecfg_version_reg; //fixed read only constant
+   wire [31:0] 	ecfg_version_reg;
    reg 		ecfg_reset_reg;
-   reg [11:0] 	ecfg_datain_reg;
-   reg [11:0] 	ecfg_dataout_reg;
+   reg [11:0] 	ecfg_gpio_datain_reg;
+   reg [11:0] 	ecfg_gpio_dataout_reg;
    reg [31:0] 	mi_data_out;
-   
+   reg 		mi_data_sel;
+
    //wires
    wire 	ecfg_read;
    wire 	ecfg_write;
@@ -191,6 +193,7 @@ parameter RFAW   = 5;   //Number of registers=2^RFAW
    wire 	ecfg_version_match;
    wire 	ecfg_datain_match;
    wire 	ecfg_dataout_match;
+   wire         ecfg_match;
    wire 	ecfg_regmux;
    wire [31:0] 	ecfg_reg_mux;
    wire 	ecfg_cfgtx_write;
@@ -221,6 +224,16 @@ parameter RFAW   = 5;   //Number of registers=2^RFAW
    assign ecfg_datain_match    = mi_addr[19:0]==`E_REG_SYSDATAIN;
    assign ecfg_dataout_match   = mi_addr[19:0]==`E_REG_SYSDATAOUT;
 
+   assign ecfg_match           = ecfg_reset_match   |
+				 ecfg_cfgtx_match   |
+				 ecfg_cfgrx_match   |
+				 ecfg_cfgclk_match  |
+				 ecfg_coreid_match  |
+				 ecfg_version_match |
+				 ecfg_datain_match  |
+				 ecfg_dataout_match;
+   
+				
    //Write enables
    assign ecfg_reset_write     = ecfg_reset_match   & ecfg_write;
    assign ecfg_cfgtx_write     = ecfg_cfgtx_match   & ecfg_write;
@@ -230,27 +243,28 @@ parameter RFAW   = 5;   //Number of registers=2^RFAW
    assign ecfg_version_write   = ecfg_version_match & ecfg_write;
    assign ecfg_datain_write    = ecfg_datain_match  & ecfg_write;
    assign ecfg_dataout_write   = ecfg_dataout_match & ecfg_write;
+
    
    //###########################
    //# ESYSCFGTX
    //###########################
    always @ (posedge clk)
-     if(reset)
+     if(hw_reset)
        ecfg_cfgtx_reg[11:0] <= 12'b0;
      else if (ecfg_cfgtx_write)
        ecfg_cfgtx_reg[11:0] <= mi_data_in[11:0];
 
-   assign ecfg_tx_enable        = ecfg_cfgtx_reg[0];
-   assign ecfg_tx_mmu_mode      = ecfg_cfgtx_reg[1];   
-   assign ecfg_tx_gpio_mode     = ecfg_cfgtx_reg[3:2]==2'b01;
+   assign ecfg_tx_enable         = ecfg_cfgtx_reg[0];
+   assign ecfg_tx_mmu_mode       = ecfg_cfgtx_reg[1];   
+   assign ecfg_tx_gpio_mode      = ecfg_cfgtx_reg[3:2]==2'b01;
    assign ecfg_tx_ctrl_mode[3:0] = ecfg_cfgtx_reg[7:4];
-   assign ecfg_tx_clkdiv[3:0]   = ecfg_cfgtx_reg[11:8];
+   assign ecfg_tx_clkdiv[3:0]    = ecfg_cfgtx_reg[11:8];
 
    //###########################
    //# ESYSCFGRX
    //###########################
    always @ (posedge clk)
-     if(reset)
+     if(hw_reset)
        ecfg_cfgrx_reg[4:0] <= 5'b0;
      else if (ecfg_cfgrx_write)
        ecfg_cfgrx_reg[4:0] <= mi_data_in[4:0];
@@ -265,7 +279,7 @@ parameter RFAW   = 5;   //Number of registers=2^RFAW
    //# ESYSCFGCLK
    //###########################
     always @ (posedge clk)
-     if(reset)
+     if(hw_reset)
        ecfg_cfgclk_reg[7:0] <= 8'b0;
      else if (ecfg_cfgclk_write)
        ecfg_cfgclk_reg[7:0] <= mi_data_in[7:0];
@@ -278,7 +292,7 @@ parameter RFAW   = 5;   //Number of registers=2^RFAW
    //# ESYSCOREID
    //###########################
    always @ (posedge clk)
-     if(reset)
+     if(hw_reset)
        ecfg_coreid_reg[IDW-1:0] <= param_coreid[IDW-1:0];
      else if (ecfg_coreid_write)
        ecfg_coreid_reg[IDW-1:0] <= mi_data_in[IDW-1:0];   
@@ -294,49 +308,53 @@ parameter RFAW   = 5;   //Number of registers=2^RFAW
    //# ESYSDATAIN
    //###########################
    always @ (posedge clk)
-     if(reset)
-       ecfg_datain_reg[11:0] <= 12'b0;   
+     if(hw_reset)
+       ecfg_gpio_datain_reg[11:0] <= 12'b0;   
      else if (ecfg_datain_write)
-       ecfg_datain_reg[11:0] <= mi_data_in[11:0];  
+       ecfg_gpio_datain_reg[11:0] <= mi_data_in[11:0];  
 
    //###########################
    //# ESYSDATAOUT
    //###########################
    always @ (posedge clk)
-     if(reset)
-       ecfg_dataout_reg[11:0] <= 12'b0;   
+     if(hw_reset)
+       ecfg_gpio_dataout_reg[11:0] <= 12'b0;   
      else if (ecfg_dataout_write)
-       ecfg_dataout_reg[11:0] <= mi_data_in[11:0];  
+       ecfg_gpio_dataout_reg[11:0] <= mi_data_in[11:0];  
 
-   assign ecfg_dataout[11:0] = ecfg_dataout_reg[11:0];
+   assign ecfg_gpio_dataout[11:0] = ecfg_gpio_dataout_reg[11:0];
    
    //###########################
    //# ESYSRESET
    //###########################
     always @ (posedge clk)
-      if(reset)
+      if(hw_reset)
 	ecfg_reset_reg <= 1'b0;   
       else if (ecfg_reset_write)
 	ecfg_reset_reg <= mi_data_in[0];  
 
    assign ecfg_sw_reset = ecfg_reset_reg;
+   assign ecfg_reset    = ecfg_sw_reset | hw_reset;
    
    //###############################
    //# DATA READBACK MUX
    //###############################
 
-   assign ecfg_reg_mux[31:0] =   ({(32){ecfg_cfgtx_match}}   & {20'b0,ecfg_cfgtx_reg[11:0]})   |
-				 ({(32){ecfg_cfgrx_match}}   & {27'b0,ecfg_cfgrx_reg[4:0]})    |
-				 ({(32){ecfg_cfgclk_match}}  & {24'b0,ecfg_cfgclk_reg[7:0]})   |
-				 ({(32){ecfg_coreid_match}}  & {20'b0,ecfg_coreid_reg[11:0]})  |
-				 ({(32){ecfg_version_match}} & ecfg_version_reg[31:0])         |
-				 ({(32){ecfg_datain_match}}  & {20'b0,ecfg_datain_reg[11:0]})  |
-				 ({(32){ecfg_dataout_match}} & {20'b0,ecfg_dataout_reg[11:0]}) ;
+   assign ecfg_reg_mux[31:0] =   ({(32){ecfg_reset_match}}   & {20'b0,ecfg_cfgtx_reg[11:0]})        |
+				 ({(32){ecfg_cfgtx_match}}   & {20'b0,ecfg_cfgtx_reg[11:0]})        |
+				 ({(32){ecfg_cfgrx_match}}   & {27'b0,ecfg_cfgrx_reg[4:0]})         |
+				 ({(32){ecfg_cfgclk_match}}  & {24'b0,ecfg_cfgclk_reg[7:0]})        |
+				 ({(32){ecfg_coreid_match}}  & {20'b0,ecfg_coreid_reg[11:0]})       |
+				 ({(32){ecfg_version_match}} & ecfg_version_reg[31:0])              |
+				 ({(32){ecfg_datain_match}}  & {20'b0,ecfg_gpio_datain_reg[11:0]})  |
+				 ({(32){ecfg_dataout_match}} & {20'b0,ecfg_gpio_dataout_reg[11:0]}) ;
       
    //Pipelineing readback
    always @ (posedge clk)
      if(ecfg_read)
-       mi_data_out[31:0] <= ecfg_reg_mux[31:0];
-   
+       begin
+	  mi_data_out[31:0] <= ecfg_reg_mux[31:0];
+	  mi_data_sel       <= ecfg_match;
+       end
 endmodule // para_config
 
