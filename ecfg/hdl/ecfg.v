@@ -86,15 +86,16 @@
  ########################################################################
  */
 
-`define REG_ESYSRESET    6'h00
-`define REG_ESYSCFGTX    6'h01
-`define REG_ESYSCFGRX    6'h02
-`define REG_ESYSCFGCLK   6'h03
-`define REG_ESYSCOREID   6'h04
-`define REG_ESYSVERSION  6'h05
-`define REG_ESYSDATAIN   6'h06
-`define REG_ESYSDATAOUT  6'h07
-`define EVERSION         32'h01_02_03_04
+`define E_REG_SYSRESET    20'hf0340
+`define E_REG_SYSCFGTX    20'hf0344
+`define E_REG_SYSCFGRX    20'hf0348
+`define E_REG_SYSCFGCLK   20'hf034c
+`define E_REG_SYSCOREID   20'hf0350
+`define E_REG_SYSVERSION  20'hf0354
+`define E_REG_SYSDATAIN   20'hf0358
+`define E_REG_SYSDATAOUT  20'hf035c
+`define E_VERSION         32'h01_02_03_04
+
 module ecfg (/*AUTOARG*/
    // Outputs
    mi_data_out, ecfg_sw_reset, ecfg_tx_enable, ecfg_tx_mmu_mode,
@@ -112,10 +113,10 @@ module ecfg (/*AUTOARG*/
  COMPILE TIME PARAMETERS 
  ######################################################################
  */
-parameter EMAW  = 12;   //mmu table address width
+parameter EMAW   = 12;   //mmu table address width
 parameter EDW    = 32;  //Epiphany native data width
 parameter EAW    = 32;  //Epiphany native address width
-parameter IDW   = 12;  //Elink ID (row,column coordinate)
+parameter IDW    = 12;  //Elink ID (row,column coordinate)
 parameter RFAW   = 5;   //Number of registers=2^RFAW
 
 
@@ -131,7 +132,7 @@ parameter RFAW   = 5;   //Number of registers=2^RFAW
    input              reset;
    input              mi_access;
    input              mi_write;
-   input  [5:0]       mi_addr;
+   input  [19:0]      mi_addr;
    input  [31:0]      mi_data_in;
    output [31:0]      mi_data_out;
 
@@ -211,14 +212,14 @@ parameter RFAW   = 5;   //Number of registers=2^RFAW
    assign ecfg_read       = mi_access & ~mi_write;   
 
    //address match signals
-   assign ecfg_reset_match     = mi_addr[5:0]==`REG_ESYSRESET;
-   assign ecfg_cfgtx_match     = mi_addr[5:0]==`REG_ESYSCFGTX;
-   assign ecfg_cfgrx_match     = mi_addr[5:0]==`REG_ESYSCFGRX;
-   assign ecfg_cfgclk_match    = mi_addr[5:0]==`REG_ESYSCFGCLK;
-   assign ecfg_coreid_match    = mi_addr[5:0]==`REG_ESYSCOREID;
-   assign ecfg_version_match   = mi_addr[5:0]==`REG_ESYSVERSION;
-   assign ecfg_datain_match    = mi_addr[5:0]==`REG_ESYSDATAIN;
-   assign ecfg_dataout_match   = mi_addr[5:0]==`REG_ESYSDATAOUT;
+   assign ecfg_reset_match     = mi_addr[19:0]==`E_REG_SYSRESET;
+   assign ecfg_cfgtx_match     = mi_addr[19:0]==`E_REG_SYSCFGTX;
+   assign ecfg_cfgrx_match     = mi_addr[19:0]==`E_REG_SYSCFGRX;
+   assign ecfg_cfgclk_match    = mi_addr[19:0]==`E_REG_SYSCFGCLK;
+   assign ecfg_coreid_match    = mi_addr[19:0]==`E_REG_SYSCOREID;
+   assign ecfg_version_match   = mi_addr[19:0]==`E_REG_SYSVERSION;
+   assign ecfg_datain_match    = mi_addr[19:0]==`E_REG_SYSDATAIN;
+   assign ecfg_dataout_match   = mi_addr[19:0]==`E_REG_SYSDATAOUT;
 
    //Write enables
    assign ecfg_reset_write     = ecfg_reset_match   & ecfg_write;
@@ -287,7 +288,7 @@ parameter RFAW   = 5;   //Number of registers=2^RFAW
    //###########################
    //# ESYSVERSION
    //###########################
-   assign ecfg_version_reg[31:0] = `EVERSION;
+   assign ecfg_version_reg[31:0] = `E_VERSION;
 
    //###########################
    //# ESYSDATAIN
