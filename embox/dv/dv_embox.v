@@ -8,7 +8,7 @@ module dv_embox();
    reg        clk;
    reg        reset;
    reg        mi_access;
-   reg [5:0]  mi_addr;
+   reg [19:0]  mi_addr;
    reg [31:0] mi_data_in;
    reg 	      mi_write;
    reg [1:0]  test_state;
@@ -23,7 +23,7 @@ module dv_embox();
 	reset            = 1'b1;    // reset is active
 	mi_write         = 1'b0;
 	mi_access        = 1'b0;
-	mi_addr[5:0]     = 6'h9;
+	mi_addr[19:0]    = 20'hf0368;
 	mi_data_in[31:0] = 32'h0;
 	test_state[1:0]  = 2'b00;
 	go               = 1'b0;	
@@ -52,13 +52,13 @@ module dv_embox();
 		begin
 		   mi_access        <= 1'b1;
 		   mi_write         <= 1'b1;
-		   mi_addr[5:0]     <= mi_addr[5:0] ^ 6'b000001;	  
-		   mi_data_in[31:0] <= mi_data_in[5:0]+1'b1;
+		   mi_addr[19:0]    <= mi_addr[19:0] ^ 20'hc;	  
+		   mi_data_in[31:0] <= mi_data_in[31:0]+1'b1;
 		end
 	      else
 		begin
 		   test_state       <= 2'b01;	    
-		   mi_addr[5:0]     <= 6'b001001;
+		   mi_addr[19:0]    <= 20'hf0368;
 		   mi_data_in[31:0] <= 32'h0;		   
 		end
 	    2'b01://read
@@ -66,8 +66,8 @@ module dv_embox();
 		begin	    
 		   mi_write         <= 1'b0;
 		   mi_access        <= 1'b1;
-		   mi_addr[5:0]     <= mi_addr[5:0] ^ 6'b000001;
-		   mi_data_in[31:0] <= mi_data_in[5:0]+1'b1;
+		   mi_addr[19:0]    <= mi_addr[19:0] ^ 20'hc;
+		   mi_data_in[31:0] <= mi_data_in[31:0]+1'b1;
 		end
 	      else
 		begin
@@ -78,7 +78,7 @@ module dv_embox();
 	  endcase // case (test_state[1:0])
        end
 
-   wire done =  (mi_data_in[5:0]==6'b001000);
+   wire done =  (mi_data_in[19:0]==20'h8);
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
@@ -99,7 +99,7 @@ module dv_embox();
 	       .clk			(clk),
 	       .mi_access		(mi_access),
 	       .mi_write		(mi_write),
-	       .mi_addr			(mi_addr[5:0]),
+	       .mi_addr			(mi_addr[19:0]),
 	       .mi_data_in		(mi_data_in[DW-1:0]));
 
 
@@ -112,4 +112,8 @@ module dv_embox();
 
    
 endmodule // dv_embox
+// Local Variables:
+// verilog-library-directories:("." "../hdl" "../../memory/hdl ")
+// End:
+
 

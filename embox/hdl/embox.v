@@ -30,9 +30,9 @@
  */
 
 //Register Definitions
-`define REG_EMBSTATUS      6'h07  //mailbox status
-`define REG_EMBOX0         6'h08  //mailbox entry0 (read/write)
-`define REG_EMBOX1         6'h09  //mailbox entry1 (read/write)
+`define E_REG_MBSTATUS      20'hf0360 //mailbox status
+`define E_REG_MBOX0         20'hf0364 //mailbox entry0 (read/write)
+`define E_REG_MBOX1         20'hf0368 //mailbox entry1 (read/write)
 
 module embox (/*AUTOARG*/
    // Outputs
@@ -52,7 +52,7 @@ module embox (/*AUTOARG*/
    input              clk;   
    input              mi_access;
    input              mi_write;
-   input  [5:0]       mi_addr;
+   input  [19:0]      mi_addr;
    input  [DW-1:0]    mi_data_in;
    output [DW-1:0]    mi_data_out;
 
@@ -89,9 +89,9 @@ module embox (/*AUTOARG*/
    /*****************************/
    
    //access decode
-   assign embox_w0_access     = (mi_addr[5:0]==`REG_EMBOX0); //lower 32 bit word
-   assign embox_w1_access     = (mi_addr[5:0]==`REG_EMBOX1); //upper 32 bit word
-   assign embox_status_access = (mi_addr[5:0]==`REG_EMBSTATUS);//polling fifo status
+   assign embox_w0_access     = (mi_addr[19:0]==`E_REG_MBOX0); //lower 32 bit word
+   assign embox_w1_access     = (mi_addr[19:0]==`E_REG_MBOX1); //upper 32 bit word
+   assign embox_status_access = (mi_addr[19:0]==`E_REG_MBSTATUS);//polling fifo status
 
    //write logic
    assign  embox_write       = mi_access &  mi_write;
