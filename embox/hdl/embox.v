@@ -36,7 +36,7 @@
 
 module embox (/*AUTOARG*/
    // Outputs
-   mi_data_out, embox_full, embox_empty,
+   mi_data_out, mi_data_sel, embox_full, embox_not_empty,
    // Inputs
    reset, clk, mi_access, mi_write, mi_addr, mi_data_in
    );
@@ -55,19 +55,20 @@ module embox (/*AUTOARG*/
    input  [19:0]      mi_addr;
    input  [DW-1:0]    mi_data_in;
    output [DW-1:0]    mi_data_out;
+   output 	      mi_data_sel;
 
    /*****************************/
    /*MAILBOX OUTPUTS            */
    /*****************************/
    output 	      embox_full;
-   output 	      embox_empty;   
+   output 	      embox_not_empty;   
 
    /*****************************/
    /*REGISTERS                  */
    /*****************************/
    reg [DW-1:0]       mi_data_out;
    reg [DW-1:0]       embox_data_reg;
-
+   reg 		      mi_data_sel;
    /*****************************/
    /*WIRES                      */
    /*****************************/
@@ -93,6 +94,10 @@ module embox (/*AUTOARG*/
    assign embox_w1_access     = (mi_addr[19:0]==`E_REG_MBOX1); //upper 32 bit word
    assign embox_status_access = (mi_addr[19:0]==`E_REG_MBSTATUS);//polling fifo status
 
+   assign embox_match         = embox_w0_access |
+				embox_w1_access |
+				embox_status_access;
+   
    //write logic
    assign  embox_write       = mi_access &  mi_write;
    assign  embox_w0_write    = embox_w0_access & embox_write;
@@ -116,12 +121,17 @@ module embox (/*AUTOARG*/
    /*****************************/
    /*READ BACK DATA             */
    /*****************************/
-   assign embox_read_data[DW-1:0] = embox_status_read ? {{(DW-2){1'b0}},embox_full,~embox_empty}  :
+   assign embox_not_empty         = ~embox_empty;
+
+   assign embox_read_data[DW-1:0] = embox_status_read ? {{(DW-2){1'b0}},embox_full,embox_not_empty}  :
 				    embox_w0_read     ? embox_fifo_data[DW-1:0]                             :
 	                    	  	                embox_fifo_data[2*DW-1:DW];   
    always @ (posedge clk)
      if(embox_read)
-       mi_data_out[DW-1:0] <=  embox_read_data[DW-1:0];
+       begin
+	  mi_data_out[DW-1:0] <= embox_read_data[DW-1:0];
+	  mi_data_sel         <= embox_match;
+       end
    
    /*****************************/
    /*FIFO                       */
@@ -139,7 +149,7 @@ module embox (/*AUTOARG*/
                                        .wr_data         ({mi_data_in[DW-1:0],embox_data_reg[DW-1:0]}), 
                                        .rd_read         (embox_w1_read)
 				       ); 
- 
 endmodule // embox
+
 
 
