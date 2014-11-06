@@ -8,7 +8,7 @@ module dv_emon();
    reg        clk;
    reg        reset;
    reg        mi_access;
-   reg [5:0]  mi_addr;
+   reg [19:0] mi_addr;
    reg [31:0] mi_data_in;
    reg 	      mi_write;
    reg [1:0]  test_state;
@@ -35,7 +35,7 @@ module dv_emon();
 	reset              = 1'b1;    // reset is active
 	mi_write           = 1'b0;
 	mi_access          = 1'b0;
-	mi_addr[5:0]       = 6'h9;
+	mi_addr[19:0]      = 20'h0;
 	mi_data_in[31:0]   = 32'h0;
 	test_state[1:0]    = 2'b00;
 	go                 = 1'b0;	
@@ -76,16 +76,16 @@ module dv_emon();
 		begin
 		   mi_access        <= 1'b1;
 		   mi_write         <= 1'b1;
-		   mi_addr[5:0]     <= 6'h07;	  
+		   mi_addr[19:0]    <= 20'hf036c;		   
 		   mi_data_in[31:0] <= 32'h8_7_6_5_4_3_2_1;
 		   test_state       <= 2'b01;
 		end
-	    2'b01://init array
+	    2'b01://read
 	      if(~done)
 		begin	    
-		   mi_write         <= 1'b1;
+		   mi_write         <= 1'b0;
 		   mi_access        <= 1'b1;
-		   mi_addr[5:0]     <= mi_addr[5:0]+1'b1;
+		   mi_addr[19:0]    <= mi_addr[19:0]+20'h4;
 		   mi_data_in[31:0] <= mi_data_in[31:0]-4'h8;		   
 		end
 	      else
@@ -95,13 +95,13 @@ module dv_emon();
 		end // else: !if(~done)
 	    2'b10://init array
 	      begin
-		 mi_addr[5:0]     <= mi_addr[5:0]-1'b1;
+		 mi_addr[19:0]     <= mi_addr[19:0]-20'h4;
 	      end
 	    
 	  endcase // case (test_state[1:0])
        end
 
-   wire done =  (mi_addr[5:0]==6'b001101);
+   wire done =  (mi_addr[19:0]==6'b001101);
 
   
    
@@ -123,7 +123,7 @@ module dv_emon();
 	     .reset			(reset),
 	     .mi_access			(mi_access),
 	     .mi_write			(mi_write),
-	     .mi_addr			(mi_addr[5:0]),
+	     .mi_addr			(mi_addr[19:0]),
 	     .mi_data_in		(mi_data_in[DW-1:0]),
 	     .erx_rdfifo_access		(erx_rdfifo_access),
 	     .erx_rdfifo_wait		(erx_rdfifo_wait),
@@ -147,5 +147,9 @@ module dv_emon();
      end
 
    
-endmodule // dv_embox
+endmodule // dv_emon
+// Local Variables:
+// verilog-library-directories:("." "../hdl" "../../memory/hdl ")
+// End:
+
 

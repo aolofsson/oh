@@ -17,13 +17,13 @@
  EPIPHANY ELINK TRAFFIC MONITOR
  ########################################################################
  */
-`define REG_ESYSMONCFG   6'h07
-`define REG_ESYSRXMON0   6'h08
-`define REG_ESYSRXMON1   6'h09
-`define REG_ESYSRXMON2   6'h0A
-`define REG_ESYSTXMON0   6'h0B
-`define REG_ESYSTXMON1   6'h0C
-`define REG_ESYSTXMON2   6'h0D
+`define E_REG_SYSMONCFG   20'hf036c
+`define E_REG_SYSRXMON0   20'hf0370
+`define E_REG_SYSRXMON1   20'hf0374
+`define E_REG_SYSRXMON2   20'hf0378
+`define E_REG_SYSTXMON0   20'hf037c
+`define E_REG_SYSTXMON1   20'hf0380
+`define E_REG_SYSTXMON2   20'hf0384
 
 module emon (/*AUTOARG*/
    // Outputs
@@ -45,7 +45,7 @@ module emon (/*AUTOARG*/
    input               reset;
    input               mi_access;
    input               mi_write;
-   input  [5:0]        mi_addr;
+   input  [19:0]       mi_addr;
    input  [DW-1:0]     mi_data_in;
    output [DW-1:0]     mi_data_out;
 
@@ -95,13 +95,13 @@ module emon (/*AUTOARG*/
    assign emon_read         = mi_access & ~mi_write;   
 
    //access signals   
-   assign emon_cfg_match    = mi_addr[5:0]==`REG_ESYSMONCFG;
-   assign emon_access[0]    = mi_addr[5:0]==`REG_ESYSRXMON0;
-   assign emon_access[1]    = mi_addr[5:0]==`REG_ESYSRXMON1;
-   assign emon_access[2]    = mi_addr[5:0]==`REG_ESYSRXMON2;
-   assign emon_access[3]    = mi_addr[5:0]==`REG_ESYSTXMON0;
-   assign emon_access[4]    = mi_addr[5:0]==`REG_ESYSTXMON1;
-   assign emon_access[5]    = mi_addr[5:0]==`REG_ESYSTXMON2;
+   assign emon_cfg_match    = mi_addr[19:0]==`E_REG_SYSMONCFG;
+   assign emon_access[0]    = mi_addr[19:0]==`E_REG_SYSRXMON0;
+   assign emon_access[1]    = mi_addr[19:0]==`E_REG_SYSRXMON1;
+   assign emon_access[2]    = mi_addr[19:0]==`E_REG_SYSRXMON2;
+   assign emon_access[3]    = mi_addr[19:0]==`E_REG_SYSTXMON0;
+   assign emon_access[4]    = mi_addr[19:0]==`E_REG_SYSTXMON1;
+   assign emon_access[5]    = mi_addr[19:0]==`E_REG_SYSTXMON2;
    
    //write signals
    assign emon_write[0]     =  emon_access[0]  & mi_write & mi_access;   
