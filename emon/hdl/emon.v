@@ -27,7 +27,7 @@
 
 module emon (/*AUTOARG*/
    // Outputs
-   mi_data_out, emon_zero_flag,
+   mi_data_out, mi_data_sel, emon_zero_flag,
    // Inputs
    clk, reset, mi_access, mi_write, mi_addr, mi_data_in,
    erx_rdfifo_access, erx_rdfifo_wait, erx_wrfifo_access,
@@ -48,7 +48,8 @@ module emon (/*AUTOARG*/
    input  [19:0]       mi_addr;
    input  [DW-1:0]     mi_data_in;
    output [DW-1:0]     mi_data_out;
-
+   output              mi_data_sel;  //match signal used for readback mux
+ 
    /*****************************/
    /*ELINK DATAPATH INPUTS      */
    /*****************************/   
@@ -75,11 +76,11 @@ module emon (/*AUTOARG*/
    
    //wires
    wire 	     emon_read;
-   wire [5:0]        emon_access;
-   wire [5:0] 	     emon_write;
+   wire [5:0]        emon_mon_match;
    wire 	     emon_cfg_match;
+   wire 	     emon_match;   
+   wire [5:0] 	     emon_write;
    wire 	     emon_cfg_write;
-
    reg [DW-1:0]      emon_reg_mux;
    wire [15:0] 	     emon_vector;
    
@@ -96,21 +97,24 @@ module emon (/*AUTOARG*/
 
    //access signals   
    assign emon_cfg_match    = mi_addr[19:0]==`E_REG_SYSMONCFG;
-   assign emon_access[0]    = mi_addr[19:0]==`E_REG_SYSRXMON0;
-   assign emon_access[1]    = mi_addr[19:0]==`E_REG_SYSRXMON1;
-   assign emon_access[2]    = mi_addr[19:0]==`E_REG_SYSRXMON2;
-   assign emon_access[3]    = mi_addr[19:0]==`E_REG_SYSTXMON0;
-   assign emon_access[4]    = mi_addr[19:0]==`E_REG_SYSTXMON1;
-   assign emon_access[5]    = mi_addr[19:0]==`E_REG_SYSTXMON2;
+   assign emon_mon_match[0]    = mi_addr[19:0]==`E_REG_SYSRXMON0;
+   assign emon_mon_match[1]    = mi_addr[19:0]==`E_REG_SYSRXMON1;
+   assign emon_mon_match[2]    = mi_addr[19:0]==`E_REG_SYSRXMON2;
+   assign emon_mon_match[3]    = mi_addr[19:0]==`E_REG_SYSTXMON0;
+   assign emon_mon_match[4]    = mi_addr[19:0]==`E_REG_SYSTXMON1;
+   assign emon_mon_match[5]    = mi_addr[19:0]==`E_REG_SYSTXMON2;
    
    //write signals
-   assign emon_write[0]     =  emon_access[0]  & mi_write & mi_access;   
-   assign emon_write[1]     =  emon_access[1]  & mi_write & mi_access;   
-   assign emon_write[2]     =  emon_access[2]  & mi_write & mi_access;   
-   assign emon_write[3]     =  emon_access[3]  & mi_write & mi_access;   
-   assign emon_write[4]     =  emon_access[4]  & mi_write & mi_access;   
-   assign emon_write[5]     =  emon_access[5]  & mi_write & mi_access;   
+   assign emon_write[0]     =  emon_match[0]  & mi_write & mi_access;   
+   assign emon_write[1]     =  emon_match[1]  & mi_write & mi_access;   
+   assign emon_write[2]     =  emon_match[2]  & mi_write & mi_access;   
+   assign emon_write[3]     =  emon_match[3]  & mi_write & mi_access;   
+   assign emon_write[4]     =  emon_mach[4]  & mi_write & mi_access;   
+   assign emon_write[5]     =  emon_match[5]  & mi_write & mi_access;   
    assign emon_cfg_write    =  emon_cfg_match  & mi_write & mi_access;   
+
+   assign emon_match        = emon_cfg_match |
+			      (|emon_mon_match[5:0]);
    
    /*****************************/
    /*CONFIG REGISTER            */
@@ -171,14 +175,16 @@ module emon (/*AUTOARG*/
      begin
 	emon_reg_mux[DW-1:0]  = {(DW){1'b0}};
 	for(j=0;j<MONS;j=j+1)
-	  emon_reg_mux[DW-1:0] = emon_reg_mux[DW-1:0] | ({(DW){emon_access[j]}} & emon_reg[j]);
+	  emon_reg_mux[DW-1:0] = emon_reg_mux[DW-1:0] | ({(DW){emon_mon_match[j]}} & emon_reg[j]);
      end
    
    //Pipelineing readback
    always @ (posedge clk)
      if(emon_read)
-       mi_data_out[DW-1:0] <= emon_reg_mux[DW-1:0];			  
-
+       begin
+	  mi_data_out[DW-1:0] <= emon_reg_mux[DW-1:0];			  
+	  mi_data_sel         <= emon_match;
+       end
 
 endmodule // emon
 

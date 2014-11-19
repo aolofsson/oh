@@ -19,8 +19,8 @@
  ########################################################################
 -------------------------------------------------------------
  ESYSRESET        ***Elink reset***
- [0]              0  - elink in reset 
-                  1  - elink NOT in reset
+ [0]              0  - elink active 
+                  1  - elink in reset
 -------------------------------------------------------------
  ESYSCFGTX        ***Elink transmitter configuration***
  [0]              0  - link TX disable
@@ -57,7 +57,7 @@
                   0100 - CLKIN/8
                   0101 - CLKIN/4
                   0110 - CLKIN/2
-                  0111 - CLKIN/1
+                  0111 - CLKIN/1 (full speed)
                   1XXX - RESERVED
  [7:4]            PLL settings (TBD)
  -------------------------------------------------------------
@@ -79,7 +79,7 @@
    -------------------------------------------------------------
  ESYSDATAOUT    ***Data on eLink output pins
  [7:0]          tx_data[7:0]         
- [8]            tx_fram
+ [8]            tx_frame
  [9]            rx_wait_rd
  [10]           rx_wait_wr
  ########################################################################
@@ -142,6 +142,7 @@ parameter RFAW   = 12;  // Register file address width
    /*****************************/
    //RESET
    output 	      ecfg_sw_reset;
+   output 	      ecfg_reset;
 
    //tx
    output 	     ecfg_tx_enable;         //enable signal for TX  
@@ -176,7 +177,7 @@ parameter RFAW   = 12;  // Register file address width
    reg [4:0] 	ecfg_cfgrx_reg;
    reg [7:0] 	ecfg_cfgclk_reg;
    reg [11:0] 	ecfg_coreid_reg;
-   reg 		ecfg_reset_reg;
+   reg          ecfg_reset_reg;
    reg [11:0] 	ecfg_datain_reg;
    reg [11:0] 	ecfg_dataout_reg;
    reg [31:0] 	mi_dout;
@@ -191,6 +192,7 @@ parameter RFAW   = 12;  // Register file address width
    wire 	ecfg_coreid_match;
    wire 	ecfg_datain_match;
    wire 	ecfg_dataout_match;
+   wire         ecfg_match;
    wire 	ecfg_regmux;
    wire [31:0] 	ecfg_reg_mux;
    wire 	ecfg_cfgtx_write;
@@ -219,6 +221,16 @@ parameter RFAW   = 12;  // Register file address width
    assign ecfg_datain_match    = mi_addr[RFAW-1:2]==`E_REG_SYSDATAIN;
    assign ecfg_dataout_match   = mi_addr[RFAW-1:2]==`E_REG_SYSDATAOUT;
 
+   assign ecfg_match           = ecfg_reset_match   |
+				 ecfg_cfgtx_match   |
+				 ecfg_cfgrx_match   |
+				 ecfg_cfgclk_match  |
+				 ecfg_coreid_match  |
+				 ecfg_version_match |
+				 ecfg_datain_match  |
+				 ecfg_dataout_match;
+   
+				
    //Write enables
    assign ecfg_reset_write     = ecfg_reset_match   & ecfg_write;
    assign ecfg_cfgtx_write     = ecfg_cfgtx_match   & ecfg_write;
@@ -226,6 +238,7 @@ parameter RFAW   = 12;  // Register file address width
    assign ecfg_cfgclk_write    = ecfg_cfgclk_match  & ecfg_write;
    assign ecfg_coreid_write    = ecfg_coreid_match  & ecfg_write;
    assign ecfg_dataout_write   = ecfg_dataout_match & ecfg_write;
+
    
    //###########################
    //# ESYSCFGTX
@@ -236,11 +249,11 @@ parameter RFAW   = 12;  // Register file address width
      else if (ecfg_cfgtx_write)
        ecfg_cfgtx_reg[11:0] <= mi_din[11:0];
 
-   assign ecfg_tx_enable        = ecfg_cfgtx_reg[0];
-   assign ecfg_tx_mmu_mode      = ecfg_cfgtx_reg[1];   
-   assign ecfg_tx_gpio_mode     = ecfg_cfgtx_reg[3:2]==2'b01;
+   assign ecfg_tx_enable         = ecfg_cfgtx_reg[0];
+   assign ecfg_tx_mmu_mode       = ecfg_cfgtx_reg[1];   
+   assign ecfg_tx_gpio_mode      = ecfg_cfgtx_reg[3:2]==2'b01;
    assign ecfg_tx_ctrl_mode[3:0] = ecfg_cfgtx_reg[7:4];
-   assign ecfg_tx_clkdiv[3:0]   = ecfg_cfgtx_reg[11:8];
+   assign ecfg_tx_clkdiv[3:0]    = ecfg_cfgtx_reg[11:8];
 
    //###########################
    //# ESYSCFGRX
@@ -308,6 +321,7 @@ parameter RFAW   = 12;  // Register file address width
 	ecfg_reset_reg <= mi_din[0];  
 
    assign ecfg_sw_reset = ecfg_reset_reg;
+   assign ecfg_reset    = ecfg_sw_reset | hw_reset;
    
    //###############################
    //# DATA READBACK MUX
@@ -329,4 +343,3 @@ parameter RFAW   = 12;  // Register file address width
        endcase
 
 endmodule // para_config
-
