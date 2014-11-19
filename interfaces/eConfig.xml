@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spirit:busDefinition xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <spirit:vendor>adapteva.com</spirit:vendor>
+  <spirit:library>Adapteva</spirit:library>
+  <spirit:name>eConfig</spirit:name>
+  <spirit:version>1.0</spirit:version>
+  <spirit:directConnection>false</spirit:directConnection>
+  <spirit:isAddressable>false</spirit:isAddressable>
+  <spirit:maxMasters>1</spirit:maxMasters>
+  <spirit:maxSlaves>3</spirit:maxSlaves>
+  <spirit:description>Configuration for eLink transceivers</spirit:description>
+</spirit:busDefinition>
