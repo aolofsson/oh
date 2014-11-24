@@ -638,7 +638,7 @@
         <spirit:name>hdl/eio_rx.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
-        <spirit:userFileType>CHECKSUM_d52d0c10</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_0fdfa022</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -683,15 +683,15 @@
       <xilinx:displayName>eio_rx_v1_0</xilinx:displayName>
       <xilinx:vendorDisplayName>eio rx</xilinx:vendorDisplayName>
       <xilinx:vendorURL>http://www.adapteva.com</xilinx:vendorURL>
-      <xilinx:coreRevision>7</xilinx:coreRevision>
+      <xilinx:coreRevision>9</xilinx:coreRevision>
       <xilinx:upgrades>
         <xilinx:canUpgradeFrom>user.org:user:eio_rx:1.0</xilinx:canUpgradeFrom>
       </xilinx:upgrades>
-      <xilinx:coreCreationDateTime>2014-11-10T01:16:43Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2014-11-21T00:15:27Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
         <xilinx:tag xilinx:name="user.org:user:eio_rx:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/eio_rx/ip</xilinx:tag>
         <xilinx:tag xilinx:name="adapteva.com:user:eio_rx:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/eio_rx/ip</xilinx:tag>
-        <xilinx:tag xilinx:name="adapteva.com:Adapteva:eio_rx:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/eio_rx/ip</xilinx:tag>
+        <xilinx:tag xilinx:name="adapteva.com:Adapteva:eio_rx:1.0_ARCHIVE_LOCATION">/home/frhuettig</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>

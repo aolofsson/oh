@@ -122,7 +122,6 @@ module eio_rx (/*AUTOARG*/
      (.I (rx_lclk),
       .O (rx_lclk_s));
    
-
    // BUFR generates the slow clock
    BUFR
      #(.SIM_DEVICE("7SERIES"),

@@ -79,7 +79,7 @@ module eproto_tx (/*AUTOARG*/
 
    // TODO: Bursts
 
-   always @( posedge txlclk_p or reset ) begin
+   always @( posedge txlclk_p or posedge reset ) begin
 
       if( reset ) begin
 

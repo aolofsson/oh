@@ -73,9 +73,10 @@ module eio_tx (/*AUTOARG*/
    //# WIRES
    //############
    wire [7:0]    tx_data;  // High-speed serial data outputs
+   wire [7:0]    tx_data_t; // Tristate signal to OBUF's
    wire          tx_frame; // serial frame signal
    wire          tx_lclk;
-      
+   
    //#############################
    //# Serializer instantiations
    //#############################
@@ -121,16 +122,16 @@ module eio_tx (/*AUTOARG*/
         OSERDESE2 
           #(
             .DATA_RATE_OQ("DDR"),  // DDR, SDR
-            .DATA_RATE_TQ("DDR"),  // DDR, BUF, SDR
+            .DATA_RATE_TQ("BUF"),  // DDR, BUF, SDR
             .DATA_WIDTH(8),        // Parallel data width (2-8,10,14)
             .INIT_OQ(1'b0),        // Initial value of OQ output (1'b0,1'b1)
-            .INIT_TQ(1'b0),        // Initial value of TQ output (1'b0,1'b1)
+            .INIT_TQ(1'b1),        // Initial value of TQ output (1'b0,1'b1)
             .SERDES_MODE("MASTER"), // MASTER, SLAVE
             .SRVAL_OQ(1'b0),       // OQ output value when SR is used (1'b0,1'b1)
-            .SRVAL_TQ(1'b0),       // TQ output value when SR is used (1'b0,1'b1)
+            .SRVAL_TQ(1'b1),       // TQ output value when SR is used (1'b0,1'b1)
             .TBYTE_CTL("FALSE"),   // Enable tristate byte operation (FALSE, TRUE)
             .TBYTE_SRC("FALSE"),   // Tristate byte source (FALSE, TRUE)
-            .TRISTATE_WIDTH(4)     // 3-state converter width (1,4)
+            .TRISTATE_WIDTH(1)     // 3-state converter width (1,4)
             ) OSERDESE2_txdata 
             (
              .OFB(),   // 1-bit output: Feedback path for data
@@ -140,7 +141,7 @@ module eio_tx (/*AUTOARG*/
              .SHIFTOUT2(),
              .TBYTEOUT(),       // 1-bit output: Byte group tristate
              .TFB(),            // 1-bit output: 3-state control
-             .TQ(),             // 1-bit output: 3-state control
+             .TQ(tx_data_t[i]), // 1-bit output: 3-state control
              .CLK(txlclk_s),    // 1-bit input: High speed clock
              .CLKDIV(txlclk_p), // 1-bit input: Divided clock
              // D1 - D8: 1-bit (each) input: Parallel data inputs (1-bit each)
@@ -158,12 +159,12 @@ module eio_tx (/*AUTOARG*/
              .SHIFTIN1(1'b0),
              .SHIFTIN2(1'b0),
              // T1 - T4: 1-bit (each) input: Parallel 3-state inputs
-             .T1(1'b0),
+             .T1(~ecfg_tx_enable),
              .T2(1'b0),
              .T3(1'b0),
              .T4(1'b0),
              .TBYTEIN(1'b0),   // 1-bit input: Byte group tristate
-             .TCE(1'b0)          // 1-bit input: 3-state clock enable
+             .TCE(1'b1)          // 1-bit input: 3-state clock enable
              );     
      end // block: gen_serdes
    endgenerate
@@ -171,7 +172,7 @@ module eio_tx (/*AUTOARG*/
    OSERDESE2 
      #(
        .DATA_RATE_OQ("DDR"),  // DDR, SDR
-       .DATA_RATE_TQ("DDR"),  // DDR, BUF, SDR
+       .DATA_RATE_TQ("SDR"),  // DDR, BUF, SDR
        .DATA_WIDTH(8),        // Parallel data width (2-8,10,14)
        .INIT_OQ(1'b0),        // Initial value of OQ output (1'b0,1'b1)
        .INIT_TQ(1'b0),        // Initial value of TQ output (1'b0,1'b1)
@@ -180,7 +181,7 @@ module eio_tx (/*AUTOARG*/
        .SRVAL_TQ(1'b0),       // TQ output value when SR is used (1'b0,1'b1)
        .TBYTE_CTL("FALSE"),   // Enable tristate byte operation (FALSE, TRUE)
        .TBYTE_SRC("FALSE"),   // Tristate byte source (FALSE, TRUE)
-       .TRISTATE_WIDTH(4)     // 3-state converter width (1,4)
+       .TRISTATE_WIDTH(1)     // 3-state converter width (1,4)
        ) OSERDESE2_tframe
        (
         .OFB(),   // 1-bit output: Feedback path for data
@@ -247,7 +248,7 @@ module eio_tx (/*AUTOARG*/
         .O   (TX_DATA_P),
         .OB  (TX_DATA_N),
         .I   (tx_data),
-        .T   (~ecfg_tx_enable)
+        .T   (tx_data_t)
         );
 
    OBUFDS 

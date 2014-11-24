@@ -73,6 +73,7 @@ module eclock (/*AUTOARG*/
    // Wires
    wire         cclk_src;
    wire         cclk_base;
+   wire         cclk_p_src;
    wire         cclk_p;
    wire         cclk;
    wire         lclk_s_src;
@@ -118,7 +119,7 @@ module eclock (/*AUTOARG*/
         .CLKOUT1(lclk_s_src),   // 1-bit output: CLKOUT1
         .CLKOUT2(lclk_out_src), // 1-bit output: CLKOUT2
         .CLKOUT3(lclk_p_src),   // 1-bit output: CLKOUT3
-        .CLKOUT4(cclk_p),       // 1-bit output: CLKOUT4
+        .CLKOUT4(cclk_p_src),   // 1-bit output: CLKOUT4
         .CLKOUT5(),             // 1-bit output: CLKOUT5
         // Feedback Clocks: 1-bit (each) output: Clock feedback ports
         .CLKFBOUT(clkfb),       // 1-bit output: Feedback clock
@@ -137,6 +138,10 @@ module eclock (/*AUTOARG*/
      (.O   (cclk_base),
       .I   (cclk_src));
 
+   BUFG cclk_p_buf
+     (.O   (cclk_p),
+      .I   (cclk_p_src));
+   
    BUFG lclk_s_buf
      (.O   (lclk_s),
       .I   (lclk_s_src));

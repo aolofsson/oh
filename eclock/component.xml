@@ -300,7 +300,7 @@
       <spirit:file>
         <spirit:name>hdl/eclock.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_4c07ce39</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_e391c4dc</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -372,14 +372,14 @@
         <xilinx:taxonomy>/BaseIP</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>eclock_v1_0</xilinx:displayName>
-      <xilinx:vendorDisplayName>Adapteva</xilinx:vendorDisplayName>
+      <xilinx:vendorDisplayName>Adapteva, Inc.</xilinx:vendorDisplayName>
       <xilinx:vendorURL>http://www.adapteva.com</xilinx:vendorURL>
-      <xilinx:coreRevision>4</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2014-11-09T21:07:57Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>7</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2014-11-21T16:37:07Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
         <xilinx:tag xilinx:name="user.org:user:eclock:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/hdl/eclock/ip</xilinx:tag>
         <xilinx:tag xilinx:name="adapteva.com:user:eclock:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/hdl/eclock/ip</xilinx:tag>
-        <xilinx:tag xilinx:name="adapteva.com:Adapteva:eclock:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/hdl/eclock/ip</xilinx:tag>
+        <xilinx:tag xilinx:name="adapteva.com:Adapteva:eclock:1.0_ARCHIVE_LOCATION">/home/frhuettig</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>

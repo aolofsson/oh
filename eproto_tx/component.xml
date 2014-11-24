@@ -410,7 +410,7 @@
         <spirit:name>hdl/eproto_tx.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
-        <spirit:userFileType>CHECKSUM_df6c71d1</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_046587b3</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -450,15 +450,15 @@
       <xilinx:displayName>eproto_tx_v1_0</xilinx:displayName>
       <xilinx:vendorDisplayName>Adapteva, Inc.</xilinx:vendorDisplayName>
       <xilinx:vendorURL>http://www.adapteva.com</xilinx:vendorURL>
-      <xilinx:coreRevision>3</xilinx:coreRevision>
+      <xilinx:coreRevision>4</xilinx:coreRevision>
       <xilinx:upgrades>
         <xilinx:canUpgradeFrom>user.org:user:eproto_tx:1.0</xilinx:canUpgradeFrom>
       </xilinx:upgrades>
-      <xilinx:coreCreationDateTime>2014-11-15T05:06:01Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2014-11-20T19:17:25Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
         <xilinx:tag xilinx:name="user.org:user:eproto_tx:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/eproto_tx/ip</xilinx:tag>
         <xilinx:tag xilinx:name="adapteva.com:user:eproto_tx:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/eproto_tx/ip</xilinx:tag>
-        <xilinx:tag xilinx:name="adapteva.com:Adatpeva:eproto_tx:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/eproto_tx/ip</xilinx:tag>
+        <xilinx:tag xilinx:name="adapteva.com:Adatpeva:eproto_tx:1.0_ARCHIVE_LOCATION">/home/frhuettig</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
