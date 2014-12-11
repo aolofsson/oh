@@ -30,7 +30,7 @@
                   01 - gpio mode
                   10 - reserved
                   11 - reserved
- [7:4]           Transmit control mode for eMesh
+ [7:4]            Transmit control mode for eMesh
  [11:8]           0000 - No division, full speed
                   0001 - Divide by 2
                   Others - Reserved
@@ -75,12 +75,16 @@
  [8]            tx_frame
  [9]            tx_wait_rd
  [10]           tx_wait_wr
-   -------------------------------------------------------------
+ -------------------------------------------------------------
  ESYSDATAOUT    ***Data on eLink output pins
  [7:0]          tx_data[7:0]         
  [8]            tx_frame
  [9]            rx_wait_rd
  [10]           rx_wait_wr
+ -------------------------------------------------------------
+ ESYSDEBUG      ***Various debug signals from elink
+ [31:0]          (design specific, generic inferface for now)
+ 
  ########################################################################
  */
 
@@ -103,7 +107,7 @@ module ecfg (/*AUTOARG*/
    ecfg_cclk_div, ecfg_cclk_pllcfg, ecfg_coreid, ecfg_dataout,
    // Inputs
    param_coreid, mi_clk, mi_rst, mi_en, mi_we, mi_addr, mi_din,
-   hw_reset, ecfg_datain
+   hw_reset, ecfg_datain, ecfg_debug_signals
    );
    //Register file parameters
 
@@ -165,10 +169,13 @@ parameter RFAW   = 12;  // Register file address width
    output [11:0]     ecfg_coreid;            //core-id of fpga elink
 
    //gpio
-   input [10:0]      ecfg_datain;  // data from elink inputs
-   output [10:0]     ecfg_dataout;      //data for elink outputs {rd_wait,wr_wait,frame,data[7:0]}
+   input [10:0]      ecfg_datain;           // data from elink inputs
+   output [10:0]     ecfg_dataout;          //data for elink outputs {rd_wait,wr_wait,frame,data[7:0]}
 
-
+   //debug
+   input [31:0]      ecfg_debug_signals;    //various signals for debugging the elink hardware
+   
+   
    /*------------------------BODY CODE---------------------------------------*/
    
    //registers
@@ -235,7 +242,7 @@ parameter RFAW   = 12;  // Register file address width
    assign ecfg_cfgrx_write     = ecfg_cfgrx_match   & ecfg_write;
    assign ecfg_cfgclk_write    = ecfg_cfgclk_match  & ecfg_write;
    assign ecfg_coreid_write    = ecfg_coreid_match  & ecfg_write;
-   assign ecfg_dataout_write = ecfg_dataout_match & ecfg_write;
+   assign ecfg_dataout_write   = ecfg_dataout_match & ecfg_write;
 
    
    //###########################
@@ -320,7 +327,7 @@ parameter RFAW   = 12;  // Register file address width
 
    assign ecfg_sw_reset = ecfg_reset_reg;
    assign ecfg_reset    = ecfg_sw_reset | hw_reset;
-   
+
    //###############################
    //# DATA READBACK MUX
    //###############################
@@ -329,15 +336,16 @@ parameter RFAW   = 12;  // Register file address width
    always @ (posedge mi_clk)
      if(ecfg_read)
        case(mi_addr[RFAW-1:2])
-         `E_REG_SYSRESET:    mi_dout <= {31'b0, ecfg_reset_reg};
-         `E_REG_SYSCFGTX:    mi_dout <= {20'b0, ecfg_cfgtx_reg[11:0]};
-         `E_REG_SYSCFGRX:    mi_dout <= {27'b0, ecfg_cfgrx_reg[4:0]};
-         `E_REG_SYSCFGCLK:   mi_dout <= {24'b0, ecfg_cfgclk_reg[7:0]};
-         `E_REG_SYSCOREID:   mi_dout <= {{(32-IDW){1'b0}}, ecfg_coreid_reg[IDW-1:0]};
-         `E_REG_SYSVERSION:  mi_dout <= E_VERSION;
-         `E_REG_SYSDATAIN:   mi_dout <= {20'b0, ecfg_datain_reg[11:0]};
-         `E_REG_SYSDATAOUT:  mi_dout <= {20'b0, ecfg_dataout_reg[11:0]};
-         default:            mi_dout <= 32'd0;
+         `E_REG_SYSRESET:    mi_dout[31:0] <= {31'b0, ecfg_reset_reg};
+         `E_REG_SYSCFGTX:    mi_dout[31:0] <= {20'b0, ecfg_cfgtx_reg[11:0]};
+         `E_REG_SYSCFGRX:    mi_dout[31:0] <= {27'b0, ecfg_cfgrx_reg[4:0]};
+         `E_REG_SYSCFGCLK:   mi_dout[31:0] <= {24'b0, ecfg_cfgclk_reg[7:0]};
+         `E_REG_SYSCOREID:   mi_dout[31:0] <= {{(32-IDW){1'b0}}, ecfg_coreid_reg[IDW-1:0]};
+         `E_REG_SYSVERSION:  mi_dout[31:0] <= E_VERSION;
+         `E_REG_SYSDATAIN:   mi_dout[31:0] <= {20'b0, ecfg_datain_reg[11:0]};
+         `E_REG_SYSDATAOUT:  mi_dout[31:0] <= {20'b0, ecfg_dataout_reg[11:0]};
+	 `E_REG_SYSDEBUG:    mi_dout[31:0] <= ecfg_debug_signals[31:0];
+         default:            mi_dout[31:0] <= 32'd0;
        endcase
 
 endmodule // para_config
