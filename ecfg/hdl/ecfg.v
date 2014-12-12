@@ -84,7 +84,12 @@
  -------------------------------------------------------------
  ESYSDEBUG      ***Various debug signals from elink
  [31:0]          (design specific, generic inferface for now)
- 
+                 included: 
+                 -all wait signals, (4)
+                 -fifo fulls, 
+                 -fifo emptys
+                 -axi access, ready signals for master/slave
+                 -frame signals (in and out) 
  ########################################################################
  */
 
@@ -97,6 +102,7 @@
 `define E_REG_SYSVERSION  10'h015
 `define E_REG_SYSDATAIN   10'h016
 `define E_REG_SYSDATAOUT  10'h017
+`define E_REG_SYSDEBUG    10'h018
 
 module ecfg (/*AUTOARG*/
    // Outputs
