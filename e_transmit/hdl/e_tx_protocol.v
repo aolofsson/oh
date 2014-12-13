@@ -33,10 +33,10 @@
 
 module e_tx_protocol (/*AUTOARG*/
    // Outputs
-   emtx_rd_wait, emtx_wr_wait, emtx_ack, txframe_p, txdata_p,
+   e_tx_rd_wait, e_tx_wr_wait, e_tx_ack, txframe_p, txdata_p,
    // Inputs
-   reset, emtx_access, emtx_write, emtx_datamode, emtx_ctrlmode,
-   emtx_dstaddr, emtx_srcaddr, emtx_data, txlclk_p, tx_rd_wait,
+   reset, e_tx_access, e_tx_write, e_tx_datamode, e_tx_ctrlmode,
+   e_tx_dstaddr, e_tx_srcaddr, e_tx_data, txlclk_p, tx_rd_wait,
    tx_wr_wait
    );
 
@@ -44,16 +44,16 @@ module e_tx_protocol (/*AUTOARG*/
    input         reset;
 
    // Input from TX Arbiter
-   input         emtx_access;
-   input         emtx_write;
-   input [1:0]   emtx_datamode;
-   input [3:0]   emtx_ctrlmode;
-   input [31:0]  emtx_dstaddr;
-   input [31:0]  emtx_srcaddr;
-   input [31:0]  emtx_data;
-   output        emtx_rd_wait;
-   output        emtx_wr_wait;
-   output        emtx_ack;
+   input         e_tx_access;
+   input         e_tx_write;
+   input [1:0]   e_tx_datamode;
+   input [3:0]   e_tx_ctrlmode;
+   input [31:0]  e_tx_dstaddr;
+   input [31:0]  e_tx_srcaddr;
+   input [31:0]  e_tx_data;
+   output        e_tx_rd_wait;
+   output        e_tx_wr_wait;
+   output        e_tx_ack;
    
    // Parallel interface, 8 eLink bytes at a time
    input         txlclk_p; // Parallel-rate clock from eClock block
@@ -69,7 +69,7 @@ module e_tx_protocol (/*AUTOARG*/
    //############
    //# Local regs & wires
    //############
-   reg           emtx_ack;  // Acknowledge transaction
+   reg           e_tx_ack;  // Acknowledge transaction
    reg [7:0]     txframe_p;
    reg [63:0]    txdata_p;
    
@@ -83,33 +83,33 @@ module e_tx_protocol (/*AUTOARG*/
 
       if( reset ) begin
 
-         emtx_ack    <= 1'b0;
+         e_tx_ack    <= 1'b0;
          txframe_p   <= 'd0;
          txdata_p    <= 'd0;
 
       end else begin
 
-         if( emtx_access & ~emtx_ack ) begin
+         if( e_tx_access & ~e_tx_ack ) begin
 
-            emtx_ack  <= 1'b1;
+            e_tx_ack  <= 1'b1;
             txframe_p <= 8'h3F;
             txdata_p  <=
                { 8'd0,  // Not used
                  8'd0,
-                 ~emtx_write, 7'd0,   // B0- TODO: For bursts, add the inc bit
-                 emtx_ctrlmode, emtx_dstaddr[31:28], // B1
-                 emtx_dstaddr[27:4],  // B2, B3, B4
-                 emtx_dstaddr[3:0], emtx_datamode, emtx_write, emtx_access // B5
+                 ~e_tx_write, 7'd0,   // B0- TODO: For bursts, add the inc bit
+                 e_tx_ctrlmode, e_tx_dstaddr[31:28], // B1
+                 e_tx_dstaddr[27:4],  // B2, B3, B4
+                 e_tx_dstaddr[3:0], e_tx_datamode, e_tx_write, e_tx_access // B5
                  };
-         end else if( emtx_ack ) begin // if ( emtx_access & ~emtx_ack )
+         end else if( e_tx_ack ) begin // if ( e_tx_access & ~e_tx_ack )
 
-            emtx_ack  <= 1'b0;
+            e_tx_ack  <= 1'b0;
             txframe_p <= 8'hFF;
-            txdata_p  <= { emtx_data, emtx_srcaddr };
+            txdata_p  <= { e_tx_data, e_tx_srcaddr };
             
          end else begin
 
-            emtx_ack    <= 1'b0;
+            e_tx_ack    <= 1'b0;
             txframe_p <= 8'h00;
             txdata_p  <= 64'd0;
 
@@ -124,14 +124,14 @@ module e_tx_protocol (/*AUTOARG*/
 
    reg     rd_wait_sync;
    reg     wr_wait_sync;
-   reg     emtx_rd_wait;
-   reg     emtx_wr_wait;
+   reg     e_tx_rd_wait;
+   reg     e_tx_wr_wait;
    
    always @( posedge txlclk_p ) begin
       rd_wait_sync <= tx_rd_wait;
-      emtx_rd_wait <= rd_wait_sync;
+      e_tx_rd_wait <= rd_wait_sync;
       wr_wait_sync <= tx_wr_wait;
-      emtx_wr_wait <= wr_wait_sync;
+      e_tx_wr_wait <= wr_wait_sync;
    end
             
 endmodule // e_tx_protocol
