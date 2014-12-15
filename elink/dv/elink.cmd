@@ -1,3 +1,4 @@
+=y .
 -y ../hdl
 -y ../../common/hdl
 -y ../../axi/hdl
@@ -8,4 +9,5 @@
 -y ../../stubs/hdl
 -y ../../erx/hdl
 -y ../../etx/hdl
-dv_elink.v
+
+

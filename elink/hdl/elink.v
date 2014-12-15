@@ -656,9 +656,9 @@ module elink(/*AUTOARG*/
    /***********************************************************/
    //TODO: fix decode logic
 
-   assign mi_rd_data[31:0] = (mi_addr[15:14]==2'b00) ? mi_dout_ecfg[31:0]  :
-			     (mi_addr[15:14]==2'b01) ? mi_dout_embox[31:0] :
-			     (mi_addr[15:14]==2'b10) ? mi_dout_rx[31:0]    :
+   assign mi_rd_data[31:0] = (mi_addr[13:12]==2'b00) ? mi_dout_ecfg[31:0]  :
+			     (mi_addr[13:12]==2'b01) ? mi_dout_embox[31:0] :
+			     (mi_addr[13:12]==2'b10) ? mi_dout_rx[31:0]    :
 			      mi_dout_tx[31:0]    ;
    
 endmodule // elink

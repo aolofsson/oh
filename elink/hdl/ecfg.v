@@ -112,7 +112,7 @@ module ecfg (/*AUTOARG*/
    ecfg_rx_gpio_mode, ecfg_cclk_en, ecfg_cclk_div, ecfg_cclk_pllcfg,
    ecfg_coreid, ecfg_dataout,
    // Inputs
-   mi_clk, mi_en, mi_we, mi_addr, mi_din, hw_reset, ecfg_datain,
+   hw_reset, mi_clk, mi_en, mi_we, mi_addr, mi_din, ecfg_datain,
    ecfg_debug_signals
    );
    //Register file parameters
@@ -189,8 +189,8 @@ module ecfg (/*AUTOARG*/
    reg [7:0] 	ecfg_cfgclk_reg;
    reg [11:0] 	ecfg_coreid_reg;
    reg          ecfg_reset_reg;
-   reg [11:0] 	ecfg_datain_reg;
-   reg [11:0] 	ecfg_dataout_reg;
+   reg [10:0] 	ecfg_datain_reg;
+   reg [10:0] 	ecfg_dataout_reg;
    reg [31:0] 	mi_dout;
    
    //wires
@@ -213,6 +213,7 @@ module ecfg (/*AUTOARG*/
    wire 	ecfg_dataout_write;
    wire 	ecfg_rx_monitor_mode;
    wire 	ecfg_reset_write;
+   wire         ecfg_version_match;
    
    /*****************************/
    /*ADDRESS DECODE LOGIC       */
@@ -278,7 +279,6 @@ module ecfg (/*AUTOARG*/
    assign ecfg_rx_enable        = ecfg_cfgrx_reg[0];
    assign ecfg_rx_mmu_mode      = ecfg_cfgrx_reg[1];   
    assign ecfg_rx_gpio_mode     = ecfg_cfgrx_reg[3:2]==2'b01;
-   assign ecfg_rx_loopback_mode = ecfg_cfgrx_reg[3:2]==2'b10;
    assign ecfg_rx_monitor_mode  = ecfg_cfgrx_reg[4];
 
    //###########################
@@ -309,16 +309,16 @@ module ecfg (/*AUTOARG*/
    //# ESYSDATAIN
    //###########################
    always @ (posedge mi_clk)
-     ecfg_datain_reg <= ecfg_datain;
+     ecfg_datain_reg[10:0] <= ecfg_datain[10:0];
    
    //###########################
    //# ESYSDATAOUT
    //###########################
    always @ (posedge mi_clk)
      if(hw_reset)
-       ecfg_dataout_reg <= 'd0;   
+       ecfg_dataout_reg[10:0] <= 11'd0;   
      else if (ecfg_dataout_write)
-       ecfg_dataout_reg <= mi_din[10:0];
+       ecfg_dataout_reg[10:0] <= mi_din[10:0];
 
    assign ecfg_dataout[10:0] = ecfg_dataout_reg[10:0];
    
@@ -347,8 +347,8 @@ module ecfg (/*AUTOARG*/
          `E_REG_SYSCFGCLK:   mi_dout[31:0] <= {24'b0, ecfg_cfgclk_reg[7:0]};
          `E_REG_SYSCOREID:   mi_dout[31:0] <= {{(32-IDW){1'b0}}, ecfg_coreid_reg[IDW-1:0]};
          `E_REG_SYSVERSION:  mi_dout[31:0] <= VERSION;
-         `E_REG_SYSDATAIN:   mi_dout[31:0] <= {20'b0, ecfg_datain_reg[11:0]};
-         `E_REG_SYSDATAOUT:  mi_dout[31:0] <= {20'b0, ecfg_dataout_reg[11:0]};
+         `E_REG_SYSDATAIN:   mi_dout[31:0] <= {21'b0, ecfg_datain_reg[10:0]};
+         `E_REG_SYSDATAOUT:  mi_dout[31:0] <= {21'b0, ecfg_dataout_reg[10:0]};
 	 `E_REG_SYSDEBUG:    mi_dout[31:0] <= ecfg_debug_signals[31:0];
          default:            mi_dout[31:0] <= 32'd0;
        endcase
