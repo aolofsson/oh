@@ -299,7 +299,7 @@ module ecfg (/*AUTOARG*/
    //###########################
    always @ (posedge mi_clk)
      if(hw_reset)
-       ecfg_coreid_reg[IDW-1:0] <= PARAM_COREID;
+       ecfg_coreid_reg[IDW-1:0] <= COREID;
      else if (ecfg_coreid_write)
        ecfg_coreid_reg[IDW-1:0] <= mi_din[IDW-1:0];   
    

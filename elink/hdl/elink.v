@@ -15,7 +15,7 @@
  COPYING).  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module e_link(/*AUTOARG*/
+module elink(/*AUTOARG*/
    // Outputs
    rowid, colid, reset_n, cclk_p, cclk_n, rx_wr_wait_p, rx_wr_wait_n,
    rx_rd_wait_p, rx_rd_wait_n, tx_lclk_p, tx_lclk_n, tx_frame_p,
@@ -44,13 +44,15 @@ module e_link(/*AUTOARG*/
    s_axi_awlen, s_axi_awlock, s_axi_awprot, s_axi_awqos,
    s_axi_awregion, s_axi_awsize, s_axi_awvalid, s_axi_bready,
    s_axi_rready, s_axi_wdata, s_axi_wlast, s_axi_wstrb, s_axi_wvalid,
-   s_axicfg_araddr, s_axicfg_arprot, s_axicfg_arvalid,
-   s_axicfg_awaddr, s_axicfg_awprot, s_axicfg_awvalid,
-   s_axicfg_bready, s_axicfg_rready, s_axicfg_wdata, s_axicfg_wstrb,
-   s_axicfg_wvalid
+   s_axicfg_aclk, s_axicfg_aresetn, s_axicfg_araddr, s_axicfg_arprot,
+   s_axicfg_arvalid, s_axicfg_awaddr, s_axicfg_awprot,
+   s_axicfg_awvalid, s_axicfg_bready, s_axicfg_rready, s_axicfg_wdata,
+   s_axicfg_wstrb, s_axicfg_wvalid
    );
-   parameter COREID   = `CFG_COREID;
-   
+   parameter COREID   = 12'h810;
+   parameter AW       = 32;
+   parameter DW       = 32;
+   parameter RFAW     = 12;
    
    /****************************/
    /*BASIC SIGNALS             */
@@ -213,7 +215,8 @@ module e_link(/*AUTOARG*/
    /*****************************/
    /*AXI config slave interface */
    /*****************************/  
-
+   input 	 s_axicfg_aclk;
+   input 	 s_axicfg_aresetn;
    //read address channel
    input [12:0]  s_axicfg_araddr;
    input [2:0] 	 s_axicfg_arprot;
@@ -294,7 +297,7 @@ module e_link(/*AUTOARG*/
    wire			esaxi_emwr_prog_full;	// From etx of etx.v
    wire [102:0]		esaxi_emwr_wr_data;	// From esaxi of esaxi.v
    wire			esaxi_emwr_wr_en;	// From esaxi of esaxi.v
-   wire [RFAW-1:0]	mi_addr;		// From esaxilite of esaxilite.v
+   wire [RFAW+1:0]	mi_addr;		// From esaxilite of esaxilite.v
    wire			mi_clk;			// From esaxilite of esaxilite.v
    wire [31:0]		mi_din;			// From esaxilite of esaxilite.v
    wire			mi_en;			// From esaxilite of esaxilite.v
@@ -442,35 +445,41 @@ module e_link(/*AUTOARG*/
    /***********************************************************/
    /*AXI CONFIGURATION SLAVE (LITE)                           */
    /***********************************************************/
-   
+   /*esaxilite AUTO_TEMPLATE ( 
+                        // Outputs
+	                .s_axi_\(.*\)     (s_axicfg_\1[]),
+                        );
+   */
     esaxilite esaxilite(
 		       /*AUTOINST*/
 			// Outputs
-			.s_axicfg_arready(s_axicfg_arready),
-			.s_axicfg_awready(s_axicfg_awready),
-			.s_axicfg_bresp	(s_axicfg_bresp[1:0]),
-			.s_axicfg_bvalid(s_axicfg_bvalid),
-			.s_axicfg_rdata	(s_axicfg_rdata[31:0]),
-			.s_axicfg_rresp	(s_axicfg_rresp[1:0]),
-			.s_axicfg_rvalid(s_axicfg_rvalid),
-			.s_axicfg_wready(s_axicfg_wready),
+			.s_axi_arready	(s_axicfg_arready),	 // Templated
+			.s_axi_awready	(s_axicfg_awready),	 // Templated
+			.s_axi_bresp	(s_axicfg_bresp[1:0]),	 // Templated
+			.s_axi_bvalid	(s_axicfg_bvalid),	 // Templated
+			.s_axi_rdata	(s_axicfg_rdata[31:0]),	 // Templated
+			.s_axi_rresp	(s_axicfg_rresp[1:0]),	 // Templated
+			.s_axi_rvalid	(s_axicfg_rvalid),	 // Templated
+			.s_axi_wready	(s_axicfg_wready),	 // Templated
 			.mi_clk		(mi_clk),
 			.mi_en		(mi_en),
 			.mi_we		(mi_we),
-			.mi_addr	(mi_addr[RFAW-1:0]),
+			.mi_addr	(mi_addr[RFAW+1:0]),
 			.mi_din		(mi_din[31:0]),
 			// Inputs
-			.s_axicfg_araddr(s_axicfg_araddr[15:0]),
-			.s_axicfg_arprot(s_axicfg_arprot[2:0]),
-			.s_axicfg_arvalid(s_axicfg_arvalid),
-			.s_axicfg_awaddr(s_axicfg_awaddr[15:0]),
-			.s_axicfg_awprot(s_axicfg_awprot[2:0]),
-			.s_axicfg_awvalid(s_axicfg_awvalid),
-			.s_axicfg_bready(s_axicfg_bready),
-			.s_axicfg_rready(s_axicfg_rready),
-			.s_axicfg_wdata	(s_axicfg_wdata[31:0]),
-			.s_axicfg_wstrb	(s_axicfg_wstrb[3:0]),
-			.s_axicfg_wvalid(s_axicfg_wvalid),
+			.s_axi_aclk	(s_axicfg_aclk),	 // Templated
+			.s_axi_aresetn	(s_axicfg_aresetn),	 // Templated
+			.s_axi_araddr	(s_axicfg_araddr[15:0]), // Templated
+			.s_axi_arprot	(s_axicfg_arprot[2:0]),	 // Templated
+			.s_axi_arvalid	(s_axicfg_arvalid),	 // Templated
+			.s_axi_awaddr	(s_axicfg_awaddr[15:0]), // Templated
+			.s_axi_awprot	(s_axicfg_awprot[2:0]),	 // Templated
+			.s_axi_awvalid	(s_axicfg_awvalid),	 // Templated
+			.s_axi_bready	(s_axicfg_bready),	 // Templated
+			.s_axi_rready	(s_axicfg_rready),	 // Templated
+			.s_axi_wdata	(s_axicfg_wdata[31:0]),	 // Templated
+			.s_axi_wstrb	(s_axicfg_wstrb[3:0]),	 // Templated
+			.s_axi_wvalid	(s_axicfg_wvalid),	 // Templated
 			.mi_rd_data	(mi_rd_data[31:0]));
    
    /***********************************************************/
@@ -576,7 +585,12 @@ module e_link(/*AUTOARG*/
 	   .tx_wr_wait_p		(tx_wr_wait_p),
 	   .tx_wr_wait_n		(tx_wr_wait_n),
 	   .tx_rd_wait_p		(tx_rd_wait_p),
-	   .tx_rd_wait_n		(tx_rd_wait_n));
+	   .tx_rd_wait_n		(tx_rd_wait_n),
+	   .mi_clk			(mi_clk),
+	   .mi_en			(mi_en),
+	   .mi_we			(mi_we),
+	   .mi_addr			(mi_addr[RFAW-1:0]),
+	   .mi_din			(mi_din[31:0]));
 
    
    /***********************************************************/
@@ -649,6 +663,6 @@ module e_link(/*AUTOARG*/
    
 endmodule // elink
 // Local Variables:
-// verilog-library-directories:("." "../../embox/hdl" "../../erx/hdl" "../../etx/hdl" "../../emaxi/hdl" "../../esaxi/hdl" "../../esaxilite/hdl" )
+// verilog-library-directories:("." "../../embox/hdl" "../../erx/hdl" "../../etx/hdl" "../../axi/hdl")
 // End:
 

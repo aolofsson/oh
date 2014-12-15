@@ -248,8 +248,8 @@ endgenerate
      #(.IOSTANDARD (IOSTD_ELINK)) 
    obufds_cclk_inst
      (.O   (cclk_p),
-	  .OB  (cclk_n),
-	  .I   (cclk));
+      .OB  (cclk_n),
+      .I   (cclk));
         
 endmodule // eclock
 
