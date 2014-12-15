@@ -20,15 +20,18 @@ module erx (/*AUTOARG*/
    ecfg_rx_debug_signals, ecfg_datain, emaxi_emwr_empty,
    emaxi_emwr_rd_data, emaxi_emrq_empty, emaxi_emrq_rd_data,
    esaxi_emrr_empty, esaxi_emrr_rd_data, rx_wr_wait_p, rx_wr_wait_n,
-   rx_rd_wait_p, rx_rd_wait_n, mi_data_out,
+   rx_rd_wait_p, rx_rd_wait_n, mi_dout,
    // Inputs
    reset, s_axi_aclk, m_axi_aclk, ecfg_rx_enable, ecfg_rx_mmu_mode,
    ecfg_rx_gpio_mode, ecfg_dataout, emaxi_emwr_rd_en,
    emaxi_emrq_rd_en, esaxi_emrr_rd_en, rx_lclk_p, rx_lclk_n,
-   rx_frame_p, rx_frame_n, rx_data_p, rx_data_n, mi_access, mi_addr,
-   mi_data_in, mi_write
+   rx_frame_p, rx_frame_n, rx_data_p, rx_data_n, mi_clk, mi_en, mi_we,
+   mi_addr, mi_din
    );
 
+   parameter AW   = 32;
+   parameter DW   = 32;
+   parameter RFAW = 12;
 
    //Clocks and reset
    input          reset;
@@ -84,7 +87,9 @@ module erx (/*AUTOARG*/
    output [31:0]    mi_dout;   
    
    /*AUTOOUTPUT*/
+
    /*AUTOINPUT*/
+
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			emesh_mmu_access;	// From emmu of emmu.v
@@ -121,7 +126,9 @@ module erx (/*AUTOARG*/
    wire [7:0]		rxframe_p;		// From erx_io of erx_io.v
    wire			rxlclk_p;		// From erx_io of erx_io.v
    // End of automatics
-   
+
+   //regs
+   reg [15:0] 	ecfg_rx_debug_signals;
    
    /************************************************************/
    /*FIFOs                                                     */
@@ -249,7 +256,7 @@ module erx (/*AUTOARG*/
 		.mmu_en			(ecfg_rx_mmu_mode),
 		/*AUTOINST*/
 	      // Outputs
-	      .mi_data_out		(mi_data_out[DW-1:0]),
+	      .mi_dout			(mi_dout[31:0]),
 	      .emesh_access_out		(emesh_mmu_access),	 // Templated
 	      .emesh_write_out		(emesh_mmu_write),	 // Templated
 	      .emesh_datamode_out	(emesh_mmu_datamode[1:0]), // Templated
@@ -258,10 +265,10 @@ module erx (/*AUTOARG*/
 	      .emesh_srcaddr_out	(emesh_mmu_srcaddr[AW-1:0]), // Templated
 	      .emesh_data_out		(emesh_mmu_data[DW-1:0]), // Templated
 	      // Inputs
-	      .mi_access		(mi_access),
-	      .mi_write			(mi_write),
-	      .mi_addr			(mi_addr[IW:0]),
-	      .mi_data_in		(mi_data_in[DW-1:0]),
+	      .mi_en			(mi_en),
+	      .mi_we			(mi_we),
+	      .mi_addr			(mi_addr[RFAW-1:0]),
+	      .mi_din			(mi_din[31:0]),
 	      .emesh_access_in		(emesh_rx_access),	 // Templated
 	      .emesh_write_in		(emesh_rx_write),	 // Templated
 	      .emesh_datamode_in	(emesh_rx_datamode[1:0]), // Templated
@@ -303,7 +310,6 @@ module erx (/*AUTOARG*/
    /***********************************************************/
 
    erx_io erx_io (.ioreset		(reset),
-		    .txlclk_p		(1'b0),//TODO
 		    /*AUTOINST*/
 		  // Outputs
 		  .rx_wr_wait_p		(rx_wr_wait_p),

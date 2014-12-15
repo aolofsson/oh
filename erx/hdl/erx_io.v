@@ -282,29 +282,28 @@ module erx_io (/*AUTOARG*/
 
    wire        rxreset = reset | ~ecfg_rx_enable;
    
-   always @ (posedge rxlclk_p or posedge rxreset) begin
-      if(rxreset)
-        rxenb_sync <= 'd0;
-      else
-        rxenb_sync <= {1'b1, rxenb_sync[1]};
-   end
+   always @ (posedge rxlclk_p or posedge rxreset) 
+     begin
+	if(rxreset)
+          rxenb_sync <= 'd0;
+	else
+          rxenb_sync <= {1'b1, rxenb_sync[1]};
+     end
+   
+   always @ (posedge rxlclk_p) 
+     begin      
+	rxgpio_sync <= {ecfg_rx_gpio_mode, rxgpio_sync[1]};      
+	rxdata_reg  <= rxdata_des;
+	rxframe_reg <= rxframe_des & {8{rxenb}} & {8{~rxgpio}};     
+	rxdata_p  <= rxdata_reg;
+	rxframe_p <= rxframe_reg;
+     end
 
-   always @ (posedge rxlclk_p) begin
-      
-      rxgpio_sync <= {ecfg_rx_gpio_mode, rxgpio_sync[1]};
-      
-      rxdata_reg  <= rxdata_des;
-      rxframe_reg <= rxframe_des & {8{rxenb}} & {8{~rxgpio}};     
-      rxdata_p  <= rxdata_reg;
-      rxframe_p <= rxframe_reg;
-      end
-   end // always @ (posedge rxlclk_p)
-
-   //#############
-   //# GPIO mode inputs
-   //#############
-   reg [8:0] datain_reg;
-   reg [8:0] ecfg_datain;
+//#############
+//# GPIO mode inputs
+//#############
+reg [8:0] datain_reg;
+reg [8:0] ecfg_datain;
 
    always @ (posedge rxlclk_p) 
      begin

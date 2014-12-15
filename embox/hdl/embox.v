@@ -30,33 +30,36 @@
  */
 
 //Register Definitions
-`define E_REG_MBSTATUS      20'hf0360 //mailbox status
-`define E_REG_MBOX0         20'hf0364 //mailbox entry0 (read/write)
-`define E_REG_MBOX1         20'hf0368 //mailbox entry1 (read/write)
+`define E_REG_MBSTATUS      10'h019 //mailbox status
+`define E_REG_MBOX0         10'h01A //mailbox entry0 (read/write)
+`define E_REG_MBOX1         10'h01B //mailbox entry1 (read/write)
 
 module embox (/*AUTOARG*/
    // Outputs
-   mi_data_out, mi_data_sel, embox_full, embox_not_empty,
+   mi_dout, embox_full, embox_not_empty,
    // Inputs
-   reset, clk, mi_access, mi_write, mi_addr, mi_data_in
+   reset, clk, mi_en, mi_we, mi_addr, mi_din
    );
 
-   parameter DW  = 32; //data width of 
-   parameter RFW = 6;  //address bus width
-   parameter FAW = 4;  //fifo entries==2^FAW
+   parameter DW   = 32;  //data width of fifo
+   parameter RFAW = 12;  //address bus width
+   parameter FAW  = 4;   //fifo entries==2^FAW
+
+   /*****************************/
+   /*CLOCK AND RESET            */
+   /*****************************/
+   input              reset;       //synchronous  reset
+   input 	      clk;
 
    /*****************************/
    /*SIMPLE MEMORY INTERFACE    */
    /*****************************/
-   input              reset;       //synchronous  reset
-   input              clk;   
-   input              mi_access;
-   input              mi_write;
-   input  [19:0]      mi_addr;
-   input  [DW-1:0]    mi_data_in;
-   output [DW-1:0]    mi_data_out;
-   output 	      mi_data_sel;
-
+   input 	      mi_en;
+   input 	      mi_we;      
+   input [RFAW-1:0]   mi_addr;
+   input [DW-1:0]     mi_din;
+   output [DW-1:0]    mi_dout;   
+   
    /*****************************/
    /*MAILBOX OUTPUTS            */
    /*****************************/
@@ -66,7 +69,7 @@ module embox (/*AUTOARG*/
    /*****************************/
    /*REGISTERS                  */
    /*****************************/
-   reg [DW-1:0]       mi_data_out;
+   reg [DW-1:0]       mi_dout;
    reg [DW-1:0]       embox_data_reg;
    reg 		      mi_data_sel;
    /*****************************/
@@ -90,25 +93,18 @@ module embox (/*AUTOARG*/
    /*****************************/
    
    //access decode
-   assign embox_w0_access     = (mi_addr[19:0]==`E_REG_MBOX0); //lower 32 bit word
-   assign embox_w1_access     = (mi_addr[19:0]==`E_REG_MBOX1); //upper 32 bit word
-   assign embox_status_access = (mi_addr[19:0]==`E_REG_MBSTATUS);//polling fifo status
+   assign embox_w0_access     = (mi_addr[RFAW-1:2]==`E_REG_MBOX0); //lower 32 bit word
+   assign embox_w1_access     = (mi_addr[RFAW-1:2]==`E_REG_MBOX1); //upper 32 bit word
 
-   assign embox_match         = embox_w0_access |
-				embox_w1_access |
-				embox_status_access;
-   
-   //write logic
-   assign  embox_write       = mi_access &  mi_write;
+   //fifo read/write logic
+   assign  embox_write       = mi_en &  mi_we;
    assign  embox_w0_write    = embox_w0_access & embox_write;
-   assign  embox_w1_write    = embox_w1_access & embox_write; //causes FIFO write
+   assign  embox_w1_write    = embox_w1_access & embox_write;      //causes FIFO write
 
    //read logic
-   assign embox_read         = mi_access & ~mi_write;
-   assign embox_w0_read      = embox_w0_access     & embox_read;
-   assign embox_w1_read      = embox_w1_access     & embox_read;//causes FIFO read
-   assign embox_status_read  = embox_status_access & embox_read;
-			      
+   assign embox_read         = mi_en & ~mi_we;
+   assign embox_w1_read      = embox_w1_access & embox_read;       //causes FIFO read		      
+
    /*****************************/
    /*WRITE ACTION               */
    /*****************************/
@@ -116,39 +112,42 @@ module embox (/*AUTOARG*/
 
    always @ (posedge clk)
      if(embox_w0_write)
-       embox_data_reg[DW-1:0] <=mi_data_in[DW-1:0];
+       embox_data_reg[DW-1:0] <=mi_din[DW-1:0];
    
    /*****************************/
    /*READ BACK DATA             */
    /*****************************/
-   assign embox_not_empty         = ~embox_empty;
 
-   assign embox_read_data[DW-1:0] = embox_status_read ? {{(DW-2){1'b0}},embox_full,embox_not_empty}  :
-				    embox_w0_read     ? embox_fifo_data[DW-1:0]                             :
-	                    	  	                embox_fifo_data[2*DW-1:DW];   
    always @ (posedge clk)
      if(embox_read)
-       begin
-	  mi_data_out[DW-1:0] <= embox_read_data[DW-1:0];
-	  mi_data_sel         <= embox_match;
-       end
+       case(mi_addr[RFAW-1:2])	 
+	 `E_REG_MBOX0:    mi_dout[DW-1:0] <= embox_fifo_data[DW-1:0];	 
+	 `E_REG_MBOX1:    mi_dout[DW-1:0] <= embox_fifo_data[2*DW-1:DW];	 
+	 `E_REG_MBSTATUS: mi_dout[DW-1:0] <= {{(DW-2){1'b0}},embox_full,embox_not_empty};
+	 default:         mi_dout[DW-1:0] <= 32'd0;
+       endcase // case (mi_addr[RFAW-1:2])
+   
    
    /*****************************/
-   /*FIFO                       */
+   /*FIFO (64-BIT)              */
    /*****************************/
-   fifo #(.DW(2*DW), .AW(FAW)) mbox_fifo(
-                                       // Outputs
-                                       .rd_data         (embox_fifo_data[2*DW-1:0]),
-                                       .rd_fifo_empty   (embox_empty),
-                                       .wr_fifo_full    (embox_full),
-                                       // Inputs
-                                       .reset           (reset),
-                                       .wr_clk          (clk),
-                                       .rd_clk          (clk), 
-                                       .wr_write        (embox_w1_write), 
-                                       .wr_data         ({mi_data_in[DW-1:0],embox_data_reg[DW-1:0]}), 
-                                       .rd_read         (embox_w1_read)
-				       ); 
+   assign embox_not_empty         = ~embox_empty;
+
+   fifo_64x16 mbox(
+                   // Outputs
+                   .dout                  (), 
+                   .empty                 (embox_empty),
+                   .full                  (embox_full),
+                   .prog_full             (),
+                   // Inputs
+                   .din                   ({mi_din[DW-1:0],embox_data_reg[DW-1:0]}),
+                   .rd_clk                (clk),  
+                   .rd_en                 (embox_w1_read), 
+                   .rst                   (reset),      
+                   .wr_clk                (clk),  
+                   .wr_en                 (embox_w1_write)
+		   ); 
+   
 endmodule // embox
 
 

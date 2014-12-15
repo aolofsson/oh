@@ -20,16 +20,18 @@ module etx(/*AUTOARG*/
    ecfg_tx_debug_signals, esaxi_emrq_full, esaxi_emrq_prog_full,
    esaxi_emwr_full, esaxi_emwr_prog_full, emaxi_emrr_full,
    emaxi_emrr_prog_full, tx_lclk_p, tx_lclk_n, tx_frame_p, tx_frame_n,
-   tx_data_p, tx_data_n,
+   tx_data_p, tx_data_n, mi_dout,
    // Inputs
    reset, txlclk_out, txlclk_p, txlclk_s, s_axi_aclk, m_axi_aclk,
    ecfg_tx_clkdiv, ecfg_tx_enable, ecfg_tx_gpio_mode,
    ecfg_tx_mmu_mode, ecfg_dataout, ecfg_tx_tp_mode, esaxi_emrq_wr_en,
    esaxi_emrq_wr_data, esaxi_emwr_wr_en, esaxi_emwr_wr_data,
    emaxi_emrr_wr_en, emaxi_emrr_wr_data, tx_wr_wait_p, tx_wr_wait_n,
-   tx_rd_wait_p, tx_rd_wait_n
+   tx_rd_wait_p, tx_rd_wait_n, mi_clk, mi_en, mi_we, mi_addr, mi_din
    );
-
+   parameter AW   = 32;
+   parameter DW   = 32;
+   parameter RFAW = 12;
 
    //Clocks and reset
    input         reset;
@@ -82,10 +84,49 @@ module etx(/*AUTOARG*/
    input 	 tx_wr_wait_n;    
    input 	 tx_rd_wait_p;     //incoming pushback on read transactions
    input 	 tx_rd_wait_n;    
+
+   //Write interface for MMU
+   input 	    mi_clk;
+   input 	    mi_en;
+   input 	    mi_we;             //Single we, must write full words!
+   input [RFAW-1:0] mi_addr;
+   input [31:0]     mi_din;
+   output [31:0]    mi_dout;   
+
+   //regs
+   reg [15:0] 	    ecfg_tx_debug_signals; 
   
    /*AUTOOUTPUT*/
+
    /*AUTOINPUT*/
 
+   /*AUTOWIRE*/
+   // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire			e_tx_access;		// From etx_arbiter of etx_arbiter.v
+   wire			e_tx_ack;		// From etx_protocol of etx_protocol.v
+   wire [3:0]		e_tx_ctrlmode;		// From etx_arbiter of etx_arbiter.v
+   wire [31:0]		e_tx_data;		// From etx_arbiter of etx_arbiter.v
+   wire [1:0]		e_tx_datamode;		// From etx_arbiter of etx_arbiter.v
+   wire [31:0]		e_tx_dstaddr;		// From etx_arbiter of etx_arbiter.v
+   wire			e_tx_rd_wait;		// From etx_protocol of etx_protocol.v
+   wire [31:0]		e_tx_srcaddr;		// From etx_arbiter of etx_arbiter.v
+   wire			e_tx_wr_wait;		// From etx_protocol of etx_protocol.v
+   wire			e_tx_write;		// From etx_arbiter of etx_arbiter.v
+   wire			emrq_empty;		// From s_rq_fifo of fifo_103x16.v
+   wire [102:0]		emrq_rd_data;		// From s_rq_fifo of fifo_103x16.v
+   wire			emrq_rd_en;		// From etx_arbiter of etx_arbiter.v
+   wire			emrr_empty;		// From m_rr_fifo of fifo_103x16.v
+   wire [102:0]		emrr_rd_data;		// From m_rr_fifo of fifo_103x16.v
+   wire			emrr_rd_en;		// From etx_arbiter of etx_arbiter.v
+   wire			emwr_empty;		// From s_wr_fifo of fifo_103x16.v
+   wire [102:0]		emwr_rd_data;		// From s_wr_fifo of fifo_103x16.v
+   wire			emwr_rd_en;		// From etx_arbiter of etx_arbiter.v
+   wire			tx_rd_wait;		// From etx_io of etx_io.v
+   wire			tx_wr_wait;		// From etx_io of etx_io.v
+   wire [63:0]		txdata_p;		// From etx_protocol of etx_protocol.v
+   wire [7:0]		txframe_p;		// From etx_protocol of etx_protocol.v
+   // End of automatics
+   
    /************************************************************/
    /*FIFOs                                                     */
    /************************************************************/
@@ -96,7 +137,7 @@ module etx(/*AUTOARG*/
                                   .empty	(em@"(substring vl-cell-name  2 4)"_empty),
                                   .full	        (e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_full),
                                   //Inputs
-                                  .din		(e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_wr_data[103:0]),
+                                  .din		(e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_wr_data[102:0]),
 			          .wr_clk       (@"(substring vl-cell-name  0 1)"_axi_aclk),
                                   .wr_en	(e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_wr_en),
                                   .rd_clk       (txlclk_p),
@@ -113,7 +154,7 @@ module etx(/*AUTOARG*/
 			 .full			(esaxi_emrq_full), // Templated
 			 .prog_full		(esaxi_emrq_prog_full), // Templated
 			 // Inputs
-			 .din			(esaxi_emrq_wr_data[103:0]), // Templated
+			 .din			(esaxi_emrq_wr_data[102:0]), // Templated
 			 .rd_clk		(txlclk_p),	 // Templated
 			 .rd_en			(emrq_rd_en),	 // Templated
 			 .rst			(reset),	 // Templated
@@ -129,7 +170,7 @@ module etx(/*AUTOARG*/
 			 .full			(esaxi_emwr_full), // Templated
 			 .prog_full		(esaxi_emwr_prog_full), // Templated
 			 // Inputs
-			 .din			(esaxi_emwr_wr_data[103:0]), // Templated
+			 .din			(esaxi_emwr_wr_data[102:0]), // Templated
 			 .rd_clk		(txlclk_p),	 // Templated
 			 .rd_en			(emwr_rd_en),	 // Templated
 			 .rst			(reset),	 // Templated
@@ -145,7 +186,7 @@ module etx(/*AUTOARG*/
 			 .full			(emaxi_emrr_full), // Templated
 			 .prog_full		(emaxi_emrr_prog_full), // Templated
 			 // Inputs
-			 .din			(emaxi_emrr_wr_data[103:0]), // Templated
+			 .din			(emaxi_emrr_wr_data[102:0]), // Templated
 			 .rd_clk		(txlclk_p),	 // Templated
 			 .rd_en			(emrr_rd_en),	 // Templated
 			 .rst			(reset),	 // Templated

@@ -80,24 +80,33 @@ module etx_arbiter (/*AUTOARG*/
    // Ack from TX protocol module
    input          e_tx_ack;
 
-   // Control bits inputs (none)
+   //regs
+   reg            ready;
+   reg [102:0]    fifo_data;
+
+  
+   //wires
+   wire 	  rr_ready;
+   wire 	  rq_ready;
+   wire 	  wr_ready;
+   wire           emrr_rd_en;
+   wire 	  emrq_rd_en;
+   wire 	  emwr_rd_en;
+
 
    //############
    //# Arbitrate & forward
    //############
 
-   reg            ready;
-   reg [102:0]    fifo_data;
-
    // priority-based ready signals
-   wire           rr_ready = ~emrr_empty & ~emm_tx_wr_wait;
-   wire           rq_ready = ~emrq_empty & ~emm_tx_rd_wait & ~rr_ready;
-   wire           wr_ready = ~emwr_empty & ~emm_tx_wr_wait & ~rr_ready & ~rq_ready;
+   assign     rr_ready = ~emrr_empty & ~e_tx_wr_wait;
+   assign     rq_ready = ~emrq_empty & ~e_tx_rd_wait & ~rr_ready;
+   assign     wr_ready = ~emwr_empty & ~e_tx_wr_wait & ~rr_ready & ~rq_ready;
 
    // FIFO read enables, when we're idle or done with the current datum
-   wire           emrr_rd_en = rr_ready & (~ready | emtx_ack);
-   wire           emrq_rd_en = rq_ready & (~ready | emtx_ack);
-   wire           emwr_rd_en = wr_ready & (~ready | emtx_ack);
+   assign     emrr_rd_en = rr_ready & (~ready | emtx_ack);
+   assign     emrq_rd_en = rq_ready & (~ready | emtx_ack);
+   assign     emwr_rd_en = wr_ready & (~ready | emtx_ack);
    
    always @ (posedge clk) begin
       if( reset ) begin
