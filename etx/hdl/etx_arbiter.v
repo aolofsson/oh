@@ -1,5 +1,5 @@
 /*
-  File: earb.v
+  File: etx_arbiter.v
  
   This file is part of the Parallella Project.
 
@@ -104,9 +104,9 @@ module etx_arbiter (/*AUTOARG*/
    assign     wr_ready = ~emwr_empty & ~e_tx_wr_wait & ~rr_ready & ~rq_ready;
 
    // FIFO read enables, when we're idle or done with the current datum
-   assign     emrr_rd_en = rr_ready & (~ready | emtx_ack);
-   assign     emrq_rd_en = rq_ready & (~ready | emtx_ack);
-   assign     emwr_rd_en = wr_ready & (~ready | emtx_ack);
+   assign     emrr_rd_en = rr_ready & (~ready | e_tx_ack);
+   assign     emrq_rd_en = rq_ready & (~ready | e_tx_ack);
+   assign     emwr_rd_en = wr_ready & (~ready | e_tx_ack);
    
    always @ (posedge clk) begin
       if( reset ) begin
@@ -131,7 +131,7 @@ module etx_arbiter (/*AUTOARG*/
             ready <= 1'b1;
             fifo_data <= emwr_rd_data;
 
-         end else if( emtx_ack ) begin
+         end else if( e_tx_ack ) begin
 
             ready <= 1'b0;
 
