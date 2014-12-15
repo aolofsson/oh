@@ -16,9 +16,9 @@ module fifo_64x16(/*AUTOARG*/
    input 	 wr_clk;
    input 	 wr_en;
 
-   assign dout = 103'b0;
-   assign empty = 1'b0;
-   assign full = 1'b0;
+   assign dout      = 64'b0;
+   assign empty     = 1'b0;
+   assign full      = 1'b0;
    assign prog_full = 1'b0;
    
 endmodule // fifo_64x16
