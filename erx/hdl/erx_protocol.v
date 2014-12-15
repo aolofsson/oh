@@ -138,7 +138,7 @@ module erx_protocol (/*AUTOARG*/
          rxactive_in <= 1'b1;
       end else begin
          rxalign_in  <= 3'd0;   // No edge
-         rxactive_in <= 3'd0;
+         rxactive_in <= 1'd0;
       end
       
    end // always @ ( posedge rxlclk_p )
