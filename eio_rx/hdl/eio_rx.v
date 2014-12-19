@@ -336,8 +336,8 @@ module eio_rx (/*AUTOARG*/
    //# Wait signals (asynchronous)
    //#############
 
-   wire wr_wait = rxgpio ? ecfg_dataout[9]  : rx_wr_wait;
-   wire rd_wait = rxgpio ? ecfg_dataout[10] : rx_rd_wait;
+   wire rd_wait = rxgpio ? ecfg_dataout[9]  : rx_rd_wait;
+   wire wr_wait = rxgpio ? ecfg_dataout[10] : rx_wr_wait;
 
    OBUFDS 
      #(

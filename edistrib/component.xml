@@ -809,6 +809,16 @@
         <spirit:displayName>C Read Tag Addr</spirit:displayName>
         <spirit:value spirit:format="bitString" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_READ_TAG_ADDR" spirit:bitStringLength="12">0x810</spirit:value>
       </spirit:modelParameter>
+      <spirit:modelParameter spirit:dataType="integer">
+        <spirit:name>C_REMAP_BITS</spirit:name>
+        <spirit:displayName>C Remap Bits</spirit:displayName>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_REMAP_BITS">7</spirit:value>
+      </spirit:modelParameter>
+      <spirit:modelParameter spirit:dataType="integer">
+        <spirit:name>C_REMAP_ADDR</spirit:name>
+        <spirit:displayName>C Remap Addr</spirit:displayName>
+        <spirit:value spirit:format="bitString" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_REMAP_ADDR" spirit:bitStringLength="32">0x3E000000</spirit:value>
+      </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
   <spirit:fileSets>
@@ -818,7 +828,7 @@
         <spirit:name>hdl/edistrib.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
-        <spirit:userFileType>CHECKSUM_61486761</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_514311e6</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -835,7 +845,7 @@
         <spirit:name>xgui/edistrib_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
-        <spirit:userFileType>CHECKSUM_a3cdbfc0</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_aa823110</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
   </spirit:fileSets>
@@ -851,6 +861,16 @@
       <spirit:displayName>C_READ_TAG_ADDR</spirit:displayName>
       <spirit:value spirit:format="bitString" spirit:resolve="user" spirit:id="PARAM_VALUE.C_READ_TAG_ADDR" spirit:configGroups="0 UnGrouped hexEdit" spirit:bitStringLength="12">0x810</spirit:value>
     </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>C_REMAP_BITS</spirit:name>
+      <spirit:displayName>C_REMAP_BITS</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_REMAP_BITS">7</spirit:value>
+    </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>C_REMAP_ADDR</spirit:name>
+      <spirit:displayName>C_REMAP_ADDR</spirit:displayName>
+      <spirit:value spirit:format="bitString" spirit:resolve="user" spirit:id="PARAM_VALUE.C_REMAP_ADDR" spirit:bitStringLength="32">0x3E000000</spirit:value>
+    </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
     <xilinx:coreExtensions>
@@ -863,15 +883,15 @@
       <xilinx:displayName>edistrib_v1_0</xilinx:displayName>
       <xilinx:vendorDisplayName>Adapteva, Inc.</xilinx:vendorDisplayName>
       <xilinx:vendorURL>http://www.adapteva.com</xilinx:vendorURL>
-      <xilinx:coreRevision>4</xilinx:coreRevision>
+      <xilinx:coreRevision>5</xilinx:coreRevision>
       <xilinx:upgrades>
         <xilinx:canUpgradeFrom>user.org:user:edistrib:1.0</xilinx:canUpgradeFrom>
       </xilinx:upgrades>
-      <xilinx:coreCreationDateTime>2014-11-16T07:53:22Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2014-12-02T04:51:42Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
         <xilinx:tag xilinx:name="user.org:user:edistrib:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/edistrib/ip</xilinx:tag>
         <xilinx:tag xilinx:name="adapteva.com:user:edistrib:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/edistrib/ip</xilinx:tag>
-        <xilinx:tag xilinx:name="adapteva.com:Adapteva:edistrib:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/edistrib/ip</xilinx:tag>
+        <xilinx:tag xilinx:name="adapteva.com:Adapteva:edistrib:1.0_ARCHIVE_LOCATION">/home/frhuettig</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>

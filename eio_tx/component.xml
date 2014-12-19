@@ -564,7 +564,7 @@
         <spirit:name>hdl/eio_tx.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
-        <spirit:userFileType>CHECKSUM_f9581dcb</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_51ab8c7f</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -585,7 +585,7 @@
       </spirit:file>
     </spirit:fileSet>
   </spirit:fileSets>
-  <spirit:description>eLink I/O block</spirit:description>
+  <spirit:description>eLink TX I/O block</spirit:description>
   <spirit:parameters>
     <spirit:parameter>
       <spirit:name>IOSTD_ELINK</spirit:name>
@@ -609,11 +609,11 @@
       <xilinx:displayName>eio_tx_v1_0</xilinx:displayName>
       <xilinx:vendorDisplayName>Adapteva, Inc.</xilinx:vendorDisplayName>
       <xilinx:vendorURL>http://www.adapteva.com</xilinx:vendorURL>
-      <xilinx:coreRevision>13</xilinx:coreRevision>
+      <xilinx:coreRevision>16</xilinx:coreRevision>
       <xilinx:upgrades>
         <xilinx:canUpgradeFrom>user.org:user:eio_tx:1.0</xilinx:canUpgradeFrom>
       </xilinx:upgrades>
-      <xilinx:coreCreationDateTime>2014-11-21T16:58:56Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2014-11-24T21:31:34Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
         <xilinx:tag xilinx:name="user.org:user:eio_tx:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/eio_tx/ip</xilinx:tag>
         <xilinx:tag xilinx:name="adapteva.com:user:eio_tx:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/eio_tx/ip</xilinx:tag>

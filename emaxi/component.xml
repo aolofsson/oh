@@ -1765,10 +1765,10 @@
       <xilinx:displayName>emaxi_v1.0</xilinx:displayName>
       <xilinx:vendorDisplayName>Adapteva, Inc.</xilinx:vendorDisplayName>
       <xilinx:vendorURL>http://www.adapteva.com</xilinx:vendorURL>
-      <xilinx:coreRevision>5</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2014-11-15T06:51:53Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>6</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2014-12-16T01:13:46Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
-        <xilinx:tag xilinx:name="adapteva.com:Adapteva:emaxi:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/emaxi/emaxi_1.0</xilinx:tag>
+        <xilinx:tag xilinx:name="adapteva.com:Adapteva:emaxi:1.0_ARCHIVE_LOCATION">/home/frhuettig</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
