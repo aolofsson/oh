@@ -225,7 +225,7 @@ module eio_tx (/*AUTOARG*/
    wire       txenb_out = txenb_out_sync[0];
 
    // sync the enable signal to the phase-shifted output clock
-   always @ (negedge txlclk_out)
+   always @ (posedge txlclk_out)
      txenb_out_sync <= {ecfg_tx_enable, txenb_out_sync[1]};
    
    ODDR 

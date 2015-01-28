@@ -225,10 +225,10 @@
 
    //reg                              axi_bready;
 
-   reg [C_M_AXI_ADDR_WIDTH-1 : 0]   axi_araddr;
-   reg [7:0]                        axi_arlen;
-   reg [2:0]                        axi_arsize;
-   reg                              axi_arvalid;
+   wire [C_M_AXI_ADDR_WIDTH-1 : 0]  axi_araddr;
+   wire [7:0]                       axi_arlen;
+   wire [2:0]                       axi_arsize;
+   wire                             axi_arvalid;
 
    wire                             axi_rready;
 
@@ -430,51 +430,67 @@
 
       end // else: !if( M_AXI_ARESETN == 1'b0 )
    end // always @ ( posedge M_AXI_ACLK )
+   
+   //----------------------------
+   // Read Handler
+   //   eLink read requests generate a transaction on the AR channel,
+   //   buffer the src info to generate an eLink write when the
+   //   read data comes back.
+   //----------------------------
+
+`define RI_DSTADDR_RANGE  40:38
+`define RI_DSTADDR_LSB    38
+`define RI_DATAMODE_RANGE 37:36
+`define RI_CTRLMODE_RANGE 35:32
+`define RI_SRCADDR_RANGE  31:0
+  
+   wire       readinfo_wren;
+   wire       readinfo_rden;
+   wire       readinfo_full;
+   wire [40:0] readinfo_out;
+   wire [40:0] readinfo_in = 
+               {
+                emrq_rd_data[`DSTADDR_LSB+2 -: 3],
+                emrq_rd_data[`DATAMODE_RANGE],
+                emrq_rd_data[`CTRLMODE_RANGE],
+                emrq_rd_data[`SRCADDR_RANGE]
+                };
+
+   syncfifo
+     #(
+       // Parameters
+       .AW                              (5),
+       .DW                              (41))
+   fifo_readinfo_i
+     (
+      // Outputs
+      .rdata                            (readinfo_out),
+      .empty                            (),
+      .full                             (readinfo_full),
+      // Inputs
+      .clk                              (M_AXI_ACLK),
+      .reset                            (~M_AXI_ARESETN),
+      .wdata                            (readinfo_in),
+      .wen                              (readinfo_wren),
+      .ren                              (readinfo_rden));
 	                                                                        
    //----------------------------
    // Read Address Channel
    //----------------------------
 
-   reg       read_waiting;
-
-   assign    emrq_rd_en = axi_rready & M_AXI_RVALID;
-   
-   always @( posedge M_AXI_ACLK ) begin
-	  if ( ~M_AXI_ARESETN ) begin
-
-         axi_araddr   <= 'd0;
-         axi_arlen    <= 'd0;
-         axi_arsize   <= 'd0;
-         axi_arvalid  <= 1'b0;
-         read_waiting <= 1'b0;
-         
-	  end else begin
-
-         if( ~emrq_empty & ~read_waiting ) begin
-
-            axi_arvalid <= 1'b1;
-            axi_arsize  <= {1'b0, emrq_rd_data[`DATAMODE_RANGE]};
-            axi_araddr  <= emrq_rd_data[`DSTADDR_RANGE];
-
-         end else if( M_AXI_ARREADY ) begin
-
-            axi_arvalid <= 1'b0;
-
-         end
-
-         if( ~emrq_empty & ~read_waiting )
-           read_waiting <= 1'b1;
-         else if( axi_rready & M_AXI_RVALID )
-           read_waiting <= 1'b0;
-
-      end
-   end // always @ ( posedge M_AXI_ACLK )
+   assign    axi_araddr    = emrq_rd_data[`DSTADDR_RANGE];
+   assign    axi_arsize    = {1'b0, emrq_rd_data[`DATAMODE_RANGE]};
+   assign    axi_arlen     = 8'd0;
+   assign    axi_arvalid   = ~emrq_empty & ~readinfo_full;
+   assign    emrq_rd_en    = axi_arvalid & M_AXI_ARREADY;
+   assign    readinfo_wren = emrq_rd_en;
    
    //--------------------------------
    // Read Data (and Response) Channel
    //--------------------------------
 
-   assign axi_rready = ~emrr_full;
+   assign axi_rready = ~emrr_prog_full;
+   assign readinfo_rden = axi_rready & M_AXI_RVALID;
    
    always @( posedge M_AXI_ACLK ) begin
 	  if( ~M_AXI_ARESETN ) begin
@@ -486,18 +502,18 @@
 
          emrr_wr_en <= axi_rready & M_AXI_RVALID;
          
-         emrr_wr_data[`WRITE_BIT] <= 1'b1;
-         emrr_wr_data[`DATAMODE_RANGE] <= emrq_rd_data[`DATAMODE_RANGE];
-         emrr_wr_data[`CTRLMODE_RANGE] <= emrq_rd_data[`CTRLMODE_RANGE];  // TODO: This or cfg value?
-         emrr_wr_data[`DSTADDR_RANGE]  <= emrq_rd_data[`SRCADDR_RANGE];
-         emrr_wr_data[`SRCADDR_RANGE]  <= M_AXI_RDATA[63:32];  // only used for 64b reads
-         emrr_wr_data[`DATA_RANGE]     <= M_AXI_RDATA[31:0];
+         emrr_wr_data[`WRITE_BIT]      <= 1'b1;
+         emrr_wr_data[`DATAMODE_RANGE] <= readinfo_out[`RI_DATAMODE_RANGE];
+         emrr_wr_data[`CTRLMODE_RANGE] <= readinfo_out[`RI_CTRLMODE_RANGE];
+         emrr_wr_data[`DSTADDR_RANGE]  <= readinfo_out[`RI_SRCADDR_RANGE];
+         emrr_wr_data[`SRCADDR_RANGE]  <= 32'd0;
+         emrr_wr_data[`DATA_RANGE]     <= 32'd0;
 
          // Steer read data according to size & host address lsbs
-         case( emrq_rd_data[`DATAMODE_RANGE] )
+         case( readinfo_out[`RI_DATAMODE_RANGE] )
 
            2'd0:  // BYTE read
-             case( emrq_rd_data[`DSTADDR_LSB+2 -: 3] )
+             case( readinfo_out[`RI_DSTADDR_RANGE] )
                3'd0:  emrr_wr_data[`DATA_LSB+7 -: 8] <= M_AXI_RDATA[7:0];
                3'd1:  emrr_wr_data[`DATA_LSB+7 -: 8] <= M_AXI_RDATA[15:8];
                3'd2:  emrr_wr_data[`DATA_LSB+7 -: 8] <= M_AXI_RDATA[23:16];
@@ -506,22 +522,27 @@
                3'd5:  emrr_wr_data[`DATA_LSB+7 -: 8] <= M_AXI_RDATA[47:40];
                3'd6:  emrr_wr_data[`DATA_LSB+7 -: 8] <= M_AXI_RDATA[55:48];
                default:  emrr_wr_data[`DATA_LSB+7 -: 8] <= M_AXI_RDATA[63:56];
-             endcase // case ( emrq_rd_data[`DSTADDR_LSB+2 -: 3] )
+             endcase
 
            2'd1:  // 16b HWORD
-             case( emrq_rd_data[`DSTADDR_LSB+2 -: 2] )
+             case( readinfo_out[`RI_DSTADDR_LSB+2 -: 2] )
                2'd0: emrr_wr_data[`DATA_LSB+15 -: 16] <= M_AXI_RDATA[15:0];
                2'd1: emrr_wr_data[`DATA_LSB+15 -: 16] <= M_AXI_RDATA[31:16];
                2'd2: emrr_wr_data[`DATA_LSB+15 -: 16] <= M_AXI_RDATA[47:32];
                default: emrr_wr_data[`DATA_LSB+15 -: 16] <= M_AXI_RDATA[63:48];
-             endcase // case ( emrq_rd_data[`DSTADDR_LSB+2 -: 2] )
+             endcase
 
            2'd2:  // 32b WORD
-             if( emrq_rd_data[`DSTADDR_LSB+2] )
+             if( readinfo_out[`RI_DSTADDR_LSB+2] )
                emrr_wr_data[`DATA_RANGE] <= M_AXI_RDATA[63:32];
-           // 32b w/0 offset handled by default
+             else
+               emrr_wr_data[`DATA_RANGE] <= M_AXI_RDATA[31:0];
 
            // 64b word already defined by defaults above
+           2'd3: begin // 64b DWORD
+              emrr_wr_data[`DATA_RANGE]    <= M_AXI_RDATA[31:0];
+              emrr_wr_data[`SRCADDR_RANGE] <= M_AXI_RDATA[63:32];
+           end
          endcase
          
       end // else: !if( ~M_AXI_ARESETN )
