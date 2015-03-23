@@ -48,26 +48,26 @@
 module parallella_gpio_emio
   (/*AUTOARG*/
    // Outputs
-   processing_system7_0_GPIO_I_pin,
+   GPIO_I,
    // Inouts
    GPIO_P, GPIO_N,
    // Inputs
-   processing_system7_0_GPIO_O_pin, processing_system7_0_GPIO_T_pin
+   GPIO_O, GPIO_T
    );
 
    inout [`GPIO_NUM-1:0] GPIO_P;
    inout [`GPIO_NUM-1:0] GPIO_N;
 
-   output [47:0]  processing_system7_0_GPIO_I_pin;
-   input  [47:0]  processing_system7_0_GPIO_O_pin;
-   input  [47:0]  processing_system7_0_GPIO_T_pin;
+   output [63:0]  GPIO_I;
+   input  [63:0]  GPIO_O;
+   input  [63:0]  GPIO_T;
 
    wire [`GPIO_SIGS-1:0] gpio_i;
-   assign processing_system7_0_GPIO_I_pin[`GPIO_SIGS-1:0] = gpio_i;
+   assign GPIO_I[`GPIO_SIGS-1:0] = gpio_i;
    wire [`GPIO_SIGS-1:0] gpio_o
-                         = processing_system7_0_GPIO_O_pin[`GPIO_SIGS-1:0];
+                         = GPIO_O[`GPIO_SIGS-1:0];
    wire [`GPIO_SIGS-1:0] gpio_t
-                         = processing_system7_0_GPIO_T_pin[`GPIO_SIGS-1:0];
+                         = GPIO_T[`GPIO_SIGS-1:0];
    
 `ifdef FEATURE_GPIO_DIFF
 
@@ -150,10 +150,10 @@ module parallella_gpio_emio
 
    // Tie unused PS signals back to themselves
    genvar    n;
-   generate for(n=`GPIO_SIGS; n<48; n=n+1) begin : unused_ps_sigs
-      assign processing_system7_0_GPIO_I_pin[n]
-               = processing_system7_0_GPIO_O_pin[n] &
-                 ~processing_system7_0_GPIO_T_pin[n];
+   generate for(n=`GPIO_SIGS; n<63; n=n+1) begin : unused_ps_sigs
+      assign GPIO_I[n]
+               = GPIO_O[n] &
+                 ~GPIO_T[n];
    end
    endgenerate
    
