@@ -527,7 +527,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>16b5f2fc</spirit:value>
+            <spirit:value>fe4bbe14</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -543,7 +543,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>16b5f2fc</spirit:value>
+            <spirit:value>fe4bbe14</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1641,7 +1641,13 @@
       <spirit:file>
         <spirit:name>hdl/emaxi_v1_0.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_610b612a</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_6710a1ec</spirit:userFileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>hdl/syncfifo.v</spirit:name>
+        <spirit:fileType>verilogSource</spirit:fileType>
+        <spirit:userFileType>CHECKSUM_65374fe8</spirit:userFileType>
+        <spirit:logicalName>xil_defaultlib</spirit:logicalName>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1653,6 +1659,11 @@
       <spirit:file>
         <spirit:name>hdl/emaxi_v1_0.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>hdl/syncfifo.v</spirit:name>
+        <spirit:fileType>verilogSource</spirit:fileType>
+        <spirit:logicalName>xil_defaultlib</spirit:logicalName>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1765,17 +1776,17 @@
       <xilinx:displayName>emaxi_v1.0</xilinx:displayName>
       <xilinx:vendorDisplayName>Adapteva, Inc.</xilinx:vendorDisplayName>
       <xilinx:vendorURL>http://www.adapteva.com</xilinx:vendorURL>
-      <xilinx:coreRevision>5</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2014-11-15T06:51:53Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>12</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2015-01-14T18:46:03Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
-        <xilinx:tag xilinx:name="adapteva.com:Adapteva:emaxi:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/emaxi/emaxi_1.0</xilinx:tag>
+        <xilinx:tag xilinx:name="adapteva.com:Adapteva:emaxi:1.0_ARCHIVE_LOCATION">/home/frhuettig</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2014.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="058c1046"/>
       <xilinx:checksum xilinx:scope="addressSpaces" xilinx:value="472b5d0a"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="3991b438"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="8a44b6ab"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="169bbadf"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="737f4dbf"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="8355b882"/>

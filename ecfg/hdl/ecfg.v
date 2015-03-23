@@ -112,26 +112,20 @@ module ecfg (/*AUTOARG*/
    ecfg_rx_gpio_mode, ecfg_rx_loopback_mode, ecfg_cclk_en,
    ecfg_cclk_div, ecfg_cclk_pllcfg, ecfg_coreid, ecfg_dataout,
    // Inputs
-   param_coreid, mi_clk, mi_rst, mi_en, mi_we, mi_addr, mi_din,
-   hw_reset, ecfg_datain, ecfg_debug_signals
+   mi_clk, mi_rst, mi_en, mi_we, mi_addr, mi_din, hw_reset,
+   ecfg_datain
    );
    //Register file parameters
 
-/*
- #####################################################################
- COMPILE TIME PARAMETERS 
- ######################################################################
- */
-   
+/***************************/
+/* COMPILE TIME PARAMETERS */
+/***************************/
+
 parameter E_VERSION = 32'h00_00_00_00;  // FPGA gen:plat:type:rev
 parameter IDW    = 12;  // Elink ID (row,column coordinate)
 parameter RFAW   = 12;  // Register file address width
    // NB: The BRAM interface seems to provide BYTE addresses!
-
-   /*****************************/
-   /*STATIC CONFIG SIGNALS      */
-   /*****************************/
-   input [IDW-1:0] param_coreid;
+parameter DEF_COREID    = 12'h808;  // Reset value for ecfg_coreid
    
    /*****************************/
    /*SIMPLE MEMORY INTERFACE    */
@@ -299,7 +293,7 @@ parameter RFAW   = 12;  // Register file address width
    //###########################
    always @ (posedge mi_clk)
      if(hw_reset)
-       ecfg_coreid_reg[IDW-1:0] <= param_coreid[IDW-1:0];
+       ecfg_coreid_reg[IDW-1:0] <= DEF_COREID;
      else if (ecfg_coreid_write)
        ecfg_coreid_reg[IDW-1:0] <= mi_din[IDW-1:0];   
    

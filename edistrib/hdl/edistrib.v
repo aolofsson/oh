@@ -46,6 +46,8 @@ module edistrib (/*AUTOARG*/
    );
 
    parameter [11:0]  C_READ_TAG_ADDR = 12'h810;
+   parameter         C_REMAP_BITS = 7;
+   parameter [31:0]  C_REMAP_ADDR = 32'h3E000000;
    
    // RX clock
    input         rxlclk;
@@ -143,7 +145,8 @@ module edistrib (/*AUTOARG*/
          in_write    <= ems_dir_write;
          in_datamode <= ems_dir_datamode;
          in_ctrlmode <= ems_dir_ctrlmode;
-         in_dstaddr  <= ems_dir_dstaddr;
+         in_dstaddr  <= {C_REMAP_ADDR[31:(32-C_REMAP_BITS)], 
+                         ems_dir_dstaddr[(31-C_REMAP_BITS):0]};
          in_srcaddr  <= ems_dir_srcaddr;
          in_data     <= ems_dir_data;
 

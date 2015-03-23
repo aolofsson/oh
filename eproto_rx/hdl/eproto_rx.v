@@ -82,7 +82,8 @@ module eproto_rx (/*AUTOARG*/
    reg            write_0;
    reg            access_0;
    reg [31:16]    data_0;
-
+   reg            stream_0;
+   
    reg [2:0]      rxalign_1;
    reg            rxactive_1;
    reg [3:0]      ctrlmode_1;
@@ -92,8 +93,8 @@ module eproto_rx (/*AUTOARG*/
    reg            access_1;
    reg [31:0]     data_1;
    reg [31:0]     srcaddr_1;
-
-   reg            rxactive_2;
+   reg            stream_1;
+   
    reg [3:0]      ctrlmode_2;
    reg [31:0]     dstaddr_2;
    reg [1:0]      datamode_2;
@@ -101,7 +102,8 @@ module eproto_rx (/*AUTOARG*/
    reg            access_2;
    reg [31:0]     data_2;
    reg [31:0]     srcaddr_2;
-
+   reg            stream_2;
+   
    // Here we handle any alignment of the frame within an 8-cycle group,
    // though in theory frames should only start on rising edges??
 
@@ -135,8 +137,7 @@ module eproto_rx (/*AUTOARG*/
          rxalign_in  <= 3'd0;
          rxactive_in <= 1'b1;
       end else begin
-         rxalign_in  <= 3'd0;   // No edge
-         rxactive_in <= 3'd0;
+         rxactive_in <= 3'd0;  // No edge
       end
       
    end // always @ ( posedge rxlclk_p )
@@ -146,7 +147,8 @@ module eproto_rx (/*AUTOARG*/
 
       rxactive_0 <= rxactive_in;
       rxalign_0  <= rxalign_in;
-      
+      stream_0   <= 1'b0;
+            
       case(rxalign_in)
         3'd7: begin
            ctrlmode_0       <= rxdata_in[55:52];
@@ -155,6 +157,7 @@ module eproto_rx (/*AUTOARG*/
            write_0          <= rxdata_in[17];
            access_0         <= rxdata_in[16];
            data_0[31:16]    <= rxdata_in[15:0];
+           stream_0         <= rxframe_p[1] & (rxactive_in | stream_0);
         end
         
         3'd6: begin
@@ -164,6 +167,7 @@ module eproto_rx (/*AUTOARG*/
            write_0          <= rxdata_in[9];
            access_0         <= rxdata_in[8];
            data_0[31:24]    <= rxdata_in[7:0];
+           stream_0         <= rxframe_p[0] & (rxactive_in | stream_0);
         end
 
         3'd5: begin
@@ -212,7 +216,8 @@ module eproto_rx (/*AUTOARG*/
       write_1       <= write_0;
       access_1      <= access_0;
       data_1[31:16] <= data_0[31:16];
-
+      stream_1      <= stream_0;
+      
       case(rxalign_0)
         3'd7: begin
            data_1[15:0] <= rxdata_in[63:48];
@@ -227,6 +232,7 @@ module eproto_rx (/*AUTOARG*/
         3'd5: begin
            data_1       <= rxdata_in[63:32];
            srcaddr_1    <= rxdata_in[31:0];
+           stream_1     <= rxframe_p[7] & (rxactive_0 | stream_1);
         end
 
         3'd4: begin
@@ -236,6 +242,7 @@ module eproto_rx (/*AUTOARG*/
            access_1        <= rxdata_in[56];
            data_1          <= rxdata_in[55:24];
            srcaddr_1[31:8] <= rxdata_in[23:0];
+           stream_1        <= rxframe_p[6] & (rxactive_0 | stream_1);
         end
 
         3'd3: begin
@@ -245,6 +252,7 @@ module eproto_rx (/*AUTOARG*/
            access_1         <= rxdata_in[48];
            data_1           <= rxdata_in[47:16];
            srcaddr_1[31:16] <= rxdata_in[15:0];
+           stream_1         <= rxframe_p[5] & (rxactive_0 | stream_1);
         end
            
         3'd2: begin
@@ -254,6 +262,7 @@ module eproto_rx (/*AUTOARG*/
            access_1         <= rxdata_in[40];
            data_1           <= rxdata_in[39:8];
            srcaddr_1[31:24] <= rxdata_in[7:0];
+           stream_1         <= rxframe_p[4] & (rxactive_0 | stream_1);
         end
         
         3'd1: begin
@@ -262,6 +271,7 @@ module eproto_rx (/*AUTOARG*/
            write_1          <= rxdata_in[33];
            access_1         <= rxdata_in[32];
            data_1           <= rxdata_in[31:0];
+           stream_1         <= rxframe_p[3] & (rxactive_0 | stream_1);
         end
            
         3'd0: begin
@@ -271,6 +281,7 @@ module eproto_rx (/*AUTOARG*/
            write_1          <= rxdata_in[25];
            access_1         <= rxdata_in[24];
            data_1[31:8]     <= rxdata_in[23:0];
+           stream_1         <= rxframe_p[2] & (rxactive_0 | stream_1);
         end
       endcase
    end // always @ ( posedge rxlclk_p )
@@ -279,14 +290,20 @@ module eproto_rx (/*AUTOARG*/
    always @( posedge rxlclk_p ) begin
 
       // default pass-throughs
-      ctrlmode_2    <= ctrlmode_1;
-      dstaddr_2     <= dstaddr_1;
-      datamode_2    <= datamode_1;
-      write_2       <= write_1;
-      access_2      <= access_1 & rxactive_1;  // avoid random non-frame data
+      if(~stream_2) begin
+         ctrlmode_2    <= ctrlmode_1;
+         dstaddr_2     <= dstaddr_1;
+         datamode_2    <= datamode_1;
+         write_2       <= write_1;
+         access_2      <= access_1 & rxactive_1;
+      end else begin
+         dstaddr_2     <= dstaddr_2 + 32'h00000008;
+      end
+
       data_2        <= data_1;
-      srcaddr_2 <= srcaddr_1;
-         
+      srcaddr_2     <= srcaddr_1;
+      stream_2      <= stream_1;
+
       case( rxalign_1 )
         // 7-5: Full packet is complete in 2nd cycle
         3'd4:

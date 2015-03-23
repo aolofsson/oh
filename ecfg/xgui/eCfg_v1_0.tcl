@@ -11,8 +11,19 @@ proc init_gui { IPINST } {
   set_property tooltip {Idw} ${IDW}
   set E_VERSION  [  ipgui::add_param $IPINST -name "E_VERSION" -parent ${Page_0} -display_name {E Version}]
   set_property tooltip {E Version} ${E_VERSION}
+  set DEF_COREID  [  ipgui::add_param $IPINST -name "DEF_COREID" -parent ${Page_0} -display_name {DEF_COREID}]
+  set_property tooltip {Reset Value for Core-ID} ${DEF_COREID}
 
 
+}
+
+proc update_PARAM_VALUE.DEF_COREID { PARAM_VALUE.DEF_COREID } {
+	# Procedure called to update DEF_COREID when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.DEF_COREID { PARAM_VALUE.DEF_COREID } {
+	# Procedure called to validate DEF_COREID
+	return true
 }
 
 proc update_PARAM_VALUE.RFAW { PARAM_VALUE.RFAW } {
@@ -56,5 +67,10 @@ proc update_MODELPARAM_VALUE.IDW { MODELPARAM_VALUE.IDW PARAM_VALUE.IDW } {
 proc update_MODELPARAM_VALUE.RFAW { MODELPARAM_VALUE.RFAW PARAM_VALUE.RFAW } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.RFAW}] ${MODELPARAM_VALUE.RFAW}
+}
+
+proc update_MODELPARAM_VALUE.DEF_COREID { MODELPARAM_VALUE.DEF_COREID PARAM_VALUE.DEF_COREID } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.DEF_COREID}] ${MODELPARAM_VALUE.DEF_COREID}
 }
 

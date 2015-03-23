@@ -25,29 +25,10 @@
 // Works with 7010 (24 pins) or 7020 (48 pins) and
 // either single-ended or differential IO
 
-// Required global defines:
-//   TARGET_7Z010 | TARGET_7Z020 - Choose FPGA
-//   IOSTD_GPIO                  - Choose IO standard
-//   [FEATURE_GPIO_DIFF]         - OPTIONAL to use differential IO,
-//                                 otherwise SE
-
-// Set # of GPIO pin-pairs based on target FPGA
-`ifdef TARGET_7Z020
-  `define GPIO_NUM 24
-`elsif TARGET_7Z010
-  `define  GPIO_NUM 12
-`endif  // else throw an error!
-
-// Number of GPIO signals
-`ifdef FEATURE_GPIO_DIFF
- `define GPIO_SIGS `GPIO_NUM
-`else
- `define GPIO_SIGS (2 * `GPIO_NUM)
-`endif
-
 module parallella_gpio_emio
   (/*AUTOARG*/
    // Outputs
+<<<<<<< HEAD
    GPIO_I,
    // Inouts
    GPIO_P, GPIO_N,
@@ -68,92 +49,119 @@ module parallella_gpio_emio
                          = GPIO_O[`GPIO_SIGS-1:0];
    wire [`GPIO_SIGS-1:0] gpio_t
                          = GPIO_T[`GPIO_SIGS-1:0];
+=======
+   PS_GPIO_I,
+   // Inouts
+   GPIO_P, GPIO_N,
+   // Inputs
+   PS_GPIO_O, PS_GPIO_T
+   );
+
+   parameter  NUM_GPIO_PAIRS = 24;       // 12 or 24
+   parameter  DIFF_GPIO      = 0;        // 0 or 1
+   parameter  NUM_PS_SIGS    = 64;
+>>>>>>> origin/elink_redesign_fred
    
-`ifdef FEATURE_GPIO_DIFF
+   inout [NUM_GPIO_PAIRS-1:0] GPIO_P;
+   inout [NUM_GPIO_PAIRS-1:0] GPIO_N;
 
-   IOBUFDS
-     #(
-       .DIFF_TERM("TRUE"),
-       .IBUF_LOW_PWR("TRUE"),
-       .IOSTANDARD(`IOSTD_GPIO),
-       .SLEW("FAST")
-       )
-   GPIOBUF_DS [`GPIO_NUM-1:0]
-     (
-      .O(gpio_i),         // Buffer output
-      .IO(GPIO_P),        // Diff_p inout (connect directly to top-level port)
-      .IOB(GPIO_N),       // Diff_n inout (connect directly to top-level port)
-      .I(gpio_o),         // Buffer input
-      .T(gpio_t)          // 3-state enable input, high=input, low=output
-      );
+   output [NUM_PS_SIGS-1:0]  PS_GPIO_I;
+   input  [NUM_PS_SIGS-1:0]  PS_GPIO_O;
+   input  [NUM_PS_SIGS-1:0]  PS_GPIO_T;
 
-`else  // single-ended
+   genvar                    m;
 
-   wire [`GPIO_NUM-1:0]  gpio_i_n, gpio_i_p;
-   wire [`GPIO_NUM-1:0]  gpio_o_n, gpio_o_p;
-   wire [`GPIO_NUM-1:0]  gpio_t_n, gpio_t_p;
-
-   // Map P/N pins to single-ended signals
-   genvar       m;
    generate
-      for(m=0; m<`GPIO_NUM; m=m+2) begin : assign_se_sigs
+      if( DIFF_GPIO == 1 ) begin: GPIO_DIFF
+         
+         IOBUFDS
+           #(
+             .DIFF_TERM("TRUE"),
+             .IBUF_LOW_PWR("TRUE"),
+             .IOSTANDARD("LVDS_25"),
+             .SLEW("FAST")
+             )
+         GPIOBUF_DS [NUM_GPIO_PAIRS-1:0]
+           (
+            .O(PS_GPIO_I),      // Buffer output
+            .IO(GPIO_P),        // Diff_p inout (connect directly to top-level port)
+            .IOB(GPIO_N),       // Diff_n inout (connect directly to top-level port)
+            .I(PS_GPIO_O),      // Buffer input
+            .T(PS_GPIO_T)       // 3-state enable input, high=input, low=output
+            );
 
-         assign gpio_i[2*m]   = gpio_i_n[m];
-         assign gpio_i[2*m+1] = gpio_i_n[m+1];
-         assign gpio_i[2*m+2] = gpio_i_p[m];
-         assign gpio_i[2*m+3] = gpio_i_p[m+1];
+      end else begin: GPIO_SE  // single-ended
 
-         assign gpio_o_n[m]   = gpio_o[2*m];
-         assign gpio_o_n[m+1] = gpio_o[2*m+1];
-         assign gpio_o_p[m]   = gpio_o[2*m+2];
-         assign gpio_o_p[m+1] = gpio_o[2*m+3];
+         wire [NUM_GPIO_PAIRS-1:0]  gpio_i_n, gpio_i_p;
+         wire [NUM_GPIO_PAIRS-1:0]  gpio_o_n, gpio_o_p;
+         wire [NUM_GPIO_PAIRS-1:0]  gpio_t_n, gpio_t_p;
+
+         // Map P/N pins to single-ended signals
+         for(m=0; m<NUM_GPIO_PAIRS; m=m+2) begin : assign_se_sigs
+
+            assign PS_GPIO_I[2*m]   = gpio_i_n[m];
+            assign PS_GPIO_I[2*m+1] = gpio_i_n[m+1];
+            assign PS_GPIO_I[2*m+2] = gpio_i_p[m];
+            assign PS_GPIO_I[2*m+3] = gpio_i_p[m+1];
+
+            assign gpio_o_n[m]   = PS_GPIO_O[2*m];
+            assign gpio_o_n[m+1] = PS_GPIO_O[2*m+1];
+            assign gpio_o_p[m]   = PS_GPIO_O[2*m+2];
+            assign gpio_o_p[m+1] = PS_GPIO_O[2*m+3];
    
-         assign gpio_t_n[m]   = gpio_t[2*m];
-         assign gpio_t_n[m+1] = gpio_t[2*m+1];
-         assign gpio_t_p[m]   = gpio_t[2*m+2];
-         assign gpio_t_p[m+1] = gpio_t[2*m+3];
+            assign gpio_t_n[m]   = PS_GPIO_T[2*m];
+            assign gpio_t_n[m+1] = PS_GPIO_T[2*m+1];
+            assign gpio_t_p[m]   = PS_GPIO_T[2*m+2];
+            assign gpio_t_p[m+1] = PS_GPIO_T[2*m+3];
 
-      end // block: assign_se_sigs
+         end // block: assign_se_sigs
+   
+         IOBUF
+           #(
+             .DRIVE(8), // Specify the output drive strength
+             .IBUF_LOW_PWR("TRUE"), // Low Power - "TRUE", High Performance = "FALSE"
+             .IOSTANDARD("LVCMOS25"), // Specify the I/O standard
+             .SLEW("SLOW") // Specify the output slew rate
+             )
+         GPIOBUF_SE_N [NUM_GPIO_PAIRS-1:0]
+           (
+            .O(gpio_i_n), // Buffer output
+            .IO(GPIO_N),  // Buffer inout port (connect directly to top-level port)
+            .I(gpio_o_n), // Buffer input
+            .T(gpio_t_n)  // 3-state enable input, high=input, low=output
+            );
+
+         IOBUF
+           #(
+             .DRIVE(8), // Specify the output drive strength
+             .IBUF_LOW_PWR("TRUE"), // Low Power - "TRUE", High Performance = "FALSE"
+             .IOSTANDARD("LVCMOS25"), // Specify the I/O standard
+             .SLEW("SLOW") // Specify the output slew rate
+             )
+         GPIOBUF_SE_P [NUM_GPIO_PAIRS-1:0]
+           (
+            .O(gpio_i_p), // Buffer output
+            .IO(GPIO_P),  // Buffer inout port (connect directly to top-level port)
+            .I(gpio_o_p), // Buffer input
+            .T(gpio_t_p)  // 3-state enable input, high=input, low=output
+            );
+
+      end // block: GPIO_SE
    endgenerate
    
-   IOBUF
-     #(
-       .DRIVE(8), // Specify the output drive strength
-       .IBUF_LOW_PWR("TRUE"), // Low Power - "TRUE", High Performance = "FALSE"
-       .IOSTANDARD(`IOSTD_GPIO), // Specify the I/O standard
-       .SLEW("SLOW") // Specify the output slew rate
-       )
-   GPIOBUF_SE_N [`GPIO_NUM-1:0]
-     (
-      .O(gpio_i_n), // Buffer output
-      .IO(GPIO_N),  // Buffer inout port (connect directly to top-level port)
-      .I(gpio_o_n), // Buffer input
-      .T(gpio_t_n)  // 3-state enable input, high=input, low=output
-      );
-
-   IOBUF
-     #(
-       .DRIVE(8), // Specify the output drive strength
-       .IBUF_LOW_PWR("TRUE"), // Low Power - "TRUE", High Performance = "FALSE"
-       .IOSTANDARD(`IOSTD_GPIO), // Specify the I/O standard
-       .SLEW("SLOW") // Specify the output slew rate
-       )
-   GPIOBUF_SE_P [`GPIO_NUM-1:0]
-     (
-      .O(gpio_i_p), // Buffer output
-      .IO(GPIO_P),  // Buffer inout port (connect directly to top-level port)
-      .I(gpio_o_p), // Buffer input
-      .T(gpio_t_p)  // 3-state enable input, high=input, low=output
-      );
-
-`endif // !`ifdef FEATURE_GPIO_DIFF
-
    // Tie unused PS signals back to themselves
    genvar    n;
+<<<<<<< HEAD
    generate for(n=`GPIO_SIGS; n<63; n=n+1) begin : unused_ps_sigs
       assign GPIO_I[n]
                = GPIO_O[n] &
                  ~GPIO_T[n];
+=======
+   generate for(n=NUM_GPIO_PAIRS*2; n<48; n=n+1) begin : unused_ps_sigs
+      assign PS_GPIO_I[n]
+               = PS_GPIO_O[n] &
+                 ~PS_GPIO_T[n];
+>>>>>>> origin/elink_redesign_fred
    end
    endgenerate
    

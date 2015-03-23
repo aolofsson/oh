@@ -1912,10 +1912,10 @@
       <xilinx:displayName>esaxi_v1.0</xilinx:displayName>
       <xilinx:vendorDisplayName>Adapteva, Inc.</xilinx:vendorDisplayName>
       <xilinx:vendorURL>http://www.adapteva.com</xilinx:vendorURL>
-      <xilinx:coreRevision>4</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2014-11-16T07:56:00Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>6</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2014-12-17T23:20:19Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
-        <xilinx:tag xilinx:name="adapteva.com:Adapteva:esaxi:1.0_ARCHIVE_LOCATION">/mnt/windowsC/Adapteva/Parallella/parallella-hwelink/fpga/src/esaxi/ip/esaxi_1.0</xilinx:tag>
+        <xilinx:tag xilinx:name="adapteva.com:Adapteva:esaxi:1.0_ARCHIVE_LOCATION">/home/frhuettig</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>

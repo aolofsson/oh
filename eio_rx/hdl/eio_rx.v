@@ -291,7 +291,8 @@ module eio_rx (/*AUTOARG*/
    reg [7:0]   rxframe_reg;
 
    wire        rxreset = reset | ~ecfg_rx_enable;
-   
+
+   // The following must be asynchronouse because rxlclk may not be running
    always @ (posedge rxlclk_p or posedge rxreset) begin
       if(rxreset)
         rxenb_sync <= 'd0;
@@ -336,8 +337,8 @@ module eio_rx (/*AUTOARG*/
    //# Wait signals (asynchronous)
    //#############
 
-   wire wr_wait = rxgpio ? ecfg_dataout[9]  : rx_wr_wait;
-   wire rd_wait = rxgpio ? ecfg_dataout[10] : rx_rd_wait;
+   wire rd_wait = rxgpio ? ecfg_dataout[9]  : rx_rd_wait;
+   wire wr_wait = rxgpio ? ecfg_dataout[10] : rx_wr_wait;
 
    OBUFDS 
      #(

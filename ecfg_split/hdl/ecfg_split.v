@@ -234,6 +234,7 @@ module ecfg_split(/*AUTOARG*/
    assign mcfg0_rx_gpio_mode = slvcfg_rx_gpio_mode;
    assign mcfg0_rx_loopback_mode = slvcfg_rx_loopback_mode;
    assign mcfg0_coreid = slvcfg_coreid;
+   assign mcfg0_dataout = slvcfg_dataout;
    
    assign mcfg1_sw_reset = slvcfg_sw_reset;
    assign mcfg1_tx_enable = slvcfg_tx_enable;
@@ -246,6 +247,7 @@ module ecfg_split(/*AUTOARG*/
    assign mcfg1_rx_gpio_mode = slvcfg_rx_gpio_mode;
    assign mcfg1_rx_loopback_mode = slvcfg_rx_loopback_mode;
    assign mcfg1_coreid = slvcfg_coreid;
+   assign mcfg1_dataout = slvcfg_dataout;
    
    assign mcfg2_sw_reset = slvcfg_sw_reset;
    assign mcfg2_tx_enable = slvcfg_tx_enable;
@@ -258,6 +260,7 @@ module ecfg_split(/*AUTOARG*/
    assign mcfg2_rx_gpio_mode = slvcfg_rx_gpio_mode;
    assign mcfg2_rx_loopback_mode = slvcfg_rx_loopback_mode;
    assign mcfg2_coreid = slvcfg_coreid;
+   assign mcfg2_dataout = slvcfg_dataout;
    
    assign mcfg3_sw_reset = slvcfg_sw_reset;
    assign mcfg3_tx_enable = slvcfg_tx_enable;
@@ -270,6 +273,7 @@ module ecfg_split(/*AUTOARG*/
    assign mcfg3_rx_gpio_mode = slvcfg_rx_gpio_mode;
    assign mcfg3_rx_loopback_mode = slvcfg_rx_loopback_mode;
    assign mcfg3_coreid = slvcfg_coreid;
+   assign mcfg3_dataout = slvcfg_dataout;
    
    assign mcfg4_sw_reset = slvcfg_sw_reset;
    assign mcfg4_tx_enable = slvcfg_tx_enable;
@@ -282,5 +286,6 @@ module ecfg_split(/*AUTOARG*/
    assign mcfg4_rx_gpio_mode = slvcfg_rx_gpio_mode;
    assign mcfg4_rx_loopback_mode = slvcfg_rx_loopback_mode;
    assign mcfg4_coreid = slvcfg_coreid;
+   assign mcfg4_dataout = slvcfg_dataout;
    
 endmodule // ecfg_split

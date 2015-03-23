@@ -225,10 +225,10 @@
 
    //reg                              axi_bready;
 
-   reg [C_M_AXI_ADDR_WIDTH-1 : 0]   axi_araddr;
-   reg [7:0]                        axi_arlen;
-   reg [2:0]                        axi_arsize;
-   reg                              axi_arvalid;
+   wire [C_M_AXI_ADDR_WIDTH-1 : 0]  axi_araddr;
+   wire [7:0]                       axi_arlen;
+   wire [2:0]                       axi_arsize;
+   wire                             axi_arvalid;
 
    wire                             axi_rready;
 
@@ -283,161 +283,214 @@
    //Write Address Channel
    //--------------------
 
-   reg            aw_wait;
-   reg            w_wait;
-   
-   assign emwr_rd_en = ( ~emwr_empty & ~axi_awvalid & ~axi_wvalid )
-      | ( ~emwr_empty & axi_awvalid & M_AXI_AWREADY & axi_wvalid & M_AXI_WREADY)
-      | ( ~emwr_empty & axi_awvalid & M_AXI_AWREADY & w_wait )
-      | ( ~emwr_empty & axi_wvalid  & M_AXI_WREADY & aw_wait );
+   // Holding buffers for AW and W channels
+   reg                              awvalid_b;
+   reg [C_M_AXI_ADDR_WIDTH-1 : 0]   awaddr_b;
+   reg [2:0]                        awsize_b;
+   reg [7:0]                        awlen_b;
 
-   // Generate valid signals, internal waits
+   reg                              wvalid_b;
+   reg [C_M_AXI_DATA_WIDTH-1 : 0]   wdata_b;
+   reg [C_M_AXI_DATA_WIDTH/8-1 : 0] wstrb_b;
+
+   wire                             aw_go = axi_awvalid & M_AXI_AWREADY;
+   wire                             w_go  = axi_wvalid & M_AXI_WREADY;
+   
+   assign emwr_rd_en = ( ~emwr_empty & ~awvalid_b & ~wvalid_b);
+
+   // Generate write-address signals
    always @( posedge M_AXI_ACLK ) begin
 	  if( M_AXI_ARESETN == 1'b0 ) begin
 
          axi_awvalid <= 1'b0;
-         axi_wvalid  <= 1'b0;
-         aw_wait     <= 1'b0;
-         w_wait      <= 1'b0;
-         
-      end else begin
-
-         if( ~axi_awvalid & emwr_rd_en )
-           axi_awvalid <= 1'b1;
-         else if( axi_awvalid & M_AXI_AWREADY & ( emwr_empty | aw_wait ))
-           axi_awvalid <= 1'b0;
-
-         if( ~emwr_empty & axi_awvalid & M_AXI_AWREADY & ~M_AXI_WREADY )
-           aw_wait <= 1'b1;
-         else if( emwr_rd_en )
-           aw_wait <= 1'b0;
-
-         if( ~axi_wvalid & emwr_rd_en )
-           axi_wvalid <= 1'b1;
-         else if( axi_wvalid & M_AXI_WREADY & ( emwr_empty | w_wait ))
-           axi_wvalid <= 1'b0;
-
-         if( ~emwr_empty & axi_wvalid & M_AXI_WREADY & ~M_AXI_AWREADY )
-           w_wait <= 1'b1;
-         else if( emwr_rd_en )
-           w_wait <= 1'b0;
-         
-      end // else: !if( M_AXI_ARESETN == 1'b0 )
-   end // always @ ( posedge M_AXI_ACLK )
-
-   // Put the address, info, & data on the AXI signals
-   always @( posedge M_AXI_ACLK ) begin
-	  if( M_AXI_ARESETN == 1'b0 ) begin
-        
          axi_awaddr  <= 'd0;
          axi_awlen   <= 'd0;
          axi_awsize  <= 'd0;
-         axi_wdata   <= 'd0;
-         axi_wstrb   <= 'd0;
-         axi_wlast   <= 1'b1; // TODO: no bursts for now
+
+         awvalid_b   <= 1'b0;
+         awaddr_b    <= 'd0;
+         awlen_b     <= 'd0;
+         awsize_b    <= 'd0;
          
       end else begin
 
-         if( ~axi_awvalid | M_AXI_AWREADY ) begin
-            axi_awaddr <= emwr_rd_data[`DSTADDR_RANGE];
-            axi_awlen  <= 'd0;
-            axi_awsize <= {1'b0, emwr_rd_data[`DATAMODE_RANGE]};
+         if( ~axi_awvalid | aw_go ) begin
+            if( awvalid_b ) begin
+               axi_awvalid <= 1'b1;
+               axi_awaddr  <= awaddr_b;
+               axi_awlen   <= awlen_b;
+               axi_awsize  <= awsize_b;
+            end else begin
+               axi_awvalid <= emwr_rd_en;
+               axi_awaddr  <= emwr_rd_data[`DSTADDR_RANGE];
+               axi_awlen   <= 'd0;
+               axi_awsize  <= { 1'b0, emwr_rd_data[`DATAMODE_RANGE] };
+            end // else: !if(awvalid_b)
+         end // if (~axi_awvalid | aw_go)
+
+         if( emwr_rd_en & axi_awvalid & ~aw_go )
+           awvalid_b <= 1'b1;
+         else if( aw_go )
+           awvalid_b <= 1'b0;
+         
+         if( emwr_rd_en ) begin
+            awaddr_b  <= emwr_rd_data[`DSTADDR_RANGE];
+            awlen_b   <= 'd0;
+            awsize_b  <= { 1'b0, emwr_rd_data[`DATAMODE_RANGE] };
          end
+         
+      end // else: !if( M_AXI_ARESETN == 1'b0 )
+   end // always @ ( posedge M_AXI_ACLK )
 
-         if( ~axi_wvalid | M_AXI_WREADY ) begin
+   reg [C_M_AXI_DATA_WIDTH-1 : 0]   wdata_aligned;
+   reg [C_M_AXI_DATA_WIDTH/8-1 : 0] wstrb_aligned;
 
-            // Place data of stated size in all legal positions
-            case( emwr_rd_data[`DATAMODE_RANGE] )
+   always @ ( emwr_rd_data ) begin
 
-              2'd0: axi_wdata <= { 8{emwr_rd_data[`DATA_LSB+7 -: 8]}};
-              2'd1: axi_wdata <= { 4{emwr_rd_data[`DATA_LSB+15 -: 16]}};
-              2'd2: axi_wdata <= { 2{emwr_rd_data[`DATA_LSB+31 -: 32]}};
-              default: axi_wdata <= { emwr_rd_data[`SRCADDR_RANGE],
-                                      emwr_rd_data[`DATA_RANGE]};
-            endcase // case ( emwr_rd_data[`DATAMODE_RANGE] )
+      // Place data of stated size in all legal positions
+      case( emwr_rd_data[`DATAMODE_RANGE] )
+        
+        2'd0: wdata_aligned = { 8{emwr_rd_data[`DATA_LSB+7 -: 8]}};
+        2'd1: wdata_aligned = { 4{emwr_rd_data[`DATA_LSB+15 -: 16]}};
+        2'd2: wdata_aligned = { 2{emwr_rd_data[`DATA_LSB+31 -: 32]}};
+        default: wdata_aligned = { emwr_rd_data[`SRCADDR_RANGE],
+                                emwr_rd_data[`DATA_RANGE]};
+      endcase // case ( emwr_rd_data[`DATAMODE_RANGE] )
 
-            // Create write strobes
-            case( emwr_rd_data[`DATAMODE_RANGE] )
-              2'd0: // BYTE
-                case( emwr_rd_data[`DSTADDR_LSB+2 -: 3] )
-                  3'd0: axi_wstrb <= 8'h01;
-                  3'd1: axi_wstrb <= 8'h02;
-                  3'd2: axi_wstrb <= 8'h04;
-                  3'd3: axi_wstrb <= 8'h08;
-                  3'd4: axi_wstrb <= 8'h10;
-                  3'd5: axi_wstrb <= 8'h20;
-                  3'd6: axi_wstrb <= 8'h40;
-                  default: axi_wstrb <= 8'h80;
-                endcase
+      // Create write strobes
+      case( emwr_rd_data[`DATAMODE_RANGE] )
+        2'd0: // BYTE
+          case( emwr_rd_data[`DSTADDR_LSB+2 -: 3] )
+            3'd0: wstrb_aligned = 8'h01;
+            3'd1: wstrb_aligned = 8'h02;
+            3'd2: wstrb_aligned = 8'h04;
+            3'd3: wstrb_aligned = 8'h08;
+            3'd4: wstrb_aligned = 8'h10;
+            3'd5: wstrb_aligned = 8'h20;
+            3'd6: wstrb_aligned = 8'h40;
+            default: wstrb_aligned = 8'h80;
+          endcase
 
-              2'd1: // 16b HWORD
-                case( emwr_rd_data[`DSTADDR_LSB+2 -: 2] )
-                  2'd0: axi_wstrb <= 8'h03;
-                  2'd1: axi_wstrb <= 8'h0C;
-                  2'd2: axi_wstrb <= 8'h30;
-                  default: axi_wstrb <= 8'hC0;
-                endcase
+        2'd1: // 16b HWORD
+          case( emwr_rd_data[`DSTADDR_LSB+2 -: 2] )
+            2'd0: wstrb_aligned = 8'h03;
+            2'd1: wstrb_aligned = 8'h0C;
+            2'd2: wstrb_aligned = 8'h30;
+            default: wstrb_aligned = 8'hC0;
+          endcase
 
-              2'd2: // 32b WORD
-                if( emwr_rd_data[`DSTADDR_LSB+2] )
-                  axi_wstrb <= 8'hF0;
-                else
-                  axi_wstrb <= 8'h0F;
+        2'd2: // 32b WORD
+          if( emwr_rd_data[`DSTADDR_LSB+2] )
+            wstrb_aligned = 8'hF0;
+          else
+            wstrb_aligned = 8'h0F;
 
-              default: // 64b DWORD
-                axi_wstrb <= 8'hFF;
+        default: // 64b DWORD
+          wstrb_aligned = 8'hFF;
+        
+      endcase // case ( emwr_rd_data[`DATAMODE_RANGE] )
+   end // always @ (...
 
-            endcase // case ( emwr_rd_data[`DATAMODE_RANGE] )
+   // Generate the write-data signals
+   always @( posedge M_AXI_ACLK ) begin
+	  if( M_AXI_ARESETN == 1'b0 ) begin
 
-         end // if ( ~axi_wvalid | M_AXI_WREADY )
+         axi_wvalid  <= 1'b0;
+         axi_wdata   <= 'd0;
+         axi_wstrb   <= 'd0;
+         axi_wlast   <= 1'b1; // TODO: no bursts for now
+
+         wvalid_b   <= 1'b0;
+         wdata_b    <= 'd0;
+         wstrb_b    <= 'd0;
+         
+      end else begin // if ( M_AXI_ARESETN == 1'b0 )
+
+         if( ~axi_wvalid | w_go ) begin
+            if( wvalid_b ) begin
+               axi_wvalid <= 1'b1;
+               axi_wdata  <= wdata_b;
+               axi_wstrb  <= wstrb_b;
+            end else begin
+               axi_wvalid <= emwr_rd_en;
+               axi_wdata  <= wdata_aligned;
+               axi_wstrb  <= wstrb_aligned;
+            end
+         end // if ( ~axi_wvalid | w_go )
+
+         if( emwr_rd_en & axi_wvalid & ~w_go )
+           wvalid_b <= 1'b1;
+         else if( w_go )
+           wvalid_b <= 1'b0;
+
+         if( emwr_rd_en ) begin
+            wdata_b <= wdata_aligned;
+            wstrb_b <= wstrb_aligned;
+         end
 
       end // else: !if( M_AXI_ARESETN == 1'b0 )
    end // always @ ( posedge M_AXI_ACLK )
+   
+   //----------------------------
+   // Read Handler
+   //   eLink read requests generate a transaction on the AR channel,
+   //   buffer the src info to generate an eLink write when the
+   //   read data comes back.
+   //----------------------------
+
+`define RI_DSTADDR_RANGE  40:38
+`define RI_DSTADDR_LSB    38
+`define RI_DATAMODE_RANGE 37:36
+`define RI_CTRLMODE_RANGE 35:32
+`define RI_SRCADDR_RANGE  31:0
+  
+   wire       readinfo_wren;
+   wire       readinfo_rden;
+   wire       readinfo_full;
+   wire [40:0] readinfo_out;
+   wire [40:0] readinfo_in = 
+               {
+                emrq_rd_data[`DSTADDR_LSB+2 -: 3],
+                emrq_rd_data[`DATAMODE_RANGE],
+                emrq_rd_data[`CTRLMODE_RANGE],
+                emrq_rd_data[`SRCADDR_RANGE]
+                };
+
+   syncfifo
+     #(
+       // Parameters
+       .AW                              (5),
+       .DW                              (41))
+   fifo_readinfo_i
+     (
+      // Outputs
+      .rdata                            (readinfo_out),
+      .empty                            (),
+      .full                             (readinfo_full),
+      // Inputs
+      .clk                              (M_AXI_ACLK),
+      .reset                            (~M_AXI_ARESETN),
+      .wdata                            (readinfo_in),
+      .wen                              (readinfo_wren),
+      .ren                              (readinfo_rden));
 	                                                                        
    //----------------------------
    // Read Address Channel
    //----------------------------
 
-   reg       read_waiting;
-
-   assign    emrq_rd_en = axi_rready & M_AXI_RVALID;
-   
-   always @( posedge M_AXI_ACLK ) begin
-	  if ( ~M_AXI_ARESETN ) begin
-
-         axi_araddr   <= 'd0;
-         axi_arlen    <= 'd0;
-         axi_arsize   <= 'd0;
-         axi_arvalid  <= 1'b0;
-         read_waiting <= 1'b0;
-         
-	  end else begin
-
-         if( ~emrq_empty & ~read_waiting ) begin
-
-            axi_arvalid <= 1'b1;
-            axi_arsize  <= {1'b0, emrq_rd_data[`DATAMODE_RANGE]};
-            axi_araddr  <= emrq_rd_data[`DSTADDR_RANGE];
-
-         end else if( M_AXI_ARREADY ) begin
-
-            axi_arvalid <= 1'b0;
-
-         end
-
-         if( ~emrq_empty & ~read_waiting )
-           read_waiting <= 1'b1;
-         else if( axi_rready & M_AXI_RVALID )
-           read_waiting <= 1'b0;
-
-      end
-   end // always @ ( posedge M_AXI_ACLK )
+   assign    axi_araddr    = emrq_rd_data[`DSTADDR_RANGE];
+   assign    axi_arsize    = {1'b0, emrq_rd_data[`DATAMODE_RANGE]};
+   assign    axi_arlen     = 8'd0;
+   assign    axi_arvalid   = ~emrq_empty & ~readinfo_full;
+   assign    emrq_rd_en    = axi_arvalid & M_AXI_ARREADY;
+   assign    readinfo_wren = emrq_rd_en;
    
    //--------------------------------
    // Read Data (and Response) Channel
    //--------------------------------
 
-   assign axi_rready = ~emrr_full;
+   assign axi_rready = ~emrr_prog_full;
+   assign readinfo_rden = axi_rready & M_AXI_RVALID;
    
    always @( posedge M_AXI_ACLK ) begin
 	  if( ~M_AXI_ARESETN ) begin
@@ -449,18 +502,18 @@
 
          emrr_wr_en <= axi_rready & M_AXI_RVALID;
          
-         emrr_wr_data[`WRITE_BIT] <= 1'b1;
-         emrr_wr_data[`DATAMODE_RANGE] <= emrq_rd_data[`DATAMODE_RANGE];
-         emrr_wr_data[`CTRLMODE_RANGE] <= emrq_rd_data[`CTRLMODE_RANGE];  // TODO: This or cfg value?
-         emrr_wr_data[`DSTADDR_RANGE]  <= emrq_rd_data[`SRCADDR_RANGE];
-         emrr_wr_data[`SRCADDR_RANGE]  <= M_AXI_RDATA[63:32];  // only used for 64b reads
-         emrr_wr_data[`DATA_RANGE]     <= M_AXI_RDATA[31:0];
+         emrr_wr_data[`WRITE_BIT]      <= 1'b1;
+         emrr_wr_data[`DATAMODE_RANGE] <= readinfo_out[`RI_DATAMODE_RANGE];
+         emrr_wr_data[`CTRLMODE_RANGE] <= readinfo_out[`RI_CTRLMODE_RANGE];
+         emrr_wr_data[`DSTADDR_RANGE]  <= readinfo_out[`RI_SRCADDR_RANGE];
+         emrr_wr_data[`SRCADDR_RANGE]  <= 32'd0;
+         emrr_wr_data[`DATA_RANGE]     <= 32'd0;
 
          // Steer read data according to size & host address lsbs
-         case( emrq_rd_data[`DATAMODE_RANGE] )
+         case( readinfo_out[`RI_DATAMODE_RANGE] )
 
            2'd0:  // BYTE read
-             case( emrq_rd_data[`DSTADDR_LSB+2 -: 3] )
+             case( readinfo_out[`RI_DSTADDR_RANGE] )
                3'd0:  emrr_wr_data[`DATA_LSB+7 -: 8] <= M_AXI_RDATA[7:0];
                3'd1:  emrr_wr_data[`DATA_LSB+7 -: 8] <= M_AXI_RDATA[15:8];
                3'd2:  emrr_wr_data[`DATA_LSB+7 -: 8] <= M_AXI_RDATA[23:16];
@@ -469,22 +522,27 @@
                3'd5:  emrr_wr_data[`DATA_LSB+7 -: 8] <= M_AXI_RDATA[47:40];
                3'd6:  emrr_wr_data[`DATA_LSB+7 -: 8] <= M_AXI_RDATA[55:48];
                default:  emrr_wr_data[`DATA_LSB+7 -: 8] <= M_AXI_RDATA[63:56];
-             endcase // case ( emrq_rd_data[`DSTADDR_LSB+2 -: 3] )
+             endcase
 
            2'd1:  // 16b HWORD
-             case( emrq_rd_data[`DSTADDR_LSB+2 -: 2] )
+             case( readinfo_out[`RI_DSTADDR_LSB+2 -: 2] )
                2'd0: emrr_wr_data[`DATA_LSB+15 -: 16] <= M_AXI_RDATA[15:0];
                2'd1: emrr_wr_data[`DATA_LSB+15 -: 16] <= M_AXI_RDATA[31:16];
                2'd2: emrr_wr_data[`DATA_LSB+15 -: 16] <= M_AXI_RDATA[47:32];
                default: emrr_wr_data[`DATA_LSB+15 -: 16] <= M_AXI_RDATA[63:48];
-             endcase // case ( emrq_rd_data[`DSTADDR_LSB+2 -: 2] )
+             endcase
 
            2'd2:  // 32b WORD
-             if( emrq_rd_data[`DSTADDR_LSB+2] )
+             if( readinfo_out[`RI_DSTADDR_LSB+2] )
                emrr_wr_data[`DATA_RANGE] <= M_AXI_RDATA[63:32];
-           // 32b w/0 offset handled by default
+             else
+               emrr_wr_data[`DATA_RANGE] <= M_AXI_RDATA[31:0];
 
            // 64b word already defined by defaults above
+           2'd3: begin // 64b DWORD
+              emrr_wr_data[`DATA_RANGE]    <= M_AXI_RDATA[31:0];
+              emrr_wr_data[`SRCADDR_RANGE] <= M_AXI_RDATA[63:32];
+           end
          endcase
          
       end // else: !if( ~M_AXI_ARESETN )
