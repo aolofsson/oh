@@ -1,5 +1,6 @@
-=y .
--y ../hdl
+dv_elink.v
+-y .
+-y ../../elink/hdl
 -y ../../common/hdl
 -y ../../axi/hdl
 -y ../../fifos/hdl
