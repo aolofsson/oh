@@ -290,7 +290,7 @@ module esaxi_v1_0_S00_AXI #
                // The write address for all the beats in the transaction are increments by the data width.
                // NOTE: This should be based on awsize instead to support narrow bursts, I think.
                
-               axi_awaddr[31:ADDR_LSB] <= axi_awaddr[31 - 1:ADDR_LSB] + 1;
+               axi_awaddr[31:ADDR_LSB] <= axi_awaddr[31:ADDR_LSB] + 32'd1;
                //awaddr aligned to data width
                axi_awaddr[ADDR_LSB-1:0]  <= {ADDR_LSB{1'b0}};   
 
@@ -546,12 +546,11 @@ module esaxi_v1_0_S00_AXI #
             axi_rvalid <= 1'b1;
             axi_rresp  <= 2'd0;
 
-            case( axi_araddr[1:0] )
+            case( axi_arsize[1:0] )
 
-              2'b00: axi_rdata <= emrr_rd_data[31:0];
-              2'b01: axi_rdata <= {emrr_rd_data[23:0], 8'd0};
-              2'b10: axi_rdata <= {emrr_rd_data[15:0], 16'd0};
-              default: axi_rdata <= {emrr_rd_data[7:0], 24'd0};
+              2'b00: axi_rdata <= {4{emrr_rd_data[7:0]}};
+              2'b01: axi_rdata <= {2{emrr_rd_data[15:0]}};
+              default: axi_rdata <= emrr_rd_data;
 
             endcase // case ( axi_araddr[1:0] }...
 

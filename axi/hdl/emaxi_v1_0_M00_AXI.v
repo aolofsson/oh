@@ -456,7 +456,7 @@
                 emrq_rd_data[`SRCADDR_RANGE]
                 };
 
-   syncfifo
+   fifo_sync
      #(
        // Parameters
        .AW                              (5),
@@ -464,15 +464,15 @@
    fifo_readinfo_i
      (
       // Outputs
-      .rdata                            (readinfo_out),
-      .empty                            (),
-      .full                             (readinfo_full),
+      .rd_data                          (readinfo_out),
+      .rd_empty                         (),
+      .wr_full                          (readinfo_full),
       // Inputs
       .clk                              (M_AXI_ACLK),
       .reset                            (~M_AXI_ARESETN),
-      .wdata                            (readinfo_in),
-      .wen                              (readinfo_wren),
-      .ren                              (readinfo_rden));
+      .wr_data                          (readinfo_in),
+      .wr_en                            (readinfo_wren),
+      .rd_en                            (readinfo_rden));
 	                                                                        
    //----------------------------
    // Read Address Channel

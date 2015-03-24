@@ -27,7 +27,7 @@ module esaxilite (/*AUTOARG*/
    mi_rd_data
    );
    
-   parameter RFAW      = 12;      
+   parameter RFAW      = 13;      
 
    /*****************************/
    /*AXI 32 bit lite interface  */
@@ -36,13 +36,13 @@ module esaxilite (/*AUTOARG*/
    input 	  s_axi_aresetn;
    
    //read address channel
-   input [15:0]  s_axi_araddr;
+   input [RFAW-1:0]  s_axi_araddr;
    input [2:0] 	 s_axi_arprot;
    output 	 s_axi_arready;
    input 	 s_axi_arvalid;
    
    //write address channel
-   input [15:0]  s_axi_awaddr;
+   input [RFAW-1:0]  s_axi_awaddr;
    input [2:0] 	 s_axi_awprot;
    output 	 s_axi_awready;
    input 	 s_axi_awvalid;
@@ -79,7 +79,9 @@ module esaxilite (/*AUTOARG*/
    assign  mi_clk            = s_axi_aclk;
    assign  mi_en             = 1'b0;
    assign  mi_we             = 1'b0;
-   assign  mi_addr[RFAW+1:0] = 14'b0;
+   assign  mi_addr[RFAW+1:0] = {(RFAW){1'b0}};
    assign  mi_din[31:0]      = 32'b0;
-   
+  
+   //TODO: Insert BRAM controller or similar interface here
+
 endmodule // esaxilite
