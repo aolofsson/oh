@@ -1,23 +1,23 @@
 
 `timescale 1 ns / 1 ps
 
-	module esaxi_v1_0 #
+	module esaxi #
 	(
 		// Users to add parameters here
-     parameter [11:0]  C_READ_TAG_ADDR = 12'h810,
+	 parameter [11:0]  C_READ_TAG_ADDR = 12'h810,
 		// User parameters ends
 		// Do not modify the parameters beyond this line
 
 
-		// Parameters of Axi Slave Bus Interface S00_AXI
-		parameter integer C_S00_AXI_ID_WIDTH    = 1,
-		parameter integer C_S00_AXI_DATA_WIDTH  = 32,
-		parameter integer C_S00_AXI_ADDR_WIDTH  = 30,
-		parameter integer C_S00_AXI_AWUSER_WIDTH = 0,
-		parameter integer C_S00_AXI_ARUSER_WIDTH = 0,
-		parameter integer C_S00_AXI_WUSER_WIDTH = 0,
-		parameter integer C_S00_AXI_RUSER_WIDTH = 0,
-		parameter integer C_S00_AXI_BUSER_WIDTH = 0
+	 // Parameters of Axi Slave Bus Interface S00_AXI
+	 parameter integer C_S00_AXI_ID_WIDTH    = 12,
+	 parameter integer C_S00_AXI_DATA_WIDTH  = 32,
+	 parameter integer C_S00_AXI_ADDR_WIDTH  = 30,
+	 parameter integer C_S00_AXI_AWUSER_WIDTH = 0,
+	 parameter integer C_S00_AXI_ARUSER_WIDTH = 0,
+	 parameter integer C_S00_AXI_WUSER_WIDTH = 0,
+	 parameter integer C_S00_AXI_RUSER_WIDTH = 0,
+	 parameter integer C_S00_AXI_BUSER_WIDTH = 0
 	)
 	(
 		// Users to add ports here

@@ -1,7 +1,7 @@
 
 `timescale 1 ns / 1 ps
 
-	module emaxi_v1_0 #
+	module emaxi #
 	(
 		// Users to add parameters here
 

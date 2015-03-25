@@ -37,16 +37,16 @@ module erx_disty (/*AUTOARG*/
    emesh_rd_wait, emesh_wr_wait, emwr_wr_data, emwr_wr_en,
    emrq_wr_data, emrq_wr_en, emrr_wr_data, emrr_wr_en,
    // Inputs
-   rxlclk_p, emesh_access, emesh_write, emesh_datamode,
-   emesh_ctrlmode, emesh_dstaddr, emesh_srcaddr, emesh_data,
-   emwr_full, emwr_prog_full, emrq_full, emrq_prog_full, emrr_full,
+   clk, emesh_access, emesh_write, emesh_datamode, emesh_ctrlmode,
+   emesh_dstaddr, emesh_srcaddr, emesh_data, emwr_full,
+   emwr_prog_full, emrq_full, emrq_prog_full, emrr_full,
    emrr_prog_full, ecfg_rx_enable
    );
 
    parameter [11:0]  C_READ_TAG_ADDR = 12'h810;
    
    // RX clock
-   input         rxlclk_p;
+   input         clk;
    
    //Inputs from MMU
    input          emesh_access;
@@ -107,7 +107,7 @@ module erx_disty (/*AUTOARG*/
    //############
    //# PIPELINE AND DISTRIBUTE
    //############   
-   always @ (posedge rxlclk_p) 
+   always @ (posedge clk) 
      begin
 	in_write          <= emesh_write;
         in_datamode[1:0]  <= emesh_datamode[1:0];
@@ -117,7 +117,7 @@ module erx_disty (/*AUTOARG*/
         in_data[31:0]     <= emesh_data[31:0];
      end
 	
-   always @ (posedge rxlclk_p) 
+   always @ (posedge clk) 
      if(emesh_access) 
        begin
 	  emrq_wr_en <= ~emesh_write;

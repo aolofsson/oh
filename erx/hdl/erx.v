@@ -1,7 +1,6 @@
 /*
  Copyright (C) 2014 Adapteva, Inc.
- 
- Contributed by Fred Huettig <fred@adapteva.com>
+  
  Contributed by Andreas Olofsson <andreas@adapteva.com>
 
  This program is free software: you can redistribute it and/or modify
@@ -20,23 +19,24 @@ module erx (/*AUTOARG*/
    ecfg_rx_debug_signals, ecfg_datain, emaxi_emwr_empty,
    emaxi_emwr_rd_data, emaxi_emrq_empty, emaxi_emrq_rd_data,
    esaxi_emrr_empty, esaxi_emrr_rd_data, rx_wr_wait_p, rx_wr_wait_n,
-   rx_rd_wait_p, rx_rd_wait_n, mi_dout,
+   rx_rd_wait_p, rx_rd_wait_n, emesh_rx_dstaddr,
    // Inputs
    reset, s_axi_aclk, m_axi_aclk, ecfg_rx_enable, ecfg_rx_mmu_mode,
    ecfg_rx_gpio_mode, ecfg_dataout, emaxi_emwr_rd_en,
    emaxi_emrq_rd_en, esaxi_emrr_rd_en, rx_lclk_p, rx_lclk_n,
-   rx_frame_p, rx_frame_n, rx_data_p, rx_data_n, mi_clk, mi_en, mi_we,
-   mi_addr, mi_din
+   rx_frame_p, rx_frame_n, rx_data_p, rx_data_n, emmu_lookup_data
    );
 
    parameter AW   = 32;
    parameter DW   = 32;
-   parameter RFAW = 12;
+   parameter RFAW = 13;
+   parameter MW   = 44; //width of MMU lookup table
+   
 
    //Clocks and reset
    input          reset;
-   input 	  s_axi_aclk;           //clock for slave read request and write fifos
-   input 	  m_axi_aclk;           //clock for master read response fifo
+   input          s_axi_aclk;  //clock for slave read request and write fifos
+   input 	  m_axi_aclk;  //clock for master read response fifo
    
    //Configuration signals
   
@@ -78,16 +78,11 @@ module erx (/*AUTOARG*/
    output 	  rx_rd_wait_p;     //incoming pushback on read transactions
    output 	  rx_rd_wait_n;    
 
-   //Write interface for MMU
-   input 	    mi_clk;
-   input 	    mi_en;
-   input 	    mi_we;             //Single we, must write full words!
-   input [RFAW-1:0] mi_addr;
-   input [31:0]     mi_din;
-   output [31:0]    mi_dout;   
+   //MMU interface
+   output [AW-1:0] emesh_rx_dstaddr;   
+   input  [MW-1:0] emmu_lookup_data;
    
    /*AUTOOUTPUT*/
-
    /*AUTOINPUT*/
 
    /*AUTOWIRE*/
@@ -103,28 +98,27 @@ module erx (/*AUTOARG*/
    wire [3:0]		emesh_rx_ctrlmode;	// From erx_protocol of erx_protocol.v
    wire [31:0]		emesh_rx_data;		// From erx_protocol of erx_protocol.v
    wire [1:0]		emesh_rx_datamode;	// From erx_protocol of erx_protocol.v
-   wire [31:0]		emesh_rx_dstaddr;	// From erx_protocol of erx_protocol.v
    wire			emesh_rx_rd_wait;	// From erx_disty of erx_disty.v
    wire [31:0]		emesh_rx_srcaddr;	// From erx_protocol of erx_protocol.v
    wire			emesh_rx_wr_wait;	// From erx_disty of erx_disty.v
    wire			emesh_rx_write;		// From erx_protocol of erx_protocol.v
-   wire			emrq_full;		// From m_rq_fifo of fifo_103x32.v
-   wire			emrq_prog_full;		// From m_rq_fifo of fifo_103x32.v
+   wire			emrq_full;		// From m_rq_fifo of fifo_async.v
+   wire			emrq_prog_full;		// From m_rq_fifo of fifo_async.v
    wire [102:0]		emrq_wr_data;		// From erx_disty of erx_disty.v
    wire			emrq_wr_en;		// From erx_disty of erx_disty.v
-   wire			emrr_full;		// From s_rr_fifo of fifo_103x32.v
-   wire			emrr_prog_full;		// From s_rr_fifo of fifo_103x32.v
+   wire			emrr_full;		// From s_rr_fifo of fifo_async.v
+   wire			emrr_prog_full;		// From s_rr_fifo of fifo_async.v
    wire [102:0]		emrr_wr_data;		// From erx_disty of erx_disty.v
    wire			emrr_wr_en;		// From erx_disty of erx_disty.v
-   wire			emwr_full;		// From m_wr_fifo of fifo_103x32.v
-   wire			emwr_prog_full;		// From m_wr_fifo of fifo_103x32.v
+   wire			emwr_full;		// From m_wr_fifo of fifo_async.v
+   wire			emwr_prog_full;		// From m_wr_fifo of fifo_async.v
    wire [102:0]		emwr_wr_data;		// From erx_disty of erx_disty.v
    wire			emwr_wr_en;		// From erx_disty of erx_disty.v
+   wire [63:0]		rx_data_par;		// From erx_io of erx_io.v
+   wire [7:0]		rx_frame_par;		// From erx_io of erx_io.v
+   wire			rx_lclk_div4;		// From erx_io of erx_io.v
    wire			rx_rd_wait;		// From erx_protocol of erx_protocol.v
    wire			rx_wr_wait;		// From erx_protocol of erx_protocol.v
-   wire [63:0]		rxdata_p;		// From erx_io of erx_io.v
-   wire [7:0]		rxframe_p;		// From erx_io of erx_io.v
-   wire			rxlclk_p;		// From erx_io of erx_io.v
    // End of automatics
 
    //regs
@@ -133,70 +127,70 @@ module erx (/*AUTOARG*/
    /************************************************************/
    /*FIFOs                                                     */
    /************************************************************/
-   /*fifo_103x32 AUTO_TEMPLATE ( 
-  .dout     (e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_rd_data[]),
-  .empty    (e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_empty),
-  
-  .prog_full(em@"(substring vl-cell-name  2 4)"_prog_full),
-  .full	    (em@"(substring vl-cell-name  2 4)"_full),
-  
-  .rd_clk   (@"(substring vl-cell-name  0 1)"_axi_aclk),
-  .rd_en    (e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_rd_en),
-  .din      (em@"(substring vl-cell-name  2 4)"_wr_data[]),
-  .wr_en    (em@"(substring vl-cell-name  2 4)"_wr_en),
-  .wr_clk   (rxlclk_p),
-  .rst      (reset),
+   /*fifo_async AUTO_TEMPLATE ( 
+         //outputs
+         .rd_data     (e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_rd_data[102:0]),
+         .rd_empty    (e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_empty),
+         .wr_progfull (em@"(substring vl-cell-name  2 4)"_prog_full),
+         .wr_full     (em@"(substring vl-cell-name  2 4)"_full),  
+         //inputs
+         .rd_clk      (@"(substring vl-cell-name  0 1)"_axi_aclk),
+         .rd_en       (e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_rd_en),
+         .wr_data     (em@"(substring vl-cell-name  2 4)"_wr_data[102:0]),
+         .wr_en       (em@"(substring vl-cell-name  2 4)"_wr_en),
+         .wr_clk      (rx_lclk_div4),
+         .rst         (reset),
     );
    */
 
    //Read request fifo (from slave)
-   fifo_103x32 m_rq_fifo(/*AUTOINST*/
-			 // Outputs
-			 .dout			(emaxi_emrq_rd_data[102:0]), // Templated
-			 .empty			(emaxi_emrq_empty), // Templated
-			 .full			(emrq_full),	 // Templated
-			 .prog_full		(emrq_prog_full), // Templated
-			 // Inputs
-			 .din			(emrq_wr_data[102:0]), // Templated
-			 .rd_clk		(m_axi_aclk),	 // Templated
-			 .rd_en			(emaxi_emrq_rd_en), // Templated
-			 .rst			(reset),	 // Templated
-			 .wr_clk		(rxlclk_p),	 // Templated
-			 .wr_en			(emrq_wr_en));	 // Templated
+   fifo_async #(.DW(103)) m_rq_fifo(/*AUTOINST*/
+				    // Outputs
+				    .wr_full		(emrq_full),	 // Templated
+				    .wr_progfull	(emrq_prog_full), // Templated
+				    .rd_data		(emaxi_emrq_rd_data[102:0]), // Templated
+				    .rd_empty		(emaxi_emrq_empty), // Templated
+				    // Inputs
+				    .reset		(reset),
+				    .wr_clk		(rx_lclk_div4),	 // Templated
+				    .wr_en		(emrq_wr_en),	 // Templated
+				    .wr_data		(emrq_wr_data[102:0]), // Templated
+				    .rd_clk		(m_axi_aclk),	 // Templated
+				    .rd_en		(emaxi_emrq_rd_en)); // Templated
    
 
    
    //Write fifo (from slave)
-   fifo_103x32 m_wr_fifo(/*AUTOINST*/
-			 // Outputs
-			 .dout			(emaxi_emwr_rd_data[102:0]), // Templated
-			 .empty			(emaxi_emwr_empty), // Templated
-			 .full			(emwr_full),	 // Templated
-			 .prog_full		(emwr_prog_full), // Templated
-			 // Inputs
-			 .din			(emwr_wr_data[102:0]), // Templated
-			 .rd_clk		(m_axi_aclk),	 // Templated
-			 .rd_en			(emaxi_emwr_rd_en), // Templated
-			 .rst			(reset),	 // Templated
-			 .wr_clk		(rxlclk_p),	 // Templated
-			 .wr_en			(emwr_wr_en));	 // Templated
+   fifo_async #(.DW(103)) m_wr_fifo(/*AUTOINST*/
+				    // Outputs
+				    .wr_full		(emwr_full),	 // Templated
+				    .wr_progfull	(emwr_prog_full), // Templated
+				    .rd_data		(emaxi_emwr_rd_data[102:0]), // Templated
+				    .rd_empty		(emaxi_emwr_empty), // Templated
+				    // Inputs
+				    .reset		(reset),
+				    .wr_clk		(rx_lclk_div4),	 // Templated
+				    .wr_en		(emwr_wr_en),	 // Templated
+				    .wr_data		(emwr_wr_data[102:0]), // Templated
+				    .rd_clk		(m_axi_aclk),	 // Templated
+				    .rd_en		(emaxi_emwr_rd_en)); // Templated
    
    
 
    //Read response fifo (from master)
-   fifo_103x32 s_rr_fifo(/*AUTOINST*/
-			 // Outputs
-			 .dout			(esaxi_emrr_rd_data[102:0]), // Templated
-			 .empty			(esaxi_emrr_empty), // Templated
-			 .full			(emrr_full),	 // Templated
-			 .prog_full		(emrr_prog_full), // Templated
-			 // Inputs
-			 .din			(emrr_wr_data[102:0]), // Templated
-			 .rd_clk		(s_axi_aclk),	 // Templated
-			 .rd_en			(esaxi_emrr_rd_en), // Templated
-			 .rst			(reset),	 // Templated
-			 .wr_clk		(rxlclk_p),	 // Templated
-			 .wr_en			(emrr_wr_en));	 // Templated
+   fifo_async #(.DW(103)) s_rr_fifo(/*AUTOINST*/
+				    // Outputs
+				    .wr_full		(emrr_full),	 // Templated
+				    .wr_progfull	(emrr_prog_full), // Templated
+				    .rd_data		(esaxi_emrr_rd_data[102:0]), // Templated
+				    .rd_empty		(esaxi_emrr_empty), // Templated
+				    // Inputs
+				    .reset		(reset),
+				    .wr_clk		(rx_lclk_div4),	 // Templated
+				    .wr_en		(emrr_wr_en),	 // Templated
+				    .wr_data		(emrr_wr_data[102:0]), // Templated
+				    .rd_clk		(s_axi_aclk),	 // Templated
+				    .rd_en		(esaxi_emrr_rd_en)); // Templated
    
    
    
@@ -209,10 +203,11 @@ module erx (/*AUTOARG*/
                         .emesh_rd_wait	(emesh_rx_rd_wait),
 			.emesh_wr_wait	(emesh_rx_wr_wait),
                         .emesh_\(.*\)   (emesh_mmu_\1[]),   
+                        .clk		(rx_lclk_div4),
                         );
    */
    erx_disty erx_disty (
-			      /*AUTOINST*/
+			/*AUTOINST*/
 			// Outputs
 			.emesh_rd_wait	(emesh_rx_rd_wait),	 // Templated
 			.emesh_wr_wait	(emesh_rx_wr_wait),	 // Templated
@@ -223,7 +218,7 @@ module erx (/*AUTOARG*/
 			.emrr_wr_data	(emrr_wr_data[102:0]),
 			.emrr_wr_en	(emrr_wr_en),
 			// Inputs
-			.rxlclk_p	(rxlclk_p),
+			.clk		(rx_lclk_div4),		 // Templated
 			.emesh_access	(emesh_mmu_access),	 // Templated
 			.emesh_write	(emesh_mmu_write),	 // Templated
 			.emesh_datamode	(emesh_mmu_datamode[1:0]), // Templated
@@ -239,24 +234,27 @@ module erx (/*AUTOARG*/
 			.emrr_prog_full	(emrr_prog_full),
 			.ecfg_rx_enable	(ecfg_rx_enable));
 
+ 
 
+   
    /************************************************************/
    /*ELINK MEMORY MANAGEMENT UNIT                              */
-   /*-translates destination address                           */
+   /*(translates destination address)                          */
    /************************************************************/
    /*emmu AUTO_TEMPLATE ( 
                         // Outputs
                         .emesh_\(.*\)_out	(emesh_mmu_\1[]),   
                         //Inputs
                         .emesh_\(.*\)_in	(emesh_rx_\1[]),   
+                        .mmu_en			(ecfg_rx_mmu_mode),
+                        .clk			(rx_lclk_div4),
                         );
    */
 
-   emmu emmu (.clk			(rxlclk_p),
-		.mmu_en			(ecfg_rx_mmu_mode),
+   emmu emmu (
+	      .mmu_en			(ecfg_rx_mmu_mode),
 		/*AUTOINST*/
 	      // Outputs
-	      .mi_dout			(mi_dout[31:0]),
 	      .emesh_access_out		(emesh_mmu_access),	 // Templated
 	      .emesh_write_out		(emesh_mmu_write),	 // Templated
 	      .emesh_datamode_out	(emesh_mmu_datamode[1:0]), // Templated
@@ -265,17 +263,15 @@ module erx (/*AUTOARG*/
 	      .emesh_srcaddr_out	(emesh_mmu_srcaddr[AW-1:0]), // Templated
 	      .emesh_data_out		(emesh_mmu_data[DW-1:0]), // Templated
 	      // Inputs
-	      .mi_en			(mi_en),
-	      .mi_we			(mi_we),
-	      .mi_addr			(mi_addr[RFAW-1:0]),
-	      .mi_din			(mi_din[31:0]),
+	      .clk			(rx_lclk_div4),		 // Templated
 	      .emesh_access_in		(emesh_rx_access),	 // Templated
 	      .emesh_write_in		(emesh_rx_write),	 // Templated
 	      .emesh_datamode_in	(emesh_rx_datamode[1:0]), // Templated
 	      .emesh_ctrlmode_in	(emesh_rx_ctrlmode[3:0]), // Templated
 	      .emesh_dstaddr_in		(emesh_rx_dstaddr[AW-1:0]), // Templated
 	      .emesh_srcaddr_in		(emesh_rx_srcaddr[AW-1:0]), // Templated
-	      .emesh_data_in		(emesh_rx_data[DW-1:0])); // Templated
+	      .emesh_data_in		(emesh_rx_data[DW-1:0]), // Templated
+	      .emmu_lookup_data		(emmu_lookup_data[MW-1:0]));
    
 
    /************************************************************/
@@ -296,9 +292,9 @@ module erx (/*AUTOARG*/
 			      .emesh_rx_data	(emesh_rx_data[31:0]),
 			      // Inputs
 			      .reset		(reset),
-			      .rxlclk_p		(rxlclk_p),
-			      .rxframe_p	(rxframe_p[7:0]),
-			      .rxdata_p		(rxdata_p[63:0]),
+			      .rx_lclk_div4	(rx_lclk_div4),
+			      .rx_frame_par	(rx_frame_par[7:0]),
+			      .rx_data_par	(rx_data_par[63:0]),
 			      .emesh_rx_rd_wait	(emesh_rx_rd_wait),
 			      .emesh_rx_wr_wait	(emesh_rx_wr_wait));
 
@@ -316,9 +312,9 @@ module erx (/*AUTOARG*/
 		  .rx_wr_wait_n		(rx_wr_wait_n),
 		  .rx_rd_wait_p		(rx_rd_wait_p),
 		  .rx_rd_wait_n		(rx_rd_wait_n),
-		  .rxlclk_p		(rxlclk_p),
-		  .rxframe_p		(rxframe_p[7:0]),
-		  .rxdata_p		(rxdata_p[63:0]),
+		  .rx_lclk_div4		(rx_lclk_div4),
+		  .rx_frame_par		(rx_frame_par[7:0]),
+		  .rx_data_par		(rx_data_par[63:0]),
 		  .ecfg_datain		(ecfg_datain[8:0]),
 		  // Inputs
 		  .rx_lclk_p		(rx_lclk_p),
@@ -337,7 +333,7 @@ module erx (/*AUTOARG*/
    /************************************************************/
    /*Debug signals                                             */
    /************************************************************/
-   always @ (posedge rxlclk_p)
+   always @ (posedge rx_lclk_div4)
      begin
 	ecfg_rx_debug_signals[15:0] <= {2'b0,                     //15:14
 					emesh_rx_rd_wait,         //13
@@ -360,7 +356,7 @@ module erx (/*AUTOARG*/
    
 endmodule // elink
 // Local Variables:
-// verilog-library-directories:("." "../../stubs/hdl" "../../emmu/hdl")
+// verilog-library-directories:("." "../../memory/hdl" "../../emmu/hdl")
 // End:
 
 

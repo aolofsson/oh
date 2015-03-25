@@ -1,5 +1,5 @@
 /*
-  File: e_rx_protocol
+  File: eproto_rx.v
  
   This file is part of the Parallella Project.
 
@@ -33,11 +33,10 @@
 
 module erx_protocol (/*AUTOARG*/
    // Outputs
-   rx_rd_wait, rx_wr_wait, emesh_rx_access, emesh_rx_write,
-   emesh_rx_datamode, emesh_rx_ctrlmode, emesh_rx_dstaddr,
-   emesh_rx_srcaddr, emesh_rx_data,
+   rx_rd_wait, rx_wr_wait, emesh_rx_access, emesh_rx_write, emesh_rx_datamode,
+   emesh_rx_ctrlmode, emesh_rx_dstaddr, emesh_rx_srcaddr, emesh_rx_data,
    // Inputs
-   reset, rxlclk_p, rxframe_p, rxdata_p, emesh_rx_rd_wait,
+   reset, rx_lclk_div4, rx_frame_par, rx_data_par, emesh_rx_rd_wait,
    emesh_rx_wr_wait
    );
 
@@ -45,9 +44,9 @@ module erx_protocol (/*AUTOARG*/
    input          reset;
 
    // Parallel interface, 8 eLink bytes at a time
-   input          rxlclk_p; // Parallel clock input from IO block
-   input [7:0]    rxframe_p;
-   input [63:0]   rxdata_p;
+   input          rx_lclk_div4; // Parallel clock input from IO block
+   input [7:0]    rx_frame_par;
+   input [63:0]   rx_data_par;
    output         rx_rd_wait;  // The wait signals are passed through
    output         rx_wr_wait;  // from the emesh interfaces
    
@@ -71,10 +70,9 @@ module erx_protocol (/*AUTOARG*/
    //######################
 
    reg            frame_prev;
-
    reg [2:0]      rxalign_in;
    reg            rxactive_in;
-   reg [63:0]     rxdata_in;
+   reg [63:0]     rx_data_in;
    
    reg [2:0]      rxalign_0;
    reg            rxactive_0;
@@ -84,7 +82,8 @@ module erx_protocol (/*AUTOARG*/
    reg            write_0;
    reg            access_0;
    reg [31:16]    data_0;
-
+   reg            stream_0;
+   
    reg [2:0]      rxalign_1;
    reg            rxactive_1;
    reg [3:0]      ctrlmode_1;
@@ -94,8 +93,8 @@ module erx_protocol (/*AUTOARG*/
    reg            access_1;
    reg [31:0]     data_1;
    reg [31:0]     srcaddr_1;
-
-   reg            rxactive_2;
+   reg            stream_1;
+   
    reg [3:0]      ctrlmode_2;
    reg [31:0]     dstaddr_2;
    reg [1:0]      datamode_2;
@@ -103,106 +102,109 @@ module erx_protocol (/*AUTOARG*/
    reg            access_2;
    reg [31:0]     data_2;
    reg [31:0]     srcaddr_2;
-
+   reg            stream_2;
+   
    // Here we handle any alignment of the frame within an 8-cycle group,
    // though in theory frames should only start on rising edges??
 
-   always @( posedge rxlclk_p ) begin
+   always @( posedge rx_lclk_div4 ) begin
 
-      frame_prev  <= rxframe_p[0] ;  // Capture last bit for next group
-      rxdata_in   <= rxdata_p;
+      frame_prev  <= rx_frame_par[0] ;  // Capture last bit for next group
+      rx_data_in   <= rx_data_par;
       
-      if( ~frame_prev & rxframe_p[7] ) begin   // All 8 bytes are a new frame
+      if( ~frame_prev & rx_frame_par[7] ) begin   // All 8 bytes are a new frame
          rxalign_in  <= 3'd7;
          rxactive_in <= 1'b1;
-      end else if( ~rxframe_p[7] & rxframe_p[6] ) begin
+      end else if( ~rx_frame_par[7] & rx_frame_par[6] ) begin
          rxalign_in  <= 3'd6;
          rxactive_in <= 1'b1;
-      end else if( ~rxframe_p[6] & rxframe_p[5] ) begin
+      end else if( ~rx_frame_par[6] & rx_frame_par[5] ) begin
          rxalign_in  <= 3'd5;
          rxactive_in <= 1'b1;
-      end else if( ~rxframe_p[5] & rxframe_p[4] ) begin
+      end else if( ~rx_frame_par[5] & rx_frame_par[4] ) begin
          rxalign_in  <= 3'd4;
          rxactive_in <= 1'b1;
-      end else if( ~rxframe_p[4] & rxframe_p[3] ) begin
+      end else if( ~rx_frame_par[4] & rx_frame_par[3] ) begin
          rxalign_in  <= 3'd3;
          rxactive_in <= 1'b1;
-      end else if( ~rxframe_p[3] & rxframe_p[2] ) begin
+      end else if( ~rx_frame_par[3] & rx_frame_par[2] ) begin
          rxalign_in  <= 3'd2;
          rxactive_in <= 1'b1;
-      end else if( ~rxframe_p[2] & rxframe_p[1] ) begin
+      end else if( ~rx_frame_par[2] & rx_frame_par[1] ) begin
          rxalign_in  <= 3'd1;
          rxactive_in <= 1'b1;
-      end else if( ~rxframe_p[1] & rxframe_p[0] ) begin
+      end else if( ~rx_frame_par[1] & rx_frame_par[0] ) begin
          rxalign_in  <= 3'd0;
          rxactive_in <= 1'b1;
       end else begin
-         rxalign_in  <= 3'd0;   // No edge
-         rxactive_in <= 1'd0;
+         rxactive_in <= 3'd0;  // No edge
       end
       
-   end // always @ ( posedge rxlclk_p )
+   end // always @ ( posedge rx_lclk_div4 )
 
    // 1st cycle
-   always @( posedge rxlclk_p ) begin
+   always @( posedge rx_lclk_div4 ) begin
 
       rxactive_0 <= rxactive_in;
       rxalign_0  <= rxalign_in;
-      
+      stream_0   <= 1'b0;
+            
       case(rxalign_in)
         3'd7: begin
-           ctrlmode_0       <= rxdata_in[55:52];
-           dstaddr_0[31:0]  <= rxdata_in[51:20];
-           datamode_0       <= rxdata_in[19:18];
-           write_0          <= rxdata_in[17];
-           access_0         <= rxdata_in[16];
-           data_0[31:16]    <= rxdata_in[15:0];
+           ctrlmode_0       <= rx_data_in[55:52];
+           dstaddr_0[31:0]  <= rx_data_in[51:20];
+           datamode_0       <= rx_data_in[19:18];
+           write_0          <= rx_data_in[17];
+           access_0         <= rx_data_in[16];
+           data_0[31:16]    <= rx_data_in[15:0];
+           stream_0         <= rx_frame_par[1] & (rxactive_in | stream_0);
         end
         
         3'd6: begin
-           ctrlmode_0       <= rxdata_in[47:44];
-           dstaddr_0[31:0]  <= rxdata_in[43:12];
-           datamode_0       <= rxdata_in[11:10];
-           write_0          <= rxdata_in[9];
-           access_0         <= rxdata_in[8];
-           data_0[31:24]    <= rxdata_in[7:0];
+           ctrlmode_0       <= rx_data_in[47:44];
+           dstaddr_0[31:0]  <= rx_data_in[43:12];
+           datamode_0       <= rx_data_in[11:10];
+           write_0          <= rx_data_in[9];
+           access_0         <= rx_data_in[8];
+           data_0[31:24]    <= rx_data_in[7:0];
+           stream_0         <= rx_frame_par[0] & (rxactive_in | stream_0);
         end
 
         3'd5: begin
-           ctrlmode_0       <= rxdata_in[39:36];
-           dstaddr_0[31:0]  <= rxdata_in[35:4];
-           datamode_0       <= rxdata_in[3:2];
-           write_0          <= rxdata_in[1];
-           access_0         <= rxdata_in[0];
+           ctrlmode_0       <= rx_data_in[39:36];
+           dstaddr_0[31:0]  <= rx_data_in[35:4];
+           datamode_0       <= rx_data_in[3:2];
+           write_0          <= rx_data_in[1];
+           access_0         <= rx_data_in[0];
         end
 
         3'd4: begin
-           ctrlmode_0       <= rxdata_in[31:28];
-           dstaddr_0[31:4]  <= rxdata_in[27:0];
+           ctrlmode_0       <= rx_data_in[31:28];
+           dstaddr_0[31:4]  <= rx_data_in[27:0];
         end
 
         3'd3: begin
-           ctrlmode_0       <= rxdata_in[23:20];
-           dstaddr_0[31:12] <= rxdata_in[19:0];
+           ctrlmode_0       <= rx_data_in[23:20];
+           dstaddr_0[31:12] <= rx_data_in[19:0];
         end
 
         3'd2: begin
-           ctrlmode_0       <= rxdata_in[15:12];
-           dstaddr_0[31:20] <= rxdata_in[11:0];
+           ctrlmode_0       <= rx_data_in[15:12];
+           dstaddr_0[31:20] <= rx_data_in[11:0];
         end
 
         3'd1: begin
-           ctrlmode_0       <= rxdata_in[7:4];
-           dstaddr_0[31:28] <= rxdata_in[3:0];
+           ctrlmode_0       <= rx_data_in[7:4];
+           dstaddr_0[31:28] <= rx_data_in[3:0];
         end
         
          // if align == 0 then only the tran byte is present, ignore
       endcase // case (rxalign_in)
       
-   end // always @ ( posedge rxlclk_p )
+   end // always @ ( posedge rx_lclk_div4 )
 
    // 2nd cycle
-   always @( posedge rxlclk_p ) begin
+   always @( posedge rx_lclk_div4 ) begin
 
       rxactive_1 <= rxactive_0;
       rxalign_1  <= rxalign_0;
@@ -214,98 +216,111 @@ module erx_protocol (/*AUTOARG*/
       write_1       <= write_0;
       access_1      <= access_0;
       data_1[31:16] <= data_0[31:16];
-
+      stream_1      <= stream_0;
+      
       case(rxalign_0)
         3'd7: begin
-           data_1[15:0] <= rxdata_in[63:48];
-           srcaddr_1    <= rxdata_in[47:16];
+           data_1[15:0] <= rx_data_in[63:48];
+           srcaddr_1    <= rx_data_in[47:16];
         end
 
         3'd6: begin
-           data_1[23:0] <= rxdata_in[63:40];
-           srcaddr_1   <= rxdata_in[39:8];
+           data_1[23:0] <= rx_data_in[63:40];
+           srcaddr_1   <= rx_data_in[39:8];
         end
 
         3'd5: begin
-           data_1       <= rxdata_in[63:32];
-           srcaddr_1    <= rxdata_in[31:0];
+           data_1       <= rx_data_in[63:32];
+           srcaddr_1    <= rx_data_in[31:0];
+           stream_1     <= rx_frame_par[7] & (rxactive_0 | stream_1);
         end
 
         3'd4: begin
-           dstaddr_1[3:0]  <= rxdata_in[63:60];
-           datamode_1      <= rxdata_in[59:58];
-           write_1         <= rxdata_in[57];
-           access_1        <= rxdata_in[56];
-           data_1          <= rxdata_in[55:24];
-           srcaddr_1[31:8] <= rxdata_in[23:0];
+           dstaddr_1[3:0]  <= rx_data_in[63:60];
+           datamode_1      <= rx_data_in[59:58];
+           write_1         <= rx_data_in[57];
+           access_1        <= rx_data_in[56];
+           data_1          <= rx_data_in[55:24];
+           srcaddr_1[31:8] <= rx_data_in[23:0];
+           stream_1        <= rx_frame_par[6] & (rxactive_0 | stream_1);
         end
 
         3'd3: begin
-           dstaddr_1[11:0]  <= rxdata_in[63:52];
-           datamode_1       <= rxdata_in[51:50];
-           write_1          <= rxdata_in[49];
-           access_1         <= rxdata_in[48];
-           data_1           <= rxdata_in[47:16];
-           srcaddr_1[31:16] <= rxdata_in[15:0];
+           dstaddr_1[11:0]  <= rx_data_in[63:52];
+           datamode_1       <= rx_data_in[51:50];
+           write_1          <= rx_data_in[49];
+           access_1         <= rx_data_in[48];
+           data_1           <= rx_data_in[47:16];
+           srcaddr_1[31:16] <= rx_data_in[15:0];
+           stream_1         <= rx_frame_par[5] & (rxactive_0 | stream_1);
         end
            
         3'd2: begin
-           dstaddr_1[19:0]  <= rxdata_in[63:44];
-           datamode_1       <= rxdata_in[43:42];
-           write_1          <= rxdata_in[41];
-           access_1         <= rxdata_in[40];
-           data_1           <= rxdata_in[39:8];
-           srcaddr_1[31:24] <= rxdata_in[7:0];
+           dstaddr_1[19:0]  <= rx_data_in[63:44];
+           datamode_1       <= rx_data_in[43:42];
+           write_1          <= rx_data_in[41];
+           access_1         <= rx_data_in[40];
+           data_1           <= rx_data_in[39:8];
+           srcaddr_1[31:24] <= rx_data_in[7:0];
+           stream_1         <= rx_frame_par[4] & (rxactive_0 | stream_1);
         end
         
         3'd1: begin
-           dstaddr_1[27:0]  <= rxdata_in[63:36];
-           datamode_1       <= rxdata_in[35:34];
-           write_1          <= rxdata_in[33];
-           access_1         <= rxdata_in[32];
-           data_1           <= rxdata_in[31:0];
+           dstaddr_1[27:0]  <= rx_data_in[63:36];
+           datamode_1       <= rx_data_in[35:34];
+           write_1          <= rx_data_in[33];
+           access_1         <= rx_data_in[32];
+           data_1           <= rx_data_in[31:0];
+           stream_1         <= rx_frame_par[3] & (rxactive_0 | stream_1);
         end
            
         3'd0: begin
-           ctrlmode_1       <= rxdata_in[63:60];
-           dstaddr_1[31:0]  <= rxdata_in[59:28];
-           datamode_1       <= rxdata_in[27:26];
-           write_1          <= rxdata_in[25];
-           access_1         <= rxdata_in[24];
-           data_1[31:8]     <= rxdata_in[23:0];
+           ctrlmode_1       <= rx_data_in[63:60];
+           dstaddr_1[31:0]  <= rx_data_in[59:28];
+           datamode_1       <= rx_data_in[27:26];
+           write_1          <= rx_data_in[25];
+           access_1         <= rx_data_in[24];
+           data_1[31:8]     <= rx_data_in[23:0];
+           stream_1         <= rx_frame_par[2] & (rxactive_0 | stream_1);
         end
       endcase
-   end // always @ ( posedge rxlclk_p )
+   end // always @ ( posedge rx_lclk_div4 )
    
    // 3rd cycle
-   always @( posedge rxlclk_p ) begin
+   always @( posedge rx_lclk_div4 ) begin
 
       // default pass-throughs
-      ctrlmode_2    <= ctrlmode_1;
-      dstaddr_2     <= dstaddr_1;
-      datamode_2    <= datamode_1;
-      write_2       <= write_1;
-      access_2      <= access_1 & rxactive_1;  // avoid random non-frame data
+      if(~stream_2) begin
+         ctrlmode_2    <= ctrlmode_1;
+         dstaddr_2     <= dstaddr_1;
+         datamode_2    <= datamode_1;
+         write_2       <= write_1;
+         access_2      <= access_1 & rxactive_1;
+      end else begin
+         dstaddr_2     <= dstaddr_2 + 32'h00000008;
+      end
+
       data_2        <= data_1;
-      srcaddr_2 <= srcaddr_1;
-         
+      srcaddr_2     <= srcaddr_1;
+      stream_2      <= stream_1;
+
       case( rxalign_1 )
         // 7-5: Full packet is complete in 2nd cycle
         3'd4:
-          srcaddr_2[7:0]  <= rxdata_in[63:56];
+          srcaddr_2[7:0]  <= rx_data_in[63:56];
         3'd3:
-          srcaddr_2[15:0] <= rxdata_in[63:48];
+          srcaddr_2[15:0] <= rx_data_in[63:48];
         3'd2:
-          srcaddr_2[23:0] <= rxdata_in[63:40];
+          srcaddr_2[23:0] <= rx_data_in[63:40];
         3'd1:
-          srcaddr_2[31:0] <= rxdata_in[63:32];
+          srcaddr_2[31:0] <= rx_data_in[63:32];
         3'd0: begin
-           data_2[7:0]     <= rxdata_in[63:56];
-           srcaddr_2[31:0] <= rxdata_in[55:24];
+           data_2[7:0]     <= rx_data_in[63:56];
+           srcaddr_2[31:0] <= rx_data_in[55:24];
         end
       endcase // case ( rxalign_1 )
 
-   end // always @ ( posedge rxlclk_p )
+   end // always @ ( posedge rx_lclk_div4 )
    
 /*  The spec says reads use the 'data' slot for src address, but apparently
     the silicon has not read this spec.
@@ -316,16 +331,16 @@ module erx_protocol (/*AUTOARG*/
          case( rxalign_1 )
            // 7-5 Full packet is complete in 2nd cycle        
            3'd4:
-             srcaddr_2[7:0]  <= rxdata_in[63:56];
+             srcaddr_2[7:0]  <= rx_data_in[63:56];
            3'd3:
-             srcaddr_2[15:0] <= rxdata_in[63:48];
+             srcaddr_2[15:0] <= rx_data_in[63:48];
            3'd2:
-             srcaddr_2[23:0] <= rxdata_in[63:40];
+             srcaddr_2[23:0] <= rx_data_in[63:40];
            3'd1:
-             srcaddr_2[31:0] <= rxdata_in[63:32];
+             srcaddr_2[31:0] <= rx_data_in[63:32];
            3'd0: begin
-              data_2[7:0]     <= rxdata_in[63:56];
-              srcaddr_2[31:0] <= rxdata_in[55:24];
+              data_2[7:0]     <= rx_data_in[63:56];
+              srcaddr_2[31:0] <= rx_data_in[55:24];
            end
          endcase // case ( rxalign_1 )
          
@@ -334,18 +349,18 @@ module erx_protocol (/*AUTOARG*/
          srcaddr_2 <= data_1;
 
          if( rxalign_1 == )
-           srcaddr_2[7:0] <= rxdata_in[63:56];
+           srcaddr_2[7:0] <= rx_data_in[63:56];
 
       end // else: !if( write_1 )
       
-   end // always @ ( posedge rxlclk_p )
+   end // always @ ( posedge rx_lclk_div4 )
 */
    // xxx_2 now has one complete transfer
 
    // TODO: Handle burst mode, for now we stop after one xaction
 
-   assign emesh_rx_access   = access_2;
-   assign emesh_rx_write    = write_2;
+   assign emesh_rx_access = access_2;
+   assign emesh_rx_write  = write_2;
    assign emesh_rx_datamode = datamode_2;
    assign emesh_rx_ctrlmode = ctrlmode_2;
    assign emesh_rx_dstaddr  = dstaddr_2;
@@ -353,11 +368,9 @@ module erx_protocol (/*AUTOARG*/
    assign emesh_rx_data     = data_2;
    
    //################################
-   //# Wait signal pass through
+   //# Wait signal passthrough
    //################################
-   wire   rx_rd_wait = emesh_rx_rd_wait;
-   wire   rx_wr_wait = emesh_rx_wr_wait;
+   assign rx_rd_wait = emesh_rx_rd_wait;
+   assign rx_wr_wait = emesh_rx_wr_wait;
    
-endmodule // e_rx_protocol
-
-
+endmodule

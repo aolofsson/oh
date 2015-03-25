@@ -17,10 +17,10 @@
  # Function: A mailbox FIFO with a FIFO empty/full flags that can be used as   
  #           interrupts. Status of the FIFO can be polled.
  #
- #           REG_EMBOX0  = lower 32 bits of FIFO entry
- #           REG_EMBOX1  = upper 32 bits of FIFO entry
- #           REG_EMBPOLL = status of FIFO [0]=1-->fifo not empty
- #                                        [1]=1-->fifo full      
+ #           EMBOX0    = lower 32 bits of FIFO entry
+ #           EMBOX1    = upper 32 bits of FIFO entry
+ #           EMBSTATUS = status of FIFO [0]=1-->fifo not empty
+ #                                      [1]=1-->fifo full      
  #
  # Notes:    System takes care of not overflowing the FIFO
  #           Reading the REG_EMBOX1 causes rd pointer to update to next entry
@@ -30,9 +30,9 @@
  */
 
 //Register Definitions
-`define E_REG_MBSTATUS      10'h019 //mailbox status
-`define E_REG_MBOX0         10'h01A //mailbox entry0 (read/write)
-`define E_REG_MBOX1         10'h01B //mailbox entry1 (read/write)
+`define EMBSTATUS      10'h019 //mailbox status
+`define EMBOX0         10'h01A //mailbox entry0 (read/write)
+`define EMBOX1         10'h01B //mailbox entry1 (read/write)
 
 module embox (/*AUTOARG*/
    // Outputs
@@ -42,7 +42,7 @@ module embox (/*AUTOARG*/
    );
 
    parameter DW   = 32;  //data width of fifo
-   parameter RFAW = 12;  //address bus width
+   parameter RFAW = 13;  //address bus width
    parameter FAW  = 4;   //fifo entries==2^FAW
 
    /*****************************/
@@ -87,14 +87,15 @@ module embox (/*AUTOARG*/
    wire 	      embox_status_read;
    wire [DW-1:0]      embox_read_data;
    wire [2*DW-1:0]    embox_fifo_data;
+   wire               embox_empty;
    
    /*****************************/
    /*DECODE LOGIC               */
    /*****************************/
    
    //access decode
-   assign embox_w0_access     = (mi_addr[RFAW-1:2]==`E_REG_MBOX0); //lower 32 bit word
-   assign embox_w1_access     = (mi_addr[RFAW-1:2]==`E_REG_MBOX1); //upper 32 bit word
+   assign embox_w0_access     = (mi_addr[RFAW-1:2]==`EMBOX0); //lower 32 bit word
+   assign embox_w1_access     = (mi_addr[RFAW-1:2]==`EMBOX1); //upper 32 bit word
 
    //fifo read/write logic
    assign  embox_write       = mi_en &  mi_we;
@@ -121,9 +122,9 @@ module embox (/*AUTOARG*/
    always @ (posedge clk)
      if(embox_read)
        case(mi_addr[RFAW-1:2])	 
-	 `E_REG_MBOX0:    mi_dout[DW-1:0] <= embox_fifo_data[DW-1:0];	 
-	 `E_REG_MBOX1:    mi_dout[DW-1:0] <= embox_fifo_data[2*DW-1:DW];	 
-	 `E_REG_MBSTATUS: mi_dout[DW-1:0] <= {{(DW-2){1'b0}},embox_full,embox_not_empty};
+	 `EMBOX0:    mi_dout[DW-1:0] <= embox_fifo_data[DW-1:0];	 
+	 `EMBOX1:    mi_dout[DW-1:0] <= embox_fifo_data[2*DW-1:DW];	 
+	 `EMBSTATUS: mi_dout[DW-1:0] <= {{(DW-2){1'b0}},embox_full,embox_not_empty};
 	 default:         mi_dout[DW-1:0] <= 32'd0;
        endcase // case (mi_addr[RFAW-1:2])
    
@@ -133,20 +134,17 @@ module embox (/*AUTOARG*/
    /*****************************/
    assign embox_not_empty         = ~embox_empty;
 
-   fifo_64x16 mbox(
-                   // Outputs
-                   .dout                  (), 
-                   .empty                 (embox_empty),
-                   .full                  (embox_full),
-                   .prog_full             (),
-                   // Inputs
-                   .din                   ({mi_din[DW-1:0],embox_data_reg[DW-1:0]}),
-                   .rd_clk                (clk),  
-                   .rd_en                 (embox_w1_read), 
-                   .rst                   (reset),      
-                   .wr_clk                (clk),  
-                   .wr_en                 (embox_w1_write)
-		   ); 
+   fifo_sync #(.DW(64)) mbox(// Outputs
+			     .rd_data  (embox_fifo_data[2*DW-1:0]),
+			     .rd_empty (embox_empty),
+			     .wr_full  (embox_full),
+			     // Inputs
+			     .rd_en    (embox_w1_read), 
+			     .wr_data  ({mi_din[DW-1:0],embox_data_reg[DW-1:0]}),
+			     .wr_en    (embox_w1_write),
+			     .clk      (clk),  
+			     .reset    (reset)      
+			     ); 
    
 endmodule // embox
 

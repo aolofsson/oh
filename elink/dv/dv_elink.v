@@ -171,7 +171,6 @@ module dv_elink();
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			cclk_n;			// From elink of elink.v
    wire			cclk_p;			// From elink of elink.v
-   wire [3:0]		colid;			// From elink of elink.v
    wire			embox_full;		// From elink of elink.v
    wire			embox_not_empty;	// From elink of elink.v
    wire [31:0]		m_axi_araddr;		// From elink of elink.v
@@ -200,8 +199,7 @@ module dv_elink();
    wire			m_axi_wlast;		// From elink of elink.v
    wire [7:0]		m_axi_wstrb;		// From elink of elink.v
    wire			m_axi_wvalid;		// From elink of elink.v
-   wire			reset_n;		// From elink of elink.v
-   wire [3:0]		rowid;			// From elink of elink.v
+   wire			resetb_out;		// From elink of elink.v
    wire			rx_rd_wait_n;		// From elink of elink.v
    wire			rx_rd_wait_p;		// From elink of elink.v
    wire			rx_wr_wait_n;		// From elink of elink.v
@@ -235,9 +233,7 @@ module dv_elink();
    
    elink elink (/*AUTOINST*/
 		// Outputs
-		.rowid			(rowid[3:0]),
-		.colid			(colid[3:0]),
-		.reset_n		(reset_n),
+		.resetb_out		(resetb_out),
 		.cclk_p			(cclk_p),
 		.cclk_n			(cclk_n),
 		.rx_wr_wait_p		(rx_wr_wait_p),

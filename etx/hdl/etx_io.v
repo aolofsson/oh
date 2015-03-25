@@ -215,9 +215,15 @@ module etx_io (/*AUTOARG*/
         );
 
    //################################
-   //# LClock Creation
+   //# lclk creation
    //################################
-
+   reg [1:0]  txenb_out_sync;
+   wire       txenb_out = txenb_out_sync[0];
+   
+   // sync the enable signal to the phase-shifted output clock
+   always @ (posedge txlclk_out)
+     txenb_out_sync <= {ecfg_tx_enable, txenb_out_sync[1]};
+   
    ODDR 
      #(
        .DDR_CLK_EDGE  ("SAME_EDGE"), 
@@ -228,7 +234,7 @@ module etx_io (/*AUTOARG*/
       .Q  (tx_lclk),
       .C  (txlclk_out),
       .CE (1'b1),
-      .D1 (txenb),
+      .D1 (txenb_out),
       .D2 (1'b0),
       .R  (1'b0),
       .S  (1'b0));
@@ -256,7 +262,7 @@ module etx_io (/*AUTOARG*/
        (
         .O   (tx_frame_p),
         .OB  (tx_frame_n),
-        .I   (tx_frame_n)
+        .I   (tx_frame)
         );
 
    OBUFDS 

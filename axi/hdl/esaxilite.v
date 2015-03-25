@@ -42,10 +42,10 @@ module esaxilite (/*AUTOARG*/
    input 	 s_axi_arvalid;
    
    //write address channel
-   input [RFAW-1:0]  s_axi_awaddr;
-   input [2:0] 	 s_axi_awprot;
-   output 	 s_axi_awready;
-   input 	 s_axi_awvalid;
+   input [RFAW-1:0] s_axi_awaddr;
+   input [2:0] 	    s_axi_awprot;
+   output 	    s_axi_awready;
+   input 	    s_axi_awvalid;
    
    //buffered read response channel
    input 	 s_axi_bready;
@@ -70,7 +70,7 @@ module esaxilite (/*AUTOARG*/
    output             mi_clk;
    output 	      mi_en;
    output 	      mi_we;
-   output [RFAW+1:0]  mi_addr;
+   output [RFAW-1:0]  mi_addr;
    output [31:0]      mi_din;   
    input [31:0]       mi_rd_data;   
 
@@ -79,7 +79,7 @@ module esaxilite (/*AUTOARG*/
    assign  mi_clk            = s_axi_aclk;
    assign  mi_en             = 1'b0;
    assign  mi_we             = 1'b0;
-   assign  mi_addr[RFAW+1:0] = {(RFAW){1'b0}};
+   assign  mi_addr[RFAW-1:0] = {(RFAW){1'b0}};
    assign  mi_din[31:0]      = 32'b0;
   
    //TODO: Insert BRAM controller or similar interface here

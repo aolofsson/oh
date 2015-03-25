@@ -5,6 +5,7 @@
 
   Copyright (C) 2014 Adapteva, Inc.
   Contributed by Fred Huettig <fred@adapteva.com>
+  Contributed by Andreas Olofsson <fred@adapteva.com>
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,8 +24,8 @@
 
 module erx_io (/*AUTOARG*/
    // Outputs
-   rx_wr_wait_p, rx_wr_wait_n, rx_rd_wait_p, rx_rd_wait_n, rxlclk_p,
-   rxframe_p, rxdata_p, ecfg_datain,
+   rx_wr_wait_p, rx_wr_wait_n, rx_rd_wait_p, rx_rd_wait_n,
+   rx_lclk_div4, rx_frame_par, rx_data_par, ecfg_datain,
    // Inputs
    rx_lclk_p, rx_lclk_n, reset, ioreset, rx_frame_p, rx_frame_n,
    rx_data_p, rx_data_n, rx_wr_wait, rx_rd_wait, ecfg_rx_enable,
@@ -49,9 +50,9 @@ module erx_io (/*AUTOARG*/
    //#############
    //# Fabric interface, 1/8 bit rate of eLink
    //#############
-   output        rxlclk_p; // Parallel clock output (slow)
-   output [7:0]  rxframe_p;
-   output [63:0] rxdata_p;
+   output        rx_lclk_div4; // Parallel clock output (slow)
+   output [7:0]  rx_frame_par;
+   output [63:0] rx_data_par;
    input         rx_wr_wait;
    input         rx_rd_wait;
    
@@ -66,8 +67,8 @@ module erx_io (/*AUTOARG*/
    //############
    //# REGS
    //############
-   reg [63:0]    rxdata_p;    // output registers
-   reg [7:0]     rxframe_p;
+   reg [63:0]    rx_data_par;    // output registers
+   reg [7:0]     rx_frame_par;
    
    //############
    //# WIRES
@@ -90,7 +91,7 @@ module erx_io (/*AUTOARG*/
    IBUFDS
 	 #(.DIFF_TERM  ("TRUE"),     // Differential termination
        .IOSTANDARD (IOSTD_ELINK))
-	 ibufds_rxframe
+	 ibufds_rx_frame
 	   (.I     (rx_frame_p),
         .IB    (rx_frame_n),
         .O     (rx_frame));
@@ -119,7 +120,7 @@ module erx_io (/*AUTOARG*/
      #(.SIM_DEVICE("7SERIES"),
      .BUFR_DIVIDE("4"))
    clkout_bufr
-     (.O (rxlclk_p),
+     (.O (rx_lclk_div4),
       .CE(1'b1),
       .CLR(1'b0),
       .I (rx_lclk));
@@ -128,8 +129,8 @@ module erx_io (/*AUTOARG*/
    //# Deserializer instantiations
    //#############################
 
-   wire [63:0]   rxdata_des;
-   wire [7:0]    rxframe_des;
+   wire [63:0]   rx_data_des;
+   wire [7:0]    rx_frame_des;
    wire          rx_lclk_sn = ~rx_lclk_s;
    
    genvar        i;
@@ -162,14 +163,14 @@ module erx_io (/*AUTOARG*/
           (
            .O(),  // 1-bit output: Combinatorial output
            // Q1 - Q8: 1-bit (each) output: Registered data outputs
-           .Q1(rxdata_des[i]),      // Last data in?
-           .Q2(rxdata_des[i+8]),
-           .Q3(rxdata_des[i+16]),
-           .Q4(rxdata_des[i+24]),
-           .Q5(rxdata_des[i+32]),
-           .Q6(rxdata_des[i+40]),
-           .Q7(rxdata_des[i+48]),
-           .Q8(rxdata_des[i+56]),   // First data in?
+           .Q1(rx_data_des[i]),      // Last data in?
+           .Q2(rx_data_des[i+8]),
+           .Q3(rx_data_des[i+16]),
+           .Q4(rx_data_des[i+24]),
+           .Q5(rx_data_des[i+32]),
+           .Q6(rx_data_des[i+40]),
+           .Q7(rx_data_des[i+48]),
+           .Q8(rx_data_des[i+56]),   // First data in?
            // SHIFTOUT1, SHIFTOUT2: 1-bit (each) output: Data width expansion output ports
            .SHIFTOUT1(),
            .SHIFTOUT2(),
@@ -185,7 +186,7 @@ module erx_io (/*AUTOARG*/
            // Clocks: 1-bit (each) input: ISERDESE2 clock input ports
            .CLK(rx_lclk_s),   // 1-bit input: High-speed clock
            .CLKB(rx_lclk_sn),     // 1-bit input: High-speed secondary clock
-           .CLKDIV(rxlclk_p), // 1-bit input: Divided clock
+           .CLKDIV(rx_lclk_div4), // 1-bit input: Divided clock
            .OCLK(1'b0),     // 1-bit input: High speed output clock used when INTERFACE_TYPE="MEMORY"
            // Dynamic Clock Inversions: 1-bit (each) input: Dynamic clock inversion pins to switch clock polarity
            .DYNCLKDIVSEL(1'b0), // 1-bit input: Dynamic CLKDIV inversion
@@ -226,18 +227,18 @@ module erx_io (/*AUTOARG*/
        .SRVAL_Q3(1'b0),
        .SRVAL_Q4(1'b0)
        )
-   ISERDESE2_rxframe
+   ISERDESE2_rx_frame
      (
       .O(),  // 1-bit output: Combinatorial output
       // Q1 - Q8: 1-bit (each) output: Registered data outputs
-      .Q1(rxframe_des[0]),
-      .Q2(rxframe_des[1]),
-      .Q3(rxframe_des[2]),
-      .Q4(rxframe_des[3]),
-      .Q5(rxframe_des[4]),
-      .Q6(rxframe_des[5]),
-      .Q7(rxframe_des[6]),
-      .Q8(rxframe_des[7]),
+      .Q1(rx_frame_des[0]),
+      .Q2(rx_frame_des[1]),
+      .Q3(rx_frame_des[2]),
+      .Q4(rx_frame_des[3]),
+      .Q5(rx_frame_des[4]),
+      .Q6(rx_frame_des[5]),
+      .Q7(rx_frame_des[6]),
+      .Q8(rx_frame_des[7]),
       // SHIFTOUT1, SHIFTOUT2: 1-bit (each) output: Data width expansion output ports
       .SHIFTOUT1(),
       .SHIFTOUT2(),
@@ -253,7 +254,7 @@ module erx_io (/*AUTOARG*/
       // Clocks: 1-bit (each) input: ISERDESE2 clock input ports
       .CLK(rx_lclk_s),   // 1-bit input: High-speed clock
       .CLKB(rx_lclk_sn),     // 1-bit input: High-speed secondary clock
-      .CLKDIV(rxlclk_p), // 1-bit input: Divided clock
+      .CLKDIV(rx_lclk_div4), // 1-bit input: Divided clock
       .OCLK(1'b0),     // 1-bit input: High speed output clock used when INTERFACE_TYPE="MEMORY"
       // Dynamic Clock Inversions: 1-bit (each) input: Dynamic clock inversion pins to switch clock polarity
       .DYNCLKDIVSEL(1'b0), // 1-bit input: Dynamic CLKDIV inversion
@@ -277,12 +278,12 @@ module erx_io (/*AUTOARG*/
    wire        rxgpio = rxgpio_sync[0];
    
    // Register outputs once for good measure, then mux in loopback data if enabled
-   reg [63:0]  rxdata_reg;
-   reg [7:0]   rxframe_reg;
+   reg [63:0]  rx_data_reg;
+   reg [7:0]   rx_frame_reg;
 
    wire        rxreset = reset | ~ecfg_rx_enable;
    
-   always @ (posedge rxlclk_p or posedge rxreset) 
+   always @ (posedge rx_lclk_div4 or posedge rxreset) 
      begin
 	if(rxreset)
           rxenb_sync <= 'd0;
@@ -290,13 +291,13 @@ module erx_io (/*AUTOARG*/
           rxenb_sync <= {1'b1, rxenb_sync[1]};
      end
    
-   always @ (posedge rxlclk_p) 
+   always @ (posedge rx_lclk_div4) 
      begin      
-	rxgpio_sync <= {ecfg_rx_gpio_mode, rxgpio_sync[1]};      
-	rxdata_reg  <= rxdata_des;
-	rxframe_reg <= rxframe_des & {8{rxenb}} & {8{~rxgpio}};     
-	rxdata_p  <= rxdata_reg;
-	rxframe_p <= rxframe_reg;
+	rxgpio_sync       <= {ecfg_rx_gpio_mode, rxgpio_sync[1]};      
+	rx_data_reg[63:0] <= rx_data_des[63:0];
+	rx_data_par[63:0] <= rx_data_reg[63:0];
+	rx_frame_reg[7:0] <= rx_frame_des & {8{rxenb}} & {8{~rxgpio}};     
+	rx_frame_par[7:0] <= rx_frame_reg[7:0];
      end
 
 //#############
@@ -305,10 +306,10 @@ module erx_io (/*AUTOARG*/
 reg [8:0] datain_reg;
 reg [8:0] ecfg_datain;
 
-   always @ (posedge rxlclk_p) 
+   always @ (posedge rx_lclk_div4) 
      begin
-      datain_reg[8]    <= rxframe_p[0];
-      datain_reg[7:0]  <= rxdata_p[7:0];
+      datain_reg[8]    <= rx_frame_par[0];
+      datain_reg[7:0]  <= rx_data_p[7:0];
       ecfg_datain[8:0] <= datain_reg[8:0];      
    end
 
@@ -316,8 +317,8 @@ reg [8:0] ecfg_datain;
    //# Wait signals (asynchronous)
    //#############
 
-   wire wr_wait = rxgpio ? ecfg_dataout[9]  : rx_wr_wait;
-   wire rd_wait = rxgpio ? ecfg_dataout[10] : rx_rd_wait;
+   wire rd_wait = rxgpio ? ecfg_dataout[9]  : rx_rd_wait;
+   wire wr_wait = rxgpio ? ecfg_dataout[10] : rx_wr_wait;
 
    OBUFDS 
      #(

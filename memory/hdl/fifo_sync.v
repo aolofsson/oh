@@ -25,7 +25,7 @@
  ########################################################################
  */
 
-module syncfifo
+module fifo_sync
   #(
     // Address width (must be 5 => 32-deep FIFO)
     parameter AW = 5,
@@ -35,12 +35,12 @@ module syncfifo
    (
     input                clk,
     input                reset,
-    input [DW-1:0]       wdata,
-    input                wen,
-    input                ren,
-    output wire [DW-1:0] rdata,
-    output reg           empty,
-    output reg           full
+    input [DW-1:0]       wr_data,
+    input                wr_en,
+    input                rd_en,
+    output wire [DW-1:0] rd_data,
+    output reg           rd_empty,
+    output reg           wr_full
     );
    
    reg [AW-1:0]          waddr;
@@ -48,65 +48,63 @@ module syncfifo
    reg [AW-1:0]          count;
    
    always @ ( posedge clk ) begin
-      if( reset ) begin
-
-         waddr <= 'd0;
-         raddr <= 'd0;
-         count <= 'd0;
-         empty <= 1'b1;
-         full  <= 1'b0;
-         
-      end else begin
-
-         if( wen & ren ) begin
-
-            waddr <= waddr + 'd1;
-            raddr <= raddr + 'd1;
-
-         end else if( wen ) begin
-
-            waddr <= waddr + 'd1;
-            count <= count + 'd1;
-            empty <= 1'b0;
-            if( & count )
-              full <= 1'b1;
-
-         end else if( ren ) begin
-
-            raddr <= raddr + 'd1;
-            count <= count - 'd1;
-            full <= 1'b0;
-            if( count == 'd1 )
-              empty <= 1'b1;
-
-         end
-      end // else: !if( reset )
+      if( reset ) 
+	begin	   
+           waddr    <= 1'b0;
+           raddr    <= 1'b0;
+           count    <= 1'b0;
+           rd_empty <= 1'b1;
+           wr_full  <= 1'b0;         
+      end else 
+	begin
+           if( wr_en & rd_en ) 
+	     begin
+		waddr <= waddr + 'd1;
+		raddr <= raddr + 'd1;	      
+             end 
+	   else if( wr_en ) 
+	     begin
+		waddr <= waddr + 'd1;
+		count <= count + 'd1;
+		rd_empty <= 1'b0;
+		if( & count )
+		  wr_full <= 1'b1;		
+         end 
+	   else if( rd_en ) 
+	   begin	      
+              raddr <= raddr + 'd1;
+              count <= count - 'd1;
+              wr_full <= 1'b0;
+              if( count == 'd1 )
+		rd_empty <= 1'b1;	      
+           end
+	end // else: !if( reset )
    end // always @ ( posedge clk )
-   
-   genvar               dn;
-   
+      
+`ifdef TARGET_XILINX 
+   genvar               dn;   
    generate for(dn=0; dn<DW; dn=dn+1)
      begin : genbits
         RAM32X1D RAM32X1D_inst
           (
-           .DPO(rdata[dn] ),   // Read-only 1-bit data output
+           .DPO(rd_data[dn] ),   // Read-only 1-bit data output
            .SPO(),            // Rw/ 1-bit data output
            .A0(waddr[0]),     // Rw/ address[0] input bit
            .A1(waddr[1]),     // Rw/ address[1] input bit
            .A2(waddr[2]),     // Rw/ address[2] input bit
            .A3(waddr[3]),     // Rw/ address[3] input bit
            .A4(waddr[4]),     // Rw/ address[4] input bit
-           .D(wdata[dn]),     // Write 1-bit data input
+           .D(wr_data[dn]),     // Write 1-bit data input
            .DPRA0(raddr[0]),  // Read-only address[0] input bit
            .DPRA1(raddr[1]),  // Read-only address[1] input bit
            .DPRA2(raddr[2]),  // Read-only address[2] input bit
            .DPRA3(raddr[3]),  // Read-only address[3] input bit
            .DPRA4(raddr[4]),  // Read-only address[4] input bit
            .WCLK(clk),        // Write clock input
-           .WE(wen)           // Write enable input
+           .WE(wr_en)           // Write enable input
            );
      end
    endgenerate
-   
+`endif   
 endmodule // syncfifo
 
