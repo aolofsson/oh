@@ -33,10 +33,10 @@
 
 module etx_protocol (/*AUTOARG*/
    // Outputs
-   e_tx_rd_wait, e_tx_wr_wait, e_tx_ack, txframe_p, txdata_p,
+   e_tx_rd_wait, e_tx_wr_wait, e_tx_ack, tx_frame_par, tx_data_par,
    // Inputs
    reset, e_tx_access, e_tx_write, e_tx_datamode, e_tx_ctrlmode,
-   e_tx_dstaddr, e_tx_srcaddr, e_tx_data, txlclk_p, tx_rd_wait,
+   e_tx_dstaddr, e_tx_srcaddr, e_tx_data, tx_lclk_par, tx_rd_wait,
    tx_wr_wait
    );
 
@@ -56,9 +56,9 @@ module etx_protocol (/*AUTOARG*/
    output        e_tx_ack;
    
    // Parallel interface, 8 eLink bytes at a time
-   input         txlclk_p; // Parallel-rate clock from eClock block
-   output [7:0]  txframe_p;
-   output [63:0] txdata_p;
+   input         tx_lclk_par; // Parallel-rate clock from eClock block
+   output [7:0]  tx_frame_par;
+   output [63:0] tx_data_par;
    input         tx_rd_wait;  // The wait signals are passed through
    input         tx_wr_wait;  // to the emesh interfaces
    
@@ -70,8 +70,8 @@ module etx_protocol (/*AUTOARG*/
    //# Local regs & wires
    //############
    reg           e_tx_ack;  // Acknowledge transaction
-   reg [7:0]     txframe_p;
-   reg [63:0]    txdata_p;
+   reg [7:0]     tx_frame_par;
+   reg [63:0]    tx_data_par;
    
    //############
    //# Logic
@@ -79,44 +79,43 @@ module etx_protocol (/*AUTOARG*/
 
    // TODO: Bursts
 
-   always @( posedge txlclk_p or posedge reset ) begin
-
-      if( reset ) begin
-
-         e_tx_ack    <= 1'b0;
-         txframe_p   <= 'd0;
-         txdata_p    <= 'd0;
-
-      end else begin
-
-         if( e_tx_access & ~e_tx_ack ) begin
-
-            e_tx_ack  <= 1'b1;
-            txframe_p <= 8'h3F;
-            txdata_p  <=
-               { 8'd0,  // Not used
-                 8'd0,
-                 ~e_tx_write, 7'd0,   // B0- TODO: For bursts, add the inc bit
-                 e_tx_ctrlmode, e_tx_dstaddr[31:28], // B1
-                 e_tx_dstaddr[27:4],  // B2, B3, B4
-                 e_tx_dstaddr[3:0], e_tx_datamode, e_tx_write, e_tx_access // B5
-                 };
-         end else if( e_tx_ack ) begin // if ( e_tx_access & ~e_tx_ack )
-
-            e_tx_ack  <= 1'b0;
-            txframe_p <= 8'hFF;
-            txdata_p  <= { e_tx_data, e_tx_srcaddr };
-            
-         end else begin
-
-            e_tx_ack    <= 1'b0;
-            txframe_p <= 8'h00;
-            txdata_p  <= 64'd0;
-
-         end
-
-      end // else: !if( reset )
-   end // always @ ( posedge txlclk_p or reset )
+   always @( posedge tx_lclk_par or posedge reset ) 
+     begin
+	if(reset) 
+	  begin	     
+             e_tx_ack          <= 1'b0;
+             tx_frame_par[7:0] <= 8'd0;
+             tx_data_par[63:0] <= 64'd0;	     
+	  end 
+	else 
+	  begin
+             if( e_tx_access & ~e_tx_ack ) 
+	       begin
+		  e_tx_ack  <= 1'b1;
+		  tx_frame_par[7:0] <= 8'h3F;
+		  tx_data_par[63:0]  <= {8'd0,  // Not used
+					 8'd0,
+					 ~e_tx_write, 7'd0, // B0-TODO: For bursts, add the inc bit
+					 e_tx_ctrlmode[3:0], e_tx_dstaddr[31:28], // B1
+					 e_tx_dstaddr[27:4],  // B2, B3, B4
+					 e_tx_dstaddr[3:0], e_tx_datamode[1:0], e_tx_write, e_tx_access // B5
+				   };
+               end 
+	     else if( e_tx_ack ) 
+	       begin
+		  e_tx_ack  <= 1'b0;
+		  tx_frame_par[7:0] <= 8'hFF;
+		  tx_data_par[63:0]  <= { e_tx_data[31:0], e_tx_srcaddr[31:0]};   
+               end 
+	     else 
+	       begin
+		  e_tx_ack    <= 1'b0;
+		  tx_frame_par[7:0] <= 8'h00;
+		  tx_data_par[63:0]  <= 64'd0;
+               end
+	  end // else: !if(reset)	
+     end // always @ ( posedge txlclk_p or posedge reset )
+   
    
    //#############################
    //# Wait signals
@@ -127,13 +126,14 @@ module etx_protocol (/*AUTOARG*/
    reg     e_tx_rd_wait;
    reg     e_tx_wr_wait;
    
-   always @( posedge txlclk_p ) begin
-      rd_wait_sync <= tx_rd_wait;
-      e_tx_rd_wait <= rd_wait_sync;
-      wr_wait_sync <= tx_wr_wait;
-      e_tx_wr_wait <= wr_wait_sync;
-   end
-            
+   always @ (posedge tx_lclk_par) 
+     begin
+	rd_wait_sync <= tx_rd_wait;
+	e_tx_rd_wait <= rd_wait_sync;
+	wr_wait_sync <= tx_wr_wait;
+	e_tx_wr_wait <= wr_wait_sync;
+     end
+   
 endmodule // e_tx_protocol
 
 

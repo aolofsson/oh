@@ -114,7 +114,7 @@ module ecfg (/*AUTOARG*/
    ecfg_cclk_div, ecfg_cclk_pllcfg, ecfg_coreid, ecfg_dataout,
    // Inputs
    hw_reset, mi_clk, mi_en, mi_we, mi_addr, mi_din, ecfg_datain,
-   ecfg_debug_signals
+   ecfg_debug
    );
 
    /******************************/
@@ -174,7 +174,7 @@ module ecfg (/*AUTOARG*/
    output [10:0]     ecfg_dataout;     //data for elink outputs {rd_wait,wr_wait,frame,data[7:0]}
 
    //debug
-   input [31:0]      ecfg_debug_signals;//various signals for debugging the elink hardware
+   input [31:0]      ecfg_debug;      //various signals for debugging the elink hardware
    
    
    /*------------------------BODY CODE---------------------------------------*/
@@ -317,9 +317,10 @@ module ecfg (/*AUTOARG*/
          `ESYSVERSION:  mi_dout[31:0] <= EVERSION;
          `ESYSDATAIN:   mi_dout[31:0] <= {21'b0, ecfg_datain_reg[10:0]};
          `ESYSDATAOUT:  mi_dout[31:0] <= {21'b0, ecfg_dataout_reg[10:0]};
-	 `ESYSDEBUG:    mi_dout[31:0] <= ecfg_debug_signals[31:0];
+	 `ESYSDEBUG:    mi_dout[31:0] <= ecfg_debug[31:0];
          default:       mi_dout[31:0] <= 32'd0;
        endcase
 
-endmodule // e_cfg
+endmodule // ecfg
+
 

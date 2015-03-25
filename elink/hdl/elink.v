@@ -270,13 +270,13 @@ module elink(/*AUTOARG*/
    wire [11:0]		ecfg_coreid;		// From ecfg of ecfg.v
    wire [8:0]		ecfg_datain;		// From erx of erx.v
    wire [10:0]		ecfg_dataout;		// From ecfg of ecfg.v
-   wire [15:0]		ecfg_rx_debug_signals;	// From erx of erx.v
+   wire [15:0]		ecfg_rx_debug;		// From erx of erx.v
    wire			ecfg_rx_enable;		// From ecfg of ecfg.v
    wire			ecfg_rx_gpio_mode;	// From ecfg of ecfg.v
    wire			ecfg_rx_mmu_mode;	// From ecfg of ecfg.v
    wire [3:0]		ecfg_tx_clkdiv;		// From ecfg of ecfg.v
    wire [3:0]		ecfg_tx_ctrl_mode;	// From ecfg of ecfg.v
-   wire [15:0]		ecfg_tx_debug_signals;	// From etx of etx.v
+   wire [15:0]		ecfg_tx_debug;		// From etx of etx.v
    wire			ecfg_tx_enable;		// From ecfg of ecfg.v
    wire			ecfg_tx_gpio_mode;	// From ecfg of ecfg.v
    wire			ecfg_tx_mmu_mode;	// From ecfg of ecfg.v
@@ -307,9 +307,9 @@ module elink(/*AUTOARG*/
    wire			mi_en;			// From esaxilite of esaxilite.v
    wire			mi_we;			// From esaxilite of esaxilite.v
    wire			reset;			// From ecfg of ecfg.v
-   wire			txlclk_out;		// From eclock of eclock.v
-   wire			txlclk_p;		// From eclock of eclock.v
-   wire			txlclk_s;		// From eclock of eclock.v
+   wire			tx_lclk;		// From eclock of eclock.v
+   wire			tx_lclk_out;		// From eclock of eclock.v
+   wire			tx_lclk_par;		// From eclock of eclock.v
    // End of automatics
  
    
@@ -502,9 +502,9 @@ module elink(/*AUTOARG*/
 		 // Outputs
 		 .cclk_p		(cclk_p),
 		 .cclk_n		(cclk_n),
-		 .txlclk_s		(txlclk_s),
-		 .txlclk_out		(txlclk_out),
-		 .txlclk_p		(txlclk_p),
+		 .tx_lclk		(tx_lclk),
+		 .tx_lclk_out		(tx_lclk_out),
+		 .tx_lclk_par		(tx_lclk_par),
 		 // Inputs
 		 .clkin			(clkin),
 		 .reset			(reset),
@@ -512,17 +512,14 @@ module elink(/*AUTOARG*/
 		 .ecfg_cclk_div		(ecfg_cclk_div[3:0]),
 		 .ecfg_cclk_pllcfg	(ecfg_cclk_pllcfg[3:0]));
    
-   
-
-  
    /***********************************************************/
    /*RECEIVER                                                 */
    /***********************************************************/
 
-   erx erx(.emesh_rx_dstaddr		(emesh_rx_dstaddr[AW-1:0]),
+   erx erx(.mi_dout			(),     //TODO: No readback for now
 	   /*AUTOINST*/
 	   // Outputs
-	   .ecfg_rx_debug_signals	(ecfg_rx_debug_signals[15:0]),
+	   .ecfg_rx_debug		(ecfg_rx_debug[15:0]),
 	   .ecfg_datain			(ecfg_datain[8:0]),
 	   .emaxi_emwr_empty		(emaxi_emwr_empty),
 	   .emaxi_emwr_rd_data		(emaxi_emwr_rd_data[102:0]),
@@ -542,6 +539,11 @@ module elink(/*AUTOARG*/
 	   .ecfg_rx_mmu_mode		(ecfg_rx_mmu_mode),
 	   .ecfg_rx_gpio_mode		(ecfg_rx_gpio_mode),
 	   .ecfg_dataout		(ecfg_dataout[10:0]),
+	   .mi_clk			(mi_clk),
+	   .mi_en			(mi_en),
+	   .mi_we			(mi_we),
+	   .mi_addr			(mi_addr[RFAW-1:0]),
+	   .mi_din			(mi_din[31:0]),
 	   .emaxi_emwr_rd_en		(emaxi_emwr_rd_en),
 	   .emaxi_emrq_rd_en		(emaxi_emrq_rd_en),
 	   .esaxi_emrr_rd_en		(esaxi_emrr_rd_en),
@@ -550,21 +552,14 @@ module elink(/*AUTOARG*/
 	   .rx_frame_p			(rx_frame_p),
 	   .rx_frame_n			(rx_frame_n),
 	   .rx_data_p			(rx_data_p[7:0]),
-	   .rx_data_n			(rx_data_n[7:0]),
-	   .emmu_lookup_data		(emmu_lookup_data[MW-1:0]));
+	   .rx_data_n			(rx_data_n[7:0]));
 
-   /************************************************************/
-   /*DUAL PORTED MEMORY FOR EMMU                               */
-   /************************************************************/
-   //TODO...
-   assign emmu_lookup_data[MW-1:0]=44'b0;
-   
    /***********************************************************/
    /*TRANSMITTER                                              */
    /***********************************************************/
    etx etx(/*AUTOINST*/
 	   // Outputs
-	   .ecfg_tx_debug_signals	(ecfg_tx_debug_signals[15:0]),
+	   .ecfg_tx_debug		(ecfg_tx_debug[15:0]),
 	   .esaxi_emrq_full		(esaxi_emrq_full),
 	   .esaxi_emrq_prog_full	(esaxi_emrq_prog_full),
 	   .esaxi_emwr_full		(esaxi_emwr_full),
@@ -579,9 +574,9 @@ module elink(/*AUTOARG*/
 	   .tx_data_n			(tx_data_n[7:0]),
 	   // Inputs
 	   .reset			(reset),
-	   .txlclk_out			(txlclk_out),
-	   .txlclk_p			(txlclk_p),
-	   .txlclk_s			(txlclk_s),
+	   .tx_lclk			(tx_lclk),
+	   .tx_lclk_out			(tx_lclk_out),
+	   .tx_lclk_par			(tx_lclk_par),
 	   .s_axi_aclk			(s_axi_aclk),
 	   .m_axi_aclk			(m_axi_aclk),
 	   .ecfg_tx_clkdiv		(ecfg_tx_clkdiv[3:0]),
@@ -599,7 +594,6 @@ module elink(/*AUTOARG*/
 	   .tx_wr_wait_n		(tx_wr_wait_n),
 	   .tx_rd_wait_p		(tx_rd_wait_p),
 	   .tx_rd_wait_n		(tx_rd_wait_n));
-
    
    /***********************************************************/
    /*ELINK CONFIGURATION REGISTERES                           */
@@ -607,11 +601,10 @@ module elink(/*AUTOARG*/
 
    /*ecfg AUTO_TEMPLATE ( 
                          // Outputs
-	                .ecfg_reset		(reset),
-                        .ecfg_debug_signals ({embox_full, embox_not_empty, ecfg_rx_debug_signals[13:0],ecfg_tx_debug_signals[15:0]}),    
+	                .ecfg_reset   (reset),
+                        .ecfg_debug   ({embox_full, embox_not_empty, ecfg_rx_debug[13:0],ecfg_tx_debug[15:0]}),    
                             );
    */
-   
    
    ecfg ecfg(.mi_dout			(mi_dout_ecfg[DW-1:0]),
 	     .ecfg_resetb		(resetb_out),
@@ -639,7 +632,7 @@ module elink(/*AUTOARG*/
 	     .mi_addr			(mi_addr[RFAW-1:0]),
 	     .mi_din			(mi_din[31:0]),
 	     .ecfg_datain		(ecfg_datain[10:0]),
-	     .ecfg_debug_signals	({embox_full, embox_not_empty, ecfg_rx_debug_signals[13:0],ecfg_tx_debug_signals[15:0]})); // Templated
+	     .ecfg_debug		({embox_full, embox_not_empty, ecfg_rx_debug[13:0],ecfg_tx_debug[15:0]})); // Templated
 
    
    /***********************************************************/
@@ -669,6 +662,6 @@ module elink(/*AUTOARG*/
    
 endmodule // elink
 // Local Variables:
-// verilog-library-directories:("." "../../embox/hdl" "../../erx/hdl" "../../etx/hdl" "../../axi/hdl" "../../ecfg/hdl")
+// verilog-library-directories:("." "../../embox/hdl" "../../erx/hdl" "../../etx/hdl" "../../axi/hdl" "../../ecfg/hdl" "../../eclock/hdl")
 // End:
 

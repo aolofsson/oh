@@ -1,6 +1,4 @@
 /*
-  File: e_tx_io.v
- 
   This file is part of the Parallella Project .
 
   Copyright (C) 2014 Adapteva, Inc.
@@ -26,93 +24,95 @@ module etx_io (/*AUTOARG*/
    tx_lclk_p, tx_lclk_n, tx_frame_p, tx_frame_n, tx_data_p, tx_data_n,
    tx_wr_wait, tx_rd_wait,
    // Inputs
-   reset, ioreset, tx_wr_wait_p, tx_wr_wait_n, tx_rd_wait_p,
-   tx_rd_wait_n, txlclk_p, txlclk_s, txlclk_out, txframe_p, txdata_p,
+   reset, tx_wr_wait_p, tx_wr_wait_n, tx_rd_wait_p, tx_rd_wait_n,
+   tx_lclk_par, tx_lclk, tx_lclk_out, tx_frame_par, tx_data_par,
    ecfg_tx_enable, ecfg_tx_gpio_mode, ecfg_tx_clkdiv, ecfg_dataout
    );
 
    parameter IOSTD_ELINK = "LVDS_25";
+   //###########
+   //# reset
+   //###########
+   input        reset;              
    
    //###########
    //# eLink pins
    //###########
-   output       tx_lclk_p, tx_lclk_n;    // Differential clock from PLL to eLink
-   input        reset;
-   input        ioreset;
-
-   output       tx_frame_p, tx_frame_n;  // Outputs to eLink
+   output       tx_lclk_p, tx_lclk_n;
+   output       tx_frame_p, tx_frame_n;
    output [7:0] tx_data_p, tx_data_n;
-
    input        tx_wr_wait_p, tx_wr_wait_n;
    input        tx_rd_wait_p, tx_rd_wait_n;
 
    //#############
-   //# Fabric interface, 1/8 bit rate of eLink
+   //# Fabric interface
    //#############
-   input        txlclk_p;                // Parallel clock in (bit rate / 8)
-   input        txlclk_s;                // Serial clock in (bit rate / 2)
-   input        txlclk_out;              // "LCLK" source in, 90deg from lclk_s
-   input [7:0]  txframe_p;
-   input [63:0] txdata_p;
+   input        tx_lclk_par;  // Slow lclk for parallel side (bit rate / 8)
+   input        tx_lclk;      // High speed clock for serdesd (bit rate / 2)
+   input        tx_lclk_out;  // High speed lclk output clock (90deg from tx_lclk)
+
+   input [7:0]  tx_frame_par; // Parallel frame for serdes
+   input [63:0] tx_data_par;  // Parallel data for serdes
    output       tx_wr_wait;
    output       tx_rd_wait;
    
    //#############
    //# Configuration bits
    //#############
-   input         ecfg_tx_enable;         //enable signal for rx  
-   input         ecfg_tx_gpio_mode;      //forces rx wait pins to constants
-   input [3:0]   ecfg_tx_clkdiv;         // TODO: Implement this
-   input [10:0]  ecfg_dataout;           // frame & data for GPIO mode
+   input         ecfg_tx_enable;     //enable signal for tx  
+   input         ecfg_tx_gpio_mode;  //forces tx wait pins to constants
+   input [3:0]   ecfg_tx_clkdiv;     // TODO: Implement this
+   input [10:0]  ecfg_dataout;       // frame & data for GPIO mode
 
-   
+   //############
+   //# REGS
+   //############
+   reg [63:0] 	pdata;
+   reg [7:0] 	pframe;
+   reg [1:0]    txenb_sync;  
+   reg [1:0] 	txgpio_sync;
+   reg [1:0] 	txenb_out_sync;
+
    //############
    //# WIRES
    //############
-   wire [7:0]    tx_data;               // High-speed serial data outputs
-   wire [7:0]    tx_data_t;             // Tristate signal to OBUF's
-   wire          tx_frame;              // serial frame signal
-   wire          tx_lclk;
-   
+   wire [7:0]    tx_data;    // High-speed serial data outputs
+   wire [7:0]    tx_data_t;  // Tristate signal to OBUF's
+   wire          tx_frame;   // serial frame signal
+   wire          tx_lclk_buf;
+   wire 	 txenb;   
+   wire 	 txgpio;
+   integer 	 n;
    //#############################
    //# Serializer instantiations
-   //#############################
+   //#############################  
+   assign         txenb = txenb_sync[0];   
+   assign         txgpio = txgpio_sync[0];
 
-   reg [63:0]   pdata;
-   reg [7:0]    pframe;
-   reg [1:0]    txenb_sync;
-   wire         txenb = txenb_sync[0];
-   reg [1:0]    txgpio_sync;
-   wire         txgpio = txgpio_sync[0];
-   integer      n;
+   // Sync these control bits into our domain
+   always @ (posedge tx_lclk_par) 
+     begin
+	txenb_sync <= {ecfg_tx_enable, txenb_sync[1]};
+	txgpio_sync <= {ecfg_tx_gpio_mode, txgpio_sync[1]};      
+	if(txgpio) 
+	  begin
+             pframe <= {8{ecfg_dataout[8]}};           
+             for(n=0; n<8; n=n+1)
+               pdata[n*8+7 -: 8] <= ecfg_dataout[7:0];	   
+	  end else if(txenb) 
+	    begin
+               pframe[7:0]  <= tx_frame_par[7:0];
+               pdata[63:0]  <= tx_data_par[63:0];         
+	    end 
+	  else 
+	    begin	   
+               pframe[7:0] <= 8'd0;
+               pdata[63:0] <= 64'd0;	   
+	    end
+     end
    
-      // Sync these control bits into our domain
-   always @ (posedge txlclk_p) begin
 
-      txenb_sync <= {ecfg_tx_enable, txenb_sync[1]};
-      txgpio_sync <= {ecfg_tx_gpio_mode, txgpio_sync[1]};
-      
-      if(txgpio) begin
-
-         pframe <= {8{ecfg_dataout[8]}};
-         
-         for(n=0; n<8; n=n+1)
-           pdata[n*8+7 -: 8] <= ecfg_dataout[7:0];
-
-      end else if(txenb) begin
-
-         pframe <= txframe_p;
-         pdata  <= txdata_p;
-         
-      end else begin
-
-         pframe <= 8'd0;
-         pdata <= 64'd0;
-
-      end // else: !if(txgpio)
-
-   end // always @ (posedge txlclk_p)
-   
+   //FRAME SERDES
    genvar        i;
    generate for(i=0; i<8; i=i+1)
      begin : gen_serdes
@@ -133,14 +133,13 @@ module etx_io (/*AUTOARG*/
             (
              .OFB(),   // 1-bit output: Feedback path for data
              .OQ(tx_data[i]),     // 1-bit output: Data path output
-             // SHIFTOUT1 / SHIFTOUT2: 1-bit (each) output: Data output expansion (1-bit each)
              .SHIFTOUT1(),
              .SHIFTOUT2(),
              .TBYTEOUT(),       // 1-bit output: Byte group tristate
              .TFB(),            // 1-bit output: 3-state control
              .TQ(tx_data_t[i]), // 1-bit output: 3-state control
-             .CLK(txlclk_s),    // 1-bit input: High speed clock
-             .CLKDIV(txlclk_p), // 1-bit input: Divided clock
+             .CLK(tx_lclk),      // 1-bit input: High speed clock
+             .CLKDIV(tx_lclk_par), // 1-bit input: Divided clock
              // D1 - D8: 1-bit (each) input: Parallel data inputs (1-bit each)
              .D1(pdata[i+56]),  // First data out
              .D2(pdata[i+48]),
@@ -151,12 +150,10 @@ module etx_io (/*AUTOARG*/
              .D7(pdata[i+8]),
              .D8(pdata[i]),   // Last data out
              .OCE(1'b1),      // 1-bit input: Output data clock enable
-             .RST(ioreset),   // 1-bit input: Reset
-             // SHIFTIN1 / SHIFTIN2: 1-bit (each) input: Data input expansion (1-bit each)
+             .RST(reset),   // 1-bit input: Reset
              .SHIFTIN1(1'b0),
              .SHIFTIN2(1'b0),
-             // T1 - T4: 1-bit (each) input: Parallel 3-state inputs
-             .T1(~ecfg_tx_enable),
+             .T1(~ecfg_tx_enable), //TODO: Which clock is this one??
              .T2(1'b0),
              .T3(1'b0),
              .T4(1'b0),
@@ -165,7 +162,8 @@ module etx_io (/*AUTOARG*/
              );     
      end // block: gen_serdes
    endgenerate
-   
+
+   //DATA SERDES
    OSERDESE2 
      #(
        .DATA_RATE_OQ("DDR"),  // DDR, SDR
@@ -189,8 +187,8 @@ module etx_io (/*AUTOARG*/
         .TBYTEOUT(),       // 1-bit output: Byte group tristate
         .TFB(),            // 1-bit output: 3-state control
         .TQ(),             // 1-bit output: 3-state control
-        .CLK(txlclk_s),    // 1-bit input: High speed clock
-        .CLKDIV(txlclk_p), // 1-bit input: Divided clock
+        .CLK(tx_lclk),      // 1-bit input: High speed clock
+        .CLKDIV(tx_lclk_par), // 1-bit input: Divided clock
         // D1 - D8: 1-bit (each) input: Parallel data inputs (1-bit each)
         .D1(pframe[7]),  // first data out
         .D2(pframe[6]),
@@ -201,7 +199,7 @@ module etx_io (/*AUTOARG*/
         .D7(pframe[1]),
         .D8(pframe[0]),  // last data out
         .OCE(1'b1),      // 1-bit input: Output data clock enable
-        .RST(ioreset),   // 1-bit input: Reset
+        .RST(reset),   // 1-bit input: Reset
         // SHIFTIN1 / SHIFTIN2: 1-bit (each) input: Data input expansion (1-bit each)
         .SHIFTIN1(1'b0),
         .SHIFTIN2(1'b0),
@@ -215,14 +213,12 @@ module etx_io (/*AUTOARG*/
         );
 
    //################################
-   //# lclk creation
+   //# LCLK Creation (and gating)
    //################################
-   reg [1:0]  txenb_out_sync;
-   wire       txenb_out = txenb_out_sync[0];
-   
+
    // sync the enable signal to the phase-shifted output clock
-   always @ (posedge txlclk_out)
-     txenb_out_sync <= {ecfg_tx_enable, txenb_out_sync[1]};
+   always @ (posedge tx_lclk_out)
+     txenb_out_sync[1:0] <= {txenb_out_sync[0],ecfg_tx_enable};
    
    ODDR 
      #(
@@ -231,10 +227,10 @@ module etx_io (/*AUTOARG*/
        .SRTYPE        ("ASYNC"))
    oddr_lclk_inst
      (
-      .Q  (tx_lclk),
-      .C  (txlclk_out),
+      .Q  (tx_lclk_buf),
+      .C  (tx_lclk_out),
       .CE (1'b1),
-      .D1 (txenb_out),
+      .D1 (txenb_out_sync[1]), //TODO: meaning of D1??, shouldn't this be on CE?
       .D2 (1'b0),
       .R  (1'b0),
       .S  (1'b0));
@@ -251,7 +247,7 @@ module etx_io (/*AUTOARG*/
         .O   (tx_data_p),
         .OB  (tx_data_n),
         .I   (tx_data),
-        .T   (tx_data_t)
+        .T   (tx_data_t)            //not sure about this??
         );
 
    OBUFDS 
@@ -273,24 +269,24 @@ module etx_io (/*AUTOARG*/
        (
         .O   (tx_lclk_p),
         .OB  (tx_lclk_n),
-        .I   (tx_lclk)
+        .I   (tx_lclk_buf)
         );
 
    //################################
    //# Wait Input Buffers
    //################################
-
+   //TODO: make differential an option on both 
+   
    IBUFDS
-	 #(.DIFF_TERM  ("TRUE"),     // Differential termination
+     #(.DIFF_TERM  ("TRUE"),     // Differential termination
        .IOSTANDARD (IOSTD_ELINK))
    ibufds_txwrwait
      (.I     (tx_wr_wait_p),
       .IB    (tx_wr_wait_n),
       .O     (tx_wr_wait));
 
-   // On Parallella this signal comes in single-ended
-   // TODO: should add a
+   //On Parallella this signal comes in single-ended
    assign tx_rd_wait = tx_rd_wait_p;
    
-endmodule // e_tx_io
+endmodule // etx_io
 

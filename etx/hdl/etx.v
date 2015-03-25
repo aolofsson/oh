@@ -17,12 +17,12 @@
 
 module etx(/*AUTOARG*/
    // Outputs
-   ecfg_tx_debug_signals, esaxi_emrq_full, esaxi_emrq_prog_full,
+   ecfg_tx_debug, esaxi_emrq_full, esaxi_emrq_prog_full,
    esaxi_emwr_full, esaxi_emwr_prog_full, emaxi_emrr_full,
    emaxi_emrr_prog_full, tx_lclk_p, tx_lclk_n, tx_frame_p, tx_frame_n,
    tx_data_p, tx_data_n,
    // Inputs
-   reset, txlclk_out, txlclk_p, txlclk_s, s_axi_aclk, m_axi_aclk,
+   reset, tx_lclk, tx_lclk_out, tx_lclk_par, s_axi_aclk, m_axi_aclk,
    ecfg_tx_clkdiv, ecfg_tx_enable, ecfg_tx_gpio_mode,
    ecfg_tx_mmu_mode, ecfg_dataout, esaxi_emrq_wr_en,
    esaxi_emrq_wr_data, esaxi_emwr_wr_en, esaxi_emwr_wr_data,
@@ -35,12 +35,12 @@ module etx(/*AUTOARG*/
 
    //Clocks and reset
    input         reset;
-   input 	 txlclk_out;	       //lclk output
-   input 	 txlclk_p;	       //slow speed parallel clock for serializer
-   input 	 txlclk_s;	       //high speed serdes clock
-   input 	 s_axi_aclk;           //clock for slave read request and write fifos
-   input 	 m_axi_aclk;           //clock for master read response fifo
-   
+   input 	 tx_lclk;	       //high speed serdes clock
+   input 	 tx_lclk_out;	       //lclk output
+   input 	 tx_lclk_par;	       //slow speed parallel clock
+   input 	 s_axi_aclk;           //clock for read request and write fifos
+   input 	 m_axi_aclk;           //clock for read response fifo
+
    //Configuration signals
    input [3:0] 	 ecfg_tx_clkdiv;       //transmit clock divider
    input 	 ecfg_tx_enable;       //transmit output buffer enable   
@@ -52,7 +52,7 @@ module etx(/*AUTOARG*/
    input [10:0]  ecfg_dataout;	       //data for gpio mode
 
    //Testing
-   output [15:0] ecfg_tx_debug_signals; //various debug signals
+   output [15:0] ecfg_tx_debug;       //various debug signals
    
    //Read requests (from axi slave)
    input         esaxi_emrq_wr_en;
@@ -85,7 +85,7 @@ module etx(/*AUTOARG*/
    input 	 tx_rd_wait_n;    
 
    //regs
-   reg [15:0] 	    ecfg_tx_debug_signals; 
+   reg [15:0] 	    ecfg_tx_debug; 
   
    /*AUTOOUTPUT*/
 
@@ -112,10 +112,10 @@ module etx(/*AUTOARG*/
    wire			emwr_empty;		// From s_wr_fifo of fifo_async.v
    wire [102:0]		emwr_rd_data;		// From s_wr_fifo of fifo_async.v
    wire			emwr_rd_en;		// From etx_arbiter of etx_arbiter.v
+   wire [63:0]		tx_data_par;		// From etx_protocol of etx_protocol.v
+   wire [7:0]		tx_frame_par;		// From etx_protocol of etx_protocol.v
    wire			tx_rd_wait;		// From etx_io of etx_io.v
    wire			tx_wr_wait;		// From etx_io of etx_io.v
-   wire [63:0]		txdata_p;		// From etx_protocol of etx_protocol.v
-   wire [7:0]		txframe_p;		// From etx_protocol of etx_protocol.v
    // End of automatics
    
    /************************************************************/
@@ -131,7 +131,7 @@ module etx(/*AUTOARG*/
                                   .wr_data	(e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_wr_data[102:0]),
 			          .wr_clk       (@"(substring vl-cell-name  0 1)"_axi_aclk),
                                   .wr_en	(e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_wr_en),
-                                  .rd_clk       (txlclk_p),
+                                  .rd_clk       (tx_lclk_par),
                                   .rd_en	(em@"(substring vl-cell-name  2 4)"_rd_en),
                                   .rst          (reset),
                                                      
@@ -150,7 +150,7 @@ module etx(/*AUTOARG*/
 				    .wr_clk		(s_axi_aclk),	 // Templated
 				    .wr_en		(esaxi_emrq_wr_en), // Templated
 				    .wr_data		(esaxi_emrq_wr_data[102:0]), // Templated
-				    .rd_clk		(txlclk_p),	 // Templated
+				    .rd_clk		(tx_lclk_par),	 // Templated
 				    .rd_en		(emrq_rd_en));	 // Templated
    
 
@@ -166,7 +166,7 @@ module etx(/*AUTOARG*/
 				    .wr_clk		(s_axi_aclk),	 // Templated
 				    .wr_en		(esaxi_emwr_wr_en), // Templated
 				    .wr_data		(esaxi_emwr_wr_data[102:0]), // Templated
-				    .rd_clk		(txlclk_p),	 // Templated
+				    .rd_clk		(tx_lclk_par),	 // Templated
 				    .rd_en		(emwr_rd_en));	 // Templated
    
 
@@ -182,7 +182,7 @@ module etx(/*AUTOARG*/
 				    .wr_clk		(m_axi_aclk),	 // Templated
 				    .wr_en		(emaxi_emrr_wr_en), // Templated
 				    .wr_data		(emaxi_emrr_wr_data[102:0]), // Templated
-				    .rd_clk		(txlclk_p),	 // Templated
+				    .rd_clk		(tx_lclk_par),	 // Templated
 				    .rd_en		(emrr_rd_en));	 // Templated
    
    
@@ -192,7 +192,7 @@ module etx(/*AUTOARG*/
    /* and read response channel (master)                       */
    /********************1****************************************/
 
-   etx_arbiter etx_arbiter (.clk		(txlclk_p),
+   etx_arbiter etx_arbiter (
 			      /*AUTOINST*/
 			    // Outputs
 			    .emwr_rd_en		(emwr_rd_en),
@@ -206,6 +206,7 @@ module etx(/*AUTOARG*/
 			    .e_tx_srcaddr	(e_tx_srcaddr[31:0]),
 			    .e_tx_data		(e_tx_data[31:0]),
 			    // Inputs
+			    .tx_lclk_par	(tx_lclk_par),
 			    .reset		(reset),
 			    .emwr_rd_data	(emwr_rd_data[102:0]),
 			    .emwr_empty		(emwr_empty),
@@ -228,8 +229,8 @@ module etx(/*AUTOARG*/
 			      .e_tx_rd_wait	(e_tx_rd_wait),
 			      .e_tx_wr_wait	(e_tx_wr_wait),
 			      .e_tx_ack		(e_tx_ack),
-			      .txframe_p	(txframe_p[7:0]),
-			      .txdata_p		(txdata_p[63:0]),
+			      .tx_frame_par	(tx_frame_par[7:0]),
+			      .tx_data_par	(tx_data_par[63:0]),
 			      // Inputs
 			      .reset		(reset),
 			      .e_tx_access	(e_tx_access),
@@ -239,7 +240,7 @@ module etx(/*AUTOARG*/
 			      .e_tx_dstaddr	(e_tx_dstaddr[31:0]),
 			      .e_tx_srcaddr	(e_tx_srcaddr[31:0]),
 			      .e_tx_data	(e_tx_data[31:0]),
-			      .txlclk_p		(txlclk_p),
+			      .tx_lclk_par	(tx_lclk_par),
 			      .tx_rd_wait	(tx_rd_wait),
 			      .tx_wr_wait	(tx_wr_wait));
 
@@ -250,7 +251,7 @@ module etx(/*AUTOARG*/
    /*-serializes data for I/O                                 */  
    /***********************************************************/
 
-   etx_io etx_io (.ioreset		(reset),
+   etx_io etx_io (
 		    /*AUTOINST*/
 		  // Outputs
 		  .tx_lclk_p		(tx_lclk_p),
@@ -267,11 +268,11 @@ module etx(/*AUTOARG*/
 		  .tx_wr_wait_n		(tx_wr_wait_n),
 		  .tx_rd_wait_p		(tx_rd_wait_p),
 		  .tx_rd_wait_n		(tx_rd_wait_n),
-		  .txlclk_p		(txlclk_p),
-		  .txlclk_s		(txlclk_s),
-		  .txlclk_out		(txlclk_out),
-		  .txframe_p		(txframe_p[7:0]),
-		  .txdata_p		(txdata_p[63:0]),
+		  .tx_lclk_par		(tx_lclk_par),
+		  .tx_lclk		(tx_lclk),
+		  .tx_lclk_out		(tx_lclk_out),
+		  .tx_frame_par		(tx_frame_par[7:0]),
+		  .tx_data_par		(tx_data_par[63:0]),
 		  .ecfg_tx_enable	(ecfg_tx_enable),
 		  .ecfg_tx_gpio_mode	(ecfg_tx_gpio_mode),
 		  .ecfg_tx_clkdiv	(ecfg_tx_clkdiv[3:0]),
@@ -281,24 +282,24 @@ module etx(/*AUTOARG*/
    /************************************************************/
    /*Debug signals                                             */
    /************************************************************/
-   always @ (posedge tx_lclk_p)
+   always @ (posedge tx_lclk_par)
      begin
-	ecfg_tx_debug_signals[15:0] <= {2'b0,                     //15:14
-					e_tx_rd_wait,             //13
-					e_tx_wr_wait,             //12
-					emrr_rd_en,               //11
-					emaxi_emrr_full,          //10
-					emaxi_emrr_prog_full,     //9
-					emaxi_emrr_wr_en,	  //8			
-					emrq_rd_en,               //7
-					esaxi_emrq_full,          //6
-					esaxi_emrq_prog_full,     //5
-					esaxi_emrq_wr_en,	  //4			 
-					emwr_rd_en,               //3
-					esaxi_emwr_full,	  //2			 
-					esaxi_emwr_prog_full,     //1
-					esaxi_emwr_wr_en          //0
-					};
+	ecfg_tx_debug[15:0] <= {2'b0,                     //15:14
+				e_tx_rd_wait,             //13
+				e_tx_wr_wait,             //12
+				emrr_rd_en,               //11
+				emaxi_emrr_full,          //10
+				emaxi_emrr_prog_full,     //9
+				emaxi_emrr_wr_en,	  //8			
+				emrq_rd_en,               //7
+				esaxi_emrq_full,          //6
+				esaxi_emrq_prog_full,     //5
+				esaxi_emrq_wr_en,	  //4	 
+				emwr_rd_en,               //3
+				esaxi_emwr_full,	  //2	 
+				esaxi_emwr_prog_full,     //1
+				esaxi_emwr_wr_en          //0
+				};
      end
    
 endmodule // elink

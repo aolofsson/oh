@@ -28,31 +28,41 @@
 
 module emmu (/*AUTOARG*/
    // Outputs
-   emesh_access_out, emesh_write_out, emesh_datamode_out,
-   emesh_ctrlmode_out, emesh_dstaddr_out, emesh_srcaddr_out,
-   emesh_data_out,
+   mi_dout, emmu_access_out, emmu_write_out, emmu_datamode_out,
+   emmu_ctrlmode_out, emmu_dstaddr_out, emmu_srcaddr_out,
+   emmu_data_out,
    // Inputs
-   clk, mmu_en, emesh_access_in, emesh_write_in, emesh_datamode_in,
+   clk, mmu_en, mi_clk, mi_en, mi_we, mi_addr, mi_din,
+   emesh_access_in, emesh_write_in, emesh_datamode_in,
    emesh_ctrlmode_in, emesh_dstaddr_in, emesh_srcaddr_in,
-   emesh_data_in, emmu_lookup_data
+   emesh_data_in
    );
-   parameter DW   = 32;        //data width of
-   parameter AW   = 32;        //data width of 
-   parameter IW   = 12;        //index size of table
-   parameter PAW  = 64;        //physical address width of output
-   parameter MW   = PAW-AW+IW; //table data width
-   parameter MD   = 1<<IW;     //memory depth
-   parameter RFAW = 12;
-
+   parameter DW   = 32;         //data width
+   parameter AW   = 32;         //address width 
+   parameter IDW  = 12;         //index size of table
+   parameter PAW  = 64;         //physical address width of output
+   parameter MW   = PAW-AW+IDW; //table data width
+   parameter RFAW = IDW+1;      //width of mi_addr
+   
    /*****************************/
-   /*CLK/RESET                  */
+   /*DATAPATH CLOCk             */
    /*****************************/
-   input              clk;
+   input             clk;
    
    /*****************************/
    /*MMU LOOKUP DATA            */
    /*****************************/
-   input 	      mmu_en;           //enables mmu
+   input 	     mmu_en;              //enables mmu
+
+   /*****************************/
+   /*MMU table access interface */
+   /*****************************/
+   input 	     mi_clk;              //source synchronous clock
+   input 	     mi_en;               //memory access 
+   input    	     mi_we;               //byte wise write enable
+   input [RFAW-1:0]  mi_addr;             //table addresses
+   input [31:0]      mi_din;              //input data  
+   output [31:0]     mi_dout;             //read back data
   
    /*****************************/
    /*EMESH INPUTS               */
@@ -66,56 +76,79 @@ module emmu (/*AUTOARG*/
    input [DW-1:0]     emesh_data_in; 
 
    /*****************************/
-   /*MMU LOOKUP DATA            */
-   /*****************************/
-   input [MW-1:0]     emmu_lookup_data;   //entry based on emesh_dstaddr_in[31:20]
-   
-   /*****************************/
    /*EMESH OUTPUTS              */
    /*****************************/
-   output 	      emesh_access_out;
-   output 	      emesh_write_out;
-   output [1:0]       emesh_datamode_out;
-   output [3:0]       emesh_ctrlmode_out;
-   output [63:0]      emesh_dstaddr_out;
-   output [AW-1:0]    emesh_srcaddr_out;
-   output [DW-1:0]    emesh_data_out; 
+   output 	      emmu_access_out;
+   output 	      emmu_write_out;
+   output [1:0]       emmu_datamode_out;
+   output [3:0]       emmu_ctrlmode_out;
+   output [63:0]      emmu_dstaddr_out;
+   output [AW-1:0]    emmu_srcaddr_out;
+   output [DW-1:0]    emmu_data_out; 
 
    /*****************************/
    /*REGISTERS                  */
    /*****************************/
-   reg 		      emesh_access_out;
-   reg 		      emesh_write_out;
-   reg [1:0] 	      emesh_datamode_out;
-   reg [3:0] 	      emesh_ctrlmode_out;
-   reg [AW-1:0]       emesh_srcaddr_out;
-   reg [DW-1:0]	      emesh_data_out; 
-   reg [AW-1:0]       emesh_dstaddr_reg;
+   reg 		      emmu_access_out;
+   reg 		      emmu_write_out;
+   reg [1:0] 	      emmu_datamode_out;
+   reg [3:0] 	      emmu_ctrlmode_out;
+   reg [AW-1:0]       emmu_srcaddr_out;
+   reg [DW-1:0]	      emmu_data_out; 
+   reg [AW-1:0]       emmu_dstaddr_reg;
+
+   wire [63:0] 	      emmu_lookup_data;
+   wire [63:0] 	      mi_wr_data;
+   wire [7:0] 	      mi_wr_en;
    
+   /*****************************/
+   /*MMU WRITE LOGIC            */
+   /*****************************/
+
+   //write data
+   assign mi_wr_data[63:0] = {mi_din[31:0], mi_din[31:0]};
+   
+   //Enabling lower/upper 32 bit data write 
+   assign mi_wr_en[7:0] = (mi_en & mi_we & mi_addr[0]) ? 8'b11110000 :
+	                  (mi_en & mi_we & ~mi_addr[0])? 8'b00001111 :
+			                                 8'b00000000 ;
+   
+   memory_dp #(.DW(PAW),.AW(IDW+1)) 
+   memory_dp (
+	      // Outputs
+	      .rd_data	(emmu_lookup_data[63:0]),
+	      // Inputs
+	      .wr_clk	(mi_clk),
+	      .wr_en	(mi_wr_en[7:0]),
+	      .wr_addr	(mi_addr[IDW:0]),        //note the extra bit
+	      .wr_data	(mi_wr_data[63:0]),
+	      .rd_clk	(clk),
+	      .rd_en	(emesh_access_in),
+	      .rd_addr	({emesh_dstaddr_in[AW-1:20],1'b0})
+	      );
+
    /*****************************/
    /*EMESH OUTPUT TRANSACTION   */
    /*****************************/   
-
    //pipeline to compensate for table lookup pipeline 
    //assumes one cycle memory access!     
+
    always @ (posedge clk)
-     emesh_access_out                  <= emesh_access_in;
+     emmu_access_out               <= emesh_access_in;
    
    always @ (posedge clk)
      if(emesh_access_in)   
        begin
-	  emesh_write_out              <= emesh_write_in;
-	  emesh_data_out[DW-1:0]       <= emesh_data_in[DW-1:0];
-	  emesh_srcaddr_out[AW-1:0]    <= emesh_srcaddr_in[AW-1:0];
-	  emesh_dstaddr_reg[AW-1:0]    <= emesh_dstaddr_in[AW-1:0];
-	  emesh_ctrlmode_out[3:0]      <= emesh_ctrlmode_in[3:0];
-	  emesh_datamode_out[1:0]      <= emesh_datamode_in[1:0];
+	  emmu_write_out           <= emesh_write_in;
+	  emmu_data_out[DW-1:0]    <= emesh_data_in[DW-1:0];
+	  emmu_srcaddr_out[AW-1:0] <= emesh_srcaddr_in[AW-1:0];
+	  emmu_dstaddr_reg[AW-1:0] <= emesh_dstaddr_in[AW-1:0];
+	  emmu_ctrlmode_out[3:0]   <= emesh_ctrlmode_in[3:0];
+	  emmu_datamode_out[1:0]   <= emesh_datamode_in[1:0];
        end
    
-   //TODO: make the 32 vs 64 bit configurable, for now assume 64 bit support (a few more gates...)
-
-   assign emesh_dstaddr_out[63:0]   = mmu_en ? {emmu_lookup_data[MW-1:0],emesh_dstaddr_reg[19:0]} :
-				               {32'b0,emesh_dstaddr_reg[AW-1:0]};
+   assign emmu_dstaddr_out[63:0] = mmu_en ? {emmu_lookup_data[43:0],emmu_dstaddr_reg[19:0]} :
+				             {32'b0,emmu_dstaddr_reg[31:0]};
    
 endmodule // emmu
 

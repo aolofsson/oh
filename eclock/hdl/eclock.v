@@ -39,7 +39,7 @@
 
 module eclock (/*AUTOARG*/
    // Outputs
-   CCLK_P, CCLK_N, lclk_s, lclk_out, lclk_p,
+   cclk_p, cclk_n, tx_lclk, tx_lclk_out, tx_lclk_par,
    // Inputs
    clkin, reset, ecfg_cclk_en, ecfg_cclk_div, ecfg_cclk_pllcfg
    );
@@ -48,38 +48,39 @@ module eclock (/*AUTOARG*/
    //   PFD input frequency = 1/CLKIN1_PERIOD / DIVCLK_DIVIDE (10-450MHz)
    //   VCO frequency = PFD input frequency * CLKFBOUT_MULT (800-1600MHz)
    //   Output frequency = VCO frequency / CLKOUTn_DIVIDE
-   parameter  CLKIN_PERIOD = 10.000; // ns -> 100MHz
+   parameter  CLKIN_PERIOD = 10.000;  // ns -> 100MHz
    parameter  CLKIN_DIVIDE = 1;
-   parameter  VCO_MULT = 12;         // VCO = 1200MHz
-   parameter  CCLK_DIVIDE = 2;       // CCLK = 600MHz (at /1 setting)
-   parameter  LCLK_DIVIDE = 4;       // LCLK = 300MHz (600MB/s eLink, 75MW/s parallel)
+   parameter  VCO_MULT     = 12;      // VCO = 1200MHz
+   parameter  CCLK_DIVIDE  = 2;       // CCLK = 600MHz 
+   parameter  LCLK_DIVIDE  = 4;       // LCLK = 300MHz (600MB/s eLink)
    parameter  FEATURE_CCLK_DIV = 1'b1;
-   parameter  IOSTD_ELINK = "LVDS_25";
+   parameter  IOSTD_ELINK      = "LVDS_25";
    
-   // input clock & reset
+   //Input clock & reset
    input        clkin;
    input        reset;
    
-   // From configuration register
-   input        ecfg_cclk_en;           //cclk enable   
-   input [3:0]  ecfg_cclk_div;          //cclk divider setting
-   input [3:0]  ecfg_cclk_pllcfg;       //pll configuration TODO: ??
+   //From configuration register
+   input        ecfg_cclk_en;          //cclk enable   
+   input [3:0]  ecfg_cclk_div;         //cclk divider setting
+   input [3:0]  ecfg_cclk_pllcfg;      //pll configuration TODO: ??
 
-   output       CCLK_P, CCLK_N;
-   output       lclk_s;
-   output       lclk_out;
-   output       lclk_p;
+   //Epiphany clock
+   output       cclk_p, cclk_n;        //high speed clock directly to pin
+
+   //Transmit clocks
+   output       tx_lclk;               //for serialized in transmit serdes
+   output       tx_lclk_out;           //for lclk output
+   output       tx_lclk_par;           //slow clock for tx parallel logic 
 
    // Wires
-   wire         cclk_src;
-   wire         cclk_base;
-   wire         cclk_p_src;
-   wire         cclk_p;
-   wire         cclk;
-   wire         lclk_s_src;
-   wire         lclk_out_src;
-   wire         lclk_p_src;
    wire         clkfb;
+   wire 	pll_cclk;          //full speed cclk
+   wire 	pll_lclk;          //full speed lclk etx
+   wire 	pll_lclk_out;      //full speed lclk for pin for etx
+   wire 	pll_lclk_par;      //low speed lclk for etx
+   wire 	pll_cclk_div;      //low speed cclk
+   wire 	pll_cclk_standby;  //standby clock
    
    // PLL Primitive
    PLLE2_BASE
@@ -89,12 +90,12 @@ module eclock (/*AUTOARG*/
        .CLKFBOUT_PHASE(0.0),        // Phase offset in degrees of CLKFB, (-360.000-360.000).
        .CLKIN1_PERIOD(CLKIN_PERIOD),// Input clock period in ns to ps resolution (i.e. 33.333 is 30 MHz).
        // CLKOUT0_DIVIDE - CLKOUT5_DIVIDE: Divide amount for each CLKOUT (1-128)
-       .CLKOUT0_DIVIDE(CCLK_DIVIDE),
-       .CLKOUT1_DIVIDE(LCLK_DIVIDE),
-       .CLKOUT2_DIVIDE(LCLK_DIVIDE),
-       .CLKOUT3_DIVIDE(LCLK_DIVIDE * 4),
-       .CLKOUT4_DIVIDE(CCLK_DIVIDE * 4),
-       .CLKOUT5_DIVIDE(128),
+       .CLKOUT0_DIVIDE(CCLK_DIVIDE),      //full speed
+       .CLKOUT1_DIVIDE(LCLK_DIVIDE),      //full speed  
+       .CLKOUT2_DIVIDE(LCLK_DIVIDE),      //full speed
+       .CLKOUT3_DIVIDE(LCLK_DIVIDE * 4),  //low speed
+       .CLKOUT4_DIVIDE(CCLK_DIVIDE * 4),  //low speed
+       .CLKOUT5_DIVIDE(128),              //veeery low speed
        // CLKOUT0_DUTY_CYCLE - CLKOUT5_DUTY_CYCLE: Duty cycle for each CLKOUT (0.001-0.999).
        .CLKOUT0_DUTY_CYCLE(0.5),
        .CLKOUT1_DUTY_CYCLE(0.5),
@@ -110,102 +111,86 @@ module eclock (/*AUTOARG*/
        .CLKOUT4_PHASE(0.0),
        .CLKOUT5_PHASE(0.0),
        .DIVCLK_DIVIDE(CLKIN_DIVIDE),// Master division value, (1-56)
-       .REF_JITTER1(0.01),          // Reference input jitter in UI, (0.000-0.999).
+       .REF_JITTER1(0.01),          // Reference input jitter (0.000-0.999).
        .STARTUP_WAIT("FALSE")       // Delay DONE until PLL Locks, ("TRUE"/"FALSE")
        ) eclk_pll
        (
         // Clock Outputs: 1-bit (each) output: User configurable clock outputs
-        .CLKOUT0(cclk_src),     // 1-bit output: CLKOUT0
-        .CLKOUT1(lclk_s_src),   // 1-bit output: CLKOUT1
-        .CLKOUT2(lclk_out_src), // 1-bit output: CLKOUT2
-        .CLKOUT3(lclk_p_src),   // 1-bit output: CLKOUT3
-        .CLKOUT4(cclk_p_src),   // 1-bit output: CLKOUT4
-        .CLKOUT5(),             // 1-bit output: CLKOUT5
-        // Feedback Clocks: 1-bit (each) output: Clock feedback ports
-        .CLKFBOUT(clkfb),       // 1-bit output: Feedback clock
-        .LOCKED(),              // 1-bit output: LOCK
-        .CLKIN1(clkin),         // 1-bit input: Input clock
-        // Control Ports: 1-bit (each) inpu: PLL control ports
-        .PWRDWN(1'b0),          // 1-bit input: Power-down
-        .RST(1'b0),            // 1-bit input: Reset
-        // Feedback Clocks: 1-bit (each) input: Clock feedback ports
-        .CLKFBIN(clkfb)         // 1-bit input: Feedback clock
+        .CLKOUT0(pll_cclk),         //full speed cclk
+        .CLKOUT1(pll_lclk),         //full speed lclk etx
+        .CLKOUT2(pll_lclk_out),     //full speed lclk for pin for etx
+        .CLKOUT3(pll_lclk_par),     //low speed lclk for etx
+        .CLKOUT4(pll_cclk_div),     //low speed cclk
+        .CLKOUT5(pll_cclk_standby), //standby clock
+        .CLKFBOUT(clkfb),           //feedback clock output
+        .LOCKED(),                  //lock signal
+        .CLKIN1(clkin),             //main input clock
+        .PWRDWN(1'b0),              //pll power down
+        .RST(1'b0),                 //reset
+        .CLKFBIN(clkfb)             //feedback clock input
         );
 
    // Output buffering
 
-   BUFG cclk_buf
-     (.O   (cclk_base),
-      .I   (cclk_src));
-
-   BUFG cclk_p_buf
-     (.O   (cclk_p),
-      .I   (cclk_p_src));
-   
-   BUFG lclk_s_buf
-     (.O   (lclk_s),
-      .I   (lclk_s_src));
-
-   BUFG lclk_out_buf
-     (.O   (lclk_out),
-      .I   (lclk_out_src));
-
-   BUFG lclk_p_buf
-     (.O   (lclk_p),
-      .I   (lclk_p_src));
+   BUFG cclk_buf       (.O   (cclk_base),   .I   (pll_cclk));
+   BUFG cclk_div_buf   (.O   (cclk_div),    .I   (pll_cclk_div));   
+   BUFG lclk_buf       (.O   (lclk),        .I   (pll_lclk));
+   BUFG lclk_out_buf   (.O   (lclk_out),    .I   (pll_lclk_out));
+   BUFG lclk_par_buf   (.O   (lclk_par),    .I   (pll_lclk_par));
 
 generate
    if( FEATURE_CCLK_DIV ) begin : gen_cclk_div
 
-         // Create adjustable (but fast) CCLK
-   wire      rxi_cclk_out;
-   reg [8:1] cclk_pattern;
-   reg [3:0] clk_div_sync;
-   reg       enb_sync;
+      // Create adjustable (but fast) CCLK
+      wire      rxi_cclk_out;
+      reg [8:1] cclk_pattern;
+      reg [3:0] clk_div_sync;
+      reg       enb_sync;
    
-   always @ (posedge cclk_p) begin  // Might need x-clock TIG here
+      always @ (posedge cclk_div) begin  // Might need x-clock TIG here
 
-      clk_div_sync <= ecfg_cclk_div;
-      enb_sync     <= ecfg_cclk_en;
-
-      if(enb_sync)
-        case(clk_div_sync)
-          4'h0:    cclk_pattern <= 8'd0;         // Clock OFF
-          4'h7:    cclk_pattern <= 8'b10101010;  // Divide by 1
-          4'h6:    cclk_pattern <= 8'b11001100;  // Divide by 2
-          4'h5:    cclk_pattern <= 8'b11110000;  // Divide by 4
-          default: cclk_pattern <= {8{~cclk_pattern[1]}}; // /8
-        endcase
+	 clk_div_sync <= ecfg_cclk_div;
+	 enb_sync     <= ecfg_cclk_en;
+	 
+	 if(enb_sync)
+           case(clk_div_sync)
+             4'h0:    cclk_pattern <= 8'd0;         // Clock OFF
+             4'h7:    cclk_pattern <= 8'b10101010;  // Divide by 1
+             4'h6:    cclk_pattern <= 8'b11001100;  // Divide by 2
+             4'h5:    cclk_pattern <= 8'b11110000;  // Divide by 4
+             default: cclk_pattern <= {8{~cclk_pattern[1]}}; // /8
+           endcase
       else
-        cclk_pattern <= 8'b00000000;
-
-   end // always @ (posedge lclk_p)
-         
+        cclk_pattern <= 8'b00000000;	 
+      end // always @ (posedge cclk_div)
+      
+      
+      
    OSERDESE2 
      #(
-       .DATA_RATE_OQ("DDR"),  // DDR, SDR
-       .DATA_RATE_TQ("SDR"),  // DDR, BUF, SDR
-       .DATA_WIDTH(8),        // Parallel data width (2-8,10,14)
-       .INIT_OQ(1'b0),        // Initial value of OQ output (1'b0,1'b1)
-       .INIT_TQ(1'b0),        // Initial value of TQ output (1'b0,1'b1)
-       .SERDES_MODE("MASTER"), // MASTER, SLAVE
-       .SRVAL_OQ(1'b0),       // OQ output value when SR is used (1'b0,1'b1)
-       .SRVAL_TQ(1'b0),       // TQ output value when SR is used (1'b0,1'b1)
-       .TBYTE_CTL("FALSE"),   // Enable tristate byte operation (FALSE, TRUE)
-       .TBYTE_SRC("FALSE"),   // Tristate byte source (FALSE, TRUE)
-       .TRISTATE_WIDTH(1)     // 3-state converter width (1,4)
+       .DATA_RATE_OQ("DDR"),     // DDR, SDR
+       .DATA_RATE_TQ("SDR"),     // DDR, BUF, SDR
+       .DATA_WIDTH(8),           // Parallel data width (2-8,10,14)
+       .INIT_OQ(1'b0),           // Initial value of OQ output (1'b0,1'b1)
+       .INIT_TQ(1'b0),           // Initial value of TQ output (1'b0,1'b1)
+       .SERDES_MODE("MASTER"),   // MASTER, SLAVE
+       .SRVAL_OQ(1'b0),          // OQ output value when SR is used (1'b0,1'b1)
+       .SRVAL_TQ(1'b0),          // TQ output value when SR is used (1'b0,1'b1)
+       .TBYTE_CTL("FALSE"),      // Enable tristate byte operation (FALSE, TRUE)
+       .TBYTE_SRC("FALSE"),      // Tristate byte source (FALSE, TRUE)
+       .TRISTATE_WIDTH(1)        // 3-state converter width (1,4)
        ) OSERDESE2_inst 
        (
-        .OFB(),             // 1-bit output: Feedback path for data
-        .OQ(cclk),          // 1-bit output: Data path output
-        .SHIFTOUT1(),       // SHIFTOUTn: 1-bit (each): Data output expansion
+        .OFB(),                  // Feedback path for data
+        .OQ(cclk),               // Data path output
+        .SHIFTOUT1(),            
         .SHIFTOUT2(),
-        .TBYTEOUT(),        // 1-bit output: Byte group tristate
-        .TFB(),             // 1-bit output: 3-state control
-        .TQ(),              // 1-bit output: 3-state control
-        .CLK(cclk_base),    // 1-bit input: High speed clock
-        .CLKDIV(cclk_p),    // 1-bit input: Divided clock
-        .D1(cclk_pattern[1]), // D1 - D8: Parallel data inputs (1-bit each)
+        .TBYTEOUT(),             // Byte group tristate
+        .TFB(),                  // 1-bit output: 3-state control
+        .TQ(),                   // 3-state control
+        .CLK(cclk_base),         // High speed clock
+        .CLKDIV(cclk_div),       // Divided clock
+        .D1(cclk_pattern[1]),    // Parallel data inputs
         .D2(cclk_pattern[2]),
         .D3(cclk_pattern[3]),
         .D4(cclk_pattern[4]),
@@ -213,40 +198,35 @@ generate
         .D6(cclk_pattern[6]),
         .D7(cclk_pattern[7]),
         .D8(cclk_pattern[8]),
-        .OCE(1'b1),         // 1-bit input: Output data clock enable
-        .RST(reset),        // 1-bit input: Reset
-        .SHIFTIN1(1'b0),    // SHIFTINn: Data input expansion (1-bit each)
+        .OCE(1'b1),             // Output data clock enable TODO: gating?
+        .RST(reset),            // Reset
+        .SHIFTIN1(1'b0),        // Data input expansion (1-bit each)
         .SHIFTIN2(1'b0),
-        .T1(1'b0),          // T1 - T4: Parallel 3-state inputs
+        .T1(1'b0),              // Parallel 3-state inputs
         .T2(1'b0),
         .T3(1'b0),
         .T4(1'b0),
-        .TBYTEIN(1'b0),     // 1-bit input: Byte group tristate
-        .TCE(1'b0)          // 1-bit input: 3-state clock enable
+        .TBYTEIN(1'b0),         // Byte group tristate
+        .TCE(1'b0)              // 3-state clock enable
         );
 
-   end else begin : gen_fixed_cclk // Non-dividable CCLK
+   end else 
+     begin : gen_fixed_cclk // Non-dividable CCLK
+	reg       enb_sync;
 
-   reg       enb_sync;
-
-   always @ (posedge cclk_p)
-      enb_sync     <= ecfg_cclk_en;
-
-   // The following does not result in timing failures,
-   //  but doesn't seem glitch-safe
-   assign cclk = cclk_base & enb_sync;
-   
-   end
+	always @ (posedge cclk_div)
+	  enb_sync     <= ecfg_cclk_en;
+	
+	// The following does not result in timing failures,
+	//  but doesn't seem glitch-safe
+	assign cclk = cclk_base & enb_sync;
+     end   
 endgenerate
    
    // xilinx OBUFDS instantiation
-   //
-   OBUFDS
-     #(.IOSTANDARD (IOSTD_ELINK)) 
-   obufds_cclk_inst
-     (.O   (CCLK_P),
-	  .OB  (CCLK_N),
-	  .I   (cclk));
+   OBUFDS #(.IOSTANDARD (IOSTD_ELINK)) obufds_cclk_inst (.O  (cclk_p), 
+							 .OB (cclk_n), 
+							 .I  (cclk));
         
 endmodule // eclock
 

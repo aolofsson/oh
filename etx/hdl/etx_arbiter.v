@@ -43,12 +43,13 @@ module etx_arbiter (/*AUTOARG*/
    e_tx_datamode, e_tx_ctrlmode, e_tx_dstaddr, e_tx_srcaddr,
    e_tx_data,
    // Inputs
-   clk, reset, emwr_rd_data, emwr_empty, emrq_rd_data, emrq_empty,
-   emrr_rd_data, emrr_empty, e_tx_rd_wait, e_tx_wr_wait, e_tx_ack
+   tx_lclk_par, reset, emwr_rd_data, emwr_empty, emrq_rd_data,
+   emrq_empty, emrr_rd_data, emrr_empty, e_tx_rd_wait, e_tx_wr_wait,
+   e_tx_ack
    );
 
    // tx clock
-   input          clk;
+   input          tx_lclk_par;
    input          reset;
    
    // from write request FIFO (slave)
@@ -108,7 +109,7 @@ module etx_arbiter (/*AUTOARG*/
    assign     emrq_rd_en = rq_ready & (~ready | e_tx_ack);
    assign     emwr_rd_en = wr_ready & (~ready | e_tx_ack);
    
-   always @ (posedge clk) begin
+   always @ (posedge tx_lclk_par) begin
       if( reset ) begin
 
          ready     <= 1'b0;

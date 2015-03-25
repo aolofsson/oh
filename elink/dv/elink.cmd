@@ -10,5 +10,6 @@ dv_elink.v
 -y ../../ecfg/hdl
 -y ../../erx/hdl
 -y ../../etx/hdl
+-y ../../eclock/hdl
 
 

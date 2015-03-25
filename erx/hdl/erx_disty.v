@@ -1,10 +1,9 @@
 /*
-  File: e_rx_decoder
- 
   This file is part of the Parallella Project.
 
   Copyright (C) 2014 Adapteva, Inc.
   Contributed by Fred Huettig <fred@adapteva.com>
+  Contributed by Andreas Olofsson <andreas@adapteva.com>
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -37,25 +36,29 @@ module erx_disty (/*AUTOARG*/
    emesh_rd_wait, emesh_wr_wait, emwr_wr_data, emwr_wr_en,
    emrq_wr_data, emrq_wr_en, emrr_wr_data, emrr_wr_en,
    // Inputs
-   clk, emesh_access, emesh_write, emesh_datamode, emesh_ctrlmode,
-   emesh_dstaddr, emesh_srcaddr, emesh_data, emwr_full,
-   emwr_prog_full, emrq_full, emrq_prog_full, emrr_full,
-   emrr_prog_full, ecfg_rx_enable
+   clk, mmu_en, emmu_access, emmu_write, emmu_datamode, emmu_ctrlmode,
+   emmu_dstaddr, emmu_srcaddr, emmu_data, emwr_full, emwr_progfull,
+   emrq_full, emrq_progfull, emrr_full, emrr_progfull, ecfg_rx_enable
    );
 
    parameter [11:0]  C_READ_TAG_ADDR = 12'h810;
-   
+   parameter         C_REMAP_BITS    = 7;
+   parameter [31:0]  C_REMAP_ADDR    = 32'h3E000000;
+
    // RX clock
    input         clk;
-   
+
+   // MMU enable
+   input 	 mmu_en;
+
    //Inputs from MMU
-   input          emesh_access;
-   input          emesh_write;
-   input [1:0]    emesh_datamode;
-   input [3:0]    emesh_ctrlmode;
-   input [31:0]   emesh_dstaddr;
-   input [31:0]   emesh_srcaddr;
-   input [31:0]   emesh_data;
+   input          emmu_access;
+   input          emmu_write;
+   input [1:0]    emmu_datamode;
+   input [3:0]    emmu_ctrlmode;
+   input [31:0]   emmu_dstaddr;
+   input [31:0]   emmu_srcaddr;
+   input [31:0]   emmu_data;
    output         emesh_rd_wait;
    output         emesh_wr_wait;
  
@@ -63,19 +66,19 @@ module erx_disty (/*AUTOARG*/
    output [102:0] emwr_wr_data;
    output         emwr_wr_en;
    input          emwr_full;       // full flags for debug only
-   input          emwr_prog_full;
+   input          emwr_progfull;
    
    // Master FIFO port, read requests
    output [102:0] emrq_wr_data;
    output         emrq_wr_en;
    input          emrq_full;
-   input          emrq_prog_full;
+   input          emrq_progfull;
    
    // Master FIFO port, read responses
    output [102:0] emrr_wr_data;
    output         emrr_wr_en;
    input          emrr_full;
-   input          emrr_prog_full;
+   input          emrr_progfull;
 
    // Control bits inputs
    input          ecfg_rx_enable;
@@ -95,34 +98,46 @@ module erx_disty (/*AUTOARG*/
    reg            emrq_wr_en;
    reg            emrr_wr_en;
 
+   reg [1:0] 	  rxmmu_sync;
+
    //############
    //# WIRES
    //############
-
+   wire           rxmmu = rxmmu_sync[0];
+   
    wire [102:0]   fifo_din;
    wire [102:0]   emwr_wr_data;
    wire [102:0]   emrq_wr_data;
    wire [102:0]   emrr_wr_data;
 
+
+   
    //############
    //# PIPELINE AND DISTRIBUTE
    //############   
    always @ (posedge clk) 
      begin
-	in_write          <= emesh_write;
-        in_datamode[1:0]  <= emesh_datamode[1:0];
-        in_ctrlmode[3:0]  <= emesh_ctrlmode[3:0];
-        in_dstaddr[31:0]  <= emesh_dstaddr[31:0];
-        in_srcaddr[31:0]  <= emesh_srcaddr[31:0];
-        in_data[31:0]     <= emesh_data[31:0];
+	in_write          <= emmu_write;
+        in_datamode[1:0]  <= emmu_datamode[1:0];
+        in_ctrlmode[3:0]  <= emmu_ctrlmode[3:0];
+        in_dstaddr[31:0]  <= mmu_en ? emmu_dstaddr[31:0] : {C_REMAP_ADDR[31:(32-C_REMAP_BITS)], 
+								 emmu_dstaddr[(31-C_REMAP_BITS):0]};
+        in_srcaddr[31:0]  <= emmu_srcaddr[31:0];
+        in_data[31:0]     <= emmu_data[31:0];
      end
 	
    always @ (posedge clk) 
-     if(emesh_access) 
+     if(emmu_access) 
        begin
-	  emrq_wr_en <= ~emesh_write;
-          emrr_wr_en <= emesh_write & (emesh_dstaddr[31:20] == C_READ_TAG_ADDR);
-          emwr_wr_en <= emesh_write & (emesh_dstaddr[31:20] != C_READ_TAG_ADDR);
+	  emrq_wr_en <= ~emmu_write;
+          emrr_wr_en <= emmu_write & (emmu_dstaddr[31:20] == C_READ_TAG_ADDR);
+          emwr_wr_en <= emmu_write & (emmu_dstaddr[31:20] != C_READ_TAG_ADDR);
+       end
+     else
+       begin
+	  emrq_wr_en  <= 1'b0;
+	  emrr_wr_en  <= 1'b0;
+	  emwr_wr_en  <= 1'b0;	  
        end
    
    // TODO: Why not keep the bit pattern the same as our "default" pattern??
@@ -143,9 +158,10 @@ module erx_disty (/*AUTOARG*/
    //# Wait signal passthroughs
    //#############################
    
-   assign        emesh_rd_wait = emrq_prog_full;
-   assign        emesh_wr_wait = emwr_prog_full | emrr_prog_full;
+   assign        emesh_rd_wait = emrq_progfull;
+   assign        emesh_wr_wait = emwr_progfull | emrr_progfull;
    
-endmodule // e_rx_decoder
+endmodule // erx_disty
+
 
 
