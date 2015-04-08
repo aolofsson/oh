@@ -43,7 +43,7 @@ module erx (/*AUTOARG*/
    input 	  ecfg_rx_mmu_mode;  //enable mmu   
    output [15:0]  ecfg_rx_debug;     //various debug signals
    input 	  ecfg_rx_gpio_mode; //mode for sampling elink pins directly
-   input [10:0]   ecfg_dataout;	     //data for pins in direct mode
+   input [1:0] 	  ecfg_dataout;	     //data for pins in direct mode
    output [8:0]   ecfg_datain;       //samples elink pins
 
    //MMU table configuration interface
@@ -310,7 +310,7 @@ module erx (/*AUTOARG*/
    /*-serializes data for I/O                                 */  
    /***********************************************************/
 
-   erx_io erx_io (.ioreset		(reset),
+   erx_io erx_io (
 		    /*AUTOINST*/
 		  // Outputs
 		  .rx_wr_wait_p		(rx_wr_wait_p),
@@ -322,9 +322,9 @@ module erx (/*AUTOARG*/
 		  .rx_data_par		(rx_data_par[63:0]),
 		  .ecfg_datain		(ecfg_datain[8:0]),
 		  // Inputs
+		  .reset		(reset),
 		  .rx_lclk_p		(rx_lclk_p),
 		  .rx_lclk_n		(rx_lclk_n),
-		  .reset		(reset),
 		  .rx_frame_p		(rx_frame_p),
 		  .rx_frame_n		(rx_frame_n),
 		  .rx_data_p		(rx_data_p[7:0]),
@@ -333,7 +333,7 @@ module erx (/*AUTOARG*/
 		  .rx_rd_wait		(rx_rd_wait),
 		  .ecfg_rx_enable	(ecfg_rx_enable),
 		  .ecfg_rx_gpio_mode	(ecfg_rx_gpio_mode),
-		  .ecfg_dataout		(ecfg_dataout[10:0]));
+		  .ecfg_dataout		(ecfg_dataout[1:0]));
 
    /************************************************************/
    /*Debug signals                                             */

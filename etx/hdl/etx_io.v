@@ -62,7 +62,7 @@ module etx_io (/*AUTOARG*/
    input         ecfg_tx_enable;     //enable signal for tx  
    input         ecfg_tx_gpio_mode;  //forces tx wait pins to constants
    input [3:0]   ecfg_tx_clkdiv;     // TODO: Implement this
-   input [10:0]  ecfg_dataout;       // frame & data for GPIO mode
+   input [8:0] 	 ecfg_dataout;       // frame & data for GPIO mode
 
    //############
    //# REGS
@@ -287,6 +287,6 @@ module etx_io (/*AUTOARG*/
 
    //On Parallella this signal comes in single-ended
    assign tx_rd_wait = tx_rd_wait_p;
-   
+
 endmodule // etx_io
 

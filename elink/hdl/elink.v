@@ -33,7 +33,7 @@ module elink(/*AUTOARG*/
    s_axicfg_bvalid, s_axicfg_rdata, s_axicfg_rresp, s_axicfg_rvalid,
    s_axicfg_wready,
    // Inputs
-   hw_reset, clkin, rx_lclk_p, rx_lclk_n, rx_frame_p, rx_frame_n,
+   reset_in, clkin, rx_lclk_p, rx_lclk_n, rx_frame_p, rx_frame_n,
    rx_data_p, rx_data_n, tx_wr_wait_p, tx_wr_wait_n, tx_rd_wait_p,
    tx_rd_wait_n, m_axi_aclk, m_axi_aresetn, m_axi_arready,
    m_axi_awready, m_axi_bid, m_axi_bresp, m_axi_bvalid, m_axi_rdata,
@@ -60,8 +60,8 @@ module elink(/*AUTOARG*/
    /****************************/
    /*BASIC SIGNALS             */
    /****************************/
-   input        hw_reset;        //active high asynchronous hardware reset
-   input 	clkin;           //primary clock input
+   input        reset_in;       //active high asynchronous hardware reset
+   input 	clkin;          //primary clock input
    
    /*****************************/
    /*EPIPHANY BASIC INTERFACE   */
@@ -276,6 +276,7 @@ module elink(/*AUTOARG*/
    wire			ecfg_rx_mmu_mode;	// From ecfg of ecfg.v
    wire [3:0]		ecfg_tx_clkdiv;		// From ecfg of ecfg.v
    wire [3:0]		ecfg_tx_ctrl_mode;	// From ecfg of ecfg.v
+   wire [1:0]		ecfg_tx_datain;		// From etx of etx.v
    wire [15:0]		ecfg_tx_debug;		// From etx of etx.v
    wire			ecfg_tx_enable;		// From ecfg of ecfg.v
    wire			ecfg_tx_gpio_mode;	// From ecfg of ecfg.v
@@ -538,7 +539,7 @@ module elink(/*AUTOARG*/
 	   .ecfg_rx_enable		(ecfg_rx_enable),
 	   .ecfg_rx_mmu_mode		(ecfg_rx_mmu_mode),
 	   .ecfg_rx_gpio_mode		(ecfg_rx_gpio_mode),
-	   .ecfg_dataout		(ecfg_dataout[10:0]),
+	   .ecfg_dataout		(ecfg_dataout[1:0]),
 	   .mi_clk			(mi_clk),
 	   .mi_en			(mi_en),
 	   .mi_we			(mi_we),
@@ -559,6 +560,7 @@ module elink(/*AUTOARG*/
    /***********************************************************/
    etx etx(/*AUTOINST*/
 	   // Outputs
+	   .ecfg_tx_datain		(ecfg_tx_datain[1:0]),
 	   .ecfg_tx_debug		(ecfg_tx_debug[15:0]),
 	   .esaxi_emrq_full		(esaxi_emrq_full),
 	   .esaxi_emrq_prog_full	(esaxi_emrq_prog_full),
@@ -583,7 +585,7 @@ module elink(/*AUTOARG*/
 	   .ecfg_tx_enable		(ecfg_tx_enable),
 	   .ecfg_tx_gpio_mode		(ecfg_tx_gpio_mode),
 	   .ecfg_tx_mmu_mode		(ecfg_tx_mmu_mode),
-	   .ecfg_dataout		(ecfg_dataout[10:0]),
+	   .ecfg_dataout		(ecfg_dataout[8:0]),
 	   .esaxi_emrq_wr_en		(esaxi_emrq_wr_en),
 	   .esaxi_emrq_wr_data		(esaxi_emrq_wr_data[102:0]),
 	   .esaxi_emwr_wr_en		(esaxi_emwr_wr_en),
@@ -603,11 +605,13 @@ module elink(/*AUTOARG*/
                          // Outputs
 	                .ecfg_reset   (reset),
                         .ecfg_debug   ({embox_full, embox_not_empty, ecfg_rx_debug[13:0],ecfg_tx_debug[15:0]}),    
-                            );
+                        .ecfg_datain  ({ecfg_tx_datain[1:0],ecfg_datain[8:0]}),
+                                );
    */
    
    ecfg ecfg(.mi_dout			(mi_dout_ecfg[DW-1:0]),
 	     .ecfg_resetb		(resetb_out),
+	     .hw_reset			(reset_in),
 	     /*AUTOINST*/
 	     // Outputs
 	     .ecfg_reset		(reset),		 // Templated
@@ -625,13 +629,12 @@ module elink(/*AUTOARG*/
 	     .ecfg_coreid		(ecfg_coreid[11:0]),
 	     .ecfg_dataout		(ecfg_dataout[10:0]),
 	     // Inputs
-	     .hw_reset			(hw_reset),
 	     .mi_clk			(mi_clk),
 	     .mi_en			(mi_en),
 	     .mi_we			(mi_we),
 	     .mi_addr			(mi_addr[RFAW-1:0]),
 	     .mi_din			(mi_din[31:0]),
-	     .ecfg_datain		(ecfg_datain[10:0]),
+	     .ecfg_datain		({ecfg_tx_datain[1:0],ecfg_datain[8:0]}), // Templated
 	     .ecfg_debug		({embox_full, embox_not_empty, ecfg_rx_debug[13:0],ecfg_tx_debug[15:0]})); // Templated
 
    

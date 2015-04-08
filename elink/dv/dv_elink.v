@@ -5,7 +5,7 @@ module dv_elink();
    parameter AW = 32;
    
    //Basic stimulus to drive
-   reg        hw_reset;        //active high asynchronous hardware reset
+   reg        reset_in;        //active high asynchronous hardware reset
    reg 	      clkin;           //primary clock reg
    reg        rx_lclk_p;       //linkh speed clock reg (up to 500MHz)
    wire	      rx_lclk_n;
@@ -78,7 +78,7 @@ module dv_elink();
      begin
 	$display($time, " << Starting the Simulation >>");	
 	#0
-	  hw_reset        = 1'b1;
+	reset_in          = 1'b1;
 	clkin             = 1'b0;
         rx_lclk_p         = 1'b0;
         rx_frame_p        = 1'b0;
@@ -142,7 +142,7 @@ module dv_elink();
         s_axicfg_wvalid      = 1'b0;
        
 	#100 
-	hw_reset            = 1'b0;    // at time 100 release reset
+	  reset_in           = 1'b0;    // at time 100 release reset
 	#10000	  
 	  $finish;
      end
@@ -294,7 +294,7 @@ module dv_elink();
 		.s_axicfg_rvalid	(s_axicfg_rvalid),
 		.s_axicfg_wready	(s_axicfg_wready),
 		// Inputs
-		.hw_reset		(hw_reset),
+		.reset_in		(reset_in),
 		.clkin			(clkin),
 		.rx_lclk_p		(rx_lclk_p),
 		.rx_lclk_n		(rx_lclk_n),

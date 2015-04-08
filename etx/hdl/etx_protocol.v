@@ -34,6 +34,7 @@
 module etx_protocol (/*AUTOARG*/
    // Outputs
    e_tx_rd_wait, e_tx_wr_wait, e_tx_ack, tx_frame_par, tx_data_par,
+   ecfg_tx_datain,
    // Inputs
    reset, e_tx_access, e_tx_write, e_tx_datamode, e_tx_ctrlmode,
    e_tx_dstaddr, e_tx_srcaddr, e_tx_data, tx_lclk_par, tx_rd_wait,
@@ -61,11 +62,10 @@ module etx_protocol (/*AUTOARG*/
    output [63:0] tx_data_par;
    input         tx_rd_wait;  // The wait signals are passed through
    input         tx_wr_wait;  // to the emesh interfaces
-   
-   //#############
-   //# Configuration bits
-   //#############
 
+   //Debug/gpio signals
+   output [1:0]  ecfg_tx_datain; // {wr_wait, rd_wait}
+   
    //############
    //# Local regs & wires
    //############
@@ -133,6 +133,9 @@ module etx_protocol (/*AUTOARG*/
 	wr_wait_sync <= tx_wr_wait;
 	e_tx_wr_wait <= wr_wait_sync;
      end
+
+   assign ecfg_tx_datain[1:0] = {e_tx_wr_wait,
+				 e_tx_rd_wait};
    
 endmodule // e_tx_protocol
 

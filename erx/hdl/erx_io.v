@@ -27,21 +27,25 @@ module erx_io (/*AUTOARG*/
    rx_wr_wait_p, rx_wr_wait_n, rx_rd_wait_p, rx_rd_wait_n,
    rx_lclk_div4, rx_frame_par, rx_data_par, ecfg_datain,
    // Inputs
-   rx_lclk_p, rx_lclk_n, reset, ioreset, rx_frame_p, rx_frame_n,
-   rx_data_p, rx_data_n, rx_wr_wait, rx_rd_wait, ecfg_rx_enable,
+   reset, rx_lclk_p, rx_lclk_n, rx_frame_p, rx_frame_n, rx_data_p,
+   rx_data_n, rx_wr_wait, rx_rd_wait, ecfg_rx_enable,
    ecfg_rx_gpio_mode, ecfg_dataout
    );
 
    parameter IOSTD_ELINK = "LVDS_25";
-   
+
+
    //###########
    //# eLink pins
    //###########
-   input       rx_lclk_p, rx_lclk_n; // Differential clock from IOB
-   input       reset;
-   input       ioreset;
+   input       reset;      // Reset (from ecfg)
 
-   input       rx_frame_p, rx_frame_n;  // Inputs from eLink
+
+   //###########
+   //# eLink pins
+   //###########
+   input       rx_lclk_p, rx_lclk_n;       // Differential clock from IOB
+   input       rx_frame_p, rx_frame_n;     // Inputs from eLink
    input [7:0] rx_data_p, rx_data_n;
 
    output      rx_wr_wait_p, rx_wr_wait_n;
@@ -61,7 +65,7 @@ module erx_io (/*AUTOARG*/
    //#############
    input         ecfg_rx_enable;         //enable signal for rx  
    input         ecfg_rx_gpio_mode;      //forces rx wait pins to constants
-   input [10:0]  ecfg_dataout;           // rd_wait, wr_wait for GPIO mode
+   input [1:0] 	 ecfg_dataout;           //rd_wait, wr_wait for GPIO mode
    output [8:0]  ecfg_datain;            //gpio data in (data in and frame)
 
    //############
@@ -317,8 +321,8 @@ reg [8:0] ecfg_datain;
    //# Wait signals (asynchronous)
    //#############
 
-   wire rd_wait = rxgpio ? ecfg_dataout[9]  : rx_rd_wait;
-   wire wr_wait = rxgpio ? ecfg_dataout[10] : rx_wr_wait;
+   wire rd_wait = rxgpio ? ecfg_dataout[0]  : rx_rd_wait;
+   wire wr_wait = rxgpio ? ecfg_dataout[1] : rx_wr_wait;
 
    OBUFDS 
      #(

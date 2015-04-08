@@ -17,10 +17,10 @@
 
 module etx(/*AUTOARG*/
    // Outputs
-   ecfg_tx_debug, esaxi_emrq_full, esaxi_emrq_prog_full,
-   esaxi_emwr_full, esaxi_emwr_prog_full, emaxi_emrr_full,
-   emaxi_emrr_prog_full, tx_lclk_p, tx_lclk_n, tx_frame_p, tx_frame_n,
-   tx_data_p, tx_data_n,
+   ecfg_tx_datain, ecfg_tx_debug, esaxi_emrq_full,
+   esaxi_emrq_prog_full, esaxi_emwr_full, esaxi_emwr_prog_full,
+   emaxi_emrr_full, emaxi_emrr_prog_full, tx_lclk_p, tx_lclk_n,
+   tx_frame_p, tx_frame_n, tx_data_p, tx_data_n,
    // Inputs
    reset, tx_lclk, tx_lclk_out, tx_lclk_par, s_axi_aclk, m_axi_aclk,
    ecfg_tx_clkdiv, ecfg_tx_enable, ecfg_tx_gpio_mode,
@@ -49,11 +49,13 @@ module etx(/*AUTOARG*/
    //gpio mode
    input 	 ecfg_tx_gpio_mode;    //sets output pins to constant values
    input 	 ecfg_tx_mmu_mode;     //sets output pins to constant values
-   input [10:0]  ecfg_dataout;	       //data for gpio mode
-
+   input [8:0] 	 ecfg_dataout;	       //data for gpio mode
+   output [1:0]  ecfg_tx_datain;       //{wr_wait,rd_wait}
+   
    //Testing
    output [15:0] ecfg_tx_debug;       //various debug signals
-   
+  
+
    //Read requests (from axi slave)
    input         esaxi_emrq_wr_en;
    input [102:0] esaxi_emrq_wr_data;
@@ -231,6 +233,7 @@ module etx(/*AUTOARG*/
 			      .e_tx_ack		(e_tx_ack),
 			      .tx_frame_par	(tx_frame_par[7:0]),
 			      .tx_data_par	(tx_data_par[63:0]),
+			      .ecfg_tx_datain	(ecfg_tx_datain[1:0]),
 			      // Inputs
 			      .reset		(reset),
 			      .e_tx_access	(e_tx_access),
@@ -276,7 +279,7 @@ module etx(/*AUTOARG*/
 		  .ecfg_tx_enable	(ecfg_tx_enable),
 		  .ecfg_tx_gpio_mode	(ecfg_tx_gpio_mode),
 		  .ecfg_tx_clkdiv	(ecfg_tx_clkdiv[3:0]),
-		  .ecfg_dataout		(ecfg_dataout[10:0]));
+		  .ecfg_dataout		(ecfg_dataout[8:0]));
 
 
    /************************************************************/

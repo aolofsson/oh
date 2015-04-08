@@ -170,8 +170,8 @@ module ecfg (/*AUTOARG*/
    output [11:0]     ecfg_coreid;      //core-id of fpga elink
 
    //gpio
-   input [10:0]      ecfg_datain;      // data from elink inputs
-   output [10:0]     ecfg_dataout;     //data for elink outputs {rd_wait,wr_wait,frame,data[7:0]}
+   input [10:0]      ecfg_datain;      //data from elink inputs
+   output [10:0]     ecfg_dataout;     //data for elink outputs
 
    //debug
    input [31:0]      ecfg_debug;      //various signals for debugging the elink hardware
