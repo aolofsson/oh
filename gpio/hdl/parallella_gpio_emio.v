@@ -28,28 +28,6 @@
 module parallella_gpio_emio
   (/*AUTOARG*/
    // Outputs
-<<<<<<< HEAD
-   GPIO_I,
-   // Inouts
-   GPIO_P, GPIO_N,
-   // Inputs
-   GPIO_O, GPIO_T
-   );
-
-   inout [`GPIO_NUM-1:0] GPIO_P;
-   inout [`GPIO_NUM-1:0] GPIO_N;
-
-   output [63:0]  GPIO_I;
-   input  [63:0]  GPIO_O;
-   input  [63:0]  GPIO_T;
-
-   wire [`GPIO_SIGS-1:0] gpio_i;
-   assign GPIO_I[`GPIO_SIGS-1:0] = gpio_i;
-   wire [`GPIO_SIGS-1:0] gpio_o
-                         = GPIO_O[`GPIO_SIGS-1:0];
-   wire [`GPIO_SIGS-1:0] gpio_t
-                         = GPIO_T[`GPIO_SIGS-1:0];
-=======
    PS_GPIO_I,
    // Inouts
    GPIO_P, GPIO_N,
@@ -60,7 +38,6 @@ module parallella_gpio_emio
    parameter  NUM_GPIO_PAIRS = 24;       // 12 or 24
    parameter  DIFF_GPIO      = 0;        // 0 or 1
    parameter  NUM_PS_SIGS    = 64;
->>>>>>> origin/elink_redesign_fred
    
    inout [NUM_GPIO_PAIRS-1:0] GPIO_P;
    inout [NUM_GPIO_PAIRS-1:0] GPIO_N;
@@ -151,17 +128,10 @@ module parallella_gpio_emio
    
    // Tie unused PS signals back to themselves
    genvar    n;
-<<<<<<< HEAD
-   generate for(n=`GPIO_SIGS; n<63; n=n+1) begin : unused_ps_sigs
-      assign GPIO_I[n]
-               = GPIO_O[n] &
-                 ~GPIO_T[n];
-=======
    generate for(n=NUM_GPIO_PAIRS*2; n<48; n=n+1) begin : unused_ps_sigs
       assign PS_GPIO_I[n]
                = PS_GPIO_O[n] &
                  ~PS_GPIO_T[n];
->>>>>>> origin/elink_redesign_fred
    end
    endgenerate
    
