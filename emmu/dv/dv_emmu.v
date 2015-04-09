@@ -12,13 +12,15 @@ module dv_emmu();
    //Stimulus to drive
    reg        clk;
    reg        reset;
-
+   reg 	      mmu_en;
+   
    //Reg interface
-   reg        mi_access;
+   reg        mi_en;
    reg [12:0] mi_addr;
-   reg [31:0] mi_data_in;
-   reg 	      mi_write;
-
+   reg [31:0] mi_din;
+   reg [3:0]  mi_we;
+   
+   
    //emesh interface
    reg              emesh_access_in;
    reg              emesh_write_in;
@@ -39,10 +41,10 @@ module dv_emmu();
 	#0
         clk                    = 1'b0;    // at time 0
 	reset                  = 1'b1;    // reset is active
-	mi_write               = 1'b0;
-	mi_access              = 1'b0;
+	mi_we[3:0]             = 4'b0;
+	mi_en                  = 1'b0;
 	mi_addr[12:0]          = 13'b0;
-	mi_data_in[31:0]       = 32'h55555000;
+	mi_din[31:0]           = 32'h55555000;
 	test_state[1:0]        = 2'b00;
 	go                     = 1'b0;		
         emesh_access_in        = 1'b0;
@@ -52,6 +54,7 @@ module dv_emmu();
 	emesh_dstaddr_in[31:0] = 32'b0;
 	emesh_srcaddr_in[31:0] = 32'b0;
 	emesh_data_in[31:0]    = 32'b0;
+	mmu_en                 = 1'b1;
 	#100 
 	  reset    = 1'b0;    // at time 100 release reset
 	#100
@@ -75,15 +78,15 @@ module dv_emmu();
 	    2'b00://write entries
 	      if(mi_addr[12:0]<13'h16)
 		begin
-		   mi_access        <= 1'b1;
-		   mi_write         <= 1'b1;
-		   mi_addr[12:0]    <= mi_addr[12:0]   +1'b1;	  
-		   mi_data_in[31:0] <= mi_addr[0] ? (mi_addr[12:0]+32'hFFFFF000) : 32'hFFFFFFFF;		   
+		   mi_en            <= 1'b1;
+		   mi_we[3:0]       <= 4'b1111;
+		   mi_addr[12:0]    <= mi_addr[12:0] + 1'b1;	  
+		   mi_din[31:0]     <= mi_addr[0] ? (mi_addr[12:0]+32'hFFFFF000) : 32'hFFFFFFFF;		   
 		end
 	      else
 		begin
 		   test_state       <= 2'b01;
-		   mi_access        <= 1'b0;
+		   mi_en            <= 1'b0;
 		end
 	    2'b01://
 	      if(emesh_dstaddr_in[31:0]<32'h00800000)
@@ -113,36 +116,36 @@ module dv_emmu();
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			emesh_access_out;	// From emmu of emmu.v
-   wire [3:0]		emesh_ctrlmode_out;	// From emmu of emmu.v
-   wire [DW-1:0]	emesh_data_out;		// From emmu of emmu.v
-   wire [1:0]		emesh_datamode_out;	// From emmu of emmu.v
-   wire [PAW-1:0]	emesh_dstaddr_out;	// From emmu of emmu.v
-   wire [AW-1:0]	emesh_srcaddr_out;	// From emmu of emmu.v
-   wire			emesh_write_out;	// From emmu of emmu.v
-   wire [DW-1:0]	mi_data_out;		// From emmu of emmu.v
+   wire			emmu_access_out;	// From emmu of emmu.v
+   wire [3:0]		emmu_ctrlmode_out;	// From emmu of emmu.v
+   wire [DW-1:0]	emmu_data_out;		// From emmu of emmu.v
+   wire [1:0]		emmu_datamode_out;	// From emmu of emmu.v
+   wire [63:0]		emmu_dstaddr_out;	// From emmu of emmu.v
+   wire [AW-1:0]	emmu_srcaddr_out;	// From emmu of emmu.v
+   wire			emmu_write_out;		// From emmu of emmu.v
+   wire [31:0]		mi_dout;		// From emmu of emmu.v
    // End of automatics
    /*AUTOWIRE*/
    
    //DUT
-   emmu emmu(
+   emmu emmu(.mi_clk			(clk),
 	     /*AUTOINST*/
 	     // Outputs
-	     .mi_data_out		(mi_data_out[DW-1:0]),
-	     .emesh_access_out		(emesh_access_out),
-	     .emesh_write_out		(emesh_write_out),
-	     .emesh_datamode_out	(emesh_datamode_out[1:0]),
-	     .emesh_ctrlmode_out	(emesh_ctrlmode_out[3:0]),
-	     .emesh_dstaddr_out		(emesh_dstaddr_out[PAW-1:0]),
-	     .emesh_srcaddr_out		(emesh_srcaddr_out[AW-1:0]),
-	     .emesh_data_out		(emesh_data_out[DW-1:0]),
+	     .mi_dout			(mi_dout[31:0]),
+	     .emmu_access_out		(emmu_access_out),
+	     .emmu_write_out		(emmu_write_out),
+	     .emmu_datamode_out		(emmu_datamode_out[1:0]),
+	     .emmu_ctrlmode_out		(emmu_ctrlmode_out[3:0]),
+	     .emmu_dstaddr_out		(emmu_dstaddr_out[63:0]),
+	     .emmu_srcaddr_out		(emmu_srcaddr_out[AW-1:0]),
+	     .emmu_data_out		(emmu_data_out[DW-1:0]),
 	     // Inputs
-	     .reset			(reset),
 	     .clk			(clk),
-	     .mi_access			(mi_access),
-	     .mi_write			(mi_write),
-	     .mi_addr			(mi_addr[IW:0]),
-	     .mi_data_in		(mi_data_in[DW-1:0]),
+	     .mmu_en			(mmu_en),
+	     .mi_en			(mi_en),
+	     .mi_we			(mi_we[3:0]),
+	     .mi_addr			(mi_addr[15:0]),
+	     .mi_din			(mi_din[31:0]),
 	     .emesh_access_in		(emesh_access_in),
 	     .emesh_write_in		(emesh_write_in),
 	     .emesh_datamode_in		(emesh_datamode_in[1:0]),
@@ -160,5 +163,9 @@ module dv_emmu();
 
    
 endmodule // dv_emmu
+// Local Variables:
+// verilog-library-directories:("." "../hdl")
+// End:
+
 
 
