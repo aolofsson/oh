@@ -135,7 +135,12 @@ module emmu (/*AUTOARG*/
 				       .addrb	(emesh_dstaddr_in[31:20])
 				       );
 
-`endif //  `ifdef TARGET_XILINX
+`else // !`ifdef TARGET_XILINX
+   
+   assign emmu_lookup_data[47:0]=48'b0;
+				 
+`endif // !`ifdef TARGET_XILINX
+   
 				       
    /*****************************/
    /*EMESH OUTPUT TRANSACTION   */
