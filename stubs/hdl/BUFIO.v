@@ -6,6 +6,8 @@ module BUFIO (/*AUTOARG*/
    );
    input I;
    output O;
+
+   assign O=I;
    
 endmodule // BUFIO
 

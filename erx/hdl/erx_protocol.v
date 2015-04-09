@@ -33,8 +33,9 @@
 
 module erx_protocol (/*AUTOARG*/
    // Outputs
-   rx_rd_wait, rx_wr_wait, emesh_rx_access, emesh_rx_write, emesh_rx_datamode,
-   emesh_rx_ctrlmode, emesh_rx_dstaddr, emesh_rx_srcaddr, emesh_rx_data,
+   rx_rd_wait, rx_wr_wait, emesh_rx_access, emesh_rx_write,
+   emesh_rx_datamode, emesh_rx_ctrlmode, emesh_rx_dstaddr,
+   emesh_rx_srcaddr, emesh_rx_data,
    // Inputs
    reset, rx_lclk_div4, rx_frame_par, rx_data_par, emesh_rx_rd_wait,
    emesh_rx_wr_wait
@@ -107,39 +108,44 @@ module erx_protocol (/*AUTOARG*/
    // Here we handle any alignment of the frame within an 8-cycle group,
    // though in theory frames should only start on rising edges??
 
-   always @( posedge rx_lclk_div4 ) begin
-
-      frame_prev  <= rx_frame_par[0] ;  // Capture last bit for next group
-      rx_data_in   <= rx_data_par;
-      
-      if( ~frame_prev & rx_frame_par[7] ) begin   // All 8 bytes are a new frame
-         rxalign_in  <= 3'd7;
-         rxactive_in <= 1'b1;
-      end else if( ~rx_frame_par[7] & rx_frame_par[6] ) begin
-         rxalign_in  <= 3'd6;
-         rxactive_in <= 1'b1;
-      end else if( ~rx_frame_par[6] & rx_frame_par[5] ) begin
-         rxalign_in  <= 3'd5;
-         rxactive_in <= 1'b1;
-      end else if( ~rx_frame_par[5] & rx_frame_par[4] ) begin
-         rxalign_in  <= 3'd4;
-         rxactive_in <= 1'b1;
-      end else if( ~rx_frame_par[4] & rx_frame_par[3] ) begin
-         rxalign_in  <= 3'd3;
-         rxactive_in <= 1'b1;
-      end else if( ~rx_frame_par[3] & rx_frame_par[2] ) begin
-         rxalign_in  <= 3'd2;
-         rxactive_in <= 1'b1;
-      end else if( ~rx_frame_par[2] & rx_frame_par[1] ) begin
-         rxalign_in  <= 3'd1;
-         rxactive_in <= 1'b1;
-      end else if( ~rx_frame_par[1] & rx_frame_par[0] ) begin
-         rxalign_in  <= 3'd0;
-         rxactive_in <= 1'b1;
-      end else begin
-         rxactive_in <= 3'd0;  // No edge
-      end
-      
+   always @( posedge rx_lclk_div4 or posedge reset) 
+     if(reset)
+       begin
+	  rxalign_in  <= 3'd0;
+          rxactive_in <= 1'b0;
+       end
+     else
+       begin      
+	  frame_prev   <= rx_frame_par[0] ;  // Capture last bit for next group
+	  rx_data_in   <= rx_data_par;
+	  
+	  if( ~frame_prev & rx_frame_par[7] ) begin   // All 8 bytes are a new frame
+             rxalign_in  <= 3'd7;
+             rxactive_in <= 1'b1;
+	  end else if( ~rx_frame_par[7] & rx_frame_par[6] ) begin
+             rxalign_in  <= 3'd6;
+             rxactive_in <= 1'b1;
+	  end else if( ~rx_frame_par[6] & rx_frame_par[5] ) begin
+             rxalign_in  <= 3'd5;
+             rxactive_in <= 1'b1;
+	  end else if( ~rx_frame_par[5] & rx_frame_par[4] ) begin
+             rxalign_in  <= 3'd4;
+             rxactive_in <= 1'b1;
+	  end else if( ~rx_frame_par[4] & rx_frame_par[3] ) begin
+             rxalign_in  <= 3'd3;
+             rxactive_in <= 1'b1;
+	  end else if( ~rx_frame_par[3] & rx_frame_par[2] ) begin
+             rxalign_in  <= 3'd2;
+             rxactive_in <= 1'b1;
+	  end else if( ~rx_frame_par[2] & rx_frame_par[1] ) begin
+             rxalign_in  <= 3'd1;
+             rxactive_in <= 1'b1;
+	  end else if( ~rx_frame_par[1] & rx_frame_par[0] ) begin
+             rxalign_in  <= 3'd0;
+             rxactive_in <= 1'b1;
+	  end else begin
+             rxactive_in <= 3'd0;  // No edge
+	  end	        
    end // always @ ( posedge rx_lclk_div4 )
 
    // 1st cycle
@@ -359,8 +365,8 @@ module erx_protocol (/*AUTOARG*/
 
    // TODO: Handle burst mode, for now we stop after one xaction
 
-   assign emesh_rx_access = access_2;
-   assign emesh_rx_write  = write_2;
+   assign emesh_rx_access   = access_2;
+   assign emesh_rx_write    = write_2;
    assign emesh_rx_datamode = datamode_2;
    assign emesh_rx_ctrlmode = ctrlmode_2;
    assign emesh_rx_dstaddr  = dstaddr_2;

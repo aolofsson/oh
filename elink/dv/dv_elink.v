@@ -8,7 +8,7 @@ module dv_elink();
    reg        reset_in;        //active high asynchronous hardware reset
    reg 	      clkin;           //primary clock reg
    reg        rx_lclk_p;       //linkh speed clock reg (up to 500MHz)
-   wire	      rx_lclk_n;
+   reg	      rx_lclk_n;
    reg        rx_frame_p;      //transaction frame signal
    wire        rx_frame_n;
    reg [7:0]  rx_data_p;       //receive data (dual data rate)
@@ -72,6 +72,7 @@ module dv_elink();
    reg [31:0] s_axicfg_wdata;
    reg [3:0]  s_axicfg_wstrb;
    reg 	      s_axicfg_wvalid;
+   reg 	      s_axicfg_awvalid;
    
     //Reset
    initial
@@ -81,6 +82,7 @@ module dv_elink();
 	reset_in          = 1'b1;
 	clkin             = 1'b0;
         rx_lclk_p         = 1'b0;
+	rx_lclk_n         = 1'b1;
         rx_frame_p        = 1'b0;
 	rx_data_p[7:0]    = 8'h00; 
     	tx_wr_wait_p      = 1'b0;
@@ -116,7 +118,7 @@ module dv_elink();
 	s_axi_awcache[3:0]= 4'b0;
 	s_axi_awid[11:0]  = 12'b0;
 	s_axi_awlen[7:0]  = 8'b0;
-	s_axi_awlock[0:0] = 1'b0;
+	s_axi_awlock[0:0] = 1'b0;	
 	s_axi_awprot[2:0] = 3'b0;
 	s_axi_awqos[3:0]  = 4'b0;
 	s_axi_awregion[3:0]= 4'b0;
@@ -136,6 +138,7 @@ module dv_elink();
 	s_axicfg_awaddr[12:0]= 13'b0;
 	s_axicfg_awprot[2:0] = 3'b0;
     	s_axicfg_bready      = 1'b0;
+	s_axicfg_awvalid     = 1'b0;	
     	s_axicfg_rready      = 1'b0;
 	s_axicfg_wdata[31:0] = 32'b0;
 	s_axicfg_wstrb[3:0]  = 4'b0;
@@ -143,6 +146,9 @@ module dv_elink();
        
 	#100 
 	  reset_in           = 1'b0;    // at time 100 release reset
+   	  s_axi_aresetn      = 1'b1;
+   	  s_axicfg_aresetn   = 1'b1;
+   	  m_axi_aresetn      = 1'b1;
 	#10000	  
 	  $finish;
      end
@@ -154,6 +160,7 @@ module dv_elink();
 	 begin
 	    clkin      = ~clkin;
 	    rx_lclk_p  = ~rx_lclk_p;
+	    rx_lclk_n  = ~rx_lclk_n;
 	    s_axi_aclk = ~s_axi_aclk;
 	    m_axi_aclk = ~m_axi_aclk;
 	    s_axicfg_aclk=~s_axicfg_aclk;	    
@@ -161,7 +168,6 @@ module dv_elink();
      end
 
    //Driving differentials
-   assign rx_clk_n     = ~rx_lclk_p;
    assign rx_frame_n   = ~rx_frame_p;
    assign rx_data_n    = ~rx_data_p;
    assign tx_wr_wait_n = ~tx_wr_wait_p;
@@ -351,10 +357,10 @@ module dv_elink();
 		.s_axi_wvalid		(s_axi_wvalid),
 		.s_axicfg_aclk		(s_axicfg_aclk),
 		.s_axicfg_aresetn	(s_axicfg_aresetn),
-		.s_axicfg_araddr	(s_axicfg_araddr[12:0]),
+		.s_axicfg_araddr	(s_axicfg_araddr[15:0]),
 		.s_axicfg_arprot	(s_axicfg_arprot[2:0]),
 		.s_axicfg_arvalid	(s_axicfg_arvalid),
-		.s_axicfg_awaddr	(s_axicfg_awaddr[12:0]),
+		.s_axicfg_awaddr	(s_axicfg_awaddr[15:0]),
 		.s_axicfg_awprot	(s_axicfg_awprot[2:0]),
 		.s_axicfg_awvalid	(s_axicfg_awvalid),
 		.s_axicfg_bready	(s_axicfg_bready),

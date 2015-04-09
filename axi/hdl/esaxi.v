@@ -20,8 +20,6 @@
 	 parameter integer C_S00_AXI_BUSER_WIDTH = 0
 	)
 	(
-		// Users to add ports here
-
      // FIFO write port, write requests
      output wire [102:0] emwr_wr_data,
      output wire         emwr_wr_en,
@@ -43,7 +41,7 @@
      input wire [3:0]    ecfg_tx_ctrl_mode,
      input wire [11:0]   ecfg_coreid,
    
-		// User ports ends
+		// User ports endsx
 		// Do not modify the ports beyond this line
 
 
@@ -96,7 +94,7 @@
 		input wire  s00_axi_rready
 	);
 // Instantiation of Axi Bus Interface S00_AXI
-	esaxi_v1_0_S00_AXI # (
+	esaxi_logic # (
         .C_READ_TAG_ADDR(C_READ_TAG_ADDR),
 		.C_S_AXI_ID_WIDTH(C_S00_AXI_ID_WIDTH),
 		.C_S_AXI_DATA_WIDTH(C_S00_AXI_DATA_WIDTH),
@@ -106,7 +104,7 @@
 		.C_S_AXI_WUSER_WIDTH(C_S00_AXI_WUSER_WIDTH),
 		.C_S_AXI_RUSER_WIDTH(C_S00_AXI_RUSER_WIDTH),
 		.C_S_AXI_BUSER_WIDTH(C_S00_AXI_BUSER_WIDTH)
-	) esaxi_v1_0_S00_AXI_inst (
+	) esaxi_logic (
         .emwr_wr_data      (emwr_wr_data),
         .emwr_wr_en        (emwr_wr_en),
         .emwr_full         (emwr_full),
@@ -120,7 +118,6 @@
         .emrr_empty        (emrr_empty),
         .ecfg_tx_ctrl_mode (ecfg_tx_ctrl_mode),
         .ecfg_coreid       (ecfg_coreid),
-
 		.S_AXI_ACLK(s00_axi_aclk),
 		.S_AXI_ARESETN(s00_axi_aresetn),
 		.S_AXI_AWID(s00_axi_awid),

@@ -59,10 +59,10 @@ module emmu (/*AUTOARG*/
    /*****************************/
    input 	     mi_clk;              //source synchronous clock
    input 	     mi_en;               //memory access 
-   input    	     mi_we;               //byte wise write enable
-   input [RFAW-1:0]  mi_addr;             //table addresses
+   input [3:0] 	     mi_we;               //byte wise write enable
+   input [15:0]      mi_addr;             //table addresses
    input [31:0]      mi_din;              //input data  
-   output [31:0]     mi_dout;             //read back data
+   output [31:0]     mi_dout;             //read back (TODO? not implemented)
   
    /*****************************/
    /*EMESH INPUTS               */
@@ -97,9 +97,11 @@ module emmu (/*AUTOARG*/
    reg [DW-1:0]	      emmu_data_out; 
    reg [AW-1:0]       emmu_dstaddr_reg;
 
-   wire [63:0] 	      emmu_lookup_data;
+   wire [47:0] 	      emmu_lookup_data;
    wire [63:0] 	      mi_wr_data;
-   wire [7:0] 	      mi_wr_en;
+   wire [5:0] 	      mi_wr_en;
+   wire 	      mi_write_low;
+   wire 	      mi_write_high;
    
    /*****************************/
    /*MMU WRITE LOGIC            */
@@ -108,25 +110,33 @@ module emmu (/*AUTOARG*/
    //write data
    assign mi_wr_data[63:0] = {mi_din[31:0], mi_din[31:0]};
    
-   //Enabling lower/upper 32 bit data write 
-   assign mi_wr_en[7:0] = (mi_en & mi_we & mi_addr[0]) ? 8'b11110000 :
-	                  (mi_en & mi_we & ~mi_addr[0])? 8'b00001111 :
-			                                 8'b00000000 ;
+   //write controls
+   assign mi_write_low  = (mi_en & mi_we[0] & (mi_addr[2:0]==3'b000));
+   assign mi_write_high = (mi_en & mi_we[0] & (mi_addr[2:0]==3'b100));
    
-   memory_dp #(.DW(PAW),.AW(IDW+1)) 
-   memory_dp (
-	      // Outputs
-	      .rd_data	(emmu_lookup_data[63:0]),
-	      // Inputs
-	      .wr_clk	(mi_clk),
-	      .wr_en	(mi_wr_en[7:0]),
-	      .wr_addr	(mi_addr[IDW:0]),        //note the extra bit
-	      .wr_data	(mi_wr_data[63:0]),
-	      .rd_clk	(clk),
-	      .rd_en	(emesh_access_in),
-	      .rd_addr	({emesh_dstaddr_in[AW-1:20],1'b0})
-	      );
+   //Enabling lower/upper 32 bit data write 
+   assign mi_wr_en[5:0] =  mi_write_low  ? 8'b11110000 :
+	                   mi_write_high ? 8'b00001111 :
+			                   8'b00000000 ;
+   
 
+`ifdef TARGET_XILINX
+   memory_dp_48x4096 memory_dp_48x4096(
+				       //write (portA)
+				       .clka	(mi_clk),
+				       .ena	(mi_en),
+				       .wea	(mi_wr_en[5:0]),
+				       .addra	(mi_addr[14:3]),
+				       .dina	(mi_wr_data[47:0]),
+				       //read (portB)
+				       .doutb	(emmu_lookup_data[47:0]),
+				       .clkb	(clk),
+				       .enb	(emesh_access_in),
+				       .addrb	(emesh_dstaddr_in[31:20])
+				       );
+
+`endif //  `ifdef TARGET_XILINX
+				       
    /*****************************/
    /*EMESH OUTPUT TRANSACTION   */
    /*****************************/   
@@ -147,10 +157,15 @@ module emmu (/*AUTOARG*/
 	  emmu_datamode_out[1:0]   <= emesh_datamode_in[1:0];
        end
    
-   assign emmu_dstaddr_out[63:0] = mmu_en ? {emmu_lookup_data[43:0],emmu_dstaddr_reg[19:0]} :
+   assign emmu_dstaddr_out[63:0] = mmu_en ? {emmu_lookup_data[43:0],
+					     emmu_dstaddr_reg[19:0]} :
 				             {32'b0,emmu_dstaddr_reg[31:0]};
    
 endmodule // emmu
+// Local Variables:
+// verilog-library-directories:("." "../../stubs/hdl")
+// End:
+
 
 
    

@@ -1,4 +1,5 @@
 dv_elink.v
+../../constants/hdl/xilinx_constants.v
 -y .
 -y ../../elink/hdl
 -y ../../stubs/hdl

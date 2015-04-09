@@ -135,7 +135,7 @@ module ecfg (/*AUTOARG*/
    /*****************************/  
    input             mi_clk;
    input 	     mi_en;
-   input 	     mi_we;             //Single we, must write full words!
+   input [3:0] 	     mi_we;             //Single we, must write full words!
    input  [RFAW-1:0] mi_addr;
    input [31:0]      mi_din;
    output [31:0]     mi_dout;   
@@ -208,8 +208,8 @@ module ecfg (/*AUTOARG*/
    /*****************************/
 
    //read/write decode
-   assign ecfg_write      = mi_en & mi_we;
-   assign ecfg_read       = mi_en & ~mi_we;   
+   assign ecfg_write      = mi_en & mi_we[0];
+   assign ecfg_read       = mi_en & ~mi_we[0];   
 
    //Write enables
    assign ecfg_reset_write     = ecfg_write & (mi_addr[RFAW-1:2]==`ESYSRESET);

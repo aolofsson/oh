@@ -67,26 +67,12 @@ module memory_dp(/*AUTOARG*/
            end
       end
    endgenerate
-    //////////////////////
-   //XILINX MEMORY 
-   ////////////////////// 
-`elsif CFG_XILINX
+`elsif TARGET_XILINX
    //instantiate XILINX BRAM (based on parameter size)
    
-   //////////////////////
-   //ALTERA MEMORY 
-   ////////////////////// 
-`elsif CFG_ALTERA
    
-   //////////////////////
-   //VIRAGE CHIP MEMORY
-   ////////////////////// 
-`elsif CFG_VIRAGE_MEMORY
+`elsif TARGET_ALTERA
    
-   //////////////////////
-   //ARM CHIP MEMORY
-   ////////////////////// 
-   `elsif CFG_ARM_MEMORY
 `endif
    
 endmodule // memory_dp

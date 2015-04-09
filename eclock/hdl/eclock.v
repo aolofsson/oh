@@ -48,11 +48,12 @@ module eclock (/*AUTOARG*/
    //   PFD input frequency = 1/CLKIN1_PERIOD / DIVCLK_DIVIDE (10-450MHz)
    //   VCO frequency = PFD input frequency * CLKFBOUT_MULT (800-1600MHz)
    //   Output frequency = VCO frequency / CLKOUTn_DIVIDE
-   parameter  CLKIN_PERIOD = 10.000;  // ns -> 100MHz
-   parameter  CLKIN_DIVIDE = 1;
-   parameter  VCO_MULT     = 12;      // VCO = 1200MHz
-   parameter  CCLK_DIVIDE  = 2;       // CCLK = 600MHz 
-   parameter  LCLK_DIVIDE  = 4;       // LCLK = 300MHz (600MB/s eLink)
+
+   parameter  CLKIN_PERIOD     = 10.000;  // ns -> 100MHz
+   parameter  CLKIN_DIVIDE     = 1;
+   parameter  VCO_MULT         = 12;      // VCO = 1200MHz
+   parameter  CCLK_DIVIDE      = 2;       // CCLK = 600MHz 
+   parameter  LCLK_DIVIDE      = 4;       // LCLK = 300MHz (600MB/s eLink)
    parameter  FEATURE_CCLK_DIV = 1'b1;
    parameter  IOSTD_ELINK      = "LVDS_25";
    
@@ -81,6 +82,8 @@ module eclock (/*AUTOARG*/
    wire 	pll_lclk_par;      //low speed lclk for etx
    wire 	pll_cclk_div;      //low speed cclk
    wire 	pll_cclk_standby;  //standby clock
+   wire 	cclk;
+   
    
    // PLL Primitive
    PLLE2_BASE
@@ -131,12 +134,11 @@ module eclock (/*AUTOARG*/
         );
 
    // Output buffering
-
    BUFG cclk_buf       (.O   (cclk_base),   .I   (pll_cclk));
    BUFG cclk_div_buf   (.O   (cclk_div),    .I   (pll_cclk_div));   
-   BUFG lclk_buf       (.O   (lclk),        .I   (pll_lclk));
-   BUFG lclk_out_buf   (.O   (lclk_out),    .I   (pll_lclk_out));
-   BUFG lclk_par_buf   (.O   (lclk_par),    .I   (pll_lclk_par));
+   BUFG lclk_buf       (.O   (tx_lclk),     .I   (pll_lclk));
+   BUFG lclk_out_buf   (.O   (tx_lclk_out), .I   (pll_lclk_out));
+   BUFG lclk_par_buf   (.O   (tx_lclk_par), .I   (pll_lclk_par));
 
 generate
    if( FEATURE_CCLK_DIV ) begin : gen_cclk_div
@@ -165,8 +167,8 @@ generate
       end // always @ (posedge cclk_div)
       
       
-      
-   OSERDESE2 
+      //CCLK CLOCK DIVIDER
+      OSERDESE2 
      #(
        .DATA_RATE_OQ("DDR"),     // DDR, SDR
        .DATA_RATE_TQ("SDR"),     // DDR, BUF, SDR
@@ -223,10 +225,8 @@ generate
      end   
 endgenerate
    
-   // xilinx OBUFDS instantiation
-   OBUFDS #(.IOSTANDARD (IOSTD_ELINK)) obufds_cclk_inst (.O  (cclk_p), 
-							 .OB (cclk_n), 
-							 .I  (cclk));
+   //Clock output
+   OBUFDS #(.IOSTANDARD (IOSTD_ELINK)) obufds_cclk_inst (.O  (cclk_p), .OB (cclk_n), .I  (cclk));
         
 endmodule // eclock
 

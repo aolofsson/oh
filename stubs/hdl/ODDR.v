@@ -16,6 +16,8 @@ module ODDR (/*AUTOARG*/
    input R;
    input S;
    output Q;
+
+   assign Q=1'b0;
    
 endmodule // ODDR
 

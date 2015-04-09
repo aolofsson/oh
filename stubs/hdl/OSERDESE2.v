@@ -50,4 +50,13 @@ module OSERDESE2 ( /*AUTOARG*/
    input  TBYTEIN;
    input  TCE;
 
+
+   assign OFB=1'b0;
+   assign OQ=1'b0;
+   assign SHIFTOUT1=1'b0;
+   assign SHIFTOUT2=1'b0;
+   assign TBYTEOUT=1'b0;
+   assign TFB=1'b0;
+   assign TQ=1'b0;
+   
 endmodule // OSERDESE2

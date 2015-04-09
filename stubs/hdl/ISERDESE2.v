@@ -53,6 +53,20 @@ module ISERDESE2 (/*AUTOARG*/
    input  RST;
    input  SHIFTIN1;
    input  SHIFTIN2;
+
+   
+   assign O=1'b0;
+   assign QQ=1'b0;
+   assign SHIFTOUT1=1'b0;
+   assign SHIFTOUT2=1'b0;
+   assign Q1=1'b0;
+   assign Q2=1'b0;
+   assign Q3=1'b0;
+   assign Q4=1'b0;   
+   assign Q5=1'b0;
+   assign Q6=1'b0;
+   assign Q7=1'b0;
+   assign Q8=1'b0;
    	
 endmodule // ISERDESE2
 

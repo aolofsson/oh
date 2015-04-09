@@ -55,7 +55,7 @@ module embox (/*AUTOARG*/
    /*SIMPLE MEMORY INTERFACE    */
    /*****************************/
    input 	      mi_en;
-   input 	      mi_we;      
+   input [3:0]	      mi_we;      
    input [RFAW-1:0]   mi_addr;
    input [DW-1:0]     mi_din;
    output [DW-1:0]    mi_dout;   
@@ -98,12 +98,12 @@ module embox (/*AUTOARG*/
    assign embox_w1_access     = (mi_addr[RFAW-1:2]==`EMBOX1); //upper 32 bit word
 
    //fifo read/write logic
-   assign  embox_write       = mi_en &  mi_we;
+   assign  embox_write       = mi_en &  mi_we[0];
    assign  embox_w0_write    = embox_w0_access & embox_write;
    assign  embox_w1_write    = embox_w1_access & embox_write;      //causes FIFO write
 
    //read logic
-   assign embox_read         = mi_en & ~mi_we;
+   assign embox_read         = mi_en & ~mi_we[0];
    assign embox_w1_read      = embox_w1_access & embox_read;       //causes FIFO read		      
 
    /*****************************/

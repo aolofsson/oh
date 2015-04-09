@@ -135,7 +135,7 @@ module erx_io (/*AUTOARG*/
 
    wire [63:0]   rx_data_des;
    wire [7:0]    rx_frame_des;
-   wire          rx_lclk_sn = ~rx_lclk_s;
+   wire          rx_lclk_sn = ~rx_lclk_s;//TODO: Not important, only for MEMORY_QDR mode?
    
    genvar        i;
    generate for(i=0; i<8; i=i+1)
@@ -313,7 +313,7 @@ reg [8:0] ecfg_datain;
    always @ (posedge rx_lclk_div4) 
      begin
       datain_reg[8]    <= rx_frame_par[0];
-      datain_reg[7:0]  <= rx_data_p[7:0];
+      datain_reg[7:0]  <= rx_data[7:0];
       ecfg_datain[8:0] <= datain_reg[8:0];      
    end
 

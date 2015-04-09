@@ -54,6 +54,17 @@ module PLLE2_BASE (/*AUTOARG*/
    output CLKOUT4;
    output CLKOUT5;
    output CLKFBOUT;
-   
+
+
+   //Not a correct model
+   assign CLKFB=CLKIN1;
+   assign LOCKED=1'b0;
+   assign CLKOUT0=CLKIN1;
+   assign CLKOUT1=CLKIN1;
+   assign CLKOUT2=CLKIN1;
+   assign CLKOUT3=CLKIN1;
+   assign CLKOUT4=CLKIN1;
+   assign CLKOUT5=CLKIN1;
+   assign CLKFBOUT=CLKIN1;
    
 endmodule // PLLE2_BASE

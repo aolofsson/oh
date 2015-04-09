@@ -73,29 +73,20 @@ module elink(/*AUTOARG*/
    /*****************************/
    /*ELINK INTERFACE (I/O PINS) */
    /*****************************/          
+
    //Receiver
-   input        rx_lclk_p;       //linkh speed clock input (up to 500MHz)
-   input        rx_lclk_n;
-   input        rx_frame_p;      //transaction frame signal
-   input        rx_frame_n;
-   input [7:0]  rx_data_p;       //receive data (dual data rate)
-   input [7:0]  rx_data_n;
-   output       rx_wr_wait_p;    //outgoing pushback on write transactions
-   output       rx_wr_wait_n;     
-   output       rx_rd_wait_p;    //outgoing pushback on read transactions
-   output       rx_rd_wait_n;     
+   input        rx_lclk_p,   rx_lclk_n;    //link rx clock input
+   input        rx_frame_p,  rx_frame_n;   //link rx frame signal
+   input [7:0] 	rx_data_p,   rx_data_n;    //link rx data
+   output       rx_wr_wait_p,rx_wr_wait_n; //link rx write pushback output
+   output       rx_rd_wait_p,rx_rd_wait_n; //link rx read pushback output
    
    //Transmitter
-   output       tx_lclk_p;       //hlink clock output (up to 500MHz)
-   output       tx_lclk_n;
-   output       tx_frame_p;      //transaction frame signal
-   output       tx_frame_n;
-   output [7:0] tx_data_p;       //transmit data (dual data rate)
-   output [7:0] tx_data_n;          
-   input 	tx_wr_wait_p;    //incoming pushback on write transactions
-   input 	tx_wr_wait_n;    
-   input 	tx_rd_wait_p;    //incoming pushback on read transactions
-   input 	tx_rd_wait_n;    
+   output       tx_lclk_p,   tx_lclk_n;    //link tx clock output
+   output       tx_frame_p,  tx_frame_n;   //link tx frame signal
+   output [7:0] tx_data_p,   tx_data_n;    //link tx data
+   input 	tx_wr_wait_p,tx_wr_wait_n; //link tx write pushback input
+   input 	tx_rd_wait_p,tx_rd_wait_n; //link tx read pushback input
 
    /*****************************/
    /*MAILBOX                    */
@@ -220,13 +211,13 @@ module elink(/*AUTOARG*/
    input 	 s_axicfg_aresetn;
 
    //read address channel
-   input [12:0]  s_axicfg_araddr;
+   input [15:0]  s_axicfg_araddr;
    input [2:0] 	 s_axicfg_arprot;
    output 	 s_axicfg_arready;
    input 	 s_axicfg_arvalid;
 
    //write address channel
-   input [12:0]  s_axicfg_awaddr;
+   input [15:0]  s_axicfg_awaddr;
    input [2:0] 	 s_axicfg_awprot;
    output 	 s_axicfg_awready;
    input 	 s_axicfg_awvalid;
@@ -254,10 +245,6 @@ module elink(/*AUTOARG*/
    wire [31:0] 	 mi_rd_data;
    wire [31:0] 	 mi_dout_ecfg;
    wire [31:0] 	 mi_dout_embox;
-   wire [31:0] 	 mi_dout_rx;
-   wire [31:0] 	 mi_dout_tx;
-   wire [MW-1:0] emmu_lookup_data;
-   wire [AW-1:0] emesh_rx_dstaddr;
 
    /*AUTOINPUT*/
    /*AUTOOUTPUT*/
@@ -302,11 +289,11 @@ module elink(/*AUTOARG*/
    wire			esaxi_emwr_prog_full;	// From etx of etx.v
    wire [102:0]		esaxi_emwr_wr_data;	// From esaxi of esaxi.v
    wire			esaxi_emwr_wr_en;	// From esaxi of esaxi.v
-   wire [RFAW-1:0]	mi_addr;		// From esaxilite of esaxilite.v
-   wire			mi_clk;			// From esaxilite of esaxilite.v
-   wire [31:0]		mi_din;			// From esaxilite of esaxilite.v
-   wire			mi_en;			// From esaxilite of esaxilite.v
-   wire			mi_we;			// From esaxilite of esaxilite.v
+   wire [15:0]		mi_addr;		// From esaxi_cfg of esaxi_cfg.v
+   wire			mi_clk;			// From esaxi_cfg of esaxi_cfg.v
+   wire [31:0]		mi_din;			// From esaxi_cfg of esaxi_cfg.v
+   wire			mi_en;			// From esaxi_cfg of esaxi_cfg.v
+   wire [3:0]		mi_we;			// From esaxi_cfg of esaxi_cfg.v
    wire			reset;			// From ecfg of ecfg.v
    wire			tx_lclk;		// From eclock of eclock.v
    wire			tx_lclk_out;		// From eclock of eclock.v
@@ -458,42 +445,42 @@ module elink(/*AUTOARG*/
    /***********************************************************/
    /*AXI CONFIGURATION SLAVE (LITE)                           */
    /***********************************************************/
-   /*esaxilite AUTO_TEMPLATE ( 
+   /*esaxi_cfg AUTO_TEMPLATE ( 
                         // Outputs
-	                .s_axi_\(.*\)     (s_axicfg_\1[]),
+	                .s_axi_\(.*\) (s_axicfg_\1[]),
                         );
    */
-    esaxilite esaxilite(
+   esaxi_cfg esaxi_cfg(
 		       /*AUTOINST*/
-			// Outputs
-			.s_axi_arready	(s_axicfg_arready),	 // Templated
-			.s_axi_awready	(s_axicfg_awready),	 // Templated
-			.s_axi_bresp	(s_axicfg_bresp[1:0]),	 // Templated
-			.s_axi_bvalid	(s_axicfg_bvalid),	 // Templated
-			.s_axi_rdata	(s_axicfg_rdata[31:0]),	 // Templated
-			.s_axi_rresp	(s_axicfg_rresp[1:0]),	 // Templated
-			.s_axi_rvalid	(s_axicfg_rvalid),	 // Templated
-			.s_axi_wready	(s_axicfg_wready),	 // Templated
-			.mi_clk		(mi_clk),
-			.mi_en		(mi_en),
-			.mi_we		(mi_we),
-			.mi_addr	(mi_addr[RFAW-1:0]),
-			.mi_din		(mi_din[31:0]),
-			// Inputs
-			.s_axi_aclk	(s_axicfg_aclk),	 // Templated
-			.s_axi_aresetn	(s_axicfg_aresetn),	 // Templated
-			.s_axi_araddr	(s_axicfg_araddr[RFAW-1:0]), // Templated
-			.s_axi_arprot	(s_axicfg_arprot[2:0]),	 // Templated
-			.s_axi_arvalid	(s_axicfg_arvalid),	 // Templated
-			.s_axi_awaddr	(s_axicfg_awaddr[RFAW-1:0]), // Templated
-			.s_axi_awprot	(s_axicfg_awprot[2:0]),	 // Templated
-			.s_axi_awvalid	(s_axicfg_awvalid),	 // Templated
-			.s_axi_bready	(s_axicfg_bready),	 // Templated
-			.s_axi_rready	(s_axicfg_rready),	 // Templated
-			.s_axi_wdata	(s_axicfg_wdata[31:0]),	 // Templated
-			.s_axi_wstrb	(s_axicfg_wstrb[3:0]),	 // Templated
-			.s_axi_wvalid	(s_axicfg_wvalid),	 // Templated
-			.mi_rd_data	(mi_rd_data[31:0]));
+		       // Outputs
+		       .s_axi_arready	(s_axicfg_arready),	 // Templated
+		       .s_axi_awready	(s_axicfg_awready),	 // Templated
+		       .s_axi_bresp	(s_axicfg_bresp[1:0]),	 // Templated
+		       .s_axi_bvalid	(s_axicfg_bvalid),	 // Templated
+		       .s_axi_rdata	(s_axicfg_rdata[31:0]),	 // Templated
+		       .s_axi_rresp	(s_axicfg_rresp[1:0]),	 // Templated
+		       .s_axi_rvalid	(s_axicfg_rvalid),	 // Templated
+		       .s_axi_wready	(s_axicfg_wready),	 // Templated
+		       .mi_clk		(mi_clk),
+		       .mi_en		(mi_en),
+		       .mi_we		(mi_we[3:0]),
+		       .mi_addr		(mi_addr[15:0]),
+		       .mi_din		(mi_din[31:0]),
+		       // Inputs
+		       .s_axi_aclk	(s_axicfg_aclk),	 // Templated
+		       .s_axi_aresetn	(s_axicfg_aresetn),	 // Templated
+		       .s_axi_araddr	(s_axicfg_araddr[15:0]), // Templated
+		       .s_axi_arprot	(s_axicfg_arprot[2:0]),	 // Templated
+		       .s_axi_arvalid	(s_axicfg_arvalid),	 // Templated
+		       .s_axi_awaddr	(s_axicfg_awaddr[15:0]), // Templated
+		       .s_axi_awprot	(s_axicfg_awprot[2:0]),	 // Templated
+		       .s_axi_awvalid	(s_axicfg_awvalid),	 // Templated
+		       .s_axi_bready	(s_axicfg_bready),	 // Templated
+		       .s_axi_rready	(s_axicfg_rready),	 // Templated
+		       .s_axi_wdata	(s_axicfg_wdata[31:0]),	 // Templated
+		       .s_axi_wstrb	(s_axicfg_wstrb[3:0]),	 // Templated
+		       .s_axi_wvalid	(s_axicfg_wvalid),	 // Templated
+		       .mi_rd_data	(mi_rd_data[31:0]));
    
    /***********************************************************/
    /*ELINK CLOCK GENERATOR                                    */
@@ -542,8 +529,8 @@ module elink(/*AUTOARG*/
 	   .ecfg_dataout		(ecfg_dataout[1:0]),
 	   .mi_clk			(mi_clk),
 	   .mi_en			(mi_en),
-	   .mi_we			(mi_we),
-	   .mi_addr			(mi_addr[RFAW-1:0]),
+	   .mi_we			(mi_we[3:0]),
+	   .mi_addr			(mi_addr[15:0]),
 	   .mi_din			(mi_din[31:0]),
 	   .emaxi_emwr_rd_en		(emaxi_emwr_rd_en),
 	   .emaxi_emrq_rd_en		(emaxi_emrq_rd_en),
@@ -631,7 +618,7 @@ module elink(/*AUTOARG*/
 	     // Inputs
 	     .mi_clk			(mi_clk),
 	     .mi_en			(mi_en),
-	     .mi_we			(mi_we),
+	     .mi_we			(mi_we[3:0]),
 	     .mi_addr			(mi_addr[RFAW-1:0]),
 	     .mi_din			(mi_din[31:0]),
 	     .ecfg_datain		({ecfg_tx_datain[1:0],ecfg_datain[8:0]}), // Templated
@@ -651,7 +638,7 @@ module elink(/*AUTOARG*/
 	       // Inputs
 	       .reset			(reset),
 	       .mi_en			(mi_en),
-	       .mi_we			(mi_we),
+	       .mi_we			(mi_we[3:0]),
 	       .mi_addr			(mi_addr[RFAW-1:0]),
 	       .mi_din			(mi_din[DW-1:0]));
    
