@@ -1,5 +1,8 @@
 //`timescale 1 ns / 100 ps
-module dv_emmu();
+module dv_emmu
+  (input clk,
+   input reset,
+   input go);
 
    parameter DW   = 32;        //data width of
    parameter AW   = 32;        //data width of 
@@ -10,8 +13,6 @@ module dv_emmu();
 
    
    //Stimulus to drive
-   reg        clk;
-   reg        reset;
    reg 	      mmu_en;
    
    //Reg interface
@@ -32,46 +33,12 @@ module dv_emmu();
    
    //Test junk
    reg [1:0]  test_state;
-   reg 	      go;
   
-   //Reset
-   initial
-     begin
-	$display($time, " << Starting the Simulation >>");	
-	#0
-        clk                    = 1'b0;    // at time 0
-	reset                  = 1'b1;    // reset is active
-	mi_we[3:0]             = 4'b0;
-	mi_en                  = 1'b0;
-	mi_addr[12:0]          = 13'b0;
-	mi_din[31:0]           = 32'h55555000;
-	test_state[1:0]        = 2'b00;
-	go                     = 1'b0;		
-        emesh_access_in        = 1'b0;
-	emesh_write_in         = 1'b0;
-	emesh_ctrlmode_in[3:0] = 4'b0;
-	emesh_datamode_in[1:0] = 2'b0;
-	emesh_dstaddr_in[31:0] = 32'b0;
-	emesh_srcaddr_in[31:0] = 32'b0;
-	emesh_data_in[31:0]    = 32'b0;
-	mmu_en                 = 1'b1;
-	#100 
-	  reset    = 1'b0;    // at time 100 release reset
-	#100
-	  go       = 1'b1;	
-	#10000	  
-	  $finish;
-     end
-
-   //Clock
-   always
-     #10 clk = ~clk;
-
    //Pattern generator
    //1.) Write some patterns through mi_interface
    //2.) Write some patterns from emesh interface
       
-   always @ (negedge clk)
+   always @ (negedge clk) begin
      if(go)
        begin
 	  case(test_state[1:0])
@@ -81,7 +48,9 @@ module dv_emmu();
 		   mi_en            <= 1'b1;
 		   mi_we[3:0]       <= 4'b1111;
 		   mi_addr[12:0]    <= mi_addr[12:0] + 1'b1;	  
-		   mi_din[31:0]     <= mi_addr[0] ? (mi_addr[12:0]+32'hFFFFF000) : 32'hFFFFFFFF;		   
+		   /* verilator lint_off WIDTH */
+		   mi_din[31:0]     <= mi_addr[0] ? (mi_addr[12:0]+32'hFFFFF000) : 32'hFFFFFFFF;
+		   /* verilator lint_on WIDTH */
 		end
 	      else
 		begin
@@ -108,9 +77,25 @@ module dv_emmu();
 	      begin
 		 mi_addr[5:0]     <= mi_addr[5:0]-1'b1;
 	      end
+	    default : test_state <= test_state;
 	  endcase // case (test_state[1:0])
-       end
-
+       end // if (go)
+      if (reset) begin
+	 mi_we[3:0]             <= 4'b0;
+	 mi_en                  <= 1'b0;
+	 mi_addr[12:0]          <= 13'b0;
+	 mi_din[31:0]           <= 32'h55555000;
+	 test_state[1:0]        <= 2'b00;
+         emesh_access_in        <= 1'b0;
+	 emesh_write_in         <= 1'b0;
+	 emesh_ctrlmode_in[3:0] <= 4'b0;
+	 emesh_datamode_in[1:0] <= 2'b0;
+	 emesh_dstaddr_in[31:0] <= 32'b0;
+	 emesh_srcaddr_in[31:0] <= 32'b0;
+	 emesh_data_in[31:0]    <= 32'b0;
+	 mmu_en                 <= 1'b1;
+     end
+   end
    wire done =  (mi_addr[5:0]==6'b001101);
   
    
@@ -144,7 +129,7 @@ module dv_emmu();
 	     .mmu_en			(mmu_en),
 	     .mi_en			(mi_en),
 	     .mi_we			(mi_we[3:0]),
-	     .mi_addr			(mi_addr[15:0]),
+	     .mi_addr			({3'b000,mi_addr[12:0]}),
 	     .mi_din			(mi_din[31:0]),
 	     .emesh_access_in		(emesh_access_in),
 	     .emesh_write_in		(emesh_write_in),
@@ -153,13 +138,6 @@ module dv_emmu();
 	     .emesh_dstaddr_in		(emesh_dstaddr_in[AW-1:0]),
 	     .emesh_srcaddr_in		(emesh_srcaddr_in[AW-1:0]),
 	     .emesh_data_in		(emesh_data_in[DW-1:0]));
-
-   //Waveform dump
-   initial
-     begin
-	$dumpfile("test.vcd");
-	$dumpvars(0, dv_emmu);
-     end
 
    
 endmodule // dv_emmu

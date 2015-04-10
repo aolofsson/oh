@@ -99,7 +99,7 @@ module emmu (/*AUTOARG*/
 
    wire [47:0] 	      emmu_lookup_data;
    wire [63:0] 	      mi_wr_data;
-   wire [5:0] 	      mi_wr_en;
+   wire [7:0] 	      mi_wr_en;
    wire 	      mi_write_low;
    wire 	      mi_write_high;
    
@@ -115,7 +115,7 @@ module emmu (/*AUTOARG*/
    assign mi_write_high = (mi_en & mi_we[0] & (mi_addr[2:0]==3'b100));
    
    //Enabling lower/upper 32 bit data write 
-   assign mi_wr_en[5:0] =  mi_write_low  ? 8'b11110000 :
+   assign mi_wr_en[7:0] =  mi_write_low  ? 8'b11110000 :
 	                   mi_write_high ? 8'b00001111 :
 			                   8'b00000000 ;
    
