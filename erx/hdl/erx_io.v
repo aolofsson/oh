@@ -25,11 +25,11 @@
 module erx_io (/*AUTOARG*/
    // Outputs
    rx_wr_wait_p, rx_wr_wait_n, rx_rd_wait_p, rx_rd_wait_n,
-   rx_lclk_div4, rx_frame_par, rx_data_par, ecfg_datain,
+   rx_lclk_div4, rx_frame_par, rx_data_par, ecfg_rx_datain,
    // Inputs
    reset, rx_lclk_p, rx_lclk_n, rx_frame_p, rx_frame_n, rx_data_p,
    rx_data_n, rx_wr_wait, rx_rd_wait, ecfg_rx_enable,
-   ecfg_rx_gpio_mode, ecfg_dataout
+   ecfg_rx_gpio_enable, ecfg_dataout
    );
 
    parameter IOSTD_ELINK = "LVDS_25";
@@ -64,9 +64,9 @@ module erx_io (/*AUTOARG*/
    //# Configuration bits
    //#############
    input         ecfg_rx_enable;         //enable signal for rx  
-   input         ecfg_rx_gpio_mode;      //forces rx wait pins to constants
+   input         ecfg_rx_gpio_enable;    //forces rx wait pins to constants
    input [1:0] 	 ecfg_dataout;           //rd_wait, wr_wait for GPIO mode
-   output [8:0]  ecfg_datain;            //gpio data in (data in and frame)
+   output [8:0]  ecfg_rx_datain;         //gpio data in (data in and frame)
 
    //############
    //# REGS
@@ -297,7 +297,7 @@ module erx_io (/*AUTOARG*/
    
    always @ (posedge rx_lclk_div4) 
      begin      
-	rxgpio_sync       <= {ecfg_rx_gpio_mode, rxgpio_sync[1]};      
+	rxgpio_sync       <= {ecfg_rx_gpio_enable, rxgpio_sync[1]};      
 	rx_data_reg[63:0] <= rx_data_des[63:0];
 	rx_data_par[63:0] <= rx_data_reg[63:0];
 	rx_frame_reg[7:0] <= rx_frame_des & {8{rxenb}} & {8{~rxgpio}};     
@@ -308,13 +308,13 @@ module erx_io (/*AUTOARG*/
 //# GPIO mode inputs
 //#############
 reg [8:0] datain_reg;
-reg [8:0] ecfg_datain;
+reg [8:0] ecfg_rx_datain;
 
    always @ (posedge rx_lclk_div4) 
      begin
-      datain_reg[8]    <= rx_frame_par[0];
-      datain_reg[7:0]  <= rx_data[7:0];
-      ecfg_datain[8:0] <= datain_reg[8:0];      
+      datain_reg[8]       <= rx_frame_par[0];
+      datain_reg[7:0]     <= rx_data[7:0];
+      ecfg_rx_datain[8:0] <= datain_reg[8:0];      
    end
 
    //#############

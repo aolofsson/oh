@@ -11,7 +11,7 @@ module esaxi_logic #
    // Width of ID for for write address, write data, read address and read data
    parameter integer C_S_AXI_ID_WIDTH    = 1,
    // Width of S_AXI data bus
-        parameter integer C_S_AXI_DATA_WIDTH    = 32,
+   parameter integer C_S_AXI_DATA_WIDTH    = 32,
    // Width of S_AXI address bus
    parameter integer C_S_AXI_ADDR_WIDTH    = 30,
    // Width of optional user defined signal in write address channel
@@ -28,159 +28,159 @@ module esaxi_logic #
    (
     // Users to add ports here
     // FIFO write port, write requests
-    output reg [102:0] 			      emwr_wr_data,
-    output reg 				      emwr_wr_en,
-    input 				      emwr_full,
-    input 				      emwr_prog_full,
+    output reg [102:0] 			 emwr_wr_data,
+    output reg 				 emwr_wr_en,
+    input 				 emwr_full,
+    input 				 emwr_prog_full,
     
     // FIFO write port, read requests
-    output reg [102:0] 			      emrq_wr_data,
-    output reg 				      emrq_wr_en,
-    input 				      emrq_full,
-    input 				      emrq_prog_full,
+    output reg [102:0] 			 emrq_wr_data,
+    output reg 				 emrq_wr_en,
+    input 				 emrq_full,
+    input 				 emrq_prog_full,
     
     // FIFO read port, read responses
-    input [102:0] 			      emrr_rd_data,
-    output 				      emrr_rd_en,
-    input 				      emrr_empty,
+    input [102:0] 			 emrr_rd_data,
+    output 				 emrr_rd_en,
+    input 				 emrr_empty,
 
     // Control bits from eConfig
-    input  [3:0] 			      ecfg_tx_ctrl_mode,
-    input  [11:0] 			      ecfg_coreid,
+    input [3:0] 			 ecfg_tx_ctrl_mode,
+    input [11:0] 			 ecfg_coreid,
 
     // User ports ends
     // Do not modify the ports beyond this line
 
     // Global Clock Signal
-    input  				      S_AXI_ACLK,
+    input 				 S_AXI_ACLK,
     // Global Reset Signal. This Signal is Active LOW
-    input  				      S_AXI_ARESETN,
+    input 				 S_AXI_ARESETN,
     // Write Address ID
-    input  [C_S_AXI_ID_WIDTH-1 : 0]       S_AXI_AWID,
+    input [C_S_AXI_ID_WIDTH-1 : 0] 	 S_AXI_AWID,
     // Write address
-    input  [C_S_AXI_ADDR_WIDTH-1 : 0]     S_AXI_AWADDR,
+    input [C_S_AXI_ADDR_WIDTH-1 : 0] 	 S_AXI_AWADDR,
     // Burst length. The burst length gives the exact number of transfers in a burst
-    input  [7 : 0] 			      S_AXI_AWLEN,
+    input [7 : 0] 			 S_AXI_AWLEN,
     // Burst size. This signal indicates the size of each transfer in the burst
-    input  [2 : 0] 			      S_AXI_AWSIZE,
+    input [2 : 0] 			 S_AXI_AWSIZE,
     // Burst type. The burst type and the size information, 
     // determine how the address for each transfer within the burst is calculated.
-    input  [1 : 0] 			      S_AXI_AWBURST,
+    input [1 : 0] 			 S_AXI_AWBURST,
     // Lock type. Provides additional information about the
     // atomic characteristics of the transfer.
-    input  				      S_AXI_AWLOCK,
+    input 				 S_AXI_AWLOCK,
     // Memory type. This signal indicates how transactions
     // are required to progress through a system.
-    input  [3 : 0] 			      S_AXI_AWCACHE,
+    input [3 : 0] 			 S_AXI_AWCACHE,
     // Protection type. This signal indicates the privilege
     // and security level of the transaction, and whether
     // the transaction is a data access or an instruction access.
-    input  [2 : 0] 			      S_AXI_AWPROT,
+    input [2 : 0] 			 S_AXI_AWPROT,
     // Quality of Service, QoS identifier sent for each
     // write transaction.
-    input  [3 : 0] 			      S_AXI_AWQOS,
+    input [3 : 0] 			 S_AXI_AWQOS,
     // Region identifier. Permits a single physical interface
     // on a slave to be used for multiple logical interfaces.
-    input  [3 : 0] 			      S_AXI_AWREGION,
+    input [3 : 0] 			 S_AXI_AWREGION,
     // Optional User-defined signal in the write address channel.
-    input  [C_S_AXI_AWUSER_WIDTH-1 : 0]   S_AXI_AWUSER,
+    input [C_S_AXI_AWUSER_WIDTH-1 : 0] 	 S_AXI_AWUSER,
     // Write address valid. This signal indicates that
     // the channel is signaling valid write address and
     // control information.
-    input  				      S_AXI_AWVALID,
+    input 				 S_AXI_AWVALID,
     // Write address ready. This signal indicates that
     // the slave is ready to accept an address and associated
     // control signals.
-    output  			      S_AXI_AWREADY,
+    output 				 S_AXI_AWREADY,
     // Write Data
-    input  [C_S_AXI_DATA_WIDTH-1 : 0]     S_AXI_WDATA,
+    input [C_S_AXI_DATA_WIDTH-1 : 0] 	 S_AXI_WDATA,
     // Write strobes. This signal indicates which byte
     // lanes hold valid data. There is one write strobe
     // bit for each eight bits of the write data bus.
-    input  [(C_S_AXI_DATA_WIDTH/8)-1 : 0] S_AXI_WSTRB,
+    input [(C_S_AXI_DATA_WIDTH/8)-1 : 0] S_AXI_WSTRB,
     // Write last. This signal indicates the last transfer
     // in a write burst.
-    input  				      S_AXI_WLAST,
+    input 				 S_AXI_WLAST,
     // Optional User-defined signal in the write data channel.
-    input  [C_S_AXI_WUSER_WIDTH-1 : 0]    S_AXI_WUSER,
+    input [C_S_AXI_WUSER_WIDTH-1 : 0] 	 S_AXI_WUSER,
     // Write valid. This signal indicates that valid write
     // data and strobes are available.
-    input  				      S_AXI_WVALID,
+    input 				 S_AXI_WVALID,
     // Write ready. This signal indicates that the slave
     // can accept the write data.
-    output  			      S_AXI_WREADY,
+    output 				 S_AXI_WREADY,
     // Response ID tag. This signal is the ID tag of the
     // write response.
-    output  [C_S_AXI_ID_WIDTH-1 : 0]      S_AXI_BID,
+    output [C_S_AXI_ID_WIDTH-1 : 0] 	 S_AXI_BID,
     // Write response. This signal indicates the status
     // of the write transaction.
-    output  [1 : 0] 		      S_AXI_BRESP,
+    output [1 : 0] 			 S_AXI_BRESP,
     // Optional User-defined signal in the write response channel.
-    output  [C_S_AXI_BUSER_WIDTH-1 : 0]   S_AXI_BUSER,
+    output [C_S_AXI_BUSER_WIDTH-1 : 0] 	 S_AXI_BUSER,
     // Write response valid. This signal indicates that the
     // channel is signaling a valid write response.
-    output  			      S_AXI_BVALID,
+    output 				 S_AXI_BVALID,
     // Response ready. This signal indicates that the master
     // can accept a write response.
-    input  				      S_AXI_BREADY,
+    input 				 S_AXI_BREADY,
     // Read address ID. This signal is the identification
     // tag for the read address group of signals.
-    input  [C_S_AXI_ID_WIDTH-1 : 0]       S_AXI_ARID,
+    input [C_S_AXI_ID_WIDTH-1 : 0] 	 S_AXI_ARID,
     // Read address. This signal indicates the initial
     // address of a read burst transaction.
-    input  [C_S_AXI_ADDR_WIDTH-1 : 0]     S_AXI_ARADDR,
+    input [C_S_AXI_ADDR_WIDTH-1 : 0] 	 S_AXI_ARADDR,
     // Burst length. The burst length gives the exact number of transfers in a burst
-    input  [7 : 0] 			      S_AXI_ARLEN,
+    input [7 : 0] 			 S_AXI_ARLEN,
     // Burst size. This signal indicates the size of each transfer in the burst
-    input  [2 : 0] 			      S_AXI_ARSIZE,
+    input [2 : 0] 			 S_AXI_ARSIZE,
     // Burst type. The burst type and the size information, 
     // determine how the address for each transfer within the burst is calculated.
-    input  [1 : 0] 			      S_AXI_ARBURST,
+    input [1 : 0] 			 S_AXI_ARBURST,
     // Lock type. Provides additional information about the
     // atomic characteristics of the transfer.
-    input  				      S_AXI_ARLOCK,
+    input 				 S_AXI_ARLOCK,
     // Memory type. This signal indicates how transactions
     // are required to progress through a system.
-    input  [3 : 0] 			      S_AXI_ARCACHE,
+    input [3 : 0] 			 S_AXI_ARCACHE,
     // Protection type. This signal indicates the privilege
     // and security level of the transaction, and whether
     // the transaction is a data access or an instruction access.
-    input  [2 : 0] 			      S_AXI_ARPROT,
+    input [2 : 0] 			 S_AXI_ARPROT,
     // Quality of Service, QoS identifier sent for each
     // read transaction.
-    input  [3 : 0] 			      S_AXI_ARQOS,
+    input [3 : 0] 			 S_AXI_ARQOS,
     // Region identifier. Permits a single physical interface
     // on a slave to be used for multiple logical interfaces.
-    input  [3 : 0] 			      S_AXI_ARREGION,
+    input [3 : 0] 			 S_AXI_ARREGION,
     // Optional User-defined signal in the read address channel.
-    input  [C_S_AXI_ARUSER_WIDTH-1 : 0]   S_AXI_ARUSER,
+    input [C_S_AXI_ARUSER_WIDTH-1 : 0] 	 S_AXI_ARUSER,
     // Write address valid. This signal indicates that
     // the channel is signaling valid read address and
     // control information.
-    input  				      S_AXI_ARVALID,
+    input 				 S_AXI_ARVALID,
     // Read address ready. This signal indicates that
     // the slave is ready to accept an address and associated
     // control signals.
-    output  			      S_AXI_ARREADY,
+    output 				 S_AXI_ARREADY,
     // Read ID tag. This signal is the identification tag
     // for the read data group of signals generated by the slave.
-    output  [C_S_AXI_ID_WIDTH-1 : 0]      S_AXI_RID,
+    output [C_S_AXI_ID_WIDTH-1 : 0] 	 S_AXI_RID,
     // Read Data
-    output  [C_S_AXI_DATA_WIDTH-1 : 0]    S_AXI_RDATA,
+    output [C_S_AXI_DATA_WIDTH-1 : 0] 	 S_AXI_RDATA,
     // Read response. This signal indicates the status of
     // the read transfer.
-    output  [1 : 0] 		      S_AXI_RRESP,
+    output [1 : 0] 			 S_AXI_RRESP,
     // Read last. This signal indicates the last transfer
     // in a read burst.
-    output  			      S_AXI_RLAST,
+    output 				 S_AXI_RLAST,
     // Optional User-defined signal in the read address channel.
-    output  [C_S_AXI_RUSER_WIDTH-1 : 0]   S_AXI_RUSER,
+    output [C_S_AXI_RUSER_WIDTH-1 : 0] 	 S_AXI_RUSER,
     // Read valid. This signal indicates that the channel
     // is signaling the required read data.
-    output  			      S_AXI_RVALID,
+    output 				 S_AXI_RVALID,
     // Read ready. This signal indicates that the master can
     // accept the read data and response information.
-    input  				      S_AXI_RREADY
+    input 				 S_AXI_RREADY
     );
 
    // AXI4FULL signals
@@ -534,10 +534,9 @@ module esaxi_logic #
 
    always @( posedge S_AXI_ACLK ) begin
       if ( S_AXI_ARESETN == 1'b0 ) begin
-
-         axi_rvalid <= 1'b0;
-         axi_rdata  <= 'd0;
-         axi_rresp  <= 2'd0;
+         axi_rvalid       <= 1'b0;
+         axi_rdata[31:0]  <= 32'd0;
+         axi_rresp        <= 2'd0;
 
       end else begin
 
@@ -548,9 +547,9 @@ module esaxi_logic #
 
             case( axi_arsize[1:0] )
 
-              2'b00: axi_rdata <= {4{emrr_rd_data[7:0]}};
-              2'b01: axi_rdata <= {2{emrr_rd_data[15:0]}};
-              default: axi_rdata <= emrr_rd_data;
+              2'b00: axi_rdata[31:0] <= {4{emrr_rd_data[7:0]}};
+              2'b01: axi_rdata[31:0] <= {2{emrr_rd_data[15:0]}};
+              default: axi_rdata[31:0] <= emrr_rd_data[31:0];
 
             endcase // case ( axi_araddr[1:0] }...
 

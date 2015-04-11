@@ -1,33 +1,16 @@
-/*
- Copyright (C) 2014 Adapteva, Inc.
- 
- Contributed by Fred Huettig <fred@adapteva.com>
- Contributed by Andreas Olofsson <andreas@adapteva.com>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.This program is distributed in the hope 
- that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. You should have received a copy 
- of the GNU General Public License along with this program (see the file 
- COPYING).  If not, see <http://www.gnu.org/licenses/>.
- */
-
 module etx(/*AUTOARG*/
    // Outputs
    ecfg_tx_datain, ecfg_tx_debug, esaxi_emrq_full,
    esaxi_emrq_prog_full, esaxi_emwr_full, esaxi_emwr_prog_full,
    emaxi_emrr_full, emaxi_emrr_prog_full, tx_lclk_p, tx_lclk_n,
-   tx_frame_p, tx_frame_n, tx_data_p, tx_data_n,
+   tx_frame_p, tx_frame_n, tx_data_p, tx_data_n, mi_dout,
    // Inputs
    reset, tx_lclk, tx_lclk_out, tx_lclk_par, s_axi_aclk, m_axi_aclk,
-   ecfg_tx_clkdiv, ecfg_tx_enable, ecfg_tx_gpio_mode,
-   ecfg_tx_mmu_mode, ecfg_dataout, esaxi_emrq_wr_en,
+   ecfg_tx_clkdiv, ecfg_tx_enable, ecfg_tx_gpio_enable,
+   ecfg_tx_mmu_enable, ecfg_dataout, esaxi_emrq_wr_en,
    esaxi_emrq_wr_data, esaxi_emwr_wr_en, esaxi_emwr_wr_data,
    emaxi_emrr_wr_en, emaxi_emrr_wr_data, tx_wr_wait_p, tx_wr_wait_n,
-   tx_rd_wait_p, tx_rd_wait_n
+   tx_rd_wait_p, tx_rd_wait_n, mi_clk, mi_en, mi_we, mi_addr, mi_din
    );
    parameter AW   = 32;
    parameter DW   = 32;
@@ -47,8 +30,8 @@ module etx(/*AUTOARG*/
   
 
    //gpio mode
-   input 	 ecfg_tx_gpio_mode;    //sets output pins to constant values
-   input 	 ecfg_tx_mmu_mode;     //sets output pins to constant values
+   input 	 ecfg_tx_gpio_enable;    //sets output pins to constant values
+   input 	 ecfg_tx_mmu_enable;     //sets output pins to constant values
    input [8:0] 	 ecfg_dataout;	       //data for gpio mode
    output [1:0]  ecfg_tx_datain;       //{wr_wait,rd_wait}
    
@@ -86,6 +69,15 @@ module etx(/*AUTOARG*/
    input 	 tx_rd_wait_p;     //incoming pushback on read transactions
    input 	 tx_rd_wait_n;    
 
+
+   //MMU table configuration interface
+   input 	    mi_clk;     //source synchronous clock
+   input 	    mi_en;      //memory access 
+   input  	    mi_we;      //byte wise write enable
+   input [15:0]     mi_addr;    //table address
+   input [31:0]     mi_din;     //input data  
+   output [31:0]    mi_dout;    //read back data
+   
    //regs
    reg [15:0] 	    ecfg_tx_debug; 
   
@@ -192,7 +184,7 @@ module etx(/*AUTOARG*/
    /*ELINK TRANSMIT ARBITER                                    */
    /*-arbiter between write (slave), read request (slave),     */
    /* and read response channel (master)                       */
-   /********************1****************************************/
+   /************************************************************/
 
    etx_arbiter etx_arbiter (
 			      /*AUTOINST*/
@@ -277,7 +269,7 @@ module etx(/*AUTOARG*/
 		  .tx_frame_par		(tx_frame_par[7:0]),
 		  .tx_data_par		(tx_data_par[63:0]),
 		  .ecfg_tx_enable	(ecfg_tx_enable),
-		  .ecfg_tx_gpio_mode	(ecfg_tx_gpio_mode),
+		  .ecfg_tx_gpio_enable	(ecfg_tx_gpio_enable),
 		  .ecfg_tx_clkdiv	(ecfg_tx_clkdiv[3:0]),
 		  .ecfg_dataout		(ecfg_dataout[8:0]));
 
@@ -290,18 +282,18 @@ module etx(/*AUTOARG*/
 	ecfg_tx_debug[15:0] <= {2'b0,                     //15:14
 				e_tx_rd_wait,             //13
 				e_tx_wr_wait,             //12
-				emrr_rd_en,               //11
-				emaxi_emrr_full,          //10
-				emaxi_emrr_prog_full,     //9
-				emaxi_emrr_wr_en,	  //8			
-				emrq_rd_en,               //7
-				esaxi_emrq_full,          //6
-				esaxi_emrq_prog_full,     //5
-				esaxi_emrq_wr_en,	  //4	 
-				emwr_rd_en,               //3
-				esaxi_emwr_full,	  //2	 
-				esaxi_emwr_prog_full,     //1
-				esaxi_emwr_wr_en          //0
+				emrr_rd_en,               //11			
+				emaxi_emrr_prog_full,     //10
+				emaxi_emrr_wr_en,	  //9			
+				emrq_rd_en,               //8			
+				esaxi_emrq_prog_full,     //7
+				esaxi_emrq_wr_en,	  //6	 
+				emwr_rd_en,               //5
+				esaxi_emwr_prog_full,     //4
+				esaxi_emwr_wr_en,         //3
+				emaxi_emrr_full,          //2
+				esaxi_emrq_full,          //1
+				esaxi_emwr_full	          //0	 
 				};
      end
    
@@ -311,3 +303,19 @@ endmodule // elink
 // End:
 
 
+/*
+ Copyright (C) 2014 Adapteva, Inc.
+ 
+ Contributed by Fred Huettig <fred@adapteva.com>
+ Contributed by Andreas Olofsson <andreas@adapteva.com>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.This program is distributed in the hope 
+ that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
+ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. You should have received a copy 
+ of the GNU General Public License along with this program (see the file 
+ COPYING).  If not, see <http://www.gnu.org/licenses/>.
+ */

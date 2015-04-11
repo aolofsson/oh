@@ -1,28 +1,12 @@
-/*
- Copyright (C) 2014 Adapteva, Inc.
-  
- Contributed by Andreas Olofsson <andreas@adapteva.com>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.This program is distributed in the hope 
- that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. You should have received a copy 
- of the GNU General Public License along with this program (see the file 
- COPYING).  If not, see <http://www.gnu.org/licenses/>.
- */
-
 module erx (/*AUTOARG*/
    // Outputs
-   ecfg_rx_debug, ecfg_datain, mi_dout, emaxi_emwr_empty,
+   ecfg_rx_debug, ecfg_rx_datain, mi_dout, emaxi_emwr_empty,
    emaxi_emwr_rd_data, emaxi_emrq_empty, emaxi_emrq_rd_data,
    esaxi_emrr_empty, esaxi_emrr_rd_data, rx_wr_wait_p, rx_wr_wait_n,
    rx_rd_wait_p, rx_rd_wait_n,
    // Inputs
-   reset, s_axi_aclk, m_axi_aclk, ecfg_rx_enable, ecfg_rx_mmu_mode,
-   ecfg_rx_gpio_mode, ecfg_dataout, mi_clk, mi_en, mi_we, mi_addr,
+   reset, s_axi_aclk, m_axi_aclk, ecfg_rx_enable, ecfg_rx_mmu_enable,
+   ecfg_rx_gpio_enable, ecfg_dataout, mi_clk, mi_en, mi_we, mi_addr,
    mi_din, emaxi_emwr_rd_en, emaxi_emrq_rd_en, esaxi_emrr_rd_en,
    rx_lclk_p, rx_lclk_n, rx_frame_p, rx_frame_n, rx_data_p, rx_data_n
    );
@@ -39,17 +23,17 @@ module erx (/*AUTOARG*/
    input 	  m_axi_aclk;        //clock for read request and write fifo
    
    //Configuration signals  
-   input 	  ecfg_rx_enable;    //receiver enable
-   input 	  ecfg_rx_mmu_mode;  //enable mmu   
-   output [15:0]  ecfg_rx_debug;     //various debug signals
-   input 	  ecfg_rx_gpio_mode; //mode for sampling elink pins directly
-   input [1:0] 	  ecfg_dataout;	     //data for pins in direct mode
-   output [8:0]   ecfg_datain;       //samples elink pins
+   input 	  ecfg_rx_enable;     //receiver enable
+   input 	  ecfg_rx_mmu_enable; //enable mmu   
+   output [15:0]  ecfg_rx_debug;      //various debug signals
+   input 	  ecfg_rx_gpio_enable;//mode for sampling elink pins directly
+   input [1:0] 	  ecfg_dataout;	      //data for pins in direct mode
+   output [8:0]   ecfg_rx_datain;     //samples elink pins
 
    //MMU table configuration interface
    input 	    mi_clk;     //source synchronous clock
    input 	    mi_en;      //memory access 
-   input [3:0] 	    mi_we;      //byte wise write enable
+   input  	    mi_we;      //byte wise write enable
    input [15:0]     mi_addr;    //table address
    input [31:0]     mi_din;     //input data  
    output [31:0]    mi_dout;    //read back data
@@ -203,7 +187,7 @@ module erx (/*AUTOARG*/
                         //Inputs
                         .emesh_rd_wait	(emesh_rx_rd_wait),
 			.emesh_wr_wait	(emesh_rx_wr_wait),
-                        .mmu_en		(ecfg_rx_mmu_mode),
+                        .mmu_en		(ecfg_rx_mmu_enable),
                         .clk		(rx_lclk_div4),
                         );
    */
@@ -220,7 +204,7 @@ module erx (/*AUTOARG*/
 			.emrr_wr_en	(emrr_wr_en),
 			// Inputs
 			.clk		(rx_lclk_div4),		 // Templated
-			.mmu_en		(ecfg_rx_mmu_mode),	 // Templated
+			.mmu_en		(ecfg_rx_mmu_enable),	 // Templated
 			.emmu_access	(emmu_access),
 			.emmu_write	(emmu_write),
 			.emmu_datamode	(emmu_datamode[1:0]),
@@ -245,7 +229,7 @@ module erx (/*AUTOARG*/
                         .emmu_\(.*\)_out	(emmu_\1[]),   
                          //Inputs
                         .emesh_\(.*\)_in	(emesh_rx_\1[]),   
-                        .mmu_en			(ecfg_rx_mmu_mode),
+                        .mmu_en			(ecfg_rx_mmu_enable),
                         .clk			(rx_lclk_div4),
                         );
    */
@@ -253,7 +237,7 @@ module erx (/*AUTOARG*/
    emmu emmu (
 	      /*AUTOINST*/
 	      // Outputs
-	      .mi_dout			(mi_dout[31:0]),
+	      .mi_dout			(mi_dout[DW-1:0]),
 	      .emmu_access_out		(emmu_access),		 // Templated
 	      .emmu_write_out		(emmu_write),		 // Templated
 	      .emmu_datamode_out	(emmu_datamode[1:0]),	 // Templated
@@ -263,12 +247,12 @@ module erx (/*AUTOARG*/
 	      .emmu_data_out		(emmu_data[DW-1:0]),	 // Templated
 	      // Inputs
 	      .clk			(rx_lclk_div4),		 // Templated
-	      .mmu_en			(ecfg_rx_mmu_mode),	 // Templated
+	      .mmu_en			(ecfg_rx_mmu_enable),	 // Templated
 	      .mi_clk			(mi_clk),
 	      .mi_en			(mi_en),
-	      .mi_we			(mi_we[3:0]),
-	      .mi_addr			(mi_addr[15:0]),
-	      .mi_din			(mi_din[31:0]),
+	      .mi_we			(mi_we),
+	      .mi_addr			(mi_addr[19:0]),
+	      .mi_din			(mi_din[DW-1:0]),
 	      .emesh_access_in		(emesh_rx_access),	 // Templated
 	      .emesh_write_in		(emesh_rx_write),	 // Templated
 	      .emesh_datamode_in	(emesh_rx_datamode[1:0]), // Templated
@@ -319,7 +303,7 @@ module erx (/*AUTOARG*/
 		  .rx_lclk_div4		(rx_lclk_div4),
 		  .rx_frame_par		(rx_frame_par[7:0]),
 		  .rx_data_par		(rx_data_par[63:0]),
-		  .ecfg_datain		(ecfg_datain[8:0]),
+		  .ecfg_rx_datain	(ecfg_rx_datain[8:0]),
 		  // Inputs
 		  .reset		(reset),
 		  .rx_lclk_p		(rx_lclk_p),
@@ -331,7 +315,7 @@ module erx (/*AUTOARG*/
 		  .rx_wr_wait		(rx_wr_wait),
 		  .rx_rd_wait		(rx_rd_wait),
 		  .ecfg_rx_enable	(ecfg_rx_enable),
-		  .ecfg_rx_gpio_mode	(ecfg_rx_gpio_mode),
+		  .ecfg_rx_gpio_enable	(ecfg_rx_gpio_enable),
 		  .ecfg_dataout		(ecfg_dataout[1:0]));
 
    /************************************************************/
@@ -343,17 +327,17 @@ module erx (/*AUTOARG*/
 				emesh_rx_rd_wait,         //13
 				emesh_rx_wr_wait,         //12
 				esaxi_emrr_rd_en,         //11
-				emrr_full,                //10
-				emrr_progfull,            //9
-				emrr_wr_en,	          //8			
-				emaxi_emrq_rd_en,         //7
-				emrq_full,                //6
-				emrq_progfull,            //5
-				emrq_wr_en,	          //4			 
-				emaxi_emwr_rd_en,         //3
-				emwr_full,	          //2			 
-				emwr_progfull,            //1
-				emwr_wr_en                //0
+				emrr_progfull,            //10
+				emrr_wr_en,	          //9			
+				emaxi_emrq_rd_en,         //8
+				emrq_progfull,            //7
+				emrq_wr_en,	          //6		 
+				emaxi_emwr_rd_en,         //5
+				emwr_progfull,            //4
+				emwr_wr_en,               //3
+				emrr_full,                //2
+				emrq_full,                //1
+				emwr_full	          //0	
 				};
      end
 
@@ -363,4 +347,19 @@ endmodule // erx
 // verilog-library-directories:("." "../../emmu/hdl" "../../stubs/hdl")
 // End:
 
+/*
+ Copyright (C) 2014 Adapteva, Inc.
+  
+ Contributed by Andreas Olofsson <andreas@adapteva.com>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.This program is distributed in the hope 
+ that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
+ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. You should have received a copy 
+ of the GNU General Public License along with this program (see the file 
+ COPYING).  If not, see <http://www.gnu.org/licenses/>.
+ */
 

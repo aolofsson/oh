@@ -1,26 +1,4 @@
 /*
-  This file is part of the Parallella Project.
-
-  Copyright (C) 2014 Adapteva, Inc.
-  Contributed by Fred Huettig <fred@adapteva.com>
-  Contributed by Andreas Olofsson <andreas@adapteva.com>
-
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program (see the file COPYING).  If not, see
-  <http://www.gnu.org/licenses/>.
-*/
-
-/*
  ########################################################################
  EPIPHANY eMesh Filter / Distributor
  ########################################################################
@@ -28,7 +6,6 @@
  This block takes one eMesh input, selected from two available 
  (MMU or direct), and distributes the transactions based on type
  (write, read request, read response).
- 
  */
 
 module erx_disty (/*AUTOARG*/
@@ -121,7 +98,7 @@ module erx_disty (/*AUTOARG*/
         in_datamode[1:0]  <= emmu_datamode[1:0];
         in_ctrlmode[3:0]  <= emmu_ctrlmode[3:0];
         in_dstaddr[31:0]  <= mmu_en ? emmu_dstaddr[31:0] : {C_REMAP_ADDR[31:(32-C_REMAP_BITS)], 
-								 emmu_dstaddr[(31-C_REMAP_BITS):0]};
+							    emmu_dstaddr[(31-C_REMAP_BITS):0]};
         in_srcaddr[31:0]  <= emmu_srcaddr[31:0];
         in_data[31:0]     <= emmu_data[31:0];
      end
@@ -165,3 +142,24 @@ endmodule // erx_disty
 
 
 
+/*
+  This file is part of the Parallella Project.
+
+  Copyright (C) 2014 Adapteva, Inc.
+  Contributed by Fred Huettig <fred@adapteva.com>
+  Contributed by Andreas Olofsson <andreas@adapteva.com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program (see the file COPYING).  If not, see
+  <http://www.gnu.org/licenses/>.
+*/

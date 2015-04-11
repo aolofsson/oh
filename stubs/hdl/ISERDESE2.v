@@ -1,6 +1,6 @@
 module ISERDESE2 (/*AUTOARG*/
    // Outputs
-   O, QQ, SHIFTOUT1, SHIFTOUT2, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8,
+   Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, O, SHIFTOUT1, SHIFTOUT2,
    // Inputs
    BITSLIP, CE1, CE2, CLKDIVP, CLK, CLKB, CLKDIV, OCLK, OCLKB,
    DYNCLKDIVSEL, DYNCLKSEL, D, DDLY, OFB, RST, SHIFTIN1, SHIFTIN2
@@ -24,18 +24,8 @@ module ISERDESE2 (/*AUTOARG*/
    parameter SRVAL_Q3=0;  
    parameter SRVAL_Q4=0;  
    
-   output O;
-   output QQ;
-   output SHIFTOUT1;
-   output SHIFTOUT2;
-   output Q1;
-   output Q2;
-   output Q3;
-   output Q4;   
-   output Q5;
-   output Q6;
-   output Q7;
-   output Q8;
+  
+  
    input  BITSLIP;
    input  CE1;
    input  CE2;
@@ -54,9 +44,20 @@ module ISERDESE2 (/*AUTOARG*/
    input  SHIFTIN1;
    input  SHIFTIN2;
 
+   //outputs
+    output Q1;
+   output Q2;
+   output Q3;
+   output Q4;   
+   output Q5;
+   output Q6;
+   output Q7;
+   output Q8;
+   output O;
+   output SHIFTOUT1;
+   output SHIFTOUT2;
    
    assign O=1'b0;
-   assign QQ=1'b0;
    assign SHIFTOUT1=1'b0;
    assign SHIFTOUT2=1'b0;
    assign Q1=1'b0;

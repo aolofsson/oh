@@ -1,36 +1,17 @@
-/*
-  Copyright (C) 2014 Adapteva, Inc.
-  Contributed by Fred Huettig <fred@adapteva.com>
- 
-   This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.This program is distributed in the hope 
-  that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
-  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details. You should have received a copy 
-  of the GNU General Public License along with this program (see the file 
-  COPYING).  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 /*###########################################################################
- # Function:  Generates clocks for eLink module:
- #      CCLK_N/P - Epiphany Core Clock, Differential, must be connected
- #                 directly to IO pins.
+ # Function:  High speed clock generator elink module
+ #      
+ #  cclk_p/n    - Epiphany Core Clock, Differential, must be connected
+ #                directly to IO pins.
  #
- #      lclk_p - Parallel data clock, at bit rate / 8
+ #  tx_lclk_par - Parallel data clock, at bit rate / 8 for etx
  #
- #      lclk_s - Serial DDR data clock, at bit rate / 2
+ #  tx_lclk     - Serial DDR data clock, at bit rate / 2 for etx
  #
- #      lclk_out - DDR "Clock" clock, to generate LCLK output
- #                 At bit rate / 2, 90deg shifted from lclk_s
+ #  tx_lclk_out - DDR "Clock" clock, to generate tx_lclk_p/n output
+ #                At bit rate / 2, 90deg shifted from tx_lclk
  #
- # Inputs:
- #      ecfg_cclk_en - Enable the CCLK output
- #      ecfg_cclk_div - CCLK divider
- #      ecfg_cclk_pllcfg - PLL configuration (not implemented)
- #
- # Notes:    Uses Xilinx macros throughout
+ # Notes: Uses Xilinx macros throughout
  #
  ############################################################################
  */
@@ -41,7 +22,8 @@ module eclock (/*AUTOARG*/
    // Outputs
    cclk_p, cclk_n, tx_lclk, tx_lclk_out, tx_lclk_par,
    // Inputs
-   clkin, reset, ecfg_cclk_en, ecfg_cclk_div, ecfg_cclk_pllcfg
+   clkin, reset, ecfg_cclk_en, ecfg_cclk_div, ecfg_cclk_pllcfg,
+   ecfg_cclk_bypass, ecfg_tx_clkbypass
    );
 
    // Parameters must be set as follows:
@@ -65,7 +47,9 @@ module eclock (/*AUTOARG*/
    input        ecfg_cclk_en;          //cclk enable   
    input [3:0]  ecfg_cclk_div;         //cclk divider setting
    input [3:0]  ecfg_cclk_pllcfg;      //pll configuration TODO: ??
-
+   input	ecfg_cclk_bypass;      //ccclk==clkin 
+   input 	ecfg_tx_clkbypass;     //tx_lclk==clkin (need manual divider for lclk_out)
+   
    //Epiphany clock
    output       cclk_p, cclk_n;        //high speed clock directly to pin
 
@@ -83,6 +67,8 @@ module eclock (/*AUTOARG*/
    wire 	pll_cclk_div;      //low speed cclk
    wire 	pll_cclk_standby;  //standby clock
    wire 	cclk;
+   wire 	cclk_base;
+   wire 	cclk_div;
    
    
    // PLL Primitive
@@ -230,3 +216,17 @@ endgenerate
         
 endmodule // eclock
 
+/*
+  Copyright (C) 2014 Adapteva, Inc.
+  Contributed by Fred Huettig <fred@adapteva.com>
+ 
+   This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.This program is distributed in the hope 
+  that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
+  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details. You should have received a copy 
+  of the GNU General Public License along with this program (see the file 
+  COPYING).  If not, see <http://www.gnu.org/licenses/>.
+*/

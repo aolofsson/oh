@@ -26,7 +26,7 @@ module etx_io (/*AUTOARG*/
    // Inputs
    reset, tx_wr_wait_p, tx_wr_wait_n, tx_rd_wait_p, tx_rd_wait_n,
    tx_lclk_par, tx_lclk, tx_lclk_out, tx_frame_par, tx_data_par,
-   ecfg_tx_enable, ecfg_tx_gpio_mode, ecfg_tx_clkdiv, ecfg_dataout
+   ecfg_tx_enable, ecfg_tx_gpio_enable, ecfg_tx_clkdiv, ecfg_dataout
    );
 
    parameter IOSTD_ELINK = "LVDS_25";
@@ -60,7 +60,7 @@ module etx_io (/*AUTOARG*/
    //# Configuration bits
    //#############
    input         ecfg_tx_enable;     //enable signal for tx  
-   input         ecfg_tx_gpio_mode;  //forces tx wait pins to constants
+   input         ecfg_tx_gpio_enable;//forces tx wait pins to constants
    input [3:0]   ecfg_tx_clkdiv;     // TODO: Implement this
    input [8:0] 	 ecfg_dataout;       // frame & data for GPIO mode
 
@@ -93,7 +93,7 @@ module etx_io (/*AUTOARG*/
    always @ (posedge tx_lclk_par) 
      begin
 	txenb_sync <= {ecfg_tx_enable, txenb_sync[1]};
-	txgpio_sync <= {ecfg_tx_gpio_mode, txgpio_sync[1]};      
+	txgpio_sync <= {ecfg_tx_gpio_enable, txgpio_sync[1]};      
 	if(txgpio) 
 	  begin
              pframe <= {8{ecfg_dataout[8]}};           

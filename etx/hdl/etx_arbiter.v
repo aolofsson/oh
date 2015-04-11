@@ -1,27 +1,4 @@
 /*
-  File: etx_arbiter.v
- 
-  This file is part of the Parallella Project.
-
-  Copyright (C) 2014 Adapteva, Inc.
-  Contributed by Fred Huettig <fred@adapteva.com>
-
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program (see the file COPYING).  If not, see
-  <http://www.gnu.org/licenses/>.
-*/
-
-/*
  ########################################################################
  EPIPHANY eMesh Arbiter
  ########################################################################
@@ -31,10 +8,10 @@
  the transmit channel.
  
  The arbitration order is (fixed, highest to lowest)
-   1) read responses
-   2) read requests
-   3) writes
- 
+ 1) host writes
+ 2) read requests from host
+ 3) read responses
+
  */
 
 module etx_arbiter (/*AUTOARG*/
@@ -85,7 +62,6 @@ module etx_arbiter (/*AUTOARG*/
    reg            ready;
    reg [102:0]    fifo_data;
 
-  
    //wires
    wire 	  rr_ready;
    wire 	  rq_ready;
@@ -100,10 +76,10 @@ module etx_arbiter (/*AUTOARG*/
    //############
 
    // priority-based ready signals
-   assign     rr_ready = ~emrr_empty & ~e_tx_wr_wait;
-   assign     rq_ready = ~emrq_empty & ~e_tx_rd_wait & ~rr_ready;
-   assign     wr_ready = ~emwr_empty & ~e_tx_wr_wait & ~rr_ready & ~rq_ready;
-
+   assign     wr_ready = ~emwr_empty & ~e_tx_wr_wait;                        //highest
+   assign     rq_ready = ~emrq_empty & ~e_tx_rd_wait & ~wr_ready;
+   assign     rr_ready = ~emrr_empty & ~e_tx_wr_wait & ~wr_ready & ~rq_ready;//lowest
+   
    // FIFO read enables, when we're idle or done with the current datum
    assign     emrr_rd_en = rr_ready & (~ready | e_tx_ack);
    assign     emrq_rd_en = rq_ready & (~ready | e_tx_ack);
@@ -143,7 +119,7 @@ module etx_arbiter (/*AUTOARG*/
    //#############################
    //# Break-out the emesh signals
    //#############################
-   
+   //TODO: We need to change the order of thes packets, not consistant
    assign e_tx_access   = ready;
    assign e_tx_write    = fifo_data[102];
    assign e_tx_datamode = fifo_data[101:100];
@@ -154,3 +130,26 @@ module etx_arbiter (/*AUTOARG*/
 
 endmodule // e_tx_arbiter
 
+/*
+  File: etx_arbiter.v
+ 
+  This file is part of the Parallella Project.
+
+  Copyright (C) 2014 Adapteva, Inc.
+  Contributed by Fred Huettig <fred@adapteva.com>
+  Contributed by Andreas Olofsson <andreas@adapteva.com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program (see the file COPYING).  If not, see
+  <http://www.gnu.org/licenses/>.
+*/

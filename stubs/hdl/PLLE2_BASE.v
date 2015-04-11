@@ -1,7 +1,7 @@
 module PLLE2_BASE (/*AUTOARG*/
    // Outputs
-   CLKFB, LOCKED, CLKOUT0, CLKOUT1, CLKOUT2, CLKOUT3, CLKOUT4,
-   CLKOUT5, CLKFBOUT,
+   LOCKED, CLKOUT0, CLKOUT1, CLKOUT2, CLKOUT3, CLKOUT4, CLKOUT5,
+   CLKFBOUT,
    // Inputs
    CLKIN1, RST, PWRDWN, CLKFBIN
    );
@@ -39,13 +39,14 @@ module PLLE2_BASE (/*AUTOARG*/
    parameter STARTUP_WAIT = 0;
    parameter IOSTANDARD = 0;
    
+
+   //inputs
    input CLKIN1;
    input RST;
    input PWRDWN;
    input CLKFBIN;
    
-   
-   output CLKFB;
+   //outputs
    output LOCKED;
    output CLKOUT0;
    output CLKOUT1;
@@ -57,7 +58,7 @@ module PLLE2_BASE (/*AUTOARG*/
 
 
    //Not a correct model
-   assign CLKFB=CLKIN1;
+   assign CLKFBOUT=CLKIN1;
    assign LOCKED=1'b0;
    assign CLKOUT0=CLKIN1;
    assign CLKOUT1=CLKIN1;

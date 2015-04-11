@@ -1,8 +1,10 @@
 //`timescale 1 ns / 100 ps
 module dv_elink();
-
+/* verilator lint_off WIDTH */
+/* verilator lint_off STMTDLY */
    parameter DW = 32;
    parameter AW = 32;
+   parameter FW = 1;
    
    //Basic stimulus to drive
    reg        reset_in;        //active high asynchronous hardware reset
@@ -60,24 +62,11 @@ module dv_elink();
    reg 	      s_axi_wlast;
    reg [3:0]  s_axi_wstrb;
    reg 	      s_axi_wvalid;
-   reg 	      s_axicfg_aclk;
-   reg 	      s_axicfg_aresetn;
-   reg [12:0] s_axicfg_araddr;
-   reg [2:0]  s_axicfg_arprot;
-   reg 	      s_axicfg_arvalid;
-   reg [12:0] s_axicfg_awaddr;
-   reg [2:0]  s_axicfg_awprot;
-   reg 	      s_axicfg_bready;
-   reg 	      s_axicfg_rready;
-   reg [31:0] s_axicfg_wdata;
-   reg [3:0]  s_axicfg_wstrb;
-   reg 	      s_axicfg_wvalid;
-   reg 	      s_axicfg_awvalid;
+   wire       [FW-1:0]  flag;
    
     //Reset
    initial
      begin
-	$display($time, " << Starting the Simulation >>");	
 	#0
 	reset_in          = 1'b1;
 	clkin             = 1'b0;
@@ -130,24 +119,10 @@ module dv_elink();
     	s_axi_wlast        = 1'b0;
 	s_axi_wstrb[3:0]   = 4'b0;
     	s_axi_wvalid       = 1'b0;
-	s_axicfg_aclk        = 1'b0;
-    	s_axicfg_aresetn     = 1'b0;
-	s_axicfg_araddr[12:0]=13'b0;
-	s_axicfg_arprot[2:0] = 1'b0;
-    	s_axicfg_arvalid     = 1'b0;
-	s_axicfg_awaddr[12:0]= 13'b0;
-	s_axicfg_awprot[2:0] = 3'b0;
-    	s_axicfg_bready      = 1'b0;
-	s_axicfg_awvalid     = 1'b0;	
-    	s_axicfg_rready      = 1'b0;
-	s_axicfg_wdata[31:0] = 32'b0;
-	s_axicfg_wstrb[3:0]  = 4'b0;
-        s_axicfg_wvalid      = 1'b0;
        
 	#100 
 	  reset_in           = 1'b0;    // at time 100 release reset
    	  s_axi_aresetn      = 1'b1;
-   	  s_axicfg_aresetn   = 1'b1;
    	  m_axi_aresetn      = 1'b1;
 	#10000	  
 	  $finish;
@@ -163,7 +138,6 @@ module dv_elink();
 	    rx_lclk_n  = ~rx_lclk_n;
 	    s_axi_aclk = ~s_axi_aclk;
 	    m_axi_aclk = ~m_axi_aclk;
-	    s_axicfg_aclk=~s_axicfg_aclk;	    
 	 end
      end
 
@@ -177,6 +151,7 @@ module dv_elink();
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			cclk_n;			// From elink of elink.v
    wire			cclk_p;			// From elink of elink.v
+   wire [3:0]		colid;			// From elink of elink.v
    wire			embox_full;		// From elink of elink.v
    wire			embox_not_empty;	// From elink of elink.v
    wire [31:0]		m_axi_araddr;		// From elink of elink.v
@@ -206,6 +181,7 @@ module dv_elink();
    wire [7:0]		m_axi_wstrb;		// From elink of elink.v
    wire			m_axi_wvalid;		// From elink of elink.v
    wire			resetb_out;		// From elink of elink.v
+   wire [3:0]		rowid;			// From elink of elink.v
    wire			rx_rd_wait_n;		// From elink of elink.v
    wire			rx_rd_wait_p;		// From elink of elink.v
    wire			rx_wr_wait_n;		// From elink of elink.v
@@ -221,14 +197,6 @@ module dv_elink();
    wire [1:0]		s_axi_rresp;		// From elink of elink.v
    wire			s_axi_rvalid;		// From elink of elink.v
    wire			s_axi_wready;		// From elink of elink.v
-   wire			s_axicfg_arready;	// From elink of elink.v
-   wire			s_axicfg_awready;	// From elink of elink.v
-   wire [1:0]		s_axicfg_bresp;		// From elink of elink.v
-   wire			s_axicfg_bvalid;	// From elink of elink.v
-   wire [31:0]		s_axicfg_rdata;		// From elink of elink.v
-   wire [1:0]		s_axicfg_rresp;		// From elink of elink.v
-   wire			s_axicfg_rvalid;	// From elink of elink.v
-   wire			s_axicfg_wready;	// From elink of elink.v
    wire [7:0]		tx_data_n;		// From elink of elink.v
    wire [7:0]		tx_data_p;		// From elink of elink.v
    wire			tx_frame_n;		// From elink of elink.v
@@ -239,6 +207,8 @@ module dv_elink();
    
    elink elink (/*AUTOINST*/
 		// Outputs
+		.colid			(colid[3:0]),
+		.rowid			(rowid[3:0]),
 		.resetb_out		(resetb_out),
 		.cclk_p			(cclk_p),
 		.cclk_n			(cclk_n),
@@ -252,8 +222,6 @@ module dv_elink();
 		.tx_frame_n		(tx_frame_n),
 		.tx_data_p		(tx_data_p[7:0]),
 		.tx_data_n		(tx_data_n[7:0]),
-		.embox_not_empty	(embox_not_empty),
-		.embox_full		(embox_full),
 		.m_axi_araddr		(m_axi_araddr[31:0]),
 		.m_axi_arburst		(m_axi_arburst[1:0]),
 		.m_axi_arcache		(m_axi_arcache[3:0]),
@@ -291,17 +259,12 @@ module dv_elink();
 		.s_axi_rresp		(s_axi_rresp[1:0]),
 		.s_axi_rvalid		(s_axi_rvalid),
 		.s_axi_wready		(s_axi_wready),
-		.s_axicfg_arready	(s_axicfg_arready),
-		.s_axicfg_awready	(s_axicfg_awready),
-		.s_axicfg_bresp		(s_axicfg_bresp[1:0]),
-		.s_axicfg_bvalid	(s_axicfg_bvalid),
-		.s_axicfg_rdata		(s_axicfg_rdata[31:0]),
-		.s_axicfg_rresp		(s_axicfg_rresp[1:0]),
-		.s_axicfg_rvalid	(s_axicfg_rvalid),
-		.s_axicfg_wready	(s_axicfg_wready),
+		.embox_not_empty	(embox_not_empty),
+		.embox_full		(embox_full),
 		// Inputs
 		.reset_in		(reset_in),
 		.clkin			(clkin),
+		.flag			(flag[FW-1:0]),
 		.rx_lclk_p		(rx_lclk_p),
 		.rx_lclk_n		(rx_lclk_n),
 		.rx_frame_p		(rx_frame_p),
@@ -354,28 +317,17 @@ module dv_elink();
 		.s_axi_wdata		(s_axi_wdata[31:0]),
 		.s_axi_wlast		(s_axi_wlast),
 		.s_axi_wstrb		(s_axi_wstrb[3:0]),
-		.s_axi_wvalid		(s_axi_wvalid),
-		.s_axicfg_aclk		(s_axicfg_aclk),
-		.s_axicfg_aresetn	(s_axicfg_aresetn),
-		.s_axicfg_araddr	(s_axicfg_araddr[15:0]),
-		.s_axicfg_arprot	(s_axicfg_arprot[2:0]),
-		.s_axicfg_arvalid	(s_axicfg_arvalid),
-		.s_axicfg_awaddr	(s_axicfg_awaddr[15:0]),
-		.s_axicfg_awprot	(s_axicfg_awprot[2:0]),
-		.s_axicfg_awvalid	(s_axicfg_awvalid),
-		.s_axicfg_bready	(s_axicfg_bready),
-		.s_axicfg_rready	(s_axicfg_rready),
-		.s_axicfg_wdata		(s_axicfg_wdata[31:0]),
-		.s_axicfg_wstrb		(s_axicfg_wstrb[3:0]),
-		.s_axicfg_wvalid	(s_axicfg_wvalid));
+		.s_axi_wvalid		(s_axi_wvalid));
 
    //Waveform dump
+`ifdef TARGET_VERILATOR
+`else
    initial
      begin
         $dumpfile("test.vcd");
         $dumpvars(0, dv_elink);
      end
-
+`endif
    
 endmodule // dv_elink
 // Local Variables:
