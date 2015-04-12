@@ -30,17 +30,17 @@ module etx_arbiter (/*AUTOARG*/
    input          reset;
    
    // from write request FIFO (slave)
-   input [102:0]  emwr_rd_data;
+   input [103:0]  emwr_rd_data;
    output         emwr_rd_en;
    input          emwr_empty;
    
    // from read request fifo (slave port)
-   input [102:0]  emrq_rd_data;
+   input [103:0]  emrq_rd_data;
    output         emrq_rd_en;
    input          emrq_empty;
    
    // from read response FIFO (master port)
-   input [102:0]  emrr_rd_data;
+   input [103:0]  emrr_rd_data;
    output         emrr_rd_en;
    input          emrr_empty;
 
@@ -60,7 +60,7 @@ module etx_arbiter (/*AUTOARG*/
 
    //regs
    reg            ready;
-   reg [102:0]    fifo_data;
+   reg [103:0]    fifo_data;
 
    //wires
    wire 	  rr_ready;
@@ -119,14 +119,14 @@ module etx_arbiter (/*AUTOARG*/
    //#############################
    //# Break-out the emesh signals
    //#############################
-   //TODO: We need to change the order of thes packets, not consistant
    assign e_tx_access   = ready;
-   assign e_tx_write    = fifo_data[102];
-   assign e_tx_datamode = fifo_data[101:100];
-   assign e_tx_ctrlmode = fifo_data[99:96];
-   assign e_tx_dstaddr  = fifo_data[95:64];
-   assign e_tx_srcaddr  = fifo_data[63:32];
-   assign e_tx_data     = fifo_data[31:0];
+   assign e_tx_write    = fifo_data[1];
+   assign e_tx_datamode = fifo_data[3:2];
+   assign e_tx_ctrlmode = fifo_data[7:4];
+   assign e_tx_dstaddr  = fifo_data[39:8];
+   assign e_tx_data     = fifo_data[71:40];
+   assign e_tx_srcaddr  = fifo_data[103:72];
+
 
 endmodule // e_tx_arbiter
 

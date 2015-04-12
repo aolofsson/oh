@@ -28,19 +28,20 @@ module esaxi_logic #
    (
     // Users to add ports here
     // FIFO write port, write requests
-    output reg [102:0] 			 emwr_wr_data,
+    output reg [103:0] 			 emwr_wr_data,
     output reg 				 emwr_wr_en,
     input 				 emwr_full,
     input 				 emwr_prog_full,
     
     // FIFO write port, read requests
-    output reg [102:0] 			 emrq_wr_data,
+    output reg [103:0] 			 emrq_wr_data,
     output reg 				 emrq_wr_en,
     input 				 emrq_full,
     input 				 emrq_prog_full,
     
-    // FIFO read port, read responses
-    input [102:0] 			 emrr_rd_data,
+    // FIFO read port, read responses (only 32 bits used!)
+    // TODO: slave readback fifo should only be 32 bits!
+    input [103:0] 			 emrr_rd_data,
     output 				 emrr_rd_en,
     input 				 emrr_empty,
 
@@ -429,7 +430,7 @@ module esaxi_logic #
    reg [31:0]  aligned_addr;
    reg [1:0]   wsize;
    reg         pre_wr_en;   // delay for data alignment
-   reg [3:0]   ctrl_mode;   // Sync'd from ecfg
+   reg [3:0]   ctrlmode;   // Sync'd from ecfg
    
    always @( posedge S_AXI_ACLK ) begin
       if ( S_AXI_ARESETN == 1'b0 ) begin
@@ -437,14 +438,14 @@ module esaxi_logic #
          aligned_data[31:0]  <= 32'd0;
          aligned_addr[31:0]  <= 32'd0;
          wsize[1:0]          <= 2'd0;
-         emwr_wr_data[102:0] <= 103'd0;
+         emwr_wr_data[103:0] <= 104'd0;
          pre_wr_en           <= 1'b0;
          emwr_wr_en          <= 1'b0;
-         ctrl_mode[3:0]      <= 4'd0;
+         ctrlmode[3:0]      <= 4'd0;
          
       end else begin
 
-         ctrl_mode <= ecfg_tx_ctrl_mode;  // No timing on this
+         ctrlmode <= ecfg_tx_ctrl_mode;  // No timing on this
 
          // Set lsbs of address based on write strobes, 
          // right-justify data.
@@ -468,13 +469,15 @@ module esaxi_logic #
          pre_wr_en <= axi_wready & S_AXI_WVALID;
          emwr_wr_en <= pre_wr_en;
          
-         emwr_wr_data[102:0] <=                         
-           { 1'b1,            // write
-             wsize,           // only up to 32b
-             ctrl_mode,
-             aligned_addr,    // dstaddr
-             32'd0,           // srcaddr ignored
-             aligned_data[31:0]};
+         emwr_wr_data[103:0] <=                         
+           { 32'd0,             // srcaddr ignored
+             aligned_data[31:0],
+	     aligned_addr,      // dstaddr
+	     ctrlmode[3:0],
+	     wsize,             // only up to 32b
+	     1'b1,              //write
+	     1'b0               //access driven by fifo not empty
+	     };
          
       end // else: !if( S_AXI_ARESETN == 1'b0 )
    end // always @ ( posedge S_AXI_ACLK )
@@ -503,7 +506,7 @@ module esaxi_logic #
       if ( S_AXI_ARESETN == 1'b0 ) begin
 
          emrq_wr_en   <= 1'b0;
-         emrq_wr_data[102:0] <= 'd0;
+         emrq_wr_data[103:0] <= 104'b0;
          ractive_reg  <= 1'b0;
          rnext        <= 1'b0;
          
@@ -515,14 +518,15 @@ module esaxi_logic #
          
          emrq_wr_en <= ( ~ractive_reg & read_active ) | rnext;
          
-         emrq_wr_data[102:0] <=
-           { 1'b0,                            // !write
-             axi_arsize[1:0],                 // 32b max
-             ctrl_mode[3:0],
-             axi_araddr[31:0],                // dstaddr (read from)
-             {C_READ_TAG_ADDR[11:0], 20'd0},  // srcaddr (tag)
-             32'd0                            // no data
-             };
+         emrq_wr_data[103:0] <=
+			       {{C_READ_TAG_ADDR[11:0], 20'd0}, // srcaddr-tag
+				32'd0,                          // no data
+				axi_araddr[31:0],               // read addr
+				ctrlmode[3:0],
+				axi_arsize[1:0],                // 32b max
+				1'b0,                           //read
+				1'b0   //access determined by fifo not empty
+				};
 
       end // else: !if( S_AXI_ARESETN == 1'b0 )
    end // always @ ( posedge S_AXI_ACLK )
@@ -547,9 +551,9 @@ module esaxi_logic #
 
             case( axi_arsize[1:0] )
 
-              2'b00: axi_rdata[31:0] <= {4{emrr_rd_data[7:0]}};
-              2'b01: axi_rdata[31:0] <= {2{emrr_rd_data[15:0]}};
-              default: axi_rdata[31:0] <= emrr_rd_data[31:0];
+              2'b00: axi_rdata[31:0] <= {4{emrr_rd_data[47:40]}};
+              2'b01: axi_rdata[31:0] <= {2{emrr_rd_data[55:40]}};
+              default: axi_rdata[31:0] <= emrr_rd_data[71:40];
 
             endcase // case ( axi_araddr[1:0] }...
 

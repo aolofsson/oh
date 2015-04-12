@@ -40,19 +40,19 @@ module erx_disty (/*AUTOARG*/
    output         emesh_wr_wait;
  
    // Master FIFO port, writes
-   output [102:0] emwr_wr_data;
+   output [103:0] emwr_wr_data;
    output         emwr_wr_en;
    input          emwr_full;       // full flags for debug only
    input          emwr_progfull;
    
    // Master FIFO port, read requests
-   output [102:0] emrq_wr_data;
+   output [103:0] emrq_wr_data;
    output         emrq_wr_en;
    input          emrq_full;
    input          emrq_progfull;
    
    // Master FIFO port, read responses
-   output [102:0] emrr_wr_data;
+   output [103:0] emrr_wr_data;
    output         emrr_wr_en;
    input          emrr_full;
    input          emrr_progfull;
@@ -82,10 +82,10 @@ module erx_disty (/*AUTOARG*/
    //############
    wire           rxmmu = rxmmu_sync[0];
    
-   wire [102:0]   fifo_din;
-   wire [102:0]   emwr_wr_data;
-   wire [102:0]   emrq_wr_data;
-   wire [102:0]   emrr_wr_data;
+   wire [103:0]   fifo_din;
+   wire [103:0]   emwr_wr_data;
+   wire [103:0]   emrq_wr_data;
+   wire [103:0]   emrr_wr_data;
 
 
    
@@ -117,19 +117,18 @@ module erx_disty (/*AUTOARG*/
 	  emwr_wr_en  <= 1'b0;	  
        end
    
-   // TODO: Why not keep the bit pattern the same as our "default" pattern??
-   assign fifo_din[102:0] = {
-			     in_write,
-			     in_datamode[1:0],
-			     in_ctrlmode[3:0],
+   assign fifo_din[103:0] = {in_srcaddr[31:0],
+			     in_data[31:0],
 			     in_dstaddr[31:0],
-			     in_srcaddr[31:0],
-			     in_data[31:0]
+			     in_ctrlmode[3:0],
+			     in_datamode[1:0],
+			     in_write,
+			     1'b0  
 			     };
       
-   assign emwr_wr_data[102:0] = fifo_din[102:0];
-   assign emrq_wr_data[102:0] = fifo_din[102:0];
-   assign emrr_wr_data[102:0] = fifo_din[102:0];
+   assign emwr_wr_data[103:0] = fifo_din[103:0];
+   assign emrq_wr_data[103:0] = fifo_din[103:0];
+   assign emrr_wr_data[103:0] = fifo_din[103:0];
    
    //#############################
    //# Wait signal passthroughs

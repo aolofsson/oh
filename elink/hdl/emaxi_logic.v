@@ -23,15 +23,15 @@
  
  */
 
-`define WRITE_BIT      102
-`define DATAMODE_RANGE 101:100
-`define CTRLMODE_RANGE 99:96
-`define DSTADDR_RANGE  95:64
-`define DSTADDR_LSB    64
-`define SRCADDR_RANGE  63:32
-`define SRCADDR_LSB    32
-`define DATA_RANGE     31:0
-`define DATA_LSB       0
+`define WRITE_BIT      1
+`define DATAMODE_RANGE 3:2
+`define CTRLMODE_RANGE 7:4
+`define DSTADDR_RANGE  39:8
+`define DSTADDR_LSB    8
+`define SRCADDR_RANGE  103:72
+`define SRCADDR_LSB    72
+`define DATA_RANGE     71:40
+`define DATA_LSB       40
 
 `timescale 1 ns / 1 ps
 
@@ -66,17 +66,17 @@
 	(
 		// Users to add ports here
 		   // FIFO read-master port, writes from RX channel
-        input wire [102:0]  emwr_rd_data,
+        input wire [103:0]  emwr_rd_data,
         output wire         emwr_rd_en,
         input wire          emwr_empty,
   
         // FIFO read-master port, read requests from RX channel
-        input wire [102:0]  emrq_rd_data,
+        input wire [103:0]  emrq_rd_data,
         output wire         emrq_rd_en,
         input wire          emrq_empty,
      
         // FIFO write-master port, read responses to TX channel
-        output reg  [102:0] emrr_wr_data,
+        output reg  [103:0] emrr_wr_data,
         output reg          emrr_wr_en,
         input wire          emrr_full,
         input wire          emrr_prog_full,
@@ -348,8 +348,9 @@
    always @ ( emwr_rd_data ) begin
 
       // Place data of stated size in all legal positions
-      case( emwr_rd_data[`DATAMODE_RANGE] )
-        
+      //TODO:Swap out these  parameters with fixed values! Will not change!!!!
+
+      case( emwr_rd_data[3:2] )        
         2'd0: wdata_aligned = { 8{emwr_rd_data[`DATA_LSB+7 -: 8]}};
         2'd1: wdata_aligned = { 4{emwr_rd_data[`DATA_LSB+15 -: 16]}};
         2'd2: wdata_aligned = { 2{emwr_rd_data[`DATA_LSB+31 -: 32]}};

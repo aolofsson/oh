@@ -217,36 +217,36 @@ module elink(/*AUTOARG*/
    wire			ecfg_tx_gpio_enable;	// From ecfg of ecfg.v
    wire			ecfg_tx_mmu_enable;	// From ecfg of ecfg.v
    wire			emaxi_emrq_empty;	// From erx of erx.v
-   wire [102:0]		emaxi_emrq_rd_data;	// From erx of erx.v
+   wire [103:0]		emaxi_emrq_rd_data;	// From erx of erx.v
    wire			emaxi_emrq_rd_en;	// From emaxi of emaxi.v
    wire			emaxi_emrr_full;	// From etx of etx.v
    wire			emaxi_emrr_prog_full;	// From etx of etx.v
-   wire [102:0]		emaxi_emrr_wr_data;	// From emaxi of emaxi.v
+   wire [103:0]		emaxi_emrr_wr_data;	// From emaxi of emaxi.v
    wire			emaxi_emrr_wr_en;	// From emaxi of emaxi.v
    wire			emaxi_emwr_empty;	// From erx of erx.v
-   wire [102:0]		emaxi_emwr_rd_data;	// From erx of erx.v
+   wire [103:0]		emaxi_emwr_rd_data;	// From erx of erx.v
    wire			emaxi_emwr_rd_en;	// From emaxi of emaxi.v
    wire			emrq_full;		// From esaxi_mux of esaxi_mux.v
    wire			emrq_prog_full;		// From esaxi_mux of esaxi_mux.v
-   wire [102:0]		emrq_wr_data;		// From esaxi of esaxi.v
+   wire [103:0]		emrq_wr_data;		// From esaxi of esaxi.v
    wire			emrq_wr_en;		// From esaxi of esaxi.v
    wire			emrr_empty;		// From esaxi_mux of esaxi_mux.v
    wire [31:0]		emrr_rd_data;		// From esaxi_mux of esaxi_mux.v
    wire			emrr_rd_en;		// From esaxi of esaxi.v
    wire			emwr_full;		// From esaxi_mux of esaxi_mux.v
    wire			emwr_prog_full;		// From esaxi_mux of esaxi_mux.v
-   wire [102:0]		emwr_wr_data;		// From esaxi of esaxi.v
+   wire [103:0]		emwr_wr_data;		// From esaxi of esaxi.v
    wire			emwr_wr_en;		// From esaxi of esaxi.v
    wire			esaxi_emrq_full;	// From etx of etx.v
    wire			esaxi_emrq_prog_full;	// From etx of etx.v
-   wire [102:0]		esaxi_emrq_wr_data;	// From esaxi_mux of esaxi_mux.v
+   wire [103:0]		esaxi_emrq_wr_data;	// From esaxi_mux of esaxi_mux.v
    wire			esaxi_emrq_wr_en;	// From esaxi_mux of esaxi_mux.v
    wire			esaxi_emrr_empty;	// From erx of erx.v
-   wire [102:0]		esaxi_emrr_rd_data;	// From erx of erx.v
+   wire [103:0]		esaxi_emrr_rd_data;	// From erx of erx.v
    wire			esaxi_emrr_rd_en;	// From esaxi_mux of esaxi_mux.v
    wire			esaxi_emwr_full;	// From etx of etx.v
    wire			esaxi_emwr_prog_full;	// From etx of etx.v
-   wire [102:0]		esaxi_emwr_wr_data;	// From esaxi_mux of esaxi_mux.v
+   wire [103:0]		esaxi_emwr_wr_data;	// From esaxi_mux of esaxi_mux.v
    wire			esaxi_emwr_wr_en;	// From esaxi_mux of esaxi_mux.v
    wire [19:0]		mi_addr;		// From esaxi_mux of esaxi_mux.v
    wire			mi_clk;			// From esaxi_mux of esaxi_mux.v
@@ -295,7 +295,7 @@ module elink(/*AUTOARG*/
 	       // Outputs
 	       .emwr_rd_en		(emaxi_emwr_rd_en),	 // Templated
 	       .emrq_rd_en		(emaxi_emrq_rd_en),	 // Templated
-	       .emrr_wr_data		(emaxi_emrr_wr_data[102:0]), // Templated
+	       .emrr_wr_data		(emaxi_emrr_wr_data[103:0]), // Templated
 	       .emrr_wr_en		(emaxi_emrr_wr_en),	 // Templated
 	       .m00_axi_awlen		(m_axi_awlen[7:0]),	 // Templated
 	       .m00_axi_awsize		(m_axi_awsize[2:0]),	 // Templated
@@ -318,9 +318,9 @@ module elink(/*AUTOARG*/
 	       .m00_axi_arvalid		(m_axi_arvalid),	 // Templated
 	       .m00_axi_rready		(m_axi_rready),		 // Templated
 	       // Inputs
-	       .emwr_rd_data		(emaxi_emwr_rd_data[102:0]), // Templated
+	       .emwr_rd_data		(emaxi_emwr_rd_data[103:0]), // Templated
 	       .emwr_empty		(emaxi_emwr_empty),	 // Templated
-	       .emrq_rd_data		(emaxi_emrq_rd_data[102:0]), // Templated
+	       .emrq_rd_data		(emaxi_emrq_rd_data[103:0]), // Templated
 	       .emrq_empty		(emaxi_emrq_empty),	 // Templated
 	       .emrr_full		(emaxi_emrr_full),	 // Templated
 	       .emrr_prog_full		(emaxi_emrr_prog_full),	 // Templated
@@ -360,9 +360,9 @@ module elink(/*AUTOARG*/
 	       .s00_axi_araddr		(s_axi_araddr[29:0]),
 	       /*AUTOINST*/
 	       // Outputs
-	       .emwr_wr_data		(emwr_wr_data[102:0]),
+	       .emwr_wr_data		(emwr_wr_data[103:0]),
 	       .emwr_wr_en		(emwr_wr_en),
-	       .emrq_wr_data		(emrq_wr_data[102:0]),
+	       .emrq_wr_data		(emrq_wr_data[103:0]),
 	       .emrq_wr_en		(emrq_wr_en),
 	       .emrr_rd_en		(emrr_rd_en),
 	       .s00_axi_awready		(s_axi_awready),	 // Templated
@@ -378,7 +378,7 @@ module elink(/*AUTOARG*/
 	       .emwr_prog_full		(emwr_prog_full),
 	       .emrq_full		(emrq_full),
 	       .emrq_prog_full		(emrq_prog_full),
-	       .emrr_rd_data		(emrr_rd_data[102:0]),
+	       .emrr_rd_data		(emrr_rd_data[103:0]),
 	       .emrr_empty		(emrr_empty),
 	       .ecfg_tx_ctrlmode	(ecfg_tx_ctrlmode[3:0]),
 	       .ecfg_coreid		(ecfg_coreid[11:0]),
@@ -446,11 +446,11 @@ module elink(/*AUTOARG*/
 	   .ecfg_rx_datain		(ecfg_rx_datain[8:0]),
 	   .mi_dout			(mi_rx_emmu_dout[31:0]), // Templated
 	   .emaxi_emwr_empty		(emaxi_emwr_empty),
-	   .emaxi_emwr_rd_data		(emaxi_emwr_rd_data[102:0]),
+	   .emaxi_emwr_rd_data		(emaxi_emwr_rd_data[103:0]),
 	   .emaxi_emrq_empty		(emaxi_emrq_empty),
-	   .emaxi_emrq_rd_data		(emaxi_emrq_rd_data[102:0]),
+	   .emaxi_emrq_rd_data		(emaxi_emrq_rd_data[103:0]),
 	   .esaxi_emrr_empty		(esaxi_emrr_empty),
-	   .esaxi_emrr_rd_data		(esaxi_emrr_rd_data[102:0]),
+	   .esaxi_emrr_rd_data		(esaxi_emrr_rd_data[103:0]),
 	   .rx_wr_wait_p		(rx_wr_wait_p),
 	   .rx_wr_wait_n		(rx_wr_wait_n),
 	   .rx_rd_wait_p		(rx_rd_wait_p),
@@ -518,11 +518,11 @@ module elink(/*AUTOARG*/
 	   .ecfg_tx_mmu_enable		(ecfg_tx_mmu_enable),
 	   .ecfg_dataout		(ecfg_dataout[8:0]),
 	   .esaxi_emrq_wr_en		(esaxi_emrq_wr_en),
-	   .esaxi_emrq_wr_data		(esaxi_emrq_wr_data[102:0]),
+	   .esaxi_emrq_wr_data		(esaxi_emrq_wr_data[103:0]),
 	   .esaxi_emwr_wr_en		(esaxi_emwr_wr_en),
-	   .esaxi_emwr_wr_data		(esaxi_emwr_wr_data[102:0]),
+	   .esaxi_emwr_wr_data		(esaxi_emwr_wr_data[103:0]),
 	   .emaxi_emrr_wr_en		(emaxi_emrr_wr_en),
-	   .emaxi_emrr_wr_data		(emaxi_emrr_wr_data[102:0]),
+	   .emaxi_emrr_wr_data		(emaxi_emrr_wr_data[103:0]),
 	   .tx_wr_wait_p		(tx_wr_wait_p),
 	   .tx_wr_wait_n		(tx_wr_wait_n),
 	   .tx_rd_wait_p		(tx_rd_wait_p),
@@ -618,9 +618,9 @@ module elink(/*AUTOARG*/
 		       .emrq_prog_full	(emrq_prog_full),
 		       .emrr_rd_data	(emrr_rd_data[31:0]),
 		       .emrr_empty	(emrr_empty),
-		       .esaxi_emwr_wr_data(esaxi_emwr_wr_data[102:0]),
+		       .esaxi_emwr_wr_data(esaxi_emwr_wr_data[103:0]),
 		       .esaxi_emwr_wr_en(esaxi_emwr_wr_en),
-		       .esaxi_emrq_wr_data(esaxi_emrq_wr_data[102:0]),
+		       .esaxi_emrq_wr_data(esaxi_emrq_wr_data[103:0]),
 		       .esaxi_emrq_wr_en(esaxi_emrq_wr_en),
 		       .esaxi_emrr_rd_en(esaxi_emrr_rd_en),
 		       .mi_clk		(mi_clk),
@@ -632,16 +632,16 @@ module elink(/*AUTOARG*/
 		       .mi_addr		(mi_addr[19:0]),
 		       .mi_din		(mi_din[31:0]),
 		       // Inputs
-		       .emwr_wr_data	(emwr_wr_data[102:0]),
+		       .emwr_wr_data	(emwr_wr_data[103:0]),
 		       .emwr_wr_en	(emwr_wr_en),
-		       .emrq_wr_data	(emrq_wr_data[102:0]),
+		       .emrq_wr_data	(emrq_wr_data[103:0]),
 		       .emrq_wr_en	(emrq_wr_en),
 		       .emrr_rd_en	(emrr_rd_en),
 		       .esaxi_emwr_full	(esaxi_emwr_full),
 		       .esaxi_emwr_prog_full(esaxi_emwr_prog_full),
 		       .esaxi_emrq_full	(esaxi_emrq_full),
 		       .esaxi_emrq_prog_full(esaxi_emrq_prog_full),
-		       .esaxi_emrr_rd_data(esaxi_emrr_rd_data[31:0]),
+		       .esaxi_emrr_rd_data(esaxi_emrr_rd_data[103:0]),
 		       .esaxi_emrr_empty(esaxi_emrr_empty),
 		       .mi_ecfg_dout	(mi_ecfg_dout[DW-1:0]),
 		       .mi_tx_emmu_dout	(mi_tx_emmu_dout[DW-1:0]),

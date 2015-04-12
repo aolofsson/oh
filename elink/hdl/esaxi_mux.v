@@ -19,12 +19,12 @@ module esaxi_mux (/*AUTOARG*/
    input 	  clk;
 
    //AXI Side
-   input [102:0]  emwr_wr_data;
+   input [103:0]  emwr_wr_data;
    input 	  emwr_wr_en;   
    output 	  emwr_full;
    output 	  emwr_prog_full;
 
-   input [102:0]  emrq_wr_data;   
+   input [103:0]  emrq_wr_data;   
    input 	  emrq_wr_en;   
    output 	  emrq_full;   
    output 	  emrq_prog_full;
@@ -34,17 +34,17 @@ module esaxi_mux (/*AUTOARG*/
    output 	  emrr_empty;
    
    //FIFO side
-   output [102:0] esaxi_emwr_wr_data;
+   output [103:0] esaxi_emwr_wr_data;
    output 	  esaxi_emwr_wr_en;   
    input 	  esaxi_emwr_full;
    input 	  esaxi_emwr_prog_full;
    
-   output [102:0] esaxi_emrq_wr_data;   
+   output [103:0] esaxi_emrq_wr_data;   
    output 	  esaxi_emrq_wr_en;   
    input 	  esaxi_emrq_full;   
    input 	  esaxi_emrq_prog_full;
 
-   input [31:0]   esaxi_emrr_rd_data;   
+   input [103:0]  esaxi_emrr_rd_data;   
    output 	  esaxi_emrr_rd_en;   
    input 	  esaxi_emrr_empty;
 
@@ -123,20 +123,20 @@ module esaxi_mux (/*AUTOARG*/
    /********************************/  
 
    //Write Request
-   assign  esaxi_emwr_wr_data[102:0] = emwr_wr_data[102:0] ;
+   assign  esaxi_emwr_wr_data[103:0] = emwr_wr_data[103:0] ;
    assign  esaxi_emwr_wr_en          = emwr_wr_en & ~mi_wr;   
    assign  emwr_full                 = esaxi_emwr_full;
    assign  emwr_prog_full            = esaxi_emwr_prog_full ;
 
    //Read Request
-   assign   esaxi_emrq_wr_data[102:0] = emrq_wr_data[102:0];
+   assign   esaxi_emrq_wr_data[103:0] = emrq_wr_data[103:0];
    assign   esaxi_emrq_wr_en          = emrq_wr_en & ~mi_rd;      
    assign   emrq_full                 = esaxi_emrq_full;  
    assign   emrq_prog_full            = esaxi_emrq_prog_full ;
 
    //Read Response
    assign   emrr_rd_data[31:0]       = mi_rd_reg ? mi_dout[31:0] :
-				                   esaxi_emrr_rd_data[31:0];
+				                   esaxi_emrr_rd_data[71:40];
    assign   esaxi_emrr_rd_en          = emrr_rd_en & ~mi_rd_reg;   
    assign   emrr_empty                = esaxi_emrr_empty & ~mi_rd_reg;
 

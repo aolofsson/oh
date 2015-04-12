@@ -24,17 +24,17 @@
 	(
 		// Users to add ports here
 		   // FIFO read-master port, writes from RX channel
-         input [102:0] 			       emwr_rd_data,
+         input [103:0] 			       emwr_rd_data,
          output 			       emwr_rd_en,
          input 				       emwr_empty,
   
         // FIFO read-master port, read requests from RX channel
-         input [102:0] 			       emrq_rd_data,
+         input [103:0] 			       emrq_rd_data,
          output 			       emrq_rd_en,
          input 				       emrq_empty,
      
         // FIFO write-master port, read responses to TX channel
-         output [102:0] 		       emrr_wr_data,
+         output [103:0] 		       emrr_wr_data,
          output 			       emrr_wr_en,
          input 				       emrr_full,
          input 				       emrr_prog_full,

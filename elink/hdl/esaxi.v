@@ -21,19 +21,19 @@
 	)
 	(
      // FIFO write port, write requests
-     output wire [102:0] 			 emwr_wr_data,
+     output wire [103:0] 			 emwr_wr_data,
      output wire 				 emwr_wr_en,
      input wire 				 emwr_full,
      input wire 				 emwr_prog_full,
    
      // FIFO write port, read requests
-     output wire [102:0] 			 emrq_wr_data,
+     output wire [103:0] 			 emrq_wr_data,
      output wire 				 emrq_wr_en,
      input wire 				 emrq_full,
      input wire 				 emrq_prog_full,
    
      // FIFO read port, read responses
-     input wire [102:0] 			 emrr_rd_data,
+     input wire [103:0] 			 emrr_rd_data,
      output wire 				 emrr_rd_en,
      input wire 				 emrr_empty,
 

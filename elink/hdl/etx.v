@@ -41,19 +41,19 @@ module etx(/*AUTOARG*/
 
    //Read requests (from axi slave)
    input         esaxi_emrq_wr_en;
-   input [102:0] esaxi_emrq_wr_data;
+   input [103:0] esaxi_emrq_wr_data;
    output        esaxi_emrq_full;
    output 	 esaxi_emrq_prog_full;
 
    //Write requests (from axi slave)
    input         esaxi_emwr_wr_en;
-   input [102:0] esaxi_emwr_wr_data;
+   input [103:0] esaxi_emwr_wr_data;
    output        esaxi_emwr_full;
    output 	 esaxi_emwr_prog_full;
 
    //Read responses (from axi master)
    input         emaxi_emrr_wr_en;
-   input [102:0] emaxi_emrr_wr_data;
+   input [103:0] emaxi_emrr_wr_data;
    output        emaxi_emrr_full;
    output 	 emaxi_emrr_prog_full;
    
@@ -97,14 +97,14 @@ module etx(/*AUTOARG*/
    wire [31:0]		e_tx_srcaddr;		// From etx_arbiter of etx_arbiter.v
    wire			e_tx_wr_wait;		// From etx_protocol of etx_protocol.v
    wire			e_tx_write;		// From etx_arbiter of etx_arbiter.v
-   wire			emrq_empty;		// From s_rq_fifo of fifo_async_103x16.v
-   wire [102:0]		emrq_rd_data;		// From s_rq_fifo of fifo_async_103x16.v
+   wire			emrq_empty;		// From s_rq_fifo of fifo_async_104x16.v
+   wire [103:0]		emrq_rd_data;		// From s_rq_fifo of fifo_async_104x16.v
    wire			emrq_rd_en;		// From etx_arbiter of etx_arbiter.v
-   wire			emrr_empty;		// From m_rr_fifo of fifo_async_103x16.v
-   wire [102:0]		emrr_rd_data;		// From m_rr_fifo of fifo_async_103x16.v
+   wire			emrr_empty;		// From m_rr_fifo of fifo_async_104x16.v
+   wire [103:0]		emrr_rd_data;		// From m_rr_fifo of fifo_async_104x16.v
    wire			emrr_rd_en;		// From etx_arbiter of etx_arbiter.v
-   wire			emwr_empty;		// From s_wr_fifo of fifo_async_103x16.v
-   wire [102:0]		emwr_rd_data;		// From s_wr_fifo of fifo_async_103x16.v
+   wire			emwr_empty;		// From s_wr_fifo of fifo_async_104x16.v
+   wire [103:0]		emwr_rd_data;		// From s_wr_fifo of fifo_async_104x16.v
    wire			emwr_rd_en;		// From etx_arbiter of etx_arbiter.v
    wire [63:0]		tx_data_par;		// From etx_protocol of etx_protocol.v
    wire [7:0]		tx_frame_par;		// From etx_protocol of etx_protocol.v
@@ -115,14 +115,14 @@ module etx(/*AUTOARG*/
    /************************************************************/
    /*FIFOs                                                     */
    /************************************************************/
-   /*fifo_async_103x16 AUTO_TEMPLATE ( 
+   /*fifo_async_104x16 AUTO_TEMPLATE ( 
                                  // Outputs
-			          .dout	(em@"(substring vl-cell-name  2 4)"_rd_data[102:0]),
+			          .dout	(em@"(substring vl-cell-name  2 4)"_rd_data[103:0]),
                                   .prog_full	(e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_prog_full),
                                   .empty	(em@"(substring vl-cell-name  2 4)"_empty),
                                   .full      (e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_full),
                                   //Inputs
-                                  .din	(e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_wr_data[102:0]),
+                                  .din	(e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_wr_data[103:0]),
 			          .wr_clk       (@"(substring vl-cell-name  0 1)"_axi_aclk),
                                   .wr_en	(e@"(substring vl-cell-name  0 1)"axi_em@"(substring vl-cell-name  2 4)"_wr_en),
                                   .rd_clk       (tx_lclk_par),
@@ -133,9 +133,9 @@ module etx(/*AUTOARG*/
    */
    
    //Read request fifo (from slave)
-   fifo_async_103x16  s_rq_fifo(/*AUTOINST*/
+   fifo_async_104x16  s_rq_fifo(/*AUTOINST*/
 				// Outputs
-				.dout		(emrq_rd_data[102:0]), // Templated
+				.dout		(emrq_rd_data[103:0]), // Templated
 				.full		(esaxi_emrq_full), // Templated
 				.empty		(emrq_empty),	 // Templated
 				.prog_full	(esaxi_emrq_prog_full), // Templated
@@ -143,15 +143,15 @@ module etx(/*AUTOARG*/
 				.rst		(reset),	 // Templated
 				.wr_clk		(s_axi_aclk),	 // Templated
 				.rd_clk		(tx_lclk_par),	 // Templated
-				.din		(esaxi_emrq_wr_data[102:0]), // Templated
+				.din		(esaxi_emrq_wr_data[103:0]), // Templated
 				.wr_en		(esaxi_emrq_wr_en), // Templated
 				.rd_en		(emrq_rd_en));	 // Templated
    
 
    //Write fifo (from slave)
-   fifo_async_103x16 s_wr_fifo(/*AUTOINST*/
+   fifo_async_104x16 s_wr_fifo(/*AUTOINST*/
 			       // Outputs
-			       .dout		(emwr_rd_data[102:0]), // Templated
+			       .dout		(emwr_rd_data[103:0]), // Templated
 			       .full		(esaxi_emwr_full), // Templated
 			       .empty		(emwr_empty),	 // Templated
 			       .prog_full	(esaxi_emwr_prog_full), // Templated
@@ -159,15 +159,15 @@ module etx(/*AUTOARG*/
 			       .rst		(reset),	 // Templated
 			       .wr_clk		(s_axi_aclk),	 // Templated
 			       .rd_clk		(tx_lclk_par),	 // Templated
-			       .din		(esaxi_emwr_wr_data[102:0]), // Templated
+			       .din		(esaxi_emwr_wr_data[103:0]), // Templated
 			       .wr_en		(esaxi_emwr_wr_en), // Templated
 			       .rd_en		(emwr_rd_en));	 // Templated
    
 
    //Read response fifo (from master)
-   fifo_async_103x16  m_rr_fifo(/*AUTOINST*/
+   fifo_async_104x16  m_rr_fifo(/*AUTOINST*/
 				// Outputs
-				.dout		(emrr_rd_data[102:0]), // Templated
+				.dout		(emrr_rd_data[103:0]), // Templated
 				.full		(emaxi_emrr_full), // Templated
 				.empty		(emrr_empty),	 // Templated
 				.prog_full	(emaxi_emrr_prog_full), // Templated
@@ -175,7 +175,7 @@ module etx(/*AUTOARG*/
 				.rst		(reset),	 // Templated
 				.wr_clk		(m_axi_aclk),	 // Templated
 				.rd_clk		(tx_lclk_par),	 // Templated
-				.din		(emaxi_emrr_wr_data[102:0]), // Templated
+				.din		(emaxi_emrr_wr_data[103:0]), // Templated
 				.wr_en		(emaxi_emrr_wr_en), // Templated
 				.rd_en		(emrr_rd_en));	 // Templated
    
@@ -202,11 +202,11 @@ module etx(/*AUTOARG*/
 			    // Inputs
 			    .tx_lclk_par	(tx_lclk_par),
 			    .reset		(reset),
-			    .emwr_rd_data	(emwr_rd_data[102:0]),
+			    .emwr_rd_data	(emwr_rd_data[103:0]),
 			    .emwr_empty		(emwr_empty),
-			    .emrq_rd_data	(emrq_rd_data[102:0]),
+			    .emrq_rd_data	(emrq_rd_data[103:0]),
 			    .emrq_empty		(emrq_empty),
-			    .emrr_rd_data	(emrr_rd_data[102:0]),
+			    .emrr_rd_data	(emrr_rd_data[103:0]),
 			    .emrr_empty		(emrr_empty),
 			    .e_tx_rd_wait	(e_tx_rd_wait),
 			    .e_tx_wr_wait	(e_tx_wr_wait),
