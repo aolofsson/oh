@@ -1,27 +1,4 @@
 /*
-  File: eproto_rx.v
- 
-  This file is part of the Parallella Project.
-
-  Copyright (C) 2014 Adapteva, Inc.
-  Contributed by Fred Huettig <fred@adapteva.com>
-
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program (see the file COPYING).  If not, see
-  <http://www.gnu.org/licenses/>.
-*/
-
-/*
  ########################################################################
  EPIPHANY eLink RX Protocol block
  ########################################################################
@@ -144,68 +121,68 @@ module erx_protocol (/*AUTOARG*/
              rxalign_in  <= 3'd0;
              rxactive_in <= 1'b1;
 	  end else begin
-             rxactive_in <= 3'd0;  // No edge
+             rxactive_in <= 1'd0;  // No edge
 	  end	        
    end // always @ ( posedge rx_lclk_div4 )
 
    // 1st cycle
-   always @( posedge rx_lclk_div4 ) begin
-
-      rxactive_0 <= rxactive_in;
-      rxalign_0  <= rxalign_in;
-      stream_0   <= 1'b0;
-            
-      case(rxalign_in)
-        3'd7: begin
-           ctrlmode_0       <= rx_data_in[55:52];
-           dstaddr_0[31:0]  <= rx_data_in[51:20];
-           datamode_0       <= rx_data_in[19:18];
-           write_0          <= rx_data_in[17];
-           access_0         <= rx_data_in[16];
-           data_0[31:16]    <= rx_data_in[15:0];
-           stream_0         <= rx_frame_par[1] & (rxactive_in | stream_0);
-        end
-        
-        3'd6: begin
-           ctrlmode_0       <= rx_data_in[47:44];
-           dstaddr_0[31:0]  <= rx_data_in[43:12];
-           datamode_0       <= rx_data_in[11:10];
-           write_0          <= rx_data_in[9];
-           access_0         <= rx_data_in[8];
-           data_0[31:24]    <= rx_data_in[7:0];
-           stream_0         <= rx_frame_par[0] & (rxactive_in | stream_0);
-        end
-
-        3'd5: begin
-           ctrlmode_0       <= rx_data_in[39:36];
-           dstaddr_0[31:0]  <= rx_data_in[35:4];
-           datamode_0       <= rx_data_in[3:2];
-           write_0          <= rx_data_in[1];
-           access_0         <= rx_data_in[0];
-        end
-
-        3'd4: begin
-           ctrlmode_0       <= rx_data_in[31:28];
-           dstaddr_0[31:4]  <= rx_data_in[27:0];
-        end
-
-        3'd3: begin
-           ctrlmode_0       <= rx_data_in[23:20];
-           dstaddr_0[31:12] <= rx_data_in[19:0];
-        end
-
-        3'd2: begin
-           ctrlmode_0       <= rx_data_in[15:12];
-           dstaddr_0[31:20] <= rx_data_in[11:0];
-        end
-
-        3'd1: begin
-           ctrlmode_0       <= rx_data_in[7:4];
-           dstaddr_0[31:28] <= rx_data_in[3:0];
-        end
-        
-         // if align == 0 then only the tran byte is present, ignore
-      endcase // case (rxalign_in)
+   always @( posedge rx_lclk_div4 ) 
+     begin
+	rxactive_0 <= rxactive_in;
+	rxalign_0  <= rxalign_in;
+	stream_0   <= 1'b0;        
+	case(rxalign_in[2:0])
+          3'd7: 
+	    begin
+               ctrlmode_0[3:0]  <= rx_data_in[55:52];
+               dstaddr_0[31:0]  <= rx_data_in[51:20];
+               datamode_0       <= rx_data_in[19:18];
+               write_0          <= rx_data_in[17];
+               access_0         <= rx_data_in[16];
+               data_0[31:16]    <= rx_data_in[15:0];
+               stream_0         <= rx_frame_par[1] & (rxactive_in | stream_0);
+            end        
+          3'd6: 
+	    begin
+               ctrlmode_0[3:0]  <= rx_data_in[47:44];
+               dstaddr_0[31:0]  <= rx_data_in[43:12];
+               datamode_0       <= rx_data_in[11:10];
+               write_0          <= rx_data_in[9];
+               access_0         <= rx_data_in[8];
+               data_0[31:24]    <= rx_data_in[7:0];
+               stream_0         <= rx_frame_par[0] & (rxactive_in | stream_0);
+            end
+          3'd5: 
+	    begin
+               ctrlmode_0       <= rx_data_in[39:36];
+               dstaddr_0[31:0]  <= rx_data_in[35:4];
+               datamode_0       <= rx_data_in[3:2];
+               write_0          <= rx_data_in[1];
+               access_0         <= rx_data_in[0];
+            end
+          3'd4: 
+	    begin
+               ctrlmode_0       <= rx_data_in[31:28];
+               dstaddr_0[31:4]  <= rx_data_in[27:0];
+            end
+          3'd3: 
+	    begin
+               ctrlmode_0       <= rx_data_in[23:20];
+               dstaddr_0[31:12] <= rx_data_in[19:0];
+            end
+          3'd2: 
+	    begin
+               ctrlmode_0       <= rx_data_in[15:12];
+               dstaddr_0[31:20] <= rx_data_in[11:0];
+            end
+          3'd1: 
+	    begin
+               ctrlmode_0       <= rx_data_in[7:4];
+               dstaddr_0[31:28] <= rx_data_in[3:0];
+            end
+	  default: ;
+      endcase // case (rxalign_in[2:0])
+      
       
    end // always @ ( posedge rx_lclk_div4 )
 
@@ -296,21 +273,24 @@ module erx_protocol (/*AUTOARG*/
    always @( posedge rx_lclk_div4 ) begin
 
       // default pass-throughs
-      if(~stream_2) begin
-         ctrlmode_2    <= ctrlmode_1;
-         dstaddr_2     <= dstaddr_1;
-         datamode_2    <= datamode_1;
-         write_2       <= write_1;
-         access_2      <= access_1 & rxactive_1;
-      end else begin
-         dstaddr_2     <= dstaddr_2 + 32'h00000008;
-      end
+      if(~stream_2) 
+	begin
+           ctrlmode_2    <= ctrlmode_1;
+           dstaddr_2     <= dstaddr_1;
+           datamode_2    <= datamode_1;
+           write_2       <= write_1;
+           access_2      <= access_1 & rxactive_1;
+	end 
+      else 
+	begin
+           dstaddr_2     <= dstaddr_2 + 32'h00000008;
+	end
 
       data_2        <= data_1;
       srcaddr_2     <= srcaddr_1;
       stream_2      <= stream_1;
 
-      case( rxalign_1 )
+      case( rxalign_1[2:0] )
         // 7-5: Full packet is complete in 2nd cycle
         3'd4:
           srcaddr_2[7:0]  <= rx_data_in[63:56];
@@ -320,10 +300,12 @@ module erx_protocol (/*AUTOARG*/
           srcaddr_2[23:0] <= rx_data_in[63:40];
         3'd1:
           srcaddr_2[31:0] <= rx_data_in[63:32];
-        3'd0: begin
-           data_2[7:0]     <= rx_data_in[63:56];
-           srcaddr_2[31:0] <= rx_data_in[55:24];
-        end
+        3'd0: 
+	  begin
+             data_2[7:0]     <= rx_data_in[63:56];
+             srcaddr_2[31:0] <= rx_data_in[55:24];
+          end
+	default:;//TODO: include error message
       endcase // case ( rxalign_1 )
 
    end // always @ ( posedge rx_lclk_div4 )
@@ -380,3 +362,25 @@ module erx_protocol (/*AUTOARG*/
    assign rx_wr_wait = emesh_rx_wr_wait;
    
 endmodule
+/*
+  File: eproto_rx.v
+ 
+  This file is part of the Parallella Project.
+
+  Copyright (C) 2014 Adapteva, Inc.
+  Contributed by Fred Huettig <fred@adapteva.com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program (see the file COPYING).  If not, see
+  <http://www.gnu.org/licenses/>.
+*/

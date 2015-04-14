@@ -21,7 +21,8 @@ module esaxi (/*autoarg*/
 
    parameter [11:0]  c_read_tag_addr     = 12'h810;//emesh srcaddr tag  
    parameter integer c_s_axi_addr_width  = 30;     //address width
-
+   parameter [11:0]  ELINKID             = 12'h810;
+   
    /*****************************/
    /*Write request for TX fifo  */
    /*****************************/  
@@ -261,7 +262,7 @@ module esaxi (/*autoarg*/
 		 begin //incremental burst
 		    // the write address for all the beats in the transaction are increments by the data width.
 		    // note: this should be based on awsize instead to support narrow bursts, i think.
-		    axi_awaddr[31:addr_lsb] <= axi_awaddr[31:addr_lsb] + 32'd1;
+		    axi_awaddr[31:addr_lsb] <= axi_awaddr[31:addr_lsb] + 30'd1;
 		    //awaddr aligned to data width
 		    axi_awaddr[addr_lsb-1:0]  <= {addr_lsb{1'b0}};   		  
 		 end  // both fixed & wrapping types are treated as fixed, no update.
@@ -342,7 +343,7 @@ module esaxi (/*autoarg*/
            axi_araddr[31:0] <= 0;
            axi_arlen        <= 8'd0;
            axi_arburst      <= 2'd0;
-           axi_arsize       <= 2'b0;
+           axi_arsize[2:0]  <= 3'b0;
            s_axi_rlast      <= 1'b0;
            //s_axi_rid        <= 'd0;         
 	end
@@ -516,10 +517,10 @@ module esaxi (/*autoarg*/
 			           emrq_dstaddr[19:0];
    		
    //Block select
-   assign mi_ecfg_sel     = mi_en & (mi_addr[19:16]==EGROUP_MMR);
-   assign mi_rx_emmu_sel  = mi_en & (mi_addr[19:16]==EGROUP_RXMMU);
-   assign mi_tx_emmu_sel  = mi_en & (mi_addr[19:16]==EGROUP_TXMMU);
-   assign mi_embox_sel    = mi_en & (mi_addr[19:16]==EGROUP_EMBOX);
+   assign mi_ecfg_sel     = mi_en & (mi_addr[19:16]==`EGROUP_MMR);
+   assign mi_rx_emmu_sel  = mi_en & (mi_addr[19:16]==`EGROUP_RXMMU);
+   assign mi_tx_emmu_sel  = mi_en & (mi_addr[19:16]==`EGROUP_TXMMU);
+   assign mi_embox_sel    = mi_en & (mi_addr[19:16]==`EGROUP_EMBOX);
    				  
    //Data
    assign mi_din[31:0]     = emwr_data[31:0];

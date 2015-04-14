@@ -86,9 +86,12 @@ module etx(/*AUTOARG*/
    input [31:0]  mi_din;     //input data  
    output [31:0] mi_dout;    //read back data
    
-   //regs
+   //debug declarations
    reg [15:0] 	 ecfg_tx_debug; 
-  
+   wire 	 emwr_full;
+   wire 	 emrr_full;
+   wire 	 emrq_full;
+   
    /*AUTOOUTPUT*/
    /*AUTOINPUT*/
    
@@ -153,6 +156,8 @@ module etx(/*AUTOARG*/
                                .emesh_\(.*\)_in	(em@"(substring vl-cell-name  2 4)"_\1[]),
     );
     */
+
+
    
    //Write fifo (from slave)
    fifo_async_emesh s_wr_fifo(.fifo_full	(emwr_full),

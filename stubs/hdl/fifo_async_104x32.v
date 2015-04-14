@@ -29,7 +29,7 @@ module fifo_async_104x32(rst, wr_clk, rd_clk, din, wr_en, rd_en, dout, full, emp
    
    assign empty       =1'b0;
    assign prog_full   =1'b0;
-   assign dout[103:0] =103'b0;
+   assign dout[103:0] =104'b0;
    assign full        =1'b0;
    
 

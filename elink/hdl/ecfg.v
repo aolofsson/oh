@@ -297,9 +297,9 @@ module ecfg (/*AUTOARG*/
    //###########################
    always @ (posedge clk)
      if(hw_reset)
-       ecfg_version_reg[7:0] <= DEFAULT_VERSION;
+       ecfg_version_reg[15:0] <= DEFAULT_VERSION;
      else if (ecfg_version_write)
-       ecfg_version_reg[7:0] <= mi_din[7:0];   
+       ecfg_version_reg[15:0] <= mi_din[15:0];   
    
    //###########################
    //# ESYSDATAIN
@@ -321,11 +321,9 @@ module ecfg (/*AUTOARG*/
    //###########################
    //# ESYSDEBUG
    //###########################
-   assign ecfg_debug_vector[31:0]= {//other debug signals
-				    embox_not_empty,
-				    ecfg_rx_debug[15:3],
-				    ecfg_tx_debug[15:3],
-				    //sticky signals
+   assign ecfg_debug_vector[31:0]= {embox_not_empty,
+				    ecfg_rx_debug[14:3],
+				    ecfg_tx_debug[14:3],
 				    ecfg_rx_debug[2:0],
 				    ecfg_tx_debug[2:0],
 				    embox_full
@@ -350,7 +348,7 @@ module ecfg (/*AUTOARG*/
          `ESYSRX:      mi_dout[31:0] <= {27'b0, ecfg_cfgrx_reg[4:0]};
          `ESYSCLK:     mi_dout[31:0] <= {24'b0, ecfg_cfgclk_reg[7:0]};
          `ESYSCOREID:  mi_dout[31:0] <= {20'b0, ecfg_coreid_reg[11:0]};
-         `ESYSVERSION: mi_dout[31:0] <= {24'b0, ecfg_version_reg[7:0]};
+         `ESYSVERSION: mi_dout[31:0] <= {16'b0, ecfg_version_reg[15:0]};
          `ESYSDATAIN:  mi_dout[31:0] <= {21'b0, ecfg_datain_reg[10:0]};
          `ESYSDATAOUT: mi_dout[31:0] <= {21'b0, ecfg_dataout_reg[10:0]};
 	 `ESYSDEBUG:   mi_dout[31:0] <= {ecfg_debug_vector[31:8],ecfg_debug_reg[7:0]};

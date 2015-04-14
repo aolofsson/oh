@@ -29,7 +29,6 @@ module emmu (/*AUTOARG*/
    parameter PAW    = 64;         //physical address width of output
    parameter MW     = PAW-AW+IDW; //table data width
    parameter RFAW   = IDW+1;      //width of mi_addr
-   parameter GROUP  = 0;          //each instatiation needs a group number
    
    /*****************************/
    /*DATAPATH CLOCk             */
@@ -47,7 +46,7 @@ module emmu (/*AUTOARG*/
    input 	     mi_clk;              //source synchronous clock
    input 	     mi_en;               //memory access 
    input  	     mi_we;               //byte wise write enable
-   input [19:0]      mi_addr;             //address
+   input [15:0]      mi_addr;             //address
    input [DW-1:0]    mi_din;              //input data  
    output [DW-1:0]   mi_dout;             //read back (TODO?? not implemented)
   
@@ -97,7 +96,7 @@ module emmu (/*AUTOARG*/
    //write controls
    assign emmu_wr_en[5:0] = (emmu_write & ~mi_addr[2]) ? 6'b001111 :
 	                    (emmu_write & mi_addr[2])  ? 6'b110000 :
-			                                6'b000000 ;
+			                                 6'b000000 ;
 
    //write data
    assign emmu_wr_data[63:0] = {mi_din[31:0], mi_din[31:0]};

@@ -293,7 +293,7 @@ module erx (/*AUTOARG*/
 	      .mi_clk			(mi_clk),
 	      .mi_en			(mi_en),
 	      .mi_we			(mi_we),
-	      .mi_addr			(mi_addr[19:0]),
+	      .mi_addr			(mi_addr[15:0]),
 	      .mi_din			(mi_din[DW-1:0]),
 	      .emesh_access_in		(emesh_rx_access),	 // Templated
 	      .emesh_write_in		(emesh_rx_write),	 // Templated

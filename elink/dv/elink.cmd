@@ -1,6 +1,6 @@
-dv_elink_tb.v
 ../../constants/hdl/xilinx_constants.v
 ../../elink/hdl/elink_regmap.v
+dv_elink_tb.v
 -y .
 -y ../../elink/hdl
 -y ../../stubs/hdl

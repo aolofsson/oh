@@ -81,11 +81,11 @@ module embox (/*AUTOARG*/
    assign embox_read        = mi_en & ~mi_we;
 
    //Register write enables
-   assign  embox_lo_write    = embox_write & (mi_addr[RFAW-1:2]==`EMBOXLO); //write to shadow
-   assign  embox_push_fifo   = embox_write & (mi_addr[RFAW-1:2]==`EMBOXHI); //initiates FIFO write
+   assign  embox_lo_write    = embox_write & (mi_addr[RFAW+1:2]==`EMBOXLO); //write to shadow
+   assign  embox_push_fifo   = embox_write & (mi_addr[RFAW+1:2]==`EMBOXHI); //initiates FIFO write
    
    //read logic   
-   assign embox_pop_fifo     = embox_read & (mi_addr[RFAW-1:2]==`EMBOXHI); //fifo read      
+   assign embox_pop_fifo     = embox_read & (mi_addr[RFAW+1:2]==`EMBOXHI); //fifo read      
 
    /*****************************/
    /*WRITE ACTION               */

@@ -1,26 +1,3 @@
-/*
-  File: e_rx_io.v
- 
-  This file is part of the Parallella Project .
-
-  Copyright (C) 2014 Adapteva, Inc.
-  Contributed by Fred Huettig <fred@adapteva.com>
-  Contributed by Andreas Olofsson <fred@adapteva.com>
-
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program (see the file COPYING).  If not, see
-  <http://www.gnu.org/licenses/>.
-*/
 
 module erx_io (/*AUTOARG*/
    // Outputs
@@ -86,10 +63,10 @@ module erx_io (/*AUTOARG*/
    IBUFDS
 	 #(.DIFF_TERM  ("TRUE"),     // Differential termination
        .IOSTANDARD (IOSTD_ELINK))
-	 ibufds_rxdata[0:7]
-	   (.I     (rxi_data_p),
-        .IB    (rxi_data_n),
-        .O     (rx_data));
+	 ibufds_rxdata[7:0]
+	   (.I     (rxi_data_p[7:0]),
+        .IB    (rxi_data_n[7:0]),
+        .O     (rx_data[7:0]));
 
    IBUFDS
 	 #(.DIFF_TERM  ("TRUE"),     // Differential termination
@@ -345,5 +322,29 @@ reg [8:0] ecfg_rx_datain;
         .I(rd_wait)
         );
    
-endmodule // e_rx_io
+endmodule // erx_io
 
+
+/*
+  File: e_rx_io.v
+ 
+  This file is part of the Parallella Project .
+
+  Copyright (C) 2014 Adapteva, Inc.
+  Contributed by Fred Huettig <fred@adapteva.com>
+  Contributed by Andreas Olofsson <fred@adapteva.com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program (see the file COPYING).  If not, see
+  <http://www.gnu.org/licenses/>.
+*/

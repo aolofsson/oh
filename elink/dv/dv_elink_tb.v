@@ -1,5 +1,6 @@
 module dv_elink_tb();
 
+/* verilator lint_off STMTDLY */
 
    //REGS
    reg           clk;   
@@ -34,10 +35,12 @@ module dv_elink_tb();
 	  $finish;
      end
 
-always @ (posedge clk)
+   wire pushback = (dut_wr_wait | dut_rd_wait);
+   
+always @ (negedge clk)
   if(reset)
     begin
-       ext_access        <=1'b0;
+       ext_access       <=1'b0;
        ext_write         <=1'b0;
        ext_datamode[1:0] <=2'b0;
        ext_ctrlmode[3:0] <=4'b0;
@@ -47,24 +50,32 @@ always @ (posedge clk)
        ext_rd_wait       <=1'b0;
        ext_wr_wait       <=1'b0;
     end
-  else if(go)
+  else if (go)
     begin
-       ext_access        <=1'b1;
-       ext_write         <=1'b1;
-       ext_datamode[1:0] <=2'b0;
-       ext_ctrlmode[3:0] <=4'b0;
-       ext_data[31:0]    <=ext_data[31:0]+1'b1;
-       ext_dstaddr[31:0] <=ext_dstaddr[31:0]+1'b1;
-       ext_srcaddr[31:0] <=ext_srcaddr[31:0]+1'b1;
+       ext_access        <= 1'b1;
+       ext_write         <= 1'b1;       
+       ext_data[31:0]    <=  ext_data[31:0] + 1'b1;
+       ext_dstaddr[31:0] <=  ext_dstaddr[31:0] + 1'b1;
+       ext_srcaddr[31:0] <=  ext_srcaddr[31:0] + 1'b1;
     end
-      
+  else if (~pushback & go)
+    begin
+       ext_access        <= 1'b0;
+       ext_data[31:0]    <=  ext_data[31:0];
+       ext_dstaddr[31:0] <=  ext_dstaddr[31:0];
+       ext_srcaddr[31:0] <=  ext_srcaddr[31:0];
+    end
+ 
+   
    //Waveform dump
+`ifndef TARGET_VERILATOR
    initial
      begin
 	$dumpfile("test.vcd");
 	$dumpvars(0, dv_elink_tb);
      end
-
+`endif
+   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			dut_access;		// From dv_elink of dv_elink.v

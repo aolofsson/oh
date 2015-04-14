@@ -251,7 +251,7 @@ module emaxi(/*autoarg*/
      if(~m_axi_aresetn) 
        begin	  
 	  m_axi_wvalid      <= 1'b0;
-          m_axi_wdata[63:0] <= 8'b0;
+          m_axi_wdata[63:0] <= 64'b0;
           m_axi_wstrb[7:0]  <= 8'b0;
           m_axi_wlast       <= 1'b1; // todo: no bursts for now?	  
           wvalid_b          <= 1'b0;

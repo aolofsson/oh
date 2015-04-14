@@ -54,7 +54,7 @@ module fifo_async_emesh (/*AUTOARG*/
 			   emesh_data_in[31:0],
 			   emesh_dstaddr_in[31:0],
 			   emesh_ctrlmode_in[3:0],
-			   emesh_datemode_in[1:0],
+			   emesh_datamode_in[1:0],
 			   emesh_write_in,
 			   1'b0
 			   };
@@ -80,7 +80,7 @@ module fifo_async_emesh (/*AUTOARG*/
 					.rst		(reset),
 					.wr_clk		(wr_clk),
 					.rd_clk		(rd_clk),
-					.din		(din[103:0]),
+					.din		(fifo_din[103:0]),
 					.wr_en		(emesh_access_in),
 					.rd_en		(fifo_read)
 					);

@@ -67,7 +67,6 @@ module dv_elink(/*AUTOARG*/
    wire			dv_axi_bready;		// From emaxi of emaxi.v
    wire [1:0]		dv_axi_bresp;		// From elink of elink.v
    wire			dv_axi_bvalid;		// From elink of elink.v
-   wire [31:0]		dv_axi_rdata;		// From elink of elink.v
    wire			dv_axi_rlast;		// From elink of elink.v
    wire			dv_axi_rready;		// From emaxi of emaxi.v
    wire [1:0]		dv_axi_rresp;		// From elink of elink.v
@@ -118,6 +117,7 @@ module dv_elink(/*AUTOARG*/
    wire			wr_wait_p;		// From elink of elink.v
    // End of automatics
 
+   wire [63:0] 		dv_axi_rdata; //restricted to 32 bits here
    wire 		emaxi_emrq_rd_en;	// From emaxi of emaxi.v
    wire 		emaxi_emwr_rd_en;	// From emaxi of emaxi.v
    wire 		emaxi_emrq_access;	// To emaxi of emaxi.v
@@ -152,6 +152,13 @@ module dv_elink(/*AUTOARG*/
    wire 		esaxi_emwr_write;	// From esaxi of esaxi.v
    wire [3:0] 		colid;
    wire [3:0] 		rowid;
+   wire 		embox_full;
+   wire 		embox_not_empty;
+   wire 		cclk_p, cclk_n;
+   wire 		resetb;
+   
+   
+
    //Splitting transaction into read/write path
 
    //Read path
@@ -268,7 +275,7 @@ module dv_elink(/*AUTOARG*/
 		.ecfg_tx_ctrlmode	(4'b0),
 		.ecfg_coreid		(12'h808),
 		.ecfg_timeout_enable	(1'b0),
-		.s_axi_aresetn		(~resetn),
+		.s_axi_aresetn		(~reset),
 		.s_axi_aclk		(clk),
 		.emwr_access		(esaxi_emwr_access),
 		.emwr_write		(esaxi_emwr_write),
@@ -337,15 +344,15 @@ module dv_elink(/*AUTOARG*/
                         .txi_\(.*\)       (\1[]),  
                         .s_\(.*\)         (dv_\1[]),
                         .m_\(.*\)         (elink_\1[]),
-
-                            );
+                        .m_axi_rdata	  ({32'b0,elink_axi_rdata[31:0]}), //restricted to slave width
+                        );
    */
 
    elink elink (.reset_in		(reset),
 		.clkin			(clk),
 		.flag			(1'b0),
 		.embox_not_empty	(embox_full),
-		.embox_full		(embox_no_empty),
+		.embox_full		(embox_not_empty),
 		.cclk_p			(cclk_p),
 		.cclk_n			(cclk_n),
 		.resetb_out		(resetb),
@@ -355,6 +362,7 @@ module dv_elink(/*AUTOARG*/
 		.m_axi_aresetn		(~reset),
 		.s_axi_aclk		(clk),
 		.m_axi_aclk		(clk),
+		
 		/*AUTOINST*/
 		// Outputs
 		.rxo_wr_wait_p		(wr_wait_p),		 // Templated
@@ -413,7 +421,7 @@ module dv_elink(/*AUTOARG*/
 		.m_axi_awready		(elink_axi_awready),	 // Templated
 		.m_axi_bresp		(elink_axi_bresp[1:0]),	 // Templated
 		.m_axi_bvalid		(elink_axi_bvalid),	 // Templated
-		.m_axi_rdata		(elink_axi_rdata[63:0]), // Templated
+		.m_axi_rdata		({32'b0,elink_axi_rdata[31:0]}), // Templated
 		.m_axi_rlast		(elink_axi_rlast),	 // Templated
 		.m_axi_rresp		(elink_axi_rresp[1:0]),	 // Templated
 		.m_axi_rvalid		(elink_axi_rvalid),	 // Templated
