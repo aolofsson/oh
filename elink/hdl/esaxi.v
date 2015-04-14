@@ -209,18 +209,18 @@ module esaxi (/*autoarg*/
    
    // axi_awready is asserted when there is no write transfer in progress
 
-   always @( posedge s_axi_aclk ) 
+   always @(posedge s_axi_aclk ) 
       if(~s_axi_aresetn)  
 	begin
            s_axi_awready <= 1'b0;
-           write_active <= 1'b0;           
+           write_active  <= 1'b0;           
 	end 
       else 
 	begin
            // we're always ready for an address cycle if we're not doing something else
            //  note: might make this faster by going ready on last beat instead of after,
            //  but if we want the very best each channel should be fifo'd.
-           if( ~axi_awready & ~write_active & ~b_wait )
+           if( ~s_axi_awready & ~write_active & ~b_wait )
              s_axi_awready <= 1'b1;
            else if( s_axi_awvalid )
              s_axi_awready <= 1'b0;
@@ -271,8 +271,8 @@ module esaxi (/*autoarg*/
    //###################################################
    //#WRITE CHANNEL
    //###################################################
-   always @( posedge s_axi_aclk )
-     if( s_axi_aresetn == 1'b0 ) 
+   always @ (posedge s_axi_aclk)
+     if(~s_axi_aresetn) 
        s_axi_wready <= 1'b0;      
      else
        if( last_wr_beat )
@@ -286,7 +286,7 @@ module esaxi (/*autoarg*/
    // at the end of each transaction, burst or single.
 
    always @( posedge s_axi_aclk )
-     if ( s_axi_aresetn == 1'b0 ) 
+     if (~s_axi_aresetn) 
        begin
           s_axi_bvalid <= 1'b0;
           s_axi_bresp[1:0]  <= 2'b0;
@@ -308,7 +308,7 @@ module esaxi (/*autoarg*/
        end // else: !if( s_axi_aresetn == 1'b0 )
 
 
-    assign          last_rd_beat = s_axi_rvalid & s_axi_rlast & s_axi_rready;
+   assign          last_rd_beat = s_axi_rvalid & s_axi_rlast & s_axi_rready;
    
 
    //###################################################
