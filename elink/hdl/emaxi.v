@@ -114,7 +114,6 @@ module emaxi(/*autoarg*/
    reg [7 : 0] 		wstrb_aligned;
 
    reg 			emrr_access;
-   reg 			emrr_write;
    reg [1:0] 		emrr_datamode;
    reg [3:0] 		emrr_ctrlmode;
    reg [31:0] 		emrr_dstaddr;
@@ -300,7 +299,7 @@ module emaxi(/*autoarg*/
                {
                 emrq_srcaddr[31:0],//40:9
                 emrq_dstaddr[2:0], //8:6
-                emrq_ctrlmod[3:0], //5:2
+                emrq_ctrlmode[3:0], //5:2
                 emrq_datamode[1:0]
                 };
    
@@ -340,7 +339,7 @@ module emaxi(/*autoarg*/
    assign readinfo_rden = ~emrr_progfull & m_axi_rvalid;
 
 
-   assign emmr_write  = 1'b1;
+   assign emrr_write  = 1'b1;
    
    always @( posedge m_axi_aclk )
      if( ~m_axi_aresetn ) 

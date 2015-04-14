@@ -12,11 +12,11 @@ module esaxi (/*autoarg*/
    mi_tx_emmu_dout, mi_rx_emmu_dout, mi_embox_dout, ecfg_tx_ctrlmode,
    ecfg_coreid, ecfg_timeout_enable, s_axi_aclk, s_axi_aresetn,
    s_axi_araddr, s_axi_arburst, s_axi_arcache, s_axi_arlen,
-   s_axi_arprot, s_axi_arqos, s_axi_arregion, s_axi_arsize,
-   s_axi_arvalid, s_axi_awaddr, s_axi_awburst, s_axi_awcache,
-   s_axi_awlen, s_axi_awprot, s_axi_awqos, s_axi_awregion,
-   s_axi_awsize, s_axi_awvalid, s_axi_bready, s_axi_rready,
-   s_axi_wdata, s_axi_wlast, s_axi_wstrb, s_axi_wvalid
+   s_axi_arprot, s_axi_arqos, s_axi_arsize, s_axi_arvalid,
+   s_axi_awaddr, s_axi_awburst, s_axi_awcache, s_axi_awlen,
+   s_axi_awprot, s_axi_awqos, s_axi_awsize, s_axi_awvalid,
+   s_axi_bready, s_axi_rready, s_axi_wdata, s_axi_wlast, s_axi_wstrb,
+   s_axi_wvalid
    );
 
    parameter [11:0]  c_read_tag_addr     = 12'h810;//emesh srcaddr tag  
@@ -93,7 +93,6 @@ module esaxi (/*autoarg*/
    input [2:0] 	      s_axi_arprot;
    input [3:0] 	      s_axi_arqos;
    output 	      s_axi_arready;
-   input [3:0] 	      s_axi_arregion;
    input [2:0] 	      s_axi_arsize;
    input 	      s_axi_arvalid;
    
@@ -105,7 +104,6 @@ module esaxi (/*autoarg*/
    input [2:0] 	      s_axi_awprot;
    input [3:0] 	      s_axi_awqos;
    output 	      s_axi_awready;
-   input [3:0] 	      s_axi_awregion;
    input [2:0] 	      s_axi_awsize;
    input 	      s_axi_awvalid;
    
