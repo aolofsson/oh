@@ -1,30 +1,9 @@
-/*
-  This file is part of the Parallella Project .
-
-  Copyright (C) 2014 Adapteva, Inc.
-  Contributed by Fred Huettig <fred@adapteva.com>
-
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program (see the file COPYING).  If not, see
-  <http://www.gnu.org/licenses/>.
-*/
-
 module etx_io (/*AUTOARG*/
    // Outputs
-   tx_lclk_p, tx_lclk_n, tx_frame_p, tx_frame_n, tx_data_p, tx_data_n,
-   tx_wr_wait, tx_rd_wait,
+   txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
+   txo_data_n, tx_wr_wait, tx_rd_wait,
    // Inputs
-   reset, tx_wr_wait_p, tx_wr_wait_n, tx_rd_wait_p, tx_rd_wait_n,
+   reset, txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n,
    tx_lclk_par, tx_lclk, tx_lclk_out, tx_frame_par, tx_data_par,
    ecfg_tx_enable, ecfg_tx_gpio_enable, ecfg_tx_clkdiv, ecfg_dataout
    );
@@ -38,11 +17,11 @@ module etx_io (/*AUTOARG*/
    //###########
    //# eLink pins
    //###########
-   output       tx_lclk_p, tx_lclk_n;
-   output       tx_frame_p, tx_frame_n;
-   output [7:0] tx_data_p, tx_data_n;
-   input        tx_wr_wait_p, tx_wr_wait_n;
-   input        tx_rd_wait_p, tx_rd_wait_n;
+   output 	 txo_lclk_p, txo_lclk_n;       //tx clock (up to 500MHz)
+   output        txo_frame_p, txo_frame_n;     //tx frame signal
+   output [7:0]  txo_data_p, txo_data_n;       //tx data (dual data rate)
+   input 	 txi_wr_wait_p,txi_wr_wait_n;  //tx write pushback
+   input 	 txi_rd_wait_p, txi_rd_wait_n; //tx read pushback
 
    //#############
    //# Fabric interface
@@ -92,8 +71,8 @@ module etx_io (/*AUTOARG*/
    // Sync these control bits into our domain
    always @ (posedge tx_lclk_par) 
      begin
-	txenb_sync <= {ecfg_tx_enable, txenb_sync[1]};
-	txgpio_sync <= {ecfg_tx_gpio_enable, txgpio_sync[1]};      
+	txenb_sync[1:0]  <= {ecfg_tx_enable, txenb_sync[1]};
+	txgpio_sync[1:0] <= {ecfg_tx_gpio_enable, txgpio_sync[1]};      
 	if(txgpio) 
 	  begin
              pframe <= {8{ecfg_dataout[8]}};           
@@ -230,7 +209,7 @@ module etx_io (/*AUTOARG*/
       .Q  (tx_lclk_buf),
       .C  (tx_lclk_out),
       .CE (1'b1),
-      .D1 (txenb_out_sync[1]), //TODO: meaning of D1??, shouldn't this be on CE?
+      .D1 (txenb_out_sync[1]), //TODO: meaning of D1? Shouldn't this be on CE?
       .D2 (1'b0),
       .R  (1'b0),
       .S  (1'b0));
@@ -244,8 +223,8 @@ module etx_io (/*AUTOARG*/
        .SLEW("FAST")
        ) OBUFTDS_txdata [7:0]
        (
-        .O   (tx_data_p),
-        .OB  (tx_data_n),
+        .O   (txo_data_p),
+        .OB  (txo_data_n),
         .I   (tx_data),
         .T   (tx_data_t)            //not sure about this??
         );
@@ -256,8 +235,8 @@ module etx_io (/*AUTOARG*/
        .SLEW("FAST")
        ) OBUFDS_txframe
        (
-        .O   (tx_frame_p),
-        .OB  (tx_frame_n),
+        .O   (txo_frame_p),
+        .OB  (txo_frame_n),
         .I   (tx_frame)
         );
 
@@ -267,8 +246,8 @@ module etx_io (/*AUTOARG*/
        .SLEW("FAST")
        ) OBUFDS_lclk
        (
-        .O   (tx_lclk_p),
-        .OB  (tx_lclk_n),
+        .O   (txo_lclk_p),
+        .OB  (txo_lclk_n),
         .I   (tx_lclk_buf)
         );
 
@@ -281,12 +260,46 @@ module etx_io (/*AUTOARG*/
      #(.DIFF_TERM  ("TRUE"),     // Differential termination
        .IOSTANDARD (IOSTD_ELINK))
    ibufds_txwrwait
-     (.I     (tx_wr_wait_p),
-      .IB    (tx_wr_wait_n),
+     (.I     (txi_wr_wait_p),
+      .IB    (txi_wr_wait_n),
       .O     (tx_wr_wait));
-
+  
+//TODO: Come up with cleaner defines for this
+//Parallella and other platforms...   
+`ifdef TODO
+  IBUFDS
+     #(.DIFF_TERM  ("TRUE"),     // Differential termination
+       .IOSTANDARD (IOSTD_ELINK))
+   ibufds_txwrwait
+     (.I     (txi_rd_wait_p),
+      .IB    (txi_rd_wait_n),
+      .O     (tx_rd_wait));
+`else
    //On Parallella this signal comes in single-ended
-   assign tx_rd_wait = tx_rd_wait_p;
+   assign tx_rd_wait = txi_rd_wait_p;
+`endif
 
+
+   
 endmodule // etx_io
 
+/*
+  This file is part of the Parallella Project .
+
+  Copyright (C) 2014 Adapteva, Inc.
+  Contributed by Fred Huettig <fred@adapteva.com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program (see the file COPYING).  If not, see
+  <http://www.gnu.org/licenses/>.
+*/

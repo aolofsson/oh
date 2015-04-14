@@ -1,4 +1,4 @@
-dv_elink.v
+../hdl/elink.v
 ../../constants/hdl/xilinx_constants.v
 ../../elink/hdl/elink_regmap.v
 -y .

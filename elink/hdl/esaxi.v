@@ -1,174 +1,552 @@
+module esaxi (/*autoarg*/
+   // Outputs
+   emwr_access, emwr_write, emwr_datamode, emwr_ctrlmode,
+   emwr_dstaddr, emwr_data, emwr_srcaddr, emrq_access, emrq_write,
+   emrq_datamode, emrq_ctrlmode, emrq_dstaddr, emrq_data,
+   emrq_srcaddr, emrr_rd_en, mi_clk, mi_rx_emmu_sel, mi_tx_emmu_sel,
+   mi_ecfg_sel, mi_embox_sel, mi_we, mi_addr, mi_din, s_axi_arready,
+   s_axi_awready, s_axi_bresp, s_axi_bvalid, s_axi_rdata, s_axi_rlast,
+   s_axi_rresp, s_axi_rvalid, s_axi_wready,
+   // Inputs
+   emwr_progfull, emrq_progfull, emrr_data, emrr_access, mi_ecfg_dout,
+   mi_tx_emmu_dout, mi_rx_emmu_dout, mi_embox_dout, ecfg_tx_ctrlmode,
+   ecfg_coreid, ecfg_timeout_enable, s_axi_aclk, s_axi_aresetn,
+   s_axi_araddr, s_axi_arburst, s_axi_arcache, s_axi_arlen,
+   s_axi_arprot, s_axi_arqos, s_axi_arregion, s_axi_arsize,
+   s_axi_arvalid, s_axi_awaddr, s_axi_awburst, s_axi_awcache,
+   s_axi_awlen, s_axi_awprot, s_axi_awqos, s_axi_awregion,
+   s_axi_awsize, s_axi_awvalid, s_axi_bready, s_axi_rready,
+   s_axi_wdata, s_axi_wlast, s_axi_wstrb, s_axi_wvalid
+   );
 
-`timescale 1 ns / 1 ps
+   parameter [11:0]  c_read_tag_addr     = 12'h810;//emesh srcaddr tag  
+   parameter integer c_s_axi_addr_width  = 30;     //address width
 
-	module esaxi #
-	(
-		// Users to add parameters here
-	 parameter [11:0]  C_READ_TAG_ADDR = 12'h810,
-		// User parameters ends
-		// Do not modify the parameters beyond this line
-
-
-	 // Parameters of Axi Slave Bus Interface S00_AXI
-	 parameter integer C_S00_AXI_ID_WIDTH    = 12,
-	 parameter integer C_S00_AXI_DATA_WIDTH  = 32,
-	 parameter integer C_S00_AXI_ADDR_WIDTH  = 30,
-	 parameter integer C_S00_AXI_AWUSER_WIDTH = 0,
-	 parameter integer C_S00_AXI_ARUSER_WIDTH = 0,
-	 parameter integer C_S00_AXI_WUSER_WIDTH = 0,
-	 parameter integer C_S00_AXI_RUSER_WIDTH = 0,
-	 parameter integer C_S00_AXI_BUSER_WIDTH = 0
-	)
-	(
-     // FIFO write port, write requests
-     output wire [103:0] 			 emwr_wr_data,
-     output wire 				 emwr_wr_en,
-     input wire 				 emwr_full,
-     input wire 				 emwr_prog_full,
+   /*****************************/
+   /*Write request for TX fifo  */
+   /*****************************/  
+   output 	     emwr_access;   
+   output 	     emwr_write;
+   output [1:0]      emwr_datamode;
+   output [3:0]      emwr_ctrlmode;
+   output [31:0]     emwr_dstaddr;
+   output [31:0]     emwr_data;
+   output [31:0]     emwr_srcaddr;   
+   input 	     emwr_progfull;
    
-     // FIFO write port, read requests
-     output wire [103:0] 			 emrq_wr_data,
-     output wire 				 emrq_wr_en,
-     input wire 				 emrq_full,
-     input wire 				 emrq_prog_full,
+   /*****************************/
+   /*Read request for TX fifo   */
+   /*****************************/  
+   output 	     emrq_access;   
+   output 	     emrq_write;
+   output [1:0]      emrq_datamode;
+   output [3:0]      emrq_ctrlmode;
+   output [31:0]     emrq_dstaddr;
+   output [31:0]     emrq_data;
+   output [31:0]     emrq_srcaddr;      
+   input 	     emrq_progfull; //TODO? used for?
+
+   /*****************************/
+   /*Read response from RX fifo */
+   /*****************************/  
+   //Only data needed
+   input [31:0]       emrr_data;
+   input 	      emrr_access;         
+   output 	      emrr_rd_en; //update read fifo
+
+
+   /*****************************/
+   /*Register RD/WR Interface   */
+   /*****************************/  
+   output 	      mi_clk;
+   output 	      mi_rx_emmu_sel;
+   output 	      mi_tx_emmu_sel;
+   output 	      mi_ecfg_sel;
+   output 	      mi_embox_sel;
+   output 	      mi_we;   
+   output [19:0]      mi_addr;   
+   output [31:0]      mi_din;     
+   input [31:0]       mi_ecfg_dout;
+   input [31:0]       mi_tx_emmu_dout;
+   input [31:0]       mi_rx_emmu_dout;
+   input [31:0]       mi_embox_dout;
    
-     // FIFO read port, read responses
-     input wire [103:0] 			 emrr_rd_data,
-     output wire 				 emrr_rd_en,
-     input wire 				 emrr_empty,
+   /*****************************/
+   /*Config Settings            */
+   /*****************************/  
+   input [3:0] 	      ecfg_tx_ctrlmode;
+   input [11:0]       ecfg_coreid;
+   input 	      ecfg_timeout_enable;
+   
+   /*****************************/
+   /*AXI slave interface        */
+   /*****************************/  
+   //Clock and reset
+   input 	      s_axi_aclk;
+   input 	      s_axi_aresetn;
+   
+   //Read address channel
+   input [29:0]       s_axi_araddr;
+   input [1:0] 	      s_axi_arburst;
+   input [3:0] 	      s_axi_arcache;
+   input [7:0] 	      s_axi_arlen;
+   input [2:0] 	      s_axi_arprot;
+   input [3:0] 	      s_axi_arqos;
+   output 	      s_axi_arready;
+   input [3:0] 	      s_axi_arregion;
+   input [2:0] 	      s_axi_arsize;
+   input 	      s_axi_arvalid;
+   
+   //Write address channel
+   input [29:0]       s_axi_awaddr;
+   input [1:0] 	      s_axi_awburst;
+   input [3:0] 	      s_axi_awcache;
+   input [7:0] 	      s_axi_awlen;
+   input [2:0] 	      s_axi_awprot;
+   input [3:0] 	      s_axi_awqos;
+   output 	      s_axi_awready;
+   input [3:0] 	      s_axi_awregion;
+   input [2:0] 	      s_axi_awsize;
+   input 	      s_axi_awvalid;
+   
 
-     // Control bits from eConfig
-     input [3:0] 				 ecfg_tx_ctrlmode,
-     input [11:0] 				 ecfg_coreid,
-     input 					 ecfg_axi_timeout_enable, 
-		// User ports endsx
-		// Do not modify the ports beyond this line
+   //Buffered write response channel
+   input 	      s_axi_bready;
+   output [1:0]       s_axi_bresp;
+   output 	      s_axi_bvalid;
+
+   //Read channel
+   output [31:0]      s_axi_rdata;
+   output 	      s_axi_rlast;
+   input 	      s_axi_rready;
+   output [1:0]       s_axi_rresp;
+   output 	      s_axi_rvalid;
+   
+   //Write channel
+   input [31:0]       s_axi_wdata;
+   input 	      s_axi_wlast;
+   output 	      s_axi_wready;
+   input [3:0] 	      s_axi_wstrb;
+   input 	      s_axi_wvalid;
+   
+   // axi4full signals
+   reg 		      s_axi_awready;
+   reg 		      s_axi_wready;
+   reg 		      s_axi_bvalid;
+   reg [1:0] 	      s_axi_bresp;
+   reg 		      s_axi_arready;
+   
+   
+
+   reg [31:0] 	      axi_awaddr;  // 32b for epiphany addr
+   reg [1:0] 	      axi_awburst;
+   reg [2:0] 	      axi_awsize;
+   reg 		      axi_awready;   
+   reg 		      axi_wready;   
+   reg [1:0] 	      axi_bresp;
+   reg 		      axi_bvalid;
+   
+   reg [31:0] 	      axi_araddr;
+   reg [7:0] 	      axi_arlen;
+   reg [1:0] 	      axi_arburst;
+   reg [2:0] 	      axi_arsize;
+   reg 		      axi_arready;
+   
+   reg [31:0] 	      s_axi_rdata;
+   reg [1:0] 	      s_axi_rresp;
+   reg 		      s_axi_rlast;
+   reg 		      s_axi_rvalid;
+   
+   reg 		      read_active;
+   reg [31:0] 	      read_addr;
+   reg 		      write_active;
+   reg 		      b_wait;      // waiting to issue write response (unlikely?)
+   
+   reg 		      emwr_access;
+   reg [3:0] 	      emwr_ctrlmode;
+   reg [1:0] 	      emwr_datamode;
+   reg [31:0] 	      emwr_dstaddr;
+   reg [31:0] 	      emwr_data;
+   reg [31:0] 	      emwr_srcaddr;  //upper 32 bits in case 64 bit writes are supported
+
+   reg 		      emrq_access;
+   reg [3:0] 	      emrq_ctrlmode;
+   reg [1:0] 	      emrq_datamode;
+   reg [31:0] 	      emrq_dstaddr;
+   reg [31:0] 	      emrq_srcaddr;  //upper 32 bits in case 64 bit writes are supported
+   
+   reg 		      pre_wr_en;   // delay for data alignment
+   
+   reg 		      ractive_reg;  // need leading edge of active for 1st req
+   reg 		      rnext;
+        
+   reg 		      mi_rx_emmu_reg;
+   reg 		      mi_tx_emmu_reg;
+   reg 		      mi_ecfg_reg;
+   reg 		      mi_embox_reg;
+   reg 		      mi_rd_reg;
+   
+   wire 	      last_wr_beat;
+   wire 	      last_rd_beat;
+   wire 	      mi_wr;
+   wire 	      mi_rd;
+   wire 	      mi_we;
+   wire 	      mi_en;
+   wire [31:0] 	      mi_dout;
+   wire 	      mi_sel;
+   wire [31:0] 	      emrr_mux_data;
+   
+   //local parameter for addressing 32 bit / 64 bit c_s_axi_data_width
+   //addr_lsb is used for addressing 32/64 bit registers/memories
+   //addr_lsb = 2 for 32 bits (n downto 2)
+   //addr_lsb = 3 for 64 bits (n downto 3)
+   //TODO? Do we really need this?
+   localparam integer            addr_lsb = 2;
+
+   //###################################################
+   //#WRITE ADDRESS CHANNEL
+   //###################################################
+
+   assign  last_wr_beat = s_axi_wready & s_axi_wvalid & s_axi_wlast;
+   
+   // axi_awready is asserted when there is no write transfer in progress
+
+   always @( posedge s_axi_aclk ) 
+      if(~s_axi_aresetn)  
+	begin
+           s_axi_awready <= 1'b0;
+           write_active <= 1'b0;           
+	end 
+      else 
+	begin
+           // we're always ready for an address cycle if we're not doing something else
+           //  note: might make this faster by going ready on last beat instead of after,
+           //  but if we want the very best each channel should be fifo'd.
+           if( ~axi_awready & ~write_active & ~b_wait )
+             s_axi_awready <= 1'b1;
+           else if( s_axi_awvalid )
+             s_axi_awready <= 1'b0;
+	   
+           // the write cycle is "active" as soon as we capture an address, it
+           // ends on the last beat.
+           if( s_axi_awready & s_axi_awvalid )
+             write_active <= 1'b1;
+           else if( last_wr_beat )
+             write_active <= 1'b0;         
+	end // else: !if(~s_axi_aresetn)
+   
+   // capture address & other aw info, update address during cycle
+   always @( posedge s_axi_aclk ) 
+     if (~s_axi_aresetn)  
+       begin
+          //s_axi_bid          <= 'd0;  // capture for write response
+          axi_awaddr[31:0] <= 32'd0;
+          axi_awsize[2:0]  <= 3'd0;
+          axi_awburst[1:0] <= 2'd0;         
+       end 
+     else 
+       begin	  
+          if( s_axi_awready & s_axi_awvalid ) 
+	    begin	     
+	       //TODO: If we support only one host read, why the need?
+               //s_axi_bid      <= s_axi_awid;
+	       //TODO: something is wrong here!!!
+               axi_awaddr[31:0]   <= { ecfg_coreid[11:c_s_axi_addr_width-20],
+				       s_axi_awaddr[29:0] };
+               axi_awsize   <= s_axi_awsize;  // 0=byte, 1=16b, 2=32b
+               axi_awburst  <= s_axi_awburst; // type, 0=fixed, 1=incr, 2=wrap
+	       
+            end 
+	  else if( s_axi_wvalid & s_axi_wready ) 
+	    begin	       
+               if( axi_awburst == 2'b01 ) 
+		 begin //incremental burst
+		    // the write address for all the beats in the transaction are increments by the data width.
+		    // note: this should be based on awsize instead to support narrow bursts, i think.
+		    axi_awaddr[31:addr_lsb] <= axi_awaddr[31:addr_lsb] + 32'd1;
+		    //awaddr aligned to data width
+		    axi_awaddr[addr_lsb-1:0]  <= {addr_lsb{1'b0}};   		  
+		 end  // both fixed & wrapping types are treated as fixed, no update.
+            end // if ( s_axi_wvalid & axi_wready )
+       end // else: !if(~s_axi_aresetn)
+   
+   //###################################################
+   //#WRITE CHANNEL
+   //###################################################
+   always @( posedge s_axi_aclk )
+     if( s_axi_aresetn == 1'b0 ) 
+       s_axi_wready <= 1'b0;      
+     else
+       if( last_wr_beat )
+	 s_axi_wready <= 1'b0;
+       else if( write_active )
+	 s_axi_wready <= ~emwr_progfull;
+
+   
+   // implement write response logic generation
+   // the write response and response valid signals are asserted by the slave 
+   // at the end of each transaction, burst or single.
+
+   always @( posedge s_axi_aclk )
+     if ( s_axi_aresetn == 1'b0 ) 
+       begin
+          s_axi_bvalid <= 1'b0;
+          s_axi_bresp[1:0]  <= 2'b0;
+          b_wait     <= 1'b0;         
+       end 
+     else 
+       begin         
+         if( last_wr_beat ) 
+	   begin
+              s_axi_bvalid      <= 1'b1;
+              s_axi_bresp[1:0]  <= 2'b0;       // 'okay' response
+              b_wait            <= ~s_axi_bready;  // note: assumes bready will not drop without valid?            
+         end 
+	 else if (s_axi_bready & s_axi_bvalid) 
+	   begin	    
+              s_axi_bvalid <= 1'b0;
+              b_wait       <= 1'b0;            
+           end
+       end // else: !if( s_axi_aresetn == 1'b0 )
 
 
-		// Ports of Axi Slave Bus Interface S00_AXI
-     input wire 				 s00_axi_aclk,
-     input wire 				 s00_axi_aresetn,
-     input wire [C_S00_AXI_ID_WIDTH-1 : 0] 	 s00_axi_awid,
-     input wire [C_S00_AXI_ADDR_WIDTH-1 : 0] 	 s00_axi_awaddr,
-     input wire [7 : 0] 			 s00_axi_awlen,
-     input wire [2 : 0] 			 s00_axi_awsize,
-     input wire [1 : 0] 			 s00_axi_awburst,
-     input wire 				 s00_axi_awlock,
-     input wire [3 : 0] 			 s00_axi_awcache,
-     input wire [2 : 0] 			 s00_axi_awprot,
-     input wire [3 : 0] 			 s00_axi_awqos,
-     input wire [3 : 0] 			 s00_axi_awregion,
-     input wire [C_S00_AXI_AWUSER_WIDTH-1 : 0] 	 s00_axi_awuser,
-     input wire 				 s00_axi_awvalid,
-     output wire 				 s00_axi_awready,
-     input wire [C_S00_AXI_DATA_WIDTH-1 : 0] 	 s00_axi_wdata,
-     input wire [(C_S00_AXI_DATA_WIDTH/8)-1 : 0] s00_axi_wstrb,
-     input wire 				 s00_axi_wlast,
-     input wire [C_S00_AXI_WUSER_WIDTH-1 : 0] 	 s00_axi_wuser,
-     input wire 				 s00_axi_wvalid,
-     output wire 				 s00_axi_wready,
-     output wire [C_S00_AXI_ID_WIDTH-1 : 0] 	 s00_axi_bid,
-     output wire [1 : 0] 			 s00_axi_bresp,
-     output wire [C_S00_AXI_BUSER_WIDTH-1 : 0] 	 s00_axi_buser,
-     output wire 				 s00_axi_bvalid,
-     input wire 				 s00_axi_bready,
-     input wire [C_S00_AXI_ID_WIDTH-1 : 0] 	 s00_axi_arid,
-     input wire [C_S00_AXI_ADDR_WIDTH-1 : 0] 	 s00_axi_araddr,
-     input wire [7 : 0] 			 s00_axi_arlen,
-     input wire [2 : 0] 			 s00_axi_arsize,
-     input wire [1 : 0] 			 s00_axi_arburst,
-     input wire 				 s00_axi_arlock,
-     input wire [3 : 0] 			 s00_axi_arcache,
-     input wire [2 : 0] 			 s00_axi_arprot,
-     input wire [3 : 0] 			 s00_axi_arqos,
-     input wire [3 : 0] 			 s00_axi_arregion,
-     input wire [C_S00_AXI_ARUSER_WIDTH-1 : 0] 	 s00_axi_aruser,
-     input wire 				 s00_axi_arvalid,
-     output wire 				 s00_axi_arready,
-     output wire [C_S00_AXI_ID_WIDTH-1 : 0] 	 s00_axi_rid,
-     output wire [C_S00_AXI_DATA_WIDTH-1 : 0] 	 s00_axi_rdata,
-     output wire [1 : 0] 			 s00_axi_rresp,
-     output wire 				 s00_axi_rlast,
-     output wire [C_S00_AXI_RUSER_WIDTH-1 : 0] 	 s00_axi_ruser,
-     output wire 				 s00_axi_rvalid,
-     input wire 				 s00_axi_rready
-	);
-// Instantiation of Axi Bus Interface S00_AXI
-	esaxi_logic # (
-        .C_READ_TAG_ADDR(C_READ_TAG_ADDR),
-		.C_S_AXI_ID_WIDTH(C_S00_AXI_ID_WIDTH),
-		.C_S_AXI_DATA_WIDTH(C_S00_AXI_DATA_WIDTH),
-		.C_S_AXI_ADDR_WIDTH(C_S00_AXI_ADDR_WIDTH),
-		.C_S_AXI_AWUSER_WIDTH(C_S00_AXI_AWUSER_WIDTH),
-		.C_S_AXI_ARUSER_WIDTH(C_S00_AXI_ARUSER_WIDTH),
-		.C_S_AXI_WUSER_WIDTH(C_S00_AXI_WUSER_WIDTH),
-		.C_S_AXI_RUSER_WIDTH(C_S00_AXI_RUSER_WIDTH),
-		.C_S_AXI_BUSER_WIDTH(C_S00_AXI_BUSER_WIDTH)
-	) esaxi_logic (
-		      
-        .emwr_wr_data      (emwr_wr_data),
-        .emwr_wr_en        (emwr_wr_en),
-        .emwr_full         (emwr_full),
-        .emwr_prog_full    (emwr_prog_full),
-        .emrq_wr_data      (emrq_wr_data),
-        .emrq_wr_en        (emrq_wr_en),
-        .emrq_full         (emrq_full),
-        .emrq_prog_full    (emrq_prog_full),
-        .emrr_rd_data      (emrr_rd_data),
-        .emrr_rd_en        (emrr_rd_en),
-        .emrr_empty        (emrr_empty),
-        .ecfg_tx_ctrl_mode (ecfg_tx_ctrlmode),
-        .ecfg_coreid       (ecfg_coreid),
-		.S_AXI_ACLK(s00_axi_aclk),
-		.S_AXI_ARESETN(s00_axi_aresetn),
-		.S_AXI_AWID(s00_axi_awid),
-		.S_AXI_AWADDR(s00_axi_awaddr),
-		.S_AXI_AWLEN(s00_axi_awlen),
-		.S_AXI_AWSIZE(s00_axi_awsize),
-		.S_AXI_AWBURST(s00_axi_awburst),
-		.S_AXI_AWLOCK(s00_axi_awlock),
-		.S_AXI_AWCACHE(s00_axi_awcache),
-		.S_AXI_AWPROT(s00_axi_awprot),
-		.S_AXI_AWQOS(s00_axi_awqos),
-		.S_AXI_AWREGION(s00_axi_awregion),
-		.S_AXI_AWUSER(s00_axi_awuser),
-		.S_AXI_AWVALID(s00_axi_awvalid),
-		.S_AXI_AWREADY(s00_axi_awready),
-		.S_AXI_WDATA(s00_axi_wdata),
-		.S_AXI_WSTRB(s00_axi_wstrb),
-		.S_AXI_WLAST(s00_axi_wlast),
-		.S_AXI_WUSER(s00_axi_wuser),
-		.S_AXI_WVALID(s00_axi_wvalid),
-		.S_AXI_WREADY(s00_axi_wready),
-		.S_AXI_BID(s00_axi_bid),
-		.S_AXI_BRESP(s00_axi_bresp),
-		.S_AXI_BUSER(s00_axi_buser),
-		.S_AXI_BVALID(s00_axi_bvalid),
-		.S_AXI_BREADY(s00_axi_bready),
-		.S_AXI_ARID(s00_axi_arid),
-		.S_AXI_ARADDR(s00_axi_araddr),
-		.S_AXI_ARLEN(s00_axi_arlen),
-		.S_AXI_ARSIZE(s00_axi_arsize),
-		.S_AXI_ARBURST(s00_axi_arburst),
-		.S_AXI_ARLOCK(s00_axi_arlock),
-		.S_AXI_ARCACHE(s00_axi_arcache),
-		.S_AXI_ARPROT(s00_axi_arprot),
-		.S_AXI_ARQOS(s00_axi_arqos),
-		.S_AXI_ARREGION(s00_axi_arregion),
-		.S_AXI_ARUSER(s00_axi_aruser),
-		.S_AXI_ARVALID(s00_axi_arvalid),
-		.S_AXI_ARREADY(s00_axi_arready),
-		.S_AXI_RID(s00_axi_rid),
-		.S_AXI_RDATA(s00_axi_rdata),
-		.S_AXI_RRESP(s00_axi_rresp),
-		.S_AXI_RLAST(s00_axi_rlast),
-		.S_AXI_RUSER(s00_axi_ruser),
-		.S_AXI_RVALID(s00_axi_rvalid),
-		.S_AXI_RREADY(s00_axi_rready)
-	);
+    assign          last_rd_beat = s_axi_rvalid & s_axi_rlast & s_axi_rready;
+   
 
-	// Add user logic here
+   //###################################################
+   //#READ REQUEST CHANNEL
+   //###################################################  
+   always @( posedge s_axi_aclk ) 
+     if (~s_axi_aresetn) 
+       begin	  
+         s_axi_arready <= 1'b0;
+         read_active   <= 1'b0;         
+       end 
+     else 
+       begin    
+	  //arready
+          if( ~s_axi_arready & ~read_active )
+            s_axi_arready <= 1'b1;
+          else if( s_axi_arvalid )
+            s_axi_arready <= 1'b0;
 
-	// User logic ends
+	  //read_active
+          if( s_axi_arready & s_axi_arvalid )
+            read_active <= 1'b1;
+          else if( last_rd_beat )
+            read_active <= 1'b0;         
+       end // else: !if( s_axi_aresetn == 1'b0 )
+   
+   //Read address channel state machine
+   always @( posedge s_axi_aclk ) 
+      if (~s_axi_aresetn) 
+	begin
+           axi_araddr[31:0] <= 0;
+           axi_arlen        <= 8'd0;
+           axi_arburst      <= 2'd0;
+           axi_arsize       <= 2'b0;
+           s_axi_rlast      <= 1'b0;
+           //s_axi_rid        <= 'd0;         
+	end
+      else 
+	begin         
+         if( s_axi_arready & s_axi_arvalid ) 
+	   begin
+	      //TODO: something is wrong..
+              axi_araddr[31:0]  <= { ecfg_coreid[11:c_s_axi_addr_width-20],
+				     s_axi_araddr[29:0] };     // start address of transfer
+              axi_arlen   <= s_axi_arlen;
+              axi_arburst <= s_axi_arburst;
+              axi_arsize  <= s_axi_arsize;
+              s_axi_rlast   <= ~(|s_axi_arlen);
+              //s_axi_rid     <= s_axi_arid;              
+         end 
+	 else if( s_axi_rvalid & s_axi_rready) 
+	   begin	      
+              axi_arlen <= axi_arlen - 1;
+              if(axi_arlen == 8'd1)
+		s_axi_rlast <= 1'b1;              
+              if( s_axi_arburst == 2'b01) 
+		begin //incremental burst
+		   // the read address for all the beats in the transaction are increments by awsize
+		   // note: this should be based on awsize instead to support narrow bursts, i think?
+		   axi_araddr[c_s_axi_addr_width - 1:addr_lsb] <= axi_araddr[c_s_axi_addr_width - 1:addr_lsb] + 1;
+		   //araddr aligned to 4 byte boundary
+		   axi_araddr[addr_lsb-1:0]  <= {addr_lsb{1'b0}};   
+		   //for awsize = 4 bytes (010)
+		end
+           end // if ( s_axi_rvalid & s_axi_rready)
+	end // else: !if( s_axi_aresetn == 1'b0 )
+   
 
-	endmodule
+   //###################################################
+   //#WRITE DATA
+   //###################################################  
+   assign emwr_write         = 1'b1;
+   
+   always @( posedge s_axi_aclk ) 
+     if (~s_axi_aresetn) 
+       begin
+          emwr_srcaddr[31:0]  <= 32'd0;	 
+          emwr_data[31:0]     <= 32'd0;	  
+          emwr_dstaddr[31:0]  <= 32'd0;	 
+	  emwr_ctrlmode[3:0]  <= 4'd0;
+          emwr_datamode[1:0]  <= 2'd0;
+          emwr_access         <= 1'b0;
+          pre_wr_en           <= 1'b0;	//pipeline stage  
+       end 
+     else 
+       begin
+	  pre_wr_en               <= s_axi_wready & s_axi_wvalid;
+          emwr_access             <= pre_wr_en;
+	  emwr_ctrlmode[3:0]      <= ecfg_tx_ctrlmode; //multi cycle false path	 
+	  emwr_datamode[1:0]      <= axi_awsize[1:0];	
+          emwr_dstaddr[31:2]      <= axi_awaddr[31:2]; //set lsbs of address based on write strobes	 
+	  emwr_srcaddr[31:0]      <= 32'b0;            //TODO: implement 64 bit write	  
+	  casez(s_axi_wstrb[3:0])
+	    4'b???1://aligned
+	      begin
+		 emwr_data         <= s_axi_wdata[31:0];
+	         emwr_dstaddr[1:0] <= 2'd0;
+	      end
+	    4'b??10 : //shift by byte
+	      begin
+		 emwr_data         <= {8'd0, s_axi_wdata[31:8]};
+		 emwr_dstaddr[1:0] <= 2'd1;
+	      end
+	    4'b?100 : //shift by two bytes
+	      begin
+		 emwr_data         <= {16'd0, s_axi_wdata[31:16]};
+		 emwr_dstaddr[1:0] <= 2'd2;
+	      end
+	    default: //shift by three bytes
+	      begin
+		 emwr_data         <= {24'd0, s_axi_wdata[31:24]};
+		 emwr_dstaddr[1:0] <= 2'd3;
+	      end
+	  endcase // casez (s_axi_wstrb[3:0])
+       end // else: !if(~s_axi_aresetn)
+   
+   //###################################################
+   //#READ REQUEST (DATA CHANNEL)
+   //###################################################  
+   // ------------------------------------------
+   // -- read data handler
+   // -- reads are performed by sending a read
+   // -- request out the tx port and waiting for
+   // -- data to come back through the rx port.
+   // --
+   // -- because elink reads are not generally 
+   // -- returned in order, we will only allow
+   // -- one at a time.  that's ok because reads
+   // -- are to be avoided for speed anyway.
+   // ------------------------------------------
+
+   // since we're only sending one req at a time we can ignore the fifo flags
+   // always read response data immediately
+   assign emrr_rd_en = emrr_access & ~mi_rd_reg;   //TODO: Verify this assumption!!!
+   
+   assign emrq_write         = 1'b0;
+   assign emrq_data[31:0]    = 32'b0;
+   
+   always @( posedge s_axi_aclk )
+     if (~s_axi_aresetn) 
+       begin
+	  emrq_access         <= 1'b0;      
+	  emrq_datamode[1:0]  <= 2'd0;
+	  emrq_ctrlmode[3:0]  <= 4'd0;
+	  emrq_dstaddr[31:0]  <= 32'd0;
+	  emrq_srcaddr[31:0]  <= 32'd0;	 
+          ractive_reg         <= 1'b0;
+          rnext               <= 1'b0;          
+      end 
+     else 
+       begin
+          ractive_reg         <= read_active; //read request state machone
+          rnext               <= s_axi_rvalid & s_axi_rready & ~s_axi_rlast;         
+          emrq_access         <= ( ~ractive_reg & read_active ) | rnext;         
+	  emrq_datamode[1:0]  <= axi_arsize[1:0];
+	  emrq_ctrlmode[3:0]  <= ecfg_tx_ctrlmode;	  
+	  emrq_dstaddr[31:0]  <= axi_araddr[31:0];
+	  emrq_srcaddr[31:0]  <= {c_read_tag_addr[11:0], 20'd0};//TODO? What can we do with lower 32 bits?
+       end
+   
+  
+   //Read response AXI state machine
+   always @( posedge s_axi_aclk ) 
+      if ( s_axi_aresetn == 1'b0 ) 
+	begin
+           s_axi_rvalid       <= 1'b0;
+           s_axi_rdata[31:0]  <= 32'd0;
+           s_axi_rresp        <= 2'd0;	   
+	end 
+      else 
+	begin
+         if( emrr_access | mi_rd_reg ) 
+	   begin
+              s_axi_rvalid <= 1'b1;
+              s_axi_rresp  <= 2'd0;
+            case( axi_arsize[1:0] )
+              2'b00:   s_axi_rdata[31:0] <= {4{emrr_mux_data[7:0]}};  //8-bit
+              2'b01:   s_axi_rdata[31:0] <= {2{emrr_mux_data[15:0]}}; //16-bit
+              default: s_axi_rdata[31:0] <= emrr_mux_data[31:0];      //32-bit
+            endcase // case ( axi_arsize[1:0] )
+           end 
+	 else if( s_axi_rready ) 
+           s_axi_rvalid <= 1'b0;
+	end // else: !if( s_axi_aresetn == 1'b0 )
+
+
+   
+   //###################################################
+   //#Register Inteface Logic
+   //###################################################  
+   
+   
+   assign mi_clk = s_axi_aclk;
+   
+   //Register file access (from slave)
+   assign mi_wr = emwr_access & (emwr_dstaddr[31:20]==ELINKID);   
+   assign mi_rd = emrq_access & (emrq_dstaddr[31:20]==ELINKID);
+   
+   //Only 32 bit writes supported
+   assign mi_we         =  mi_wr;   
+   assign mi_en         =  mi_wr | mi_rd;
+
+   //Read/write address
+   assign mi_addr[19:0] =  mi_we ? emwr_dstaddr[19:0] :
+			           emrq_dstaddr[19:0];
+   		
+   //Block select
+   assign mi_ecfg_sel     = mi_en & (mi_addr[19:16]==EGROUP_MMR);
+   assign mi_rx_emmu_sel  = mi_en & (mi_addr[19:16]==EGROUP_RXMMU);
+   assign mi_tx_emmu_sel  = mi_en & (mi_addr[19:16]==EGROUP_TXMMU);
+   assign mi_embox_sel    = mi_en & (mi_addr[19:16]==EGROUP_EMBOX);
+   				  
+   //Data
+   assign mi_din[31:0]     = emwr_data[31:0];
+	 
+   //Readback
+   always@ (posedge mi_clk)
+     begin
+	mi_ecfg_reg    <= mi_ecfg_sel;
+	mi_rx_emmu_reg <= mi_rx_emmu_sel;	
+	mi_tx_emmu_reg <= mi_tx_emmu_sel;
+	mi_embox_reg   <= mi_embox_sel;
+	mi_rd_reg      <= mi_rd;
+     end
+
+   //Data mux
+   assign mi_dout[31:0] = mi_ecfg_reg    ? mi_ecfg_dout[31:0]    :
+			  mi_rx_emmu_reg ? mi_rx_emmu_dout[31:0] :
+			  mi_tx_emmu_reg ? mi_tx_emmu_dout[31:0] :
+			                   mi_embox_dout[31:0];
+   /********************************/
+   /*INTERFACE TO AXI SLAVE        */
+   /********************************/  
+
+   //Read Response
+   assign   emrr_mux_data[31:0]       = mi_rd_reg ? mi_dout[31:0] :
+				                    emrr_data[31:0];
+
+endmodule

@@ -10,8 +10,9 @@
 
 module erx_disty (/*AUTOARG*/
    // Outputs
-   emesh_rd_wait, emesh_wr_wait, emwr_wr_data, emwr_wr_en,
-   emrq_wr_data, emrq_wr_en, emrr_wr_data, emrr_wr_en,
+   emesh_rd_wait, emesh_wr_wait, emwr_wr_en, emrq_wr_en, emrr_wr_en,
+   erx_write, erx_datamode, erx_ctrlmode, erx_dstaddr, erx_srcaddr,
+   erx_data,
    // Inputs
    clk, mmu_en, emmu_access, emmu_write, emmu_datamode, emmu_ctrlmode,
    emmu_dstaddr, emmu_srcaddr, emmu_data, emwr_full, emwr_progfull,
@@ -40,36 +41,41 @@ module erx_disty (/*AUTOARG*/
    output         emesh_wr_wait;
  
    // Master FIFO port, writes
-   output [103:0] emwr_wr_data;
    output         emwr_wr_en;
    input          emwr_full;       // full flags for debug only
    input          emwr_progfull;
    
    // Master FIFO port, read requests
-   output [103:0] emrq_wr_data;
    output         emrq_wr_en;
    input          emrq_full;
    input          emrq_progfull;
    
    // Master FIFO port, read responses
-   output [103:0] emrr_wr_data;
    output         emrr_wr_en;
    input          emrr_full;
    input          emrr_progfull;
 
+   //Master Transaction for all FIFOs
+   output            erx_write;
+   output [1:0]      erx_datamode;
+   output [3:0]      erx_ctrlmode;
+   output [31:0]     erx_dstaddr;
+   output [31:0]     erx_srcaddr;
+   output [31:0]     erx_data;
+   
    // Control bits inputs
-   input          ecfg_rx_enable;
+   input 	     ecfg_rx_enable;//TODO: what to do with this?
    
    //############
    //# REGS
    //############
    
-   reg            in_write;
-   reg [1:0]      in_datamode;
-   reg [3:0]      in_ctrlmode;
-   reg [31:0]     in_dstaddr;
-   reg [31:0]     in_srcaddr;
-   reg [31:0]     in_data;
+   reg            erx_write;
+   reg [1:0]      erx_datamode;
+   reg [3:0]      erx_ctrlmode;
+   reg [31:0]     erx_dstaddr;
+   reg [31:0]     erx_srcaddr;
+   reg [31:0]     erx_data;
 
    reg            emwr_wr_en;
    reg            emrq_wr_en;
@@ -82,25 +88,18 @@ module erx_disty (/*AUTOARG*/
    //############
    wire           rxmmu = rxmmu_sync[0];
    
-   wire [103:0]   fifo_din;
-   wire [103:0]   emwr_wr_data;
-   wire [103:0]   emrq_wr_data;
-   wire [103:0]   emrr_wr_data;
-
-
-   
    //############
    //# PIPELINE AND DISTRIBUTE
    //############   
    always @ (posedge clk) 
      begin
-	in_write          <= emmu_write;
-        in_datamode[1:0]  <= emmu_datamode[1:0];
-        in_ctrlmode[3:0]  <= emmu_ctrlmode[3:0];
-        in_dstaddr[31:0]  <= mmu_en ? emmu_dstaddr[31:0] : {C_REMAP_ADDR[31:(32-C_REMAP_BITS)], 
+	erx_write          <= emmu_write;
+        erx_datamode[1:0]  <= emmu_datamode[1:0];
+        erx_ctrlmode[3:0]  <= emmu_ctrlmode[3:0];
+        erx_dstaddr[31:0]  <= mmu_en ? emmu_dstaddr[31:0] : {C_REMAP_ADDR[31:(32-C_REMAP_BITS)], 
 							    emmu_dstaddr[(31-C_REMAP_BITS):0]};
-        in_srcaddr[31:0]  <= emmu_srcaddr[31:0];
-        in_data[31:0]     <= emmu_data[31:0];
+        erx_srcaddr[31:0]  <= emmu_srcaddr[31:0];
+        erx_data[31:0]     <= emmu_data[31:0];
      end
 	
    always @ (posedge clk) 
@@ -117,19 +116,6 @@ module erx_disty (/*AUTOARG*/
 	  emwr_wr_en  <= 1'b0;	  
        end
    
-   assign fifo_din[103:0] = {in_srcaddr[31:0],
-			     in_data[31:0],
-			     in_dstaddr[31:0],
-			     in_ctrlmode[3:0],
-			     in_datamode[1:0],
-			     in_write,
-			     1'b0  
-			     };
-      
-   assign emwr_wr_data[103:0] = fifo_din[103:0];
-   assign emrq_wr_data[103:0] = fifo_din[103:0];
-   assign emrr_wr_data[103:0] = fifo_din[103:0];
-   
    //#############################
    //# Wait signal passthroughs
    //#############################
@@ -138,8 +124,6 @@ module erx_disty (/*AUTOARG*/
    assign        emesh_wr_wait = emwr_progfull | emrr_progfull;
    
 endmodule // erx_disty
-
-
 
 /*
   This file is part of the Parallella Project.

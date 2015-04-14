@@ -1,15 +1,11 @@
 module esaxi_mux (/*AUTOARG*/
    // Outputs
-   emwr_full, emwr_prog_full, emrq_full, emrq_prog_full, emrr_rd_data,
-   emrr_empty, esaxi_emwr_wr_data, esaxi_emwr_wr_en,
-   esaxi_emrq_wr_data, esaxi_emrq_wr_en, esaxi_emrr_rd_en, mi_clk,
-   mi_rx_emmu_en, mi_tx_emmu_en, mi_ecfg_en, mi_embox_en, mi_we,
-   mi_addr, mi_din,
+   emrr_mux_data, emrr_mux_empty, emrr_rd_en, mi_clk, mi_rx_emmu_sel,
+   mi_tx_emmu_sel, mi_ecfg_sel, mi_embox_sel, mi_we, mi_addr, mi_din,
    // Inputs
-   clk, emwr_wr_data, emwr_wr_en, emrq_wr_data, emrq_wr_en,
-   emrr_rd_en, esaxi_emwr_full, esaxi_emwr_prog_full, esaxi_emrq_full,
-   esaxi_emrq_prog_full, esaxi_emrr_rd_data, esaxi_emrr_empty,
-   mi_ecfg_dout, mi_tx_emmu_dout, mi_rx_emmu_dout, mi_embox_dout
+   clk, emwr_data, emwr_dstaddr, emwr_access, emrq_data, emrq_access,
+   emrr_mux_rd_en, emrr_data, emrr_empty, mi_ecfg_dout,
+   mi_tx_emmu_dout, mi_rx_emmu_dout, mi_embox_dout
    );
 
    parameter ELINKID  = 0;    //ID of link
@@ -18,45 +14,37 @@ module esaxi_mux (/*AUTOARG*/
    //Input clock
    input 	  clk;
 
-   //AXI Side
-   input [103:0]  emwr_wr_data;
-   input 	  emwr_wr_en;   
-   output 	  emwr_full;
-   output 	  emwr_prog_full;
+   //Write from slave
+   input [31:0]   emwr_data;
+   input [31:0]   emwr_dstaddr;
+   input 	  emwr_access;   
 
-   input [103:0]  emrq_wr_data;   
-   input 	  emrq_wr_en;   
-   output 	  emrq_full;   
-   output 	  emrq_prog_full;
-
-   output [31:0]  emrr_rd_data;   
-   input 	  emrr_rd_en;   
-   output 	  emrr_empty;
-   
-   //FIFO side
-   output [103:0] esaxi_emwr_wr_data;
-   output 	  esaxi_emwr_wr_en;   
-   input 	  esaxi_emwr_full;
-   input 	  esaxi_emwr_prog_full;
-   
-   output [103:0] esaxi_emrq_wr_data;   
-   output 	  esaxi_emrq_wr_en;   
-   input 	  esaxi_emrq_full;   
-   input 	  esaxi_emrq_prog_full;
-
-   input [103:0]  esaxi_emrr_rd_data;   
-   output 	  esaxi_emrr_rd_en;   
-   input 	  esaxi_emrr_empty;
+   //Read from slave
+   input [31:0]   emrq_data;
+   input [31:0]   emwr_dstaddr;
+   input 	  emrq_access;   
+ 
+   //Read response
+   output [31:0]  emrr_mux_data;   
+   input 	  emrr_mux_rd_en;   
+   output 	  emrr_mux_empty;
+      
+   //FIFO side (read response)
+   input [31:0]   emrr_data;   
+   output 	  emrr_rd_en;   
+   input 	  emrr_empty;
 
    //Register Interface 
    output         mi_clk;
-   output 	  mi_rx_emmu_en;
-   output 	  mi_tx_emmu_en;
-   output 	  mi_ecfg_en;
-   output 	  mi_embox_en;
+   output 	  mi_rx_emmu_sel;
+   output 	  mi_tx_emmu_sel;
+   output 	  mi_ecfg_sel;
+   output 	  mi_embox_sel;
    output         mi_we;   
    output [19:0]  mi_addr;   
    output [31:0]  mi_din;   
+
+   //Readback data to mux
    input [DW-1:0] mi_ecfg_dout;
    input [DW-1:0] mi_tx_emmu_dout;
    input [DW-1:0] mi_rx_emmu_dout;
@@ -82,34 +70,34 @@ module esaxi_mux (/*AUTOARG*/
    /*******************************/  
    assign mi_clk = clk;
    
-   //Register file access
-   assign mi_wr = emwr_wr_en & (emwr_wr_data[95:64]==ELINKID);   
-   assign mi_rd = emrq_wr_en & (emrq_wr_data[95:64]==ELINKID);
+   //Register file access (from slave)
+   assign mi_wr = emwr_access & (emwr_dstaddr[31:20]==ELINKID);   
+   assign mi_rd = emrq_access & (emrq_dstaddr[31:20]==ELINKID);
       
    //Only 32 bit writes supported
    assign mi_we         =  mi_wr;   
    assign mi_en         =  mi_wr | mi_rd;
 
    //Read/write address
-   assign mi_addr[19:0] =  mi_wr ? emwr_wr_data[83:64] :
-			           emrq_wr_data[83:64];
+   assign mi_addr[19:0] =  mi_we ? emwr_dstaddr[19:0] :
+			           emrq_dstaddr[19:0];
    		
-   //Block selects
-   assign mi_ecfg_en   = mi_en & (mi_addr[19:16]==EGROUP_MMR);
-   assign mi_rx_mmu_en = mi_en & (mi_addr[19:16]==EGROUP_RXMMU);
-   assign mi_tx_mmu_en = mi_en & (mi_addr[19:16]==EGROUP_TXMMU);
-   assign mi_embox_en  = mi_en & (mi_addr[19:16]==EGROUP_EMBOX);
+   //Block select
+   assign mi_ecfg_sel     = mi_en & (mi_addr[19:16]==EGROUP_MMR);
+   assign mi_rx_emmu_sel  = mi_en & (mi_addr[19:16]==EGROUP_RXMMU);
+   assign mi_tx_emmu_sel  = mi_en & (mi_addr[19:16]==EGROUP_TXMMU);
+   assign mi_embox_sel    = mi_en & (mi_addr[19:16]==EGROUP_EMBOX);
    				  
    //Data
-   assign mi_din[31:0] = emwr_wr_data[31:0];
+   assign mi_din[31:0] = emwr_data[31:0];
 	 
    //Readback
    always@ (posedge clk)
      begin
-	mi_ecfg_reg    <= mi_ecfg_en;
-	mi_rx_emmu_reg <= mi_rx_emmu_en;	
-	mi_tx_emmu_reg <= mi_tx_emmu_en;
-	mi_embox_reg   <= mi_embox_en;
+	mi_ecfg_reg    <= mi_ecfg_sel;
+	mi_rx_emmu_reg <= mi_rx_emmu_sel;	
+	mi_tx_emmu_reg <= mi_tx_emmu_sel;
+	mi_embox_reg   <= mi_embox_sel;
 	mi_rd_reg      <= mi_rd;
      end
 
@@ -122,23 +110,13 @@ module esaxi_mux (/*AUTOARG*/
    /*INTERFACE TO AXI SLAVE        */
    /********************************/  
 
-   //Write Request
-   assign  esaxi_emwr_wr_data[103:0] = emwr_wr_data[103:0] ;
-   assign  esaxi_emwr_wr_en          = emwr_wr_en & ~mi_wr;   
-   assign  emwr_full                 = esaxi_emwr_full;
-   assign  emwr_prog_full            = esaxi_emwr_prog_full ;
-
-   //Read Request
-   assign   esaxi_emrq_wr_data[103:0] = emrq_wr_data[103:0];
-   assign   esaxi_emrq_wr_en          = emrq_wr_en & ~mi_rd;      
-   assign   emrq_full                 = esaxi_emrq_full;  
-   assign   emrq_prog_full            = esaxi_emrq_prog_full ;
-
    //Read Response
-   assign   emrr_rd_data[31:0]       = mi_rd_reg ? mi_dout[31:0] :
-				                   esaxi_emrr_rd_data[71:40];
-   assign   esaxi_emrr_rd_en          = emrr_rd_en & ~mi_rd_reg;   
-   assign   emrr_empty                = esaxi_emrr_empty & ~mi_rd_reg;
+   assign   emrr_mux_data[31:0]       = mi_rd_reg ? mi_dout[31:0] :
+				                    emrr_data[31:0];
+
+   assign   emrr_mux_rd_en            = emrr_rd_en & ~mi_rd_reg;   
+
+   assign   emrr_mux_empty            = emrr_empty & ~mi_rd_reg;
 
    
 endmodule // esaxi_mux

@@ -24,11 +24,11 @@
 
 module erx_io (/*AUTOARG*/
    // Outputs
-   rx_wr_wait_p, rx_wr_wait_n, rx_rd_wait_p, rx_rd_wait_n,
+   rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n,
    rx_lclk_div4, rx_frame_par, rx_data_par, ecfg_rx_datain,
    // Inputs
-   reset, rx_lclk_p, rx_lclk_n, rx_frame_p, rx_frame_n, rx_data_p,
-   rx_data_n, rx_wr_wait, rx_rd_wait, ecfg_rx_enable,
+   reset, rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n,
+   rxi_data_p, rxi_data_n, rx_wr_wait, rx_rd_wait, ecfg_rx_enable,
    ecfg_rx_gpio_enable, ecfg_dataout
    );
 
@@ -44,13 +44,12 @@ module erx_io (/*AUTOARG*/
    //###########
    //# eLink pins
    //###########
-   input       rx_lclk_p, rx_lclk_n;       // Differential clock from IOB
-   input       rx_frame_p, rx_frame_n;     // Inputs from eLink
-   input [7:0] rx_data_p, rx_data_n;
-
-   output      rx_wr_wait_p, rx_wr_wait_n;
-   output      rx_rd_wait_p, rx_rd_wait_n;
-
+   input        rxi_lclk_p,  rxi_lclk_n;     //link rx clock input
+   input        rxi_frame_p,  rxi_frame_n;   //link rx frame signal
+   input [7:0]  rxi_data_p,   rxi_data_n;    //link rx data
+   output       rxo_wr_wait_p,rxo_wr_wait_n; //link rx write pushback output
+   output       rxo_rd_wait_p,rxo_rd_wait_n; //link rx read pushback output
+  
    //#############
    //# Fabric interface, 1/8 bit rate of eLink
    //#############
@@ -88,16 +87,16 @@ module erx_io (/*AUTOARG*/
 	 #(.DIFF_TERM  ("TRUE"),     // Differential termination
        .IOSTANDARD (IOSTD_ELINK))
 	 ibufds_rxdata[0:7]
-	   (.I     (rx_data_p),
-        .IB    (rx_data_n),
+	   (.I     (rxi_data_p),
+        .IB    (rxi_data_n),
         .O     (rx_data));
 
    IBUFDS
 	 #(.DIFF_TERM  ("TRUE"),     // Differential termination
        .IOSTANDARD (IOSTD_ELINK))
 	 ibufds_rx_frame
-	   (.I     (rx_frame_p),
-        .IB    (rx_frame_n),
+	   (.I     (rxi_frame_p),
+        .IB    (rxi_frame_n),
         .O     (rx_frame));
 
    //#####################
@@ -111,8 +110,8 @@ module erx_io (/*AUTOARG*/
      #(.DIFF_TERM  ("TRUE"),   // Differential termination
        .IOSTANDARD (IOSTD_ELINK))
    ibufds_rxlclk
-     (.I          (rx_lclk_p),
-      .IB         (rx_lclk_n),
+     (.I          (rxi_lclk_p),
+      .IB         (rxi_lclk_n),
       .O          (rx_lclk));
 
    BUFIO bufio_rxlclk
@@ -330,8 +329,8 @@ reg [8:0] ecfg_rx_datain;
        .SLEW("SLOW")
        ) OBUFDS_RXWRWAIT
        (
-        .O(rx_wr_wait_p),
-        .OB(rx_wr_wait_n),
+        .O(rxo_wr_wait_p),
+        .OB(rxo_wr_wait_n),
         .I(wr_wait)
         );
    
@@ -341,8 +340,8 @@ reg [8:0] ecfg_rx_datain;
        .SLEW("SLOW")
        ) OBUFDS_RXRDWAIT
        (
-        .O(rx_rd_wait_p),
-        .OB(rx_rd_wait_n),
+        .O(rxo_rd_wait_p),
+        .OB(rxo_rd_wait_n),
         .I(rd_wait)
         );
    

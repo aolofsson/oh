@@ -108,7 +108,7 @@ module ecfg (/*AUTOARG*/
    // Outputs
    mi_dout, ecfg_reset, ecfg_resetb, ecfg_tx_enable,
    ecfg_tx_mmu_enable, ecfg_tx_gpio_enable, ecfg_tx_ctrlmode,
-   ecfg_tx_clkdiv, ecfg_tx_clkbypass, ecfg_axi_timeout_enable,
+   ecfg_tx_clkdiv, ecfg_tx_clkbypass, ecfg_timeout_enable,
    ecfg_rx_enable, ecfg_rx_mmu_enable, ecfg_rx_gpio_enable,
    ecfg_cclk_en, ecfg_cclk_div, ecfg_cclk_pllcfg, ecfg_cclk_bypass,
    ecfg_coreid, ecfg_dataout, embox_not_empty, embox_full,
@@ -153,7 +153,7 @@ module ecfg (/*AUTOARG*/
    output [3:0] ecfg_tx_ctrlmode;       //value for emesh ctrlmode tag
    output [3:0] ecfg_tx_clkdiv;         //transmit clock divider
    output       ecfg_tx_clkbypass;      //transmit clock bypass
-   output       ecfg_axi_timeout_enable;//enables axi-slave timeout circuit
+   output       ecfg_timeout_enable;    //enables axi-slave timeout circuit
    
    //rx
    output 	ecfg_rx_enable;      //enable signal for rx  
@@ -252,7 +252,7 @@ module ecfg (/*AUTOARG*/
    assign ecfg_tx_ctrlmode[3:0]   = ecfg_cfgtx_reg[7:4];
    assign ecfg_tx_clkdiv[3:0]     = ecfg_cfgtx_reg[11:8];
    assign ecfg_tx_clkbypass       = ecfg_cfgtx_reg[12];
-   assign ecfg_axi_timeout_enable = ecfg_cfgtx_reg[13];
+   assign ecfg_timeout_enable     = ecfg_cfgtx_reg[13];
    
    //###########################
    //# ESYSRX
