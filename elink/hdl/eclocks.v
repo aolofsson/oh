@@ -218,8 +218,7 @@ endgenerate
 
 `elsif TARGET_CLEAN
    wire 	  cclk;
-   
-   
+      
    clock_divider cclk_divider(
 			      // Outputs
 			      .clkout		(cclk),
@@ -246,12 +245,12 @@ endgenerate
    
    clock_divider lclk_par_divider(
 				  // Outputs
-				  .clkout	(tx_lclk),
-				  .clkout90	(tx_lclk_out),
+				  .clkout	(tx_lclk_par),
+				  .clkout90	(),
 				  // Inputs
 				  .clkin	(clkin),
 				  .reset        (hard_reset),
-				  .divcfg	(ecfg_clk_settings[7:4]+4'd3)
+				  .divcfg	(ecfg_clk_settings[7:4] - 4'd3)
 				  );
 
    

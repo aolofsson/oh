@@ -153,7 +153,6 @@ module ecfg (/*AUTOARG*/
    /*ELINK CONTROL SIGNALS      */
    /*****************************/
    //reset
-   
 
    //tx
    output 	 ecfg_tx_enable;       // enable signal for TX  
@@ -188,9 +187,9 @@ module ecfg (/*AUTOARG*/
    
    //registers
    reg          ecfg_reset_reg;
-   reg [13:0] 	ecfg_cfgtx_reg;
-   reg [4:0] 	ecfg_cfgrx_reg;
-   reg [15:0] 	ecfg_cfgclk_reg;
+   reg [13:0] 	ecfg_tx_reg;
+   reg [4:0] 	ecfg_rx_reg;
+   reg [15:0] 	ecfg_clk_reg;
    reg [11:0] 	ecfg_coreid_reg;
    reg [15:0] 	ecfg_version_reg;
    reg [10:0] 	ecfg_datain_reg;
@@ -204,9 +203,9 @@ module ecfg (/*AUTOARG*/
    wire         ecfg_match;
    wire 	ecfg_regmux;
    wire [31:0] 	ecfg_reg_mux;
-   wire 	ecfg_cfgtx_write;
-   wire 	ecfg_cfgrx_write;
-   wire 	ecfg_cfgclk_write;
+   wire 	ecfg_tx_write;
+   wire 	ecfg_rx_write;
+   wire 	ecfg_clk_write;
    wire 	ecfg_coreid_write;
    wire 	ecfg_version_write;
    wire 	ecfg_dataout_write;
@@ -223,9 +222,9 @@ module ecfg (/*AUTOARG*/
 
    //Config write enables
    assign ecfg_reset_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSRESET);
-   assign ecfg_cfgtx_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSTX);
-   assign ecfg_cfgrx_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSRX);
-   assign ecfg_cfgclk_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSCLK);
+   assign ecfg_tx_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSTX);
+   assign ecfg_rx_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSRX);
+   assign ecfg_clk_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSCLK);
    assign ecfg_coreid_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSCOREID);
    assign ecfg_dataout_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSDATAOUT);
 
@@ -245,45 +244,45 @@ module ecfg (/*AUTOARG*/
    //###########################
    always @ (posedge mi_clk)
      if(hard_reset)
-       ecfg_cfgtx_reg[13:0] <= 14'b0;
-     else if (ecfg_cfgtx_write)
-       ecfg_cfgtx_reg[13:0] <= mi_din[13:0];
+       ecfg_tx_reg[13:0] <= 14'b0;
+     else if (ecfg_tx_write)
+       ecfg_tx_reg[13:0] <= mi_din[13:0];
 
-   assign ecfg_tx_enable          = ecfg_cfgtx_reg[0];
-   assign ecfg_tx_mmu_enable      = ecfg_cfgtx_reg[1];   
-   assign ecfg_tx_gpio_enable     = (ecfg_cfgtx_reg[3:2]==2'b01);
-   assign ecfg_tx_ctrlmode[3:0]   = ecfg_cfgtx_reg[7:4];
-   assign ecfg_timeout_enable     = ecfg_cfgtx_reg[13];
+   assign ecfg_tx_enable          = ecfg_tx_reg[0];
+   assign ecfg_tx_mmu_enable      = ecfg_tx_reg[1];   
+   assign ecfg_tx_gpio_enable     = (ecfg_tx_reg[3:2]==2'b01);
+   assign ecfg_tx_ctrlmode[3:0]   = ecfg_tx_reg[7:4];
+   assign ecfg_timeout_enable     = ecfg_tx_reg[13];
    
    //###########################
    //# ESYSRX
    //###########################
    always @ (posedge mi_clk)
      if(hard_reset)
-       ecfg_cfgrx_reg[4:0] <= 5'b0;
-     else if (ecfg_cfgrx_write)
-       ecfg_cfgrx_reg[4:0] <= mi_din[4:0];
+       ecfg_rx_reg[4:0] <= 5'b0;
+     else if (ecfg_rx_write)
+       ecfg_rx_reg[4:0] <= mi_din[4:0];
 
-   assign ecfg_rx_enable        = ecfg_cfgrx_reg[0];
-   assign ecfg_rx_mmu_enable    = ecfg_cfgrx_reg[1];   
-   assign ecfg_rx_gpio_enable   = ecfg_cfgrx_reg[3:2]==2'b01;
+   assign ecfg_rx_enable        = ecfg_rx_reg[0];
+   assign ecfg_rx_mmu_enable    = ecfg_rx_reg[1];   
+   assign ecfg_rx_gpio_enable   = ecfg_rx_reg[3:2]==2'b01;
 
    //###########################
    //# ESYSCLK
    //###########################
     always @ (posedge mi_clk)
      if(hard_reset)
-       ecfg_cfgclk_reg[15:0] <= 16'b0;
-     else if (ecfg_cfgclk_write)
-       ecfg_cfgclk_reg[15:0] <= mi_din[15:0];
+       ecfg_clk_reg[15:0] <= 16'h0055;
+     else if (ecfg_clk_write)
+       ecfg_clk_reg[15:0] <= mi_din[15:0];
 
-   assign ecfg_clk_settings[15:0] = ecfg_cfgclk_reg[15:0];
+   assign ecfg_clk_settings[15:0] = ecfg_clk_reg[15:0];
    
    
-   //assign ecfg_cclk_en             = ~(ecfg_cfgclk_reg[3:0]==4'b0000);   
-   //assign ecfg_cclk_div[3:0]       = ecfg_cfgclk_reg[3:0];
-   //assign ecfg_cclk_pllcfg[3:0]    = ecfg_cfgclk_reg[7:4];
-   //assign ecfg_cclk_bypass         = ecfg_cfgclk_reg[8];
+   //assign ecfg_cclk_en             = ~(ecfg_clk_reg[3:0]==4'b0000);   
+   //assign ecfg_cclk_div[3:0]       = ecfg_clk_reg[3:0];
+   //assign ecfg_cclk_pllcfg[3:0]    = ecfg_clk_reg[7:4];
+   //assign ecfg_cclk_bypass         = ecfg_clk_reg[8];
 
    //###########################
    //# ESYSCOREID
@@ -348,9 +347,9 @@ module ecfg (/*AUTOARG*/
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
          `ESYSRESET:   mi_dout[31:0] <= {31'b0, ecfg_reset_reg};
-         `ESYSTX:      mi_dout[31:0] <= {19'b0, ecfg_cfgtx_reg[12:0]};
-         `ESYSRX:      mi_dout[31:0] <= {27'b0, ecfg_cfgrx_reg[4:0]};
-         `ESYSCLK:     mi_dout[31:0] <= {24'b0, ecfg_cfgclk_reg[7:0]};
+         `ESYSTX:      mi_dout[31:0] <= {19'b0, ecfg_tx_reg[12:0]};
+         `ESYSRX:      mi_dout[31:0] <= {27'b0, ecfg_rx_reg[4:0]};
+         `ESYSCLK:     mi_dout[31:0] <= {24'b0, ecfg_clk_reg[7:0]};
          `ESYSCOREID:  mi_dout[31:0] <= {20'b0, ecfg_coreid_reg[11:0]};
          `ESYSVERSION: mi_dout[31:0] <= {16'b0, ecfg_version_reg[15:0]};
          `ESYSDATAIN:  mi_dout[31:0] <= {21'b0, ecfg_datain_reg[10:0]};
