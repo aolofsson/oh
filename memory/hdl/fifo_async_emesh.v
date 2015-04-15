@@ -68,11 +68,8 @@ module fifo_async_emesh (/*AUTOARG*/
    assign emesh_data_out[31:0]     =  fifo_dout[71:40];
    assign emesh_srcaddr_out[31:0]  =  fifo_dout[103:72];
 
-
-   //TODO: paraemtrize fifo properly
-
-   fifo_async_104x32 fifo_async_104x32 (//outputs
-					.dout		(fifo_dout[103:0]),
+`ifdef TARGET_XILINX   
+   fifo_async_104x32 fifo_async_104x32 (.dout		(fifo_dout[103:0]),
 					.full		(fifo_full),
 					.empty		(fifo_empty),
 					.prog_full	(fifo_progfull),
@@ -84,8 +81,25 @@ module fifo_async_emesh (/*AUTOARG*/
 					.wr_en		(emesh_access_in),
 					.rd_en		(fifo_read)
 					);
+   
+`elsif TARGET_CLEAN
+  fifo_async #(.DW(104), .AW(5))  fifo_async (
+					.rd_data	(fifo_dout[103:0]),
+					.wr_fifo_full	(fifo_progfull),
+					.rd_fifo_empty	(fifo_empty),
+					//inputs
+					.reset		(reset),
+					.wr_clk		(wr_clk),
+					.rd_clk		(rd_clk),
+					.wr_data	(fifo_din[103:0]),
+					.wr_write	(emesh_access_in),
+					.rd_read	(fifo_read)
+					);
+`elsif TARGET_ALTERA
+  //SOMETHING
+`endif
 
- 
+   
 endmodule // fifo_sync
 // Local Variables:
 // verilog-library-directories:("." "../../stubs/hdl")

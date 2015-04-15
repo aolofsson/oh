@@ -1,25 +1,11 @@
-/*
-  Copyright (C) 2014 Adapteva, Inc.
-  Contributed by Andreas Olofsson <andreas@adapteva.com>
- 
-   This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.This program is distributed in the hope 
-  that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
-  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details. You should have received a copy 
-  of the GNU General Public License along with this program (see the file 
-  COPYING).  If not, see <http://www.gnu.org/licenses/>.
-*/
 
 /*###########################################################################
  # Function: Dual port memory wrapper (one read/ one write port)
- #
+ #           To run without hardware platform dependancy, `define:
+ #           "TARGET_CLEAN"
  ############################################################################
  */
 
-`define USE_MEM_MODEL
 module memory_dp(/*AUTOARG*/
    // Outputs
    rd_data,
@@ -47,7 +33,9 @@ module memory_dp(/*AUTOARG*/
    //////////////////////
    //SIMPLE MEMORY MODEL 
    //////////////////////   
-`ifdef USE_MEM_MODEL     
+
+`ifdef TARGET_CLEAN     
+
    reg [DW-1:0]        ram    [MD-1:0];  
    reg [DW-1:0]        rd_data;
    
@@ -69,8 +57,7 @@ module memory_dp(/*AUTOARG*/
    endgenerate
 `elsif TARGET_XILINX
    //instantiate XILINX BRAM (based on parameter size)
-   
-   
+      
 `elsif TARGET_ALTERA
    
 `endif
@@ -78,6 +65,20 @@ module memory_dp(/*AUTOARG*/
 endmodule // memory_dp
 
 
+/*
+  Copyright (C) 2014 Adapteva, Inc.
+  Contributed by Andreas Olofsson <andreas@adapteva.com>
+ 
+   This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.This program is distributed in the hope 
+  that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
+  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details. You should have received a copy 
+  of the GNU General Public License along with this program (see the file 
+  COPYING).  If not, see <http://www.gnu.org/licenses/>.
+*/
 
   
      
