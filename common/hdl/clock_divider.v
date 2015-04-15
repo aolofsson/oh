@@ -69,8 +69,10 @@ module clock_divider(/*AUTOARG*/
    assign negedge90_match  = (counter[7:0]==({2'b00,divcfg_dec[7:2]} + 
 					     {1'b0,divcfg_dec[7:1]})); 
 			      
-   always @ (posedge clkin)
-     if(posedge_match)
+   always @ (posedge clkin or posedge reset)
+     if(reset)
+       clkout_reg <= 1'b0;   
+     else if(posedge_match)
        clkout_reg <= 1'b1;
      else if(negedge_match)
        clkout_reg <= 1'b0;

@@ -29,17 +29,19 @@ module dv_elink_tb();
 	  reset    = 1'b1;    // reset is active
           go       = 1'b0;
 	  clk      = 1'b0;
-	  datamode = 2'b11;
-	
-	#100 
+	  datamode = 2'b11;	
+	#400 
+          //Setting config clocks to higher value to speed sims
+          dv_elink.elink.ecfg.ecfg_clk_reg[15:0]=16'h0066;	
 	  reset    = 1'b0;    // at time 100 release reset
-	#500
-	  go       = 1'b1;
 	#1000
-	  datamode = 2'b10;
+          
+	  go       = 1'b1;
 	#2000
-	  datamode = 2'b01;
+	  datamode = 2'b10;
 	#3000
+	  datamode = 2'b01;
+	#4000
 	  datamode = 2'b00;
 	#10000	  
 	  $finish;

@@ -150,7 +150,10 @@ module etx_arbiter (/*AUTOARG*/
 				emrq_rd_en ? emrq_fifo_srcaddr[31:0] :
 				emwr_fifo_srcaddr[31:0];
 	   
-	   ready <= emrr_rd_en | emrq_rd_en | emwr_rd_en | ~etx_ack;//TODO: check last term
+	   ready   <= (emrr_rd_en | emrq_rd_en | emwr_rd_en ) ? 1'b1 : //ready
+                      (etx_ack)                               ? 1'b0 : //done
+		                                                 ready;//stay ubu
+                                          
 	end // else: !if( reset )
 
    assign etx_access = ready;

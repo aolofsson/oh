@@ -272,12 +272,11 @@ module ecfg (/*AUTOARG*/
    //###########################
     always @ (posedge mi_clk)
      if(hard_reset)
-       ecfg_clk_reg[15:0] <= 16'h0055;
+       ecfg_clk_reg[15:0] <= 16'h0000;
      else if (ecfg_clk_write)
        ecfg_clk_reg[15:0] <= mi_din[15:0];
 
    assign ecfg_clk_settings[15:0] = ecfg_clk_reg[15:0];
-   
    
    //assign ecfg_cclk_en             = ~(ecfg_clk_reg[3:0]==4'b0000);   
    //assign ecfg_cclk_div[3:0]       = ecfg_clk_reg[3:0];

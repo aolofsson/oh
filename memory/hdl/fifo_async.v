@@ -79,11 +79,13 @@ module fifo_async
 
    synchronizer #(.DW(AW+1)) rd2wr_sync (.out		(wr_rd_gray_pointer[AW:0]),
 					 .in		(rd_gray_pointer[AW:0]),
+                                         .reset		(reset),
 					 .clk		(wr_clk));
    
 
    synchronizer #(.DW(AW+1)) wr2rd_sync (.out		(rd_wr_gray_pointer[AW:0]),
 					 .in		(wr_gray_pointer[AW:0]),
+                                         .reset		(reset),
 					 .clk		(rd_clk));
    
 
