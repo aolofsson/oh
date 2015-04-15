@@ -79,7 +79,6 @@ module etx_arbiter (/*AUTOARG*/
 
    //regs
    reg            ready;
-   reg 		  etx_access;
    reg 		  etx_write;
    reg [1:0] 	  etx_datamode;
    reg [3:0] 	  etx_ctrlmode;
@@ -114,7 +113,6 @@ module etx_arbiter (/*AUTOARG*/
       if( reset ) 
 	begin
            ready             <= 1'b0;
-	   etx_access        <= 1'b0;
 	   etx_write         <= 1'b0;
 	   etx_datamode[1:0] <= 2'b0;
 	   etx_ctrlmode[3:0] <= 4'b0;
@@ -124,11 +122,9 @@ module etx_arbiter (/*AUTOARG*/
 	end 
       else 
 	begin
-	   etx_access <= 1'b0;
-
 	   etx_write  <= emrr_rd_en ? emrr_fifo_write :
 			 emrq_rd_en ? emrq_fifo_write :
-			 emwr_fifo_write;
+			              emwr_fifo_write;
 
 	   etx_datamode[1:0] <= emrr_rd_en ? emrr_fifo_datamode[1:0] :
 				emrq_rd_en ? emrq_fifo_datamode[1:0] :
@@ -156,6 +152,9 @@ module etx_arbiter (/*AUTOARG*/
 	   
 	   ready <= emrr_rd_en | emrq_rd_en | emwr_rd_en | ~etx_ack;//TODO: check last term
 	end // else: !if( reset )
+
+   assign etx_access = ready;
+   
       
 endmodule // etx_arbiter
 
