@@ -31,8 +31,13 @@ module dv_elink_tb();
 	  clk      = 1'b0;
 	  datamode = 2'b11;	
 	#400 
-          //Setting config clocks to higher value to speed sims
-          dv_elink.elink.ecfg.ecfg_clk_reg[15:0]=16'h0066;	
+          //clock config
+          dv_elink.elink.ecfg.ecfg_clk_reg[15:0] = 16'h0066;
+          //tx config 
+   	  dv_elink.elink.ecfg.ecfg_tx_reg[8:0]   = 9'h001;
+          //rx config
+	  dv_elink.elink.ecfg.ecfg_tx_reg[4:0]   = 5'h01;
+	 
 	  reset    = 1'b0;    // at time 100 release reset
 	#1000
           

@@ -5,19 +5,37 @@ module ODDR (/*AUTOARG*/
    C, CE, D1, D2, R, S
    );
 
-   parameter DDR_CLK_EDGE=0;
-   parameter INIT=0;
-   parameter SRTYPE=0;
+   parameter DDR_CLK_EDGE=0; //clock recovery mode
+   parameter INIT=0; //Q init value
+   parameter SRTYPE=0;//"SYNC", "ASYNC"
    
-   input C;
-   input CE;
-   input D1;
-   input D2;
-   input R;
-   input S;
-   output Q;
+   input C;  // Clock input
+   input CE; // Clock enable input
+   input D1; // Data input1
+   input D2; // Data input2
+   input R;  // Reset (depends on SRTYPE)
+   input S;  // Active high asynchronous pin
+   output Q; // Data Output that connects to the IOB pad
 
-   assign Q=1'b0;
+   reg 	  Q1,Q2;
+
+   //Generate different logic based on parameters
+
+   //Only doing same edge and async reset for now   
    
+   always @ (posedge C or posedge R)
+     if (R)
+       Q1 <= 1'b0;
+     else
+       Q1 <= D1;
+
+   always @ (posedge C or posedge R)
+     if (R)
+       Q2 <= 1'b0;
+     else
+       Q2 <= D2;
+   
+   assign Q = C ? Q1 : Q2;
+      
 endmodule // ODDR
 
