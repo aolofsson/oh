@@ -17,9 +17,7 @@
                   10 - reserved
                   11 - reserved
  [7:4]            Transmit control mode for eMesh
- [11:8]           Reserved
- [12]             Reserved
- [13]             AXI slave read timeout enable
+ [8]             AXI slave read timeout enable
   -------------------------------------------------------------
  ESYSRX           ***Elink receiver configuration***
  [0]              0  - link RX disable
@@ -187,7 +185,7 @@ module ecfg (/*AUTOARG*/
    
    //registers
    reg          ecfg_reset_reg;
-   reg [13:0] 	ecfg_tx_reg;
+   reg [8:0] 	ecfg_tx_reg;
    reg [4:0] 	ecfg_rx_reg;
    reg [15:0] 	ecfg_clk_reg;
    reg [11:0] 	ecfg_coreid_reg;
@@ -244,15 +242,15 @@ module ecfg (/*AUTOARG*/
    //###########################
    always @ (posedge mi_clk)
      if(hard_reset)
-       ecfg_tx_reg[13:0] <= 14'b0;
+       ecfg_tx_reg[8:0] <= 9'b0;
      else if (ecfg_tx_write)
-       ecfg_tx_reg[13:0] <= mi_din[13:0];
+       ecfg_tx_reg[8:0] <= mi_din[8:0];
 
    assign ecfg_tx_enable          = ecfg_tx_reg[0];
    assign ecfg_tx_mmu_enable      = ecfg_tx_reg[1];   
    assign ecfg_tx_gpio_enable     = (ecfg_tx_reg[3:2]==2'b01);
    assign ecfg_tx_ctrlmode[3:0]   = ecfg_tx_reg[7:4];
-   assign ecfg_timeout_enable     = ecfg_tx_reg[13];
+   assign ecfg_timeout_enable     = ecfg_tx_reg[8];
    
    //###########################
    //# ESYSRX
@@ -346,7 +344,7 @@ module ecfg (/*AUTOARG*/
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
          `ESYSRESET:   mi_dout[31:0] <= {31'b0, ecfg_reset_reg};
-         `ESYSTX:      mi_dout[31:0] <= {19'b0, ecfg_tx_reg[12:0]};
+         `ESYSTX:      mi_dout[31:0] <= {23'b0, ecfg_tx_reg[8:0]};
          `ESYSRX:      mi_dout[31:0] <= {27'b0, ecfg_rx_reg[4:0]};
          `ESYSCLK:     mi_dout[31:0] <= {24'b0, ecfg_clk_reg[7:0]};
          `ESYSCOREID:  mi_dout[31:0] <= {20'b0, ecfg_coreid_reg[11:0]};
