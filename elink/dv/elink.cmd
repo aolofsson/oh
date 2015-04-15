@@ -1,4 +1,4 @@
-../../constants/hdl/xilinx_constants.v
+../../constants/hdl/simulation_constants.v
 ../../elink/hdl/elink_regmap.v
 dv_elink_tb.v
 -y .
