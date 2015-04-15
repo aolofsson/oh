@@ -6,6 +6,7 @@ module dv_elink_tb();
    reg           clk;   
    reg 		 reset;   
    reg 		 go;
+   reg [1:0] 	 datamode;
    reg 		 ext_access;
    reg           ext_write;
    reg [1:0]     ext_datamode;
@@ -15,6 +16,7 @@ module dv_elink_tb();
    reg [31:0]    ext_srcaddr;   
    reg           ext_wr_wait;
    reg           ext_rd_wait;
+   reg 		 init;
    
    //Forever clock
    always
@@ -27,21 +29,31 @@ module dv_elink_tb();
 	  reset    = 1'b1;    // reset is active
           go       = 1'b0;
 	  clk      = 1'b0;
+	  datamode = 2'b11;
+	
 	#100 
 	  reset    = 1'b0;    // at time 100 release reset
 	#500
-	  go       =1'b1;
+	  go       = 1'b1;
+	#1000
+	  datamode = 2'b10;
+	#2000
+	  datamode = 2'b01;
+	#3000
+	  datamode = 2'b00;
 	#10000	  
 	  $finish;
      end
 
-   wire pushback = (dut_wr_wait | dut_rd_wait);
+   //Notes:The testbench connects a 64 bit master to a 32 bit slave
+   //To make this work, we limit the addresses to 64 bit aligned
    
-always @ (negedge clk)
+   
+always @ (posedge clk)
   if(reset)
     begin
-       ext_access       <=1'b0;
-       ext_write         <=1'b0;
+       ext_access        <=1'b0; //empty
+       ext_write         <=1'b1;
        ext_datamode[1:0] <=2'b0;
        ext_ctrlmode[3:0] <=4'b0;
        ext_data[31:0]    <=32'b0;
@@ -49,23 +61,15 @@ always @ (negedge clk)
        ext_srcaddr[31:0] <=32'b0;
        ext_rd_wait       <=1'b0;
        ext_wr_wait       <=1'b0;
-    end
-  else if (go)
+    end   
+  else if ((go & ~ext_access) | (ext_access & ~dut_wr_wait))
     begin
-       ext_access        <= 1'b1;
-       ext_write         <= 1'b1;       
-       ext_data[31:0]    <=  ext_data[31:0] + 1'b1;
-       ext_dstaddr[31:0] <=  ext_dstaddr[31:0] + 1'b1;
-       ext_srcaddr[31:0] <=  ext_srcaddr[31:0] + 1'b1;
+       ext_access        <=  1'b1;
+       ext_data[31:0]    <=  ext_data[31:0]    + 32'b1;
+       ext_dstaddr[31:0] <=  ext_dstaddr[31:0] + 32'd8;//(32'b1<<datamode)
+       ext_srcaddr[31:0] <=  ext_srcaddr[31:0] + 32'd8;//(32'b1<<datamode)
+       ext_datamode[1:0] <=  datamode[1:0];
     end
-  else if (~pushback & go)
-    begin
-       ext_access        <= 1'b0;
-       ext_data[31:0]    <=  ext_data[31:0];
-       ext_dstaddr[31:0] <=  ext_dstaddr[31:0];
-       ext_srcaddr[31:0] <=  ext_srcaddr[31:0];
-    end
- 
    
    //Waveform dump
 `ifndef TARGET_VERILATOR

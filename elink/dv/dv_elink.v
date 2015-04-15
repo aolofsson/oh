@@ -1,4 +1,3 @@
-//`timescale 1 ns / 100 ps
 module dv_elink(/*AUTOARG*/
    // Outputs
    dut_passed, dut_failed, dut_wr_wait, dut_rd_wait, dut_access,
