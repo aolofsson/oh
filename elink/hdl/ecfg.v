@@ -17,9 +17,8 @@
                   10 - reserved
                   11 - reserved
  [7:4]            Transmit control mode for eMesh
- [11:8]           0000 - No division, full speed
-                  0001 - Divide by 2
- [12]             Bypass mode (clkin used for tx_lclk)
+ [11:8]           Reserved
+ [12]             Reserved
  [13]             AXI slave read timeout enable
   -------------------------------------------------------------
  ESYSRX           ***Elink receiver configuration***
@@ -34,7 +33,7 @@
   -------------------------------------------------------------
  ESYSCLK          ***Epiphany clock frequency setting*** 
  [3:0]            Output divider
-                  0000 - Clock turned off
+                  0000 - CLKIN/128
                   0001 - CLKIN/64
                   0010 - CLKIN/32
                   0011 - CLKIN/16
@@ -43,8 +42,19 @@
                   0110 - CLKIN/2
                   0111 - CLKIN/1 (full speed)
                   1XXX - RESERVED
- [7:4]            PLL settings (TBD)
- [8]              PLL bypass mode (cclk is set to clkin)                       
+ [7:4]            Elink Transmit Clock
+                  0000 - CLKIN/128
+                  0001 - CLKIN/64
+                  0010 - CLKIN/32
+                  0011 - CLKIN/16
+                  0100 - CLKIN/8
+                  0101 - CLKIN/4
+                  0110 - CLKIN/2
+                  0111 - CLKIN/1 (full speed)
+                  1XXX - RESERVED
+ [11:8]           PLL settings (TBD)
+ [12]             CCLK PLL bypass mode (cclk is set to clkin)
+ [13]             LCLK PLL bypass mode (lclk is set to clkin)
  -------------------------------------------------------------
  ESYSCOREID     ***CORE ID***
  [5:0]           Column ID-->default at powerup/reset             
@@ -92,7 +102,7 @@
  [10] emwr_rd_en
  [9]  esaxi_emwr_prog_full
  [8]  esaxi_emwr_wr_en  
- //Sticky signals
+ ##########Sticky signals below#############
  [7] reserved
  [6] emrr_full (rx)
  [5] emrq_full (rx)
@@ -106,87 +116,81 @@
 
 module ecfg (/*AUTOARG*/
    // Outputs
-   mi_dout, ecfg_reset, ecfg_resetb, ecfg_tx_enable,
-   ecfg_tx_mmu_enable, ecfg_tx_gpio_enable, ecfg_tx_ctrlmode,
-   ecfg_tx_clkdiv, ecfg_tx_clkbypass, ecfg_timeout_enable,
+   soft_reset, mi_dout, ecfg_tx_enable, ecfg_tx_mmu_enable,
+   ecfg_tx_gpio_enable, ecfg_tx_ctrlmode, ecfg_timeout_enable,
    ecfg_rx_enable, ecfg_rx_mmu_enable, ecfg_rx_gpio_enable,
-   ecfg_cclk_en, ecfg_cclk_div, ecfg_cclk_pllcfg, ecfg_cclk_bypass,
-   ecfg_coreid, ecfg_dataout, embox_not_empty, embox_full,
+   ecfg_clk_settings, ecfg_coreid, ecfg_dataout, embox_not_empty,
+   embox_full,
    // Inputs
-   hw_reset, clk, mi_en, mi_we, mi_addr, mi_din, ecfg_rx_datain,
+   hard_reset, mi_clk, mi_en, mi_we, mi_addr, mi_din, ecfg_rx_datain,
    ecfg_tx_datain, ecfg_tx_debug, ecfg_rx_debug
    );
 
    /******************************/
    /*Compile Time Parameters     */
    /******************************/
-   parameter RFAW            = 5;         //32 registers for now
-   parameter DEFAULT_COREID  = 12'h808;   //reset value for ecfg_coreid
-   parameter DEFAULT_VERSION = 16'h0000;  //reset value for version
+   parameter RFAW            = 5;         // 32 registers for now
+   parameter DEFAULT_COREID  = 12'h808;   // reset value for ecfg_coreid
+   parameter DEFAULT_VERSION = 16'h0000;  // reset value for version
    
    /******************************/
-   /*HARDWARE RESET (POR/BUTTON) */
+   /*HARDWARE RESET (EXTERNAL)   */
    /******************************/
-   input 	    hw_reset;
+   input 	hard_reset;       // ecfg registers reset only by "hard reset"
+   output 	soft_reset;       // soft reset output driven by register
 
    /*****************************/
    /*SIMPLE MEMORY INTERFACE    */
-   /*****************************/  
-   input             clk;
-   input 	     mi_en;         
-   input  	     mi_we;        //single we, must write 32 bit words
-   input [19:0]      mi_addr;      //complete physical address (no shifting!)
-   input [31:0]      mi_din;
-   output [31:0]     mi_dout;   
+   /*****************************/    
+   input 	 mi_clk;
+   input 	 mi_en;         
+   input 	 mi_we;            // single we, must write 32 bit words
+   input [19:0]  mi_addr;          // complete physical address (no shifting!)
+   input [31:0]  mi_din;
+   output [31:0] mi_dout;   
    
    /*****************************/
    /*ELINK CONTROL SIGNALS      */
    /*****************************/
    //reset
-   output 	ecfg_reset;        //reset for all elink logic
-   output       ecfg_resetb;       //reset for epiphany (active low)
    
+
    //tx
-   output 	ecfg_tx_enable;         //enable signal for TX  
-   output 	ecfg_tx_mmu_enable;     //enables MMU on transmit path  
-   output 	ecfg_tx_gpio_enable;    //forces TX output pins to constants
-   output [3:0] ecfg_tx_ctrlmode;       //value for emesh ctrlmode tag
-   output [3:0] ecfg_tx_clkdiv;         //transmit clock divider
-   output       ecfg_tx_clkbypass;      //transmit clock bypass
-   output       ecfg_timeout_enable;    //enables axi-slave timeout circuit
+   output 	 ecfg_tx_enable;       // enable signal for TX  
+   output 	 ecfg_tx_mmu_enable;   // enables MMU on transmit path  
+   output 	 ecfg_tx_gpio_enable;  // forces TX output pins to constants
+   output [3:0]  ecfg_tx_ctrlmode;     // value for emesh ctrlmode tag
+   output 	 ecfg_timeout_enable;  // enables axi slave timeout circuit
    
    //rx
-   output 	ecfg_rx_enable;      //enable signal for rx  
-   output 	ecfg_rx_mmu_enable;  //enables MMU on rx path  
-   output 	ecfg_rx_gpio_enable; //forces rx wait pins to constants
- 
-   //cclk
-   output 	ecfg_cclk_en;        //cclk enable
-   output [3:0] ecfg_cclk_div;       //cclk divider setting
-   output [3:0] ecfg_cclk_pllcfg;    //pll configuration
-   output 	ecfg_cclk_bypass;    //pll bypass
+   output 	 ecfg_rx_enable;       // enable signal for rx  
+   output 	 ecfg_rx_mmu_enable;   // enables MMU on rx path  
+   output 	 ecfg_rx_gpio_enable;  // forces rx wait pins to constants
+   
+   //clocks
+   output [15:0] ecfg_clk_settings;    // clock settings
    
    //coreid
-   output [11:0] ecfg_coreid;      //core-id of fpga elink
+   output [11:0] ecfg_coreid;          // core-id of fpga elink
 
    //gpio
-   input [8:0]  ecfg_rx_datain;    //frame and data
-   input [1:0] 	ecfg_tx_datain;    //wait signals
-   output [10:0] ecfg_dataout;     //data for elink outputs
+   input [8:0] 	 ecfg_rx_datain;       // frame and data
+   input [1:0] 	 ecfg_tx_datain;       // wait signals
+   output [10:0] ecfg_dataout;         // data for elink outputs
 
    //debug
-   output 	 embox_not_empty;  //not-empty 
-   output 	 embox_full;       //full 
-   input [15:0]  ecfg_tx_debug;    //etx debug signals
-   input [15:0]  ecfg_rx_debug;    //etx debug signals
+   output 	 embox_not_empty;      // not-empty interrupt
+   output 	 embox_full;           // full debug signal 
+   input [15:0]  ecfg_tx_debug;        // etx debug signals
+   input [15:0]  ecfg_rx_debug;        // etx debug signals
    
-   /*------------------------BODY CODE---------------------------------------*/
+   /*------------------------CODE BODY---------------------------------------*/
    
    //registers
    reg          ecfg_reset_reg;
    reg [13:0] 	ecfg_cfgtx_reg;
    reg [4:0] 	ecfg_cfgrx_reg;
-   reg [8:0] 	ecfg_cfgclk_reg;
+   reg [15:0] 	ecfg_cfgclk_reg;
    reg [11:0] 	ecfg_coreid_reg;
    reg [15:0] 	ecfg_version_reg;
    reg [10:0] 	ecfg_datain_reg;
@@ -228,20 +232,19 @@ module ecfg (/*AUTOARG*/
    //###########################
    //# ESYSRESET
    //###########################
-    always @ (posedge clk)
-      if(hw_reset)
+    always @ (posedge mi_clk)
+      if(hard_reset)
 	ecfg_reset_reg <= 1'b0;   
       else if (ecfg_reset_write)
 	ecfg_reset_reg <= mi_din[0];  
 
-   assign ecfg_reset    = ecfg_reset_reg | hw_reset;
-   assign ecfg_resetb   = ~ecfg_reset;
+   assign soft_reset    = ecfg_reset_reg;
 
    //###########################
    //# ESYSTX
    //###########################
-   always @ (posedge clk)
-     if(hw_reset)
+   always @ (posedge mi_clk)
+     if(hard_reset)
        ecfg_cfgtx_reg[13:0] <= 14'b0;
      else if (ecfg_cfgtx_write)
        ecfg_cfgtx_reg[13:0] <= mi_din[13:0];
@@ -250,15 +253,13 @@ module ecfg (/*AUTOARG*/
    assign ecfg_tx_mmu_enable      = ecfg_cfgtx_reg[1];   
    assign ecfg_tx_gpio_enable     = (ecfg_cfgtx_reg[3:2]==2'b01);
    assign ecfg_tx_ctrlmode[3:0]   = ecfg_cfgtx_reg[7:4];
-   assign ecfg_tx_clkdiv[3:0]     = ecfg_cfgtx_reg[11:8];
-   assign ecfg_tx_clkbypass       = ecfg_cfgtx_reg[12];
    assign ecfg_timeout_enable     = ecfg_cfgtx_reg[13];
    
    //###########################
    //# ESYSRX
    //###########################
-   always @ (posedge clk)
-     if(hw_reset)
+   always @ (posedge mi_clk)
+     if(hard_reset)
        ecfg_cfgrx_reg[4:0] <= 5'b0;
      else if (ecfg_cfgrx_write)
        ecfg_cfgrx_reg[4:0] <= mi_din[4:0];
@@ -270,22 +271,25 @@ module ecfg (/*AUTOARG*/
    //###########################
    //# ESYSCLK
    //###########################
-    always @ (posedge clk)
-     if(hw_reset)
-       ecfg_cfgclk_reg[8:0] <= 9'b0;
+    always @ (posedge mi_clk)
+     if(hard_reset)
+       ecfg_cfgclk_reg[15:0] <= 16'b0;
      else if (ecfg_cfgclk_write)
-       ecfg_cfgclk_reg[8:0] <= mi_din[8:0];
+       ecfg_cfgclk_reg[15:0] <= mi_din[15:0];
 
-   assign ecfg_cclk_en             = ~(ecfg_cfgclk_reg[3:0]==4'b0000);   
-   assign ecfg_cclk_div[3:0]       = ecfg_cfgclk_reg[3:0];
-   assign ecfg_cclk_pllcfg[3:0]    = ecfg_cfgclk_reg[7:4];
-   assign ecfg_cclk_bypass         = ecfg_cfgclk_reg[8];
+   assign ecfg_clk_settings[15:0] = ecfg_cfgclk_reg[15:0];
+   
+   
+   //assign ecfg_cclk_en             = ~(ecfg_cfgclk_reg[3:0]==4'b0000);   
+   //assign ecfg_cclk_div[3:0]       = ecfg_cfgclk_reg[3:0];
+   //assign ecfg_cclk_pllcfg[3:0]    = ecfg_cfgclk_reg[7:4];
+   //assign ecfg_cclk_bypass         = ecfg_cfgclk_reg[8];
 
    //###########################
    //# ESYSCOREID
    //###########################
-   always @ (posedge clk)
-     if(hw_reset)
+   always @ (posedge mi_clk)
+     if(hard_reset)
        ecfg_coreid_reg[11:0] <= DEFAULT_COREID;
      else if (ecfg_coreid_write)
        ecfg_coreid_reg[11:0] <= mi_din[11:0];   
@@ -295,8 +299,8 @@ module ecfg (/*AUTOARG*/
    //###########################
    //# ESYSVERSION
    //###########################
-   always @ (posedge clk)
-     if(hw_reset)
+   always @ (posedge mi_clk)
+     if(hard_reset)
        ecfg_version_reg[15:0] <= DEFAULT_VERSION;
      else if (ecfg_version_write)
        ecfg_version_reg[15:0] <= mi_din[15:0];   
@@ -304,14 +308,14 @@ module ecfg (/*AUTOARG*/
    //###########################
    //# ESYSDATAIN
    //###########################
-   always @ (posedge clk)
+   always @ (posedge mi_clk)
      ecfg_datain_reg[10:0] <= {ecfg_rx_datain[1:0], ecfg_rx_datain[8:0]};
    
    //###########################
    //# ESYSDATAOUT
    //###########################
-   always @ (posedge clk)
-     if(hw_reset)
+   always @ (posedge mi_clk)
+     if(hard_reset)
        ecfg_dataout_reg[10:0] <= 11'd0;   
      else if (ecfg_dataout_write)
        ecfg_dataout_reg[10:0] <= mi_din[10:0];
@@ -329,8 +333,8 @@ module ecfg (/*AUTOARG*/
 				    embox_full
 				    };
    
-   always @ (posedge clk)
-     if(hw_reset)
+   always @ (posedge mi_clk)
+     if(hard_reset)
        ecfg_debug_reg[7:0] <= 8'd0;
      else
        ecfg_debug_reg[7:0] <=ecfg_debug_reg[7:0] | ecfg_debug_vector[7:0];
@@ -340,7 +344,7 @@ module ecfg (/*AUTOARG*/
    //###############################
 
    //Pipelineing readback
-   always @ (posedge clk)
+   always @ (posedge mi_clk)
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
          `ESYSRESET:   mi_dout[31:0] <= {31'b0, ecfg_reset_reg};

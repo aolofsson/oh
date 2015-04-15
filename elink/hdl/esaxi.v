@@ -403,29 +403,26 @@ module esaxi (/*autoarg*/
 	  emwr_ctrlmode_reg[3:0]    <= ecfg_tx_ctrlmode[3:0];//static
 	  emwr_datamode_reg[1:0]    <= axi_awsize[1:0];	
           emwr_dstaddr_reg[31:2]    <= axi_awaddr[31:2]; //set lsbs of address based on write strobes	 
-
-	  casez(s_axi_wstrb[3:0])
-	    4'b???1://aligned
-	      begin
-		 emwr_data_reg[31:0]   <= s_axi_wdata[31:0];
-	         emwr_dstaddr_reg[1:0] <= 2'd0;
-	      end
-	    4'b??10 : //shift by byte
-	      begin
-		 emwr_data_reg[31:0]   <= {8'd0, s_axi_wdata[31:8]};
-		 emwr_dstaddr_reg[1:0] <= 2'd1;
-	      end
-	    4'b?100 : //shift by two bytes
-	      begin
-		 emwr_data_reg[31:0]   <= {16'd0, s_axi_wdata[31:16]};
-		 emwr_dstaddr_reg[1:0] <= 2'd2;
-	      end
-	    default: //shift by three bytes
-	      begin
-		 emwr_data_reg[31:0]   <= {24'd0, s_axi_wdata[31:24]};
-		 emwr_dstaddr_reg[1:0] <= 2'd3;
-	      end
-	  endcase // casez (s_axi_wstrb[3:0])
+	  if(s_axi_wstrb[0])
+	    begin
+	       emwr_data_reg[31:0]   <= s_axi_wdata[31:0];
+	       emwr_dstaddr_reg[1:0] <= 2'd0;
+	    end
+	  else if(s_axi_wstrb[1])
+	    begin
+	       emwr_data_reg[31:0]   <= {8'd0, s_axi_wdata[31:8]};
+	       emwr_dstaddr_reg[1:0] <= 2'd1;
+	    end
+	  else if(s_axi_wstrb[2])
+	    begin
+	       emwr_data_reg[31:0]   <= {16'd0, s_axi_wdata[31:16]};
+	       emwr_dstaddr_reg[1:0] <= 2'd2;
+	    end
+	  else
+	    begin
+	       emwr_data_reg[31:0]   <= {24'd0, s_axi_wdata[31:24]};
+	       emwr_dstaddr_reg[1:0] <= 2'd3;
+	    end
        end // else: !if(~s_axi_aresetn)
 
 //Pipeline stage

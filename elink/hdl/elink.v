@@ -1,6 +1,6 @@
 module elink(/*AUTOARG*/
    // Outputs
-   colid, rowid, resetb_out, cclk_p, cclk_n, rxo_wr_wait_p,
+   colid, rowid, chip_resetb, cclk_p, cclk_n, rxo_wr_wait_p,
    rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n, txo_lclk_p,
    txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p, txo_data_n,
    m_axi_araddr, m_axi_arburst, m_axi_arcache, m_axi_arlen,
@@ -12,43 +12,45 @@ module elink(/*AUTOARG*/
    s_axi_bvalid, s_axi_rdata, s_axi_rlast, s_axi_rresp, s_axi_rvalid,
    s_axi_wready, embox_not_empty, embox_full,
    // Inputs
-   reset_in, clkin, flag, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
-   rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
-   txi_rd_wait_p, txi_rd_wait_n, m_axi_aclk, m_axi_aresetn,
-   m_axi_arready, m_axi_awready, m_axi_bresp, m_axi_bvalid,
-   m_axi_rdata, m_axi_rlast, m_axi_rresp, m_axi_rvalid, m_axi_wready,
-   s_axi_aclk, s_axi_aresetn, s_axi_araddr, s_axi_arburst,
-   s_axi_arcache, s_axi_arlen, s_axi_arprot, s_axi_arqos,
-   s_axi_arsize, s_axi_arvalid, s_axi_awaddr, s_axi_awburst,
-   s_axi_awcache, s_axi_awlen, s_axi_awprot, s_axi_awqos,
-   s_axi_awsize, s_axi_awvalid, s_axi_bready, s_axi_rready,
-   s_axi_wdata, s_axi_wlast, s_axi_wstrb, s_axi_wvalid
+   hard_reset, clkin, bypass_clocks, rxi_lclk_p, rxi_lclk_n,
+   rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p,
+   txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n, m_axi_aclk,
+   m_axi_aresetn, m_axi_arready, m_axi_awready, m_axi_bresp,
+   m_axi_bvalid, m_axi_rdata, m_axi_rlast, m_axi_rresp, m_axi_rvalid,
+   m_axi_wready, s_axi_aclk, s_axi_aresetn, s_axi_araddr,
+   s_axi_arburst, s_axi_arcache, s_axi_arlen, s_axi_arprot,
+   s_axi_arqos, s_axi_arsize, s_axi_arvalid, s_axi_awaddr,
+   s_axi_awburst, s_axi_awcache, s_axi_awlen, s_axi_awprot,
+   s_axi_awqos, s_axi_awsize, s_axi_awvalid, s_axi_bready,
+   s_axi_rready, s_axi_wdata, s_axi_wlast, s_axi_wstrb, s_axi_wvalid
    );
+   
    parameter DEF_COREID  = 12'h810;
    parameter AW          = 32;
    parameter DW          = 32;
    parameter IDW         = 32;
    parameter RFAW        = 13;
    parameter MW          = 44;
-   parameter FW          = 1;
-   parameter USE_PLL     = 1;
+   parameter INC_PLL     = 1;        //include pll
+   parameter INC_SPI     = 1;        //include spi block
    
    /****************************/
-   /*BASIC INPUTS              */
+   /*CLK AND RESET             */
    /****************************/
-   input        reset_in;       //active high synhcronous hardware reset
-   input 	clkin;          //primary clock input
-   
+   input         hard_reset;          // active high synhcronous hardware reset
+   input 	 clkin;               // clock for pll
+   input [2:0] 	 bypass_clocks;       // bypass clocks for elinks w/o pll
+                                      // "advanced", tie to zero if not used
+
    /********************************/
    /*EPIPHANY INTERFACE (I/O PINS) */
    /********************************/          
 
    //Basic
-   input  [FW-1:0] flag;                  //epiphany flag (interrupt?)
-   output [3:0]    colid;                 //epiphany colid
-   output [3:0]    rowid;                 //epiphany rowid
-   output 	   resetb_out;            //chip reset for Epiphany (active low)
-   output 	   cclk_p, cclk_n;        //high speed clock (1GHz) to Epiphany
+   output [3:0] colid;                //epiphany colid
+   output [3:0] rowid;                //epiphany rowid
+   output 	chip_resetb;          //chip reset for Epiphany (active low)
+   output 	cclk_p, cclk_n;        //high speed clock (1GHz) to Epiphany
 
    //Receiver
    input        rxi_lclk_p,  rxi_lclk_n;     //link rx clock input
@@ -160,7 +162,6 @@ module elink(/*AUTOARG*/
    input [3:0] 	 s_axi_wstrb;
    input 	 s_axi_wvalid;
 
-
    /*****************************/
    /*MAILBOX (interrupts)       */
    /*****************************/
@@ -174,17 +175,14 @@ module elink(/*AUTOARG*/
    /*AUTOINPUT*/
    /*AUTOOUTPUT*/
 
-
    //wires
    wire [31:0] 	 mi_rd_data;
    wire [31:0] 	 mi_dout_ecfg;
    wire [31:0] 	 mi_dout_embox;
+
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			ecfg_cclk_bypass;	// From ecfg of ecfg.v
-   wire [3:0]		ecfg_cclk_div;		// From ecfg of ecfg.v
-   wire			ecfg_cclk_en;		// From ecfg of ecfg.v
-   wire [3:0]		ecfg_cclk_pllcfg;	// From ecfg of ecfg.v
+   wire [15:0]		ecfg_clk_settings;	// From ecfg of ecfg.v
    wire [11:0]		ecfg_coreid;		// From ecfg of ecfg.v
    wire [10:0]		ecfg_dataout;		// From ecfg of ecfg.v
    wire [8:0]		ecfg_rx_datain;		// From erx of erx.v
@@ -193,8 +191,6 @@ module elink(/*AUTOARG*/
    wire			ecfg_rx_gpio_enable;	// From ecfg of ecfg.v
    wire			ecfg_rx_mmu_enable;	// From ecfg of ecfg.v
    wire			ecfg_timeout_enable;	// From ecfg of ecfg.v
-   wire			ecfg_tx_clkbypass;	// From ecfg of ecfg.v
-   wire [3:0]		ecfg_tx_clkdiv;		// From ecfg of ecfg.v
    wire [3:0]		ecfg_tx_ctrlmode;	// From ecfg of ecfg.v
    wire [1:0]		ecfg_tx_datain;		// From etx of etx.v
    wire [15:0]		ecfg_tx_debug;		// From etx of etx.v
@@ -256,10 +252,11 @@ module elink(/*AUTOARG*/
    wire [31:0]		mi_tx_emmu_dout;	// From etx of etx.v
    wire			mi_tx_emmu_sel;		// From esaxi of esaxi.v
    wire			mi_we;			// From esaxi of esaxi.v
-   wire			reset;			// From ecfg of ecfg.v
-   wire			tx_lclk;		// From eclock of eclock.v
-   wire			tx_lclk_out;		// From eclock of eclock.v
-   wire			tx_lclk_par;		// From eclock of eclock.v
+   wire			reset;			// From ereset of ereset.v
+   wire			soft_reset;		// From ecfg of ecfg.v
+   wire			tx_lclk;		// From eclocks of eclocks.v
+   wire			tx_lclk_out;		// From eclocks of eclocks.v
+   wire			tx_lclk_par;		// From eclocks of eclocks.v
    // End of automatics
  
    
@@ -420,27 +417,6 @@ module elink(/*AUTOARG*/
 	       .s_axi_wvalid		(s_axi_wvalid));
    
    /***********************************************************/
-   /*ELINK CLOCK GENERATOR                                    */
-   /***********************************************************/
-
-   eclock eclock(
-		 /*AUTOINST*/
-		 // Outputs
-		 .cclk_p		(cclk_p),
-		 .cclk_n		(cclk_n),
-		 .tx_lclk		(tx_lclk),
-		 .tx_lclk_out		(tx_lclk_out),
-		 .tx_lclk_par		(tx_lclk_par),
-		 // Inputs
-		 .clkin			(clkin),
-		 .reset			(reset),
-		 .ecfg_cclk_en		(ecfg_cclk_en),
-		 .ecfg_cclk_div		(ecfg_cclk_div[3:0]),
-		 .ecfg_cclk_pllcfg	(ecfg_cclk_pllcfg[3:0]),
-		 .ecfg_cclk_bypass	(ecfg_cclk_bypass),
-		 .ecfg_tx_clkbypass	(ecfg_tx_clkbypass));
-   
-   /***********************************************************/
    /*RECEIVER                                                 */
    /***********************************************************/
    /*erx AUTO_TEMPLATE ( 
@@ -536,7 +512,6 @@ module elink(/*AUTOARG*/
 	   .tx_lclk_par			(tx_lclk_par),
 	   .s_axi_aclk			(s_axi_aclk),
 	   .m_axi_aclk			(m_axi_aclk),
-	   .ecfg_tx_clkdiv		(ecfg_tx_clkdiv[3:0]),
 	   .ecfg_tx_enable		(ecfg_tx_enable),
 	   .ecfg_tx_gpio_enable		(ecfg_tx_gpio_enable),
 	   .ecfg_tx_mmu_enable		(ecfg_tx_mmu_enable),
@@ -586,32 +561,26 @@ module elink(/*AUTOARG*/
    
    
    ecfg ecfg(
-	     .ecfg_resetb		(resetb_out),
-	     .hw_reset			(reset_in),
 	     /*AUTOINST*/
 	     // Outputs
+	     .soft_reset		(soft_reset),
 	     .mi_dout			(mi_ecfg_dout[31:0]),	 // Templated
-	     .ecfg_reset		(reset),		 // Templated
 	     .ecfg_tx_enable		(ecfg_tx_enable),
 	     .ecfg_tx_mmu_enable	(ecfg_tx_mmu_enable),
 	     .ecfg_tx_gpio_enable	(ecfg_tx_gpio_enable),
 	     .ecfg_tx_ctrlmode		(ecfg_tx_ctrlmode[3:0]),
-	     .ecfg_tx_clkdiv		(ecfg_tx_clkdiv[3:0]),
-	     .ecfg_tx_clkbypass		(ecfg_tx_clkbypass),
 	     .ecfg_timeout_enable	(ecfg_timeout_enable),
 	     .ecfg_rx_enable		(ecfg_rx_enable),
 	     .ecfg_rx_mmu_enable	(ecfg_rx_mmu_enable),
 	     .ecfg_rx_gpio_enable	(ecfg_rx_gpio_enable),
-	     .ecfg_cclk_en		(ecfg_cclk_en),
-	     .ecfg_cclk_div		(ecfg_cclk_div[3:0]),
-	     .ecfg_cclk_pllcfg		(ecfg_cclk_pllcfg[3:0]),
-	     .ecfg_cclk_bypass		(ecfg_cclk_bypass),
+	     .ecfg_clk_settings		(ecfg_clk_settings[15:0]),
 	     .ecfg_coreid		(ecfg_coreid[11:0]),
 	     .ecfg_dataout		(ecfg_dataout[10:0]),
 	     .embox_not_empty		(embox_not_empty),
 	     .embox_full		(embox_full),
 	     // Inputs
-	     .clk			(mi_clk),		 // Templated
+	     .hard_reset		(hard_reset),
+	     .mi_clk			(mi_clk),
 	     .mi_en			(mi_ecfg_sel),		 // Templated
 	     .mi_we			(mi_we),
 	     .mi_addr			(mi_addr[19:0]),
@@ -644,6 +613,34 @@ module elink(/*AUTOARG*/
 	       .mi_addr			(mi_addr[19:0]),
 	       .mi_din			(mi_din[DW-1:0]));
    
+   /***********************************************************/
+   /*RESET CIRCUITRY                                          */
+   /***********************************************************/
+   ereset ereset (/*AUTOINST*/
+		  // Outputs
+		  .reset		(reset),
+		  .chip_resetb		(chip_resetb),
+		  // Inputs
+		  .hard_reset		(hard_reset),
+		  .soft_reset		(soft_reset));
+
+   /***********************************************************/
+   /*CLOCKS                                                   */
+   /***********************************************************/
+   eclocks eclocks (
+		    /*AUTOINST*/
+		    // Outputs
+		    .cclk_p		(cclk_p),
+		    .cclk_n		(cclk_n),
+		    .tx_lclk		(tx_lclk),
+		    .tx_lclk_out	(tx_lclk_out),
+		    .tx_lclk_par	(tx_lclk_par),
+		    // Inputs
+		    .clkin		(clkin),
+		    .hard_reset		(hard_reset),
+		    .ecfg_clk_settings	(ecfg_clk_settings[15:0]),
+		    .bypass_clocks	(bypass_clocks[2:0]));
+         
 endmodule // elink
 // Local Variables:
 // verilog-library-directories:("." "../../embox/hdl" "../../erx/hdl" "../../etx/hdl" "../../axi/hdl" "../../ecfg/hdl" "../../eclock/hdl")

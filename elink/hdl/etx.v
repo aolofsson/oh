@@ -5,14 +5,14 @@ module etx(/*AUTOARG*/
    txo_data_p, txo_data_n, mi_dout,
    // Inputs
    reset, tx_lclk, tx_lclk_out, tx_lclk_par, s_axi_aclk, m_axi_aclk,
-   ecfg_tx_clkdiv, ecfg_tx_enable, ecfg_tx_gpio_enable,
-   ecfg_tx_mmu_enable, ecfg_dataout, emrq_access, emrq_write,
-   emrq_datamode, emrq_ctrlmode, emrq_dstaddr, emrq_data,
-   emrq_srcaddr, emwr_access, emwr_write, emwr_datamode,
-   emwr_ctrlmode, emwr_dstaddr, emwr_data, emwr_srcaddr, emrr_access,
-   emrr_write, emrr_datamode, emrr_ctrlmode, emrr_dstaddr, emrr_data,
-   emrr_srcaddr, txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p,
-   txi_rd_wait_n, mi_clk, mi_en, mi_we, mi_addr, mi_din
+   ecfg_tx_enable, ecfg_tx_gpio_enable, ecfg_tx_mmu_enable,
+   ecfg_dataout, emrq_access, emrq_write, emrq_datamode,
+   emrq_ctrlmode, emrq_dstaddr, emrq_data, emrq_srcaddr, emwr_access,
+   emwr_write, emwr_datamode, emwr_ctrlmode, emwr_dstaddr, emwr_data,
+   emwr_srcaddr, emrr_access, emrr_write, emrr_datamode,
+   emrr_ctrlmode, emrr_dstaddr, emrr_data, emrr_srcaddr,
+   txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n, mi_clk,
+   mi_en, mi_we, mi_addr, mi_din
    );
    parameter AW   = 32;
    parameter DW   = 32;
@@ -27,7 +27,6 @@ module etx(/*AUTOARG*/
    input 	 m_axi_aclk;           //clock for read response fifo
 
    //Configuration signals
-   input [3:0] 	 ecfg_tx_clkdiv;       //transmit clock divider
    input 	 ecfg_tx_enable;       //transmit output buffer enable   
   
 
@@ -342,7 +341,6 @@ module etx(/*AUTOARG*/
 		  .tx_data_par		(tx_data_par[63:0]),
 		  .ecfg_tx_enable	(ecfg_tx_enable),
 		  .ecfg_tx_gpio_enable	(ecfg_tx_gpio_enable),
-		  .ecfg_tx_clkdiv	(ecfg_tx_clkdiv[3:0]),
 		  .ecfg_dataout		(ecfg_dataout[8:0]));
 
 

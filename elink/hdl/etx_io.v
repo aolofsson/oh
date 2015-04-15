@@ -5,7 +5,7 @@ module etx_io (/*AUTOARG*/
    // Inputs
    reset, txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n,
    tx_lclk_par, tx_lclk, tx_lclk_out, tx_frame_par, tx_data_par,
-   ecfg_tx_enable, ecfg_tx_gpio_enable, ecfg_tx_clkdiv, ecfg_dataout
+   ecfg_tx_enable, ecfg_tx_gpio_enable, ecfg_dataout
    );
 
    parameter IOSTD_ELINK = "LVDS_25";
@@ -40,7 +40,6 @@ module etx_io (/*AUTOARG*/
    //#############
    input         ecfg_tx_enable;     //enable signal for tx  
    input         ecfg_tx_gpio_enable;//forces tx wait pins to constants
-   input [3:0]   ecfg_tx_clkdiv;     // TODO: Implement this
    input [8:0] 	 ecfg_dataout;       // frame & data for GPIO mode
 
    //############

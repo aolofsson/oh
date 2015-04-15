@@ -40,7 +40,6 @@ module dv_elink(/*AUTOARG*/
    /*AUTOINPUT*/
    /*AUTOOUTPUT*/
    
-
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [7:0]		data_n;			// From elink of elink.v
@@ -154,7 +153,7 @@ module dv_elink(/*AUTOARG*/
    wire 		embox_full;
    wire 		embox_not_empty;
    wire 		cclk_p, cclk_n;
-   wire 		resetb;
+   wire 		chip_resetb;
    
    
 
@@ -347,21 +346,20 @@ module dv_elink(/*AUTOARG*/
                         );
    */
 
-   elink elink (.reset_in		(reset),
-		.clkin			(clk),
-		.flag			(1'b0),
+   elink elink (.hard_reset		(reset),
 		.embox_not_empty	(embox_full),
 		.embox_full		(embox_not_empty),
-		.cclk_p			(cclk_p),
-		.cclk_n			(cclk_n),
-		.resetb_out		(resetb),
+		.chip_resetb		(chip_resetb),
 		.colid			(colid[3:0]),
 		.rowid			(rowid[3:0]),
 		.s_axi_aresetn		(~reset),
 		.m_axi_aresetn		(~reset),
 		.s_axi_aclk		(clk),
 		.m_axi_aclk		(clk),
-		
+		.cclk_p			(cclk_p),
+		.cclk_n			(cclk_n),
+		.clkin			(clk),
+		.bypass_clocks          ({clk,clk,clk}),
 		/*AUTOINST*/
 		// Outputs
 		.rxo_wr_wait_p		(wr_wait_p),		 // Templated
@@ -448,7 +446,6 @@ module dv_elink(/*AUTOARG*/
 		.s_axi_wstrb		(dv_axi_wstrb[3:0]),	 // Templated
 		.s_axi_wvalid		(dv_axi_wvalid));	 // Templated
 
-   
 endmodule // dv_elink
 // Local Variables:
 // verilog-library-directories:("." "../hdl")
