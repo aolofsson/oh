@@ -135,21 +135,19 @@ module esaxi (/*autoarg*/
    reg [1:0] 	      s_axi_bresp;
    reg 		      s_axi_arready;
    
+   reg [31:0] 	      emwr_data_reg;
+   reg [31:0] 	      emwr_dstaddr_reg;
+   reg [3:0] 	      emwr_ctrlmode_reg;
+   reg [1:0] 	      emwr_datamode_reg;
    
-
    reg [31:0] 	      axi_awaddr;  // 32b for epiphany addr
    reg [1:0] 	      axi_awburst;
    reg [2:0] 	      axi_awsize;
-   reg 		      axi_awready;   
-   reg 		      axi_wready;   
-   reg [1:0] 	      axi_bresp;
-   reg 		      axi_bvalid;
-   
+ 
    reg [31:0] 	      axi_araddr;
    reg [7:0] 	      axi_arlen;
    reg [1:0] 	      axi_arburst;
    reg [2:0] 	      axi_arsize;
-   reg 		      axi_arready;
    
    reg [31:0] 	      s_axi_rdata;
    reg [1:0] 	      s_axi_rresp;
@@ -211,6 +209,7 @@ module esaxi (/*autoarg*/
    // axi_awready is asserted when there is no write transfer in progress
 
    always @(posedge s_axi_aclk ) 
+     begin
       if(~s_axi_aresetn)  
 	begin
            s_axi_awready <= 1'b0;
@@ -233,7 +232,9 @@ module esaxi (/*autoarg*/
            else if( last_wr_beat )
              write_active <= 1'b0;         
 	end // else: !if(~s_axi_aresetn)
+     end // always @ (posedge s_axi_aclk )
    
+	  
    // capture address & other aw info, update address during cycle
    always @( posedge s_axi_aclk ) 
      if (~s_axi_aresetn)  
@@ -257,17 +258,17 @@ module esaxi (/*autoarg*/
 	       
             end 
 	  else if( s_axi_wvalid & s_axi_wready ) 
-	    begin	       
-               if( axi_awburst == 2'b01 ) 
+            if( axi_awburst == 2'b01 ) 
 		 begin //incremental burst
 		    // the write address for all the beats in the transaction are increments by the data width.
 		    // note: this should be based on awsize instead to support narrow bursts, i think.
+		    //TODO: BUG!!
 		    axi_awaddr[31:addr_lsb] <= axi_awaddr[31:addr_lsb] + 30'd1;
-		    //awaddr aligned to data width
+		    //awaddr alignedto data width
 		    axi_awaddr[addr_lsb-1:0]  <= {addr_lsb{1'b0}};   		  
 		 end  // both fixed & wrapping types are treated as fixed, no update.
-            end // if ( s_axi_wvalid & axi_wready )
        end // else: !if(~s_axi_aresetn)
+   
    
    //###################################################
    //#WRITE CHANNEL
@@ -276,11 +277,12 @@ module esaxi (/*autoarg*/
      if(~s_axi_aresetn) 
        s_axi_wready <= 1'b0;      
      else
-       if( last_wr_beat )
-	 s_axi_wready <= 1'b0;
-       else if( write_active )
-	 s_axi_wready <= ~emwr_progfull;
-
+       begin
+	  if( last_wr_beat )
+	    s_axi_wready <= 1'b0;
+	  else if( write_active )
+	    s_axi_wready <= ~emwr_progfull;
+       end
    
    // implement write response logic generation
    // the write response and response valid signals are asserted by the slave 
@@ -289,9 +291,9 @@ module esaxi (/*autoarg*/
    always @( posedge s_axi_aclk )
      if (~s_axi_aresetn) 
        begin
-          s_axi_bvalid <= 1'b0;
+          s_axi_bvalid      <= 1'b0;
           s_axi_bresp[1:0]  <= 2'b0;
-          b_wait     <= 1'b0;         
+          b_wait            <= 1'b0;         
        end 
      else 
        begin         
@@ -309,12 +311,13 @@ module esaxi (/*autoarg*/
        end // else: !if( s_axi_aresetn == 1'b0 )
 
 
-   assign          last_rd_beat = s_axi_rvalid & s_axi_rlast & s_axi_rready;
-   
 
    //###################################################
    //#READ REQUEST CHANNEL
    //###################################################  
+
+   assign          last_rd_beat = s_axi_rvalid & s_axi_rlast & s_axi_rready;
+
    always @( posedge s_axi_aclk ) 
      if (~s_axi_aresetn) 
        begin	  
@@ -386,44 +389,63 @@ module esaxi (/*autoarg*/
    always @( posedge s_axi_aclk ) 
      if (~s_axi_aresetn) 
        begin
-          emwr_srcaddr[31:0]  <= 32'd0;	 
+          emwr_data_reg[31:0]     <= 32'd0;	  
+          emwr_dstaddr_reg[31:0]  <= 32'd0;	 
+	  emwr_ctrlmode_reg[3:0]  <= 4'd0;
+          emwr_datamode_reg[1:0]  <= 2'd0;
+          emwr_access             <= 1'b0;
+          pre_wr_en               <= 1'b0;
+       end 
+     else 
+       begin
+	  pre_wr_en                 <= s_axi_wready & s_axi_wvalid;
+          emwr_access               <= pre_wr_en;
+	  emwr_ctrlmode_reg[3:0]    <= ecfg_tx_ctrlmode[3:0];//static
+	  emwr_datamode_reg[1:0]    <= axi_awsize[1:0];	
+          emwr_dstaddr_reg[31:2]    <= axi_awaddr[31:2]; //set lsbs of address based on write strobes	 
+
+	  casez(s_axi_wstrb[3:0])
+	    4'b???1://aligned
+	      begin
+		 emwr_data_reg[31:0]   <= s_axi_wdata[31:0];
+	         emwr_dstaddr_reg[1:0] <= 2'd0;
+	      end
+	    4'b??10 : //shift by byte
+	      begin
+		 emwr_data_reg[31:0]   <= {8'd0, s_axi_wdata[31:8]};
+		 emwr_dstaddr_reg[1:0] <= 2'd1;
+	      end
+	    4'b?100 : //shift by two bytes
+	      begin
+		 emwr_data_reg[31:0]   <= {16'd0, s_axi_wdata[31:16]};
+		 emwr_dstaddr_reg[1:0] <= 2'd2;
+	      end
+	    default: //shift by three bytes
+	      begin
+		 emwr_data_reg[31:0]   <= {24'd0, s_axi_wdata[31:24]};
+		 emwr_dstaddr_reg[1:0] <= 2'd3;
+	      end
+	  endcase // casez (s_axi_wstrb[3:0])
+       end // else: !if(~s_axi_aresetn)
+
+//Pipeline stage
+ always @( posedge s_axi_aclk ) 
+     if (~s_axi_aresetn)
+       begin
+	  emwr_srcaddr[31:0]  <= 32'd0;	 
           emwr_data[31:0]     <= 32'd0;	  
           emwr_dstaddr[31:0]  <= 32'd0;	 
 	  emwr_ctrlmode[3:0]  <= 4'd0;
           emwr_datamode[1:0]  <= 2'd0;
-          emwr_access         <= 1'b0;
-          pre_wr_en           <= 1'b0;	//pipeline stage  
-       end 
-     else 
+          emwr_access         <= 1'b0;		 
+       end
+     else
        begin
-	  pre_wr_en               <= s_axi_wready & s_axi_wvalid;
-          emwr_access             <= pre_wr_en;
-	  emwr_ctrlmode[3:0]      <= ecfg_tx_ctrlmode; //multi cycle false path	 
-	  emwr_datamode[1:0]      <= axi_awsize[1:0];	
-          emwr_dstaddr[31:2]      <= axi_awaddr[31:2]; //set lsbs of address based on write strobes	 
-	  emwr_srcaddr[31:0]      <= 32'b0;            //TODO: implement 64 bit write	  
-	  casez(s_axi_wstrb[3:0])
-	    4'b???1://aligned
-	      begin
-		 emwr_data         <= s_axi_wdata[31:0];
-	         emwr_dstaddr[1:0] <= 2'd0;
-	      end
-	    4'b??10 : //shift by byte
-	      begin
-		 emwr_data         <= {8'd0, s_axi_wdata[31:8]};
-		 emwr_dstaddr[1:0] <= 2'd1;
-	      end
-	    4'b?100 : //shift by two bytes
-	      begin
-		 emwr_data         <= {16'd0, s_axi_wdata[31:16]};
-		 emwr_dstaddr[1:0] <= 2'd2;
-	      end
-	    default: //shift by three bytes
-	      begin
-		 emwr_data         <= {24'd0, s_axi_wdata[31:24]};
-		 emwr_dstaddr[1:0] <= 2'd3;
-	      end
-	  endcase // casez (s_axi_wstrb[3:0])
+          emwr_srcaddr[31:0]  <= 32'b0;	  
+          emwr_data[31:0]     <= emwr_data_reg[31:0];	  
+          emwr_dstaddr[31:0]  <= emwr_dstaddr_reg[31:0];	  
+	  emwr_ctrlmode[3:0]  <= emwr_ctrlmode_reg[3:0];	  
+          emwr_datamode[1:0]  <= emwr_datamode_reg[1:0];	  
        end // else: !if(~s_axi_aresetn)
    
    //###################################################

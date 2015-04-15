@@ -121,11 +121,6 @@ module emaxi(/*autoarg*/
    reg [31:0] 		emrr_srcaddr;
    
    //wires
-   wire [31:0] 		axi_araddr;
-   wire [7:0] 		axi_arlen;
-   wire [2:0] 		axi_arsize;
-   wire 		axi_arvalid;
-   wire 		axi_rready;
    wire 		aw_go;
    wire 		w_go;
    wire 		readinfo_wren;
@@ -150,7 +145,7 @@ module emaxi(/*autoarg*/
    //write address channel
    //--------------------
    assign aw_go       = m_axi_awvalid & m_axi_awready;
-   assign w_go        = m_axi_awvalid & m_axi_wready;
+   assign w_go        = m_axi_wvalid & m_axi_wready;
    assign emwr_rd_en  = ( emwr_access & ~awvalid_b & ~wvalid_b);
 
    // generate write-address signals
@@ -270,7 +265,7 @@ module emaxi(/*autoarg*/
               end 
 	    else 
 	      begin
-		 m_axi_wvalid       <= emwr_rd_en;
+		 m_axi_wvalid       <= emwr_rd_en;//todo
 		 m_axi_wdata[63:0]  <= wdata_aligned[63:0];
 		 m_axi_wstrb[7:0]   <= wstrb_aligned[7:0];
               end
