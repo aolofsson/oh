@@ -36,11 +36,10 @@ module dv_elink_tb();
           //tx config  (enable)
    	  dv_elink.elink.ecfg.ecfg_tx_reg[8:0]   = 9'h001;
           //rx config (enable)
-	  dv_elink.elink.ecfg.ecfg_tx_reg[4:0]   = 5'h01;
+	  dv_elink.elink.ecfg.ecfg_rx_reg[4:0]   = 5'h01;
 	 
 	  reset    = 1'b0;    // at time 100 release reset
 	#1000
-          
 	  go       = 1'b1;
 	#2000
 	  datamode = 2'b10;

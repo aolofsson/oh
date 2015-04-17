@@ -266,9 +266,9 @@ module erx_io (/*AUTOARG*/
    always @ (posedge rx_lclk_div4 or posedge rxreset) 
      begin
 	if(rxreset)
-          rxenb_sync <= 'd0;
+          rxenb_sync[1:0] <= 'd0;
 	else
-          rxenb_sync <= {1'b1, rxenb_sync[1]};
+          rxenb_sync[1:0] <= {1'b1, rxenb_sync[1]};
      end
    
    always @ (posedge rx_lclk_div4) 
@@ -276,7 +276,7 @@ module erx_io (/*AUTOARG*/
 	rxgpio_sync       <= {ecfg_rx_gpio_enable, rxgpio_sync[1]};      
 	rx_data_reg[63:0] <= rx_data_des[63:0];
 	rx_data_par[63:0] <= rx_data_reg[63:0];
-	rx_frame_reg[7:0] <= rx_frame_des & {8{rxenb}} & {8{~rxgpio}};     
+	rx_frame_reg[7:0] <= rx_frame_des[7:0] & {8{rxenb}} & {8{~rxgpio}};     
 	rx_frame_par[7:0] <= rx_frame_reg[7:0];
      end
 

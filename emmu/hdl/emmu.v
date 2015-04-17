@@ -11,14 +11,14 @@
  #
  ############################################################################
  */
-
+ 
 module emmu (/*AUTOARG*/
    // Outputs
    mi_dout, emmu_access_out, emmu_write_out, emmu_datamode_out,
    emmu_ctrlmode_out, emmu_dstaddr_out, emmu_srcaddr_out,
    emmu_data_out,
    // Inputs
-   clk, mmu_en, mi_clk, mi_en, mi_we, mi_addr, mi_din,
+   clk, reset, mmu_en, mi_clk, mi_en, mi_we, mi_addr, mi_din,
    emesh_access_in, emesh_write_in, emesh_datamode_in,
    emesh_ctrlmode_in, emesh_dstaddr_in, emesh_srcaddr_in,
    emesh_data_in
@@ -34,6 +34,7 @@ module emmu (/*AUTOARG*/
    /*DATAPATH CLOCk             */
    /*****************************/
    input             clk;
+   input 	     reset;
    
    /*****************************/
    /*MMU LOOKUP DATA            */
@@ -101,6 +102,8 @@ module emmu (/*AUTOARG*/
    //write data
    assign emmu_wr_data[63:0] = {mi_din[31:0], mi_din[31:0]};
 
+
+   
 `ifdef TARGET_XILINX
    memory_dp_48x4096 memory_dp_48x4096(
 				       //write (portA)
@@ -121,15 +124,14 @@ module emmu (/*AUTOARG*/
    assign emmu_lookup_data[47:0]=48'b0;
 				 
 `endif // !`ifdef TARGET_XILINX
-   
 				       
    /*****************************/
    /*EMESH OUTPUT TRANSACTION   */
    /*****************************/   
    //pipeline to compensate for table lookup pipeline 
    //assumes one cycle memory access!     
-
-   always @ (posedge clk)
+  
+   always @ (posedge  clk)
      emmu_access_out               <= emesh_access_in;
    
    always @ (posedge clk)
@@ -147,6 +149,8 @@ module emmu (/*AUTOARG*/
 					     emmu_dstaddr_reg[19:0]} :
 				             {32'b0,emmu_dstaddr_reg[31:0]};
    
+
+
 endmodule // emmu
 // Local Variables:
 // verilog-library-directories:("." "../../stubs/hdl")

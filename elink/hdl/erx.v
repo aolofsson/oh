@@ -289,6 +289,7 @@ module erx (/*AUTOARG*/
 	      .emmu_data_out		(emmu_data[DW-1:0]),	 // Templated
 	      // Inputs
 	      .clk			(rx_lclk_div4),		 // Templated
+	      .reset			(reset),
 	      .mmu_en			(ecfg_rx_mmu_enable),	 // Templated
 	      .mi_clk			(mi_clk),
 	      .mi_en			(mi_en),
