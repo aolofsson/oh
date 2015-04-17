@@ -38,7 +38,7 @@ module emesh_monitor(/*AUTOARG*/
      if(itrace & ~reset & emesh_access & ~emesh_wait)
        begin	     	 
 	  //$fwrite(ftrace, "TIME=%h\n",etime[31:0]);
-	  $fwrite(ftrace, "%h_%h_%h_%h_%h\n",emesh_srcaddr[AW-1:0], emesh_data[DW-1:0],emesh_dstaddr[DW-1:0],emesh_ctrlmode[3:0],{emesh_datamode[1:0],emesh_write,emesh_access});
+	  $fwrite(ftrace, "%h_%h_%h_%h\n",emesh_srcaddr[AW-1:0], emesh_data[DW-1:0],emesh_dstaddr[DW-1:0],{emesh_ctrlmode[3:0],emesh_datamode[1:0],emesh_write,emesh_access});
        end   
 endmodule // emesh_monitor
 
