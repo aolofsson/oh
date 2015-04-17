@@ -324,7 +324,6 @@ reg [8:0] ecfg_rx_datain;
    
 endmodule // erx_io
 
-
 /*
   File: e_rx_io.v
  

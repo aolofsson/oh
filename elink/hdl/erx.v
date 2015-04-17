@@ -17,7 +17,6 @@ module erx (/*AUTOARG*/
    parameter DW   = 32;
    parameter RFAW = 13;
    parameter MW   = 44; //width of MMU lookup table
-   
 
    //Clocks and reset
    input          reset;
@@ -94,13 +93,10 @@ module erx (/*AUTOARG*/
    wire [63:0]		emmu_dstaddr;		// From emmu of emmu.v
    wire [AW-1:0]	emmu_srcaddr;		// From emmu of emmu.v
    wire			emmu_write;		// From emmu of emmu.v
-   wire			emrq_full;		// From m_rq_fifo of fifo_async_emesh.v
    wire			emrq_progfull;		// From m_rq_fifo of fifo_async_emesh.v
    wire			emrq_wr_en;		// From erx_disty of erx_disty.v
-   wire			emrr_full;		// From s_rr_fifo of fifo_async_emesh.v
    wire			emrr_progfull;		// From s_rr_fifo of fifo_async_emesh.v
    wire			emrr_wr_en;		// From erx_disty of erx_disty.v
-   wire			emwr_full;		// From m_wr_fifo of fifo_async_emesh.v
    wire			emwr_progfull;		// From m_wr_fifo of fifo_async_emesh.v
    wire			emwr_wr_en;		// From erx_disty of erx_disty.v
    wire [3:0]		erx_ctrlmode;		// From erx_disty of erx_disty.v
@@ -118,7 +114,10 @@ module erx (/*AUTOARG*/
 
    //regs
    reg [15:0] 	ecfg_rx_debug;
-
+   wire 	emrq_full;
+   wire 	emwr_full;
+   wire 	emrr_full;
+   
    /************************************************************/
    /*FIFOs                                                     */
    /*(for AXI 1. read request, 2. write, and 3. read response) */
@@ -139,7 +138,8 @@ module erx (/*AUTOARG*/
    */
 
    //Read request fifo (from Epiphany)
-   fifo_async_emesh m_rq_fifo(/*AUTOINST*/
+   fifo_async_emesh m_rq_fifo(.fifo_full	(emrq_full),
+			      /*AUTOINST*/
 			      // Outputs
 			      .emesh_access_out	(emrq_access),	 // Templated
 			      .emesh_write_out	(emrq_write),	 // Templated
@@ -148,7 +148,6 @@ module erx (/*AUTOARG*/
 			      .emesh_dstaddr_out(emrq_dstaddr[31:0]), // Templated
 			      .emesh_data_out	(emrq_data[31:0]), // Templated
 			      .emesh_srcaddr_out(emrq_srcaddr[31:0]), // Templated
-			      .fifo_full	(emrq_full),	 // Templated
 			      .fifo_progfull	(emrq_progfull), // Templated
 			      // Inputs
 			      .rd_clk		(m_axi_aclk),	 // Templated
@@ -164,7 +163,8 @@ module erx (/*AUTOARG*/
 			      .fifo_read	(emrq_rd_en));	 // Templated
    
    //Write fifo (from Epiphany)
-   fifo_async_emesh m_wr_fifo(/*AUTOINST*/
+   fifo_async_emesh m_wr_fifo(.fifo_full	(emwr_full),
+			      /*AUTOINST*/
 			      // Outputs
 			      .emesh_access_out	(emwr_access),	 // Templated
 			      .emesh_write_out	(emwr_write),	 // Templated
@@ -173,7 +173,6 @@ module erx (/*AUTOARG*/
 			      .emesh_dstaddr_out(emwr_dstaddr[31:0]), // Templated
 			      .emesh_data_out	(emwr_data[31:0]), // Templated
 			      .emesh_srcaddr_out(emwr_srcaddr[31:0]), // Templated
-			      .fifo_full	(emwr_full),	 // Templated
 			      .fifo_progfull	(emwr_progfull), // Templated
 			      // Inputs
 			      .rd_clk		(m_axi_aclk),	 // Templated
@@ -191,7 +190,7 @@ module erx (/*AUTOARG*/
    
 
    //Read response fifo (for host)
-   fifo_async_emesh s_rr_fifo(
+   fifo_async_emesh s_rr_fifo(.fifo_full	(emrr_full),
 			      .emesh_access_out	(),
 			      .emesh_write_out	(),
 			      .emesh_datamode_out(),
@@ -201,7 +200,6 @@ module erx (/*AUTOARG*/
 			      /*AUTOINST*/
 			      // Outputs
 			      .emesh_data_out	(emrr_data[31:0]), // Templated
-			      .fifo_full	(emrr_full),	 // Templated
 			      .fifo_progfull	(emrr_progfull), // Templated
 			      // Inputs
 			      .rd_clk		(s_axi_aclk),	 // Templated
@@ -254,11 +252,8 @@ module erx (/*AUTOARG*/
 			.emmu_dstaddr	(emmu_dstaddr[31:0]),
 			.emmu_srcaddr	(emmu_srcaddr[31:0]),
 			.emmu_data	(emmu_data[31:0]),
-			.emwr_full	(emwr_full),
 			.emwr_progfull	(emwr_progfull),
-			.emrq_full	(emrq_full),
 			.emrq_progfull	(emrq_progfull),
-			.emrr_full	(emrr_full),
 			.emrr_progfull	(emrr_progfull),
 			.ecfg_rx_enable	(ecfg_rx_enable));
 

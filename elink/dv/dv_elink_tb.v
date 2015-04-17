@@ -1,9 +1,11 @@
 module dv_elink_tb();
-
+   parameter AW=32;
+   parameter DW=32;
+   parameter CW=2;             //number of clocks to send int
 /* verilator lint_off STMTDLY */
-
+/* verilator lint_off UNOPTFLAT */
    //REGS
-   reg           clk;   
+   reg  [1:0]    clk;   
    reg 		 reset;   
    reg 		 go;
    reg [1:0] 	 datamode;
@@ -17,10 +19,17 @@ module dv_elink_tb();
    reg           ext_wr_wait;
    reg           ext_rd_wait;
    reg 		 init;
+
    
    //Forever clock
    always
-     #10 clk = ~clk;
+     #10  clk[0] = ~clk[0];//clock for elink
+    always
+     #100 clk[1] = ~clk[1];//clock for axi interface
+                           //should make variable to really test all fifos
+
+   wire clkstim = clk[1];
+   
    
    //Reset
    initial
@@ -28,8 +37,8 @@ module dv_elink_tb();
 	#0
 	  reset    = 1'b1;    // reset is active
           go       = 1'b0;
-	  clk      = 1'b0;
-	  datamode = 2'b11;	
+	  clk[1:0] = 2'b0;
+	  datamode = 2'b10;	
 	#400 
           //clock config (fast /2)
           dv_elink.elink.ecfg.ecfg_clk_reg[15:0] = 16'h0113;
@@ -40,13 +49,13 @@ module dv_elink_tb();
 	 
 	  reset    = 1'b0;    // at time 100 release reset
 	#1000
-	  go       = 1'b1;
+	  go       = 1'b1;	
 	#2000
-	  datamode = 2'b10;
-	#3000
 	  datamode = 2'b01;
-	#4000
+	#3000
 	  datamode = 2'b00;
+	#4000
+	  go       = 1'b0;
 	#10000	  
 	  $finish;
      end
@@ -55,28 +64,27 @@ module dv_elink_tb();
    //To make this work, we limit the addresses to 64 bit aligned
    
    
-always @ (posedge clk)
-  if(reset)
+always @ (posedge clkstim)
+  if(reset | ~go)
     begin
-       ext_access        <=1'b0; //empty
-       ext_write         <=1'b1;
-       ext_datamode[1:0] <=2'b0;
-       ext_ctrlmode[3:0] <=4'b0;
-       ext_data[31:0]    <=32'b0;
-       ext_dstaddr[31:0] <=32'b0;
-       ext_srcaddr[31:0] <=32'b0;
-       ext_rd_wait       <=1'b0;
-       ext_wr_wait       <=1'b0;
+       ext_access        <= 1'b0; //empty
+       ext_write         <= 1'b1;
+       ext_datamode[1:0] <= 2'b0;
+       ext_ctrlmode[3:0] <= 4'b0;
+       ext_data[31:0]    <= 32'b0;
+       ext_dstaddr[31:0] <= 32'b0;
+       ext_srcaddr[31:0] <= 32'b0;
+       ext_rd_wait       <= 1'b0;
+       ext_wr_wait       <= 1'b0;
     end   
-  else if ((go & ~ext_access) | (ext_access & ~dut_wr_wait))
+  else if (go & ~dut_wr_wait)
+    //else if ((go & ~ext_access) | (go & ext_access & ~dut_wr_wait))    
     begin
        ext_access        <=  1'b1;
        ext_data[31:0]    <=  ext_data[31:0]    + 32'b1;
        ext_dstaddr[31:0] <=  ext_dstaddr[31:0] + 32'd8;//(32'b1<<datamode)
-       ext_srcaddr[31:0] <=  ext_srcaddr[31:0] + 32'd8;//(32'b1<<datamode)
        ext_datamode[1:0] <=  datamode[1:0];
-    end
-   
+    end  
    //Waveform dump
 `ifndef TARGET_VERILATOR
    initial
@@ -106,8 +114,8 @@ always @ (posedge clk)
 		     // Outputs
 		     .dut_passed	(dut_passed),
 		     .dut_failed	(dut_failed),
-		     .dut_wr_wait	(dut_wr_wait),
 		     .dut_rd_wait	(dut_rd_wait),
+		     .dut_wr_wait	(dut_wr_wait),
 		     .dut_access	(dut_access),
 		     .dut_write		(dut_write),
 		     .dut_datamode	(dut_datamode[1:0]),
@@ -116,7 +124,7 @@ always @ (posedge clk)
 		     .dut_srcaddr	(dut_srcaddr[31:0]),
 		     .dut_data		(dut_data[31:0]),
 		     // Inputs
-		     .clk		(clk),
+		     .clk		(clk[CW-1:0]),
 		     .reset		(reset),
 		     .ext_access	(ext_access),
 		     .ext_write		(ext_write),
@@ -125,9 +133,23 @@ always @ (posedge clk)
 		     .ext_dstaddr	(ext_dstaddr[31:0]),
 		     .ext_data		(ext_data[31:0]),
 		     .ext_srcaddr	(ext_srcaddr[31:0]),
-		     .ext_wr_wait	(ext_wr_wait),
-		     .ext_rd_wait	(ext_rd_wait));
+		     .ext_rd_wait	(ext_rd_wait),
+		     .ext_wr_wait	(ext_wr_wait));
   
 endmodule // dv_elink_tb
 
 
+/*
+ Copyright (C) 2014 Adapteva, Inc. 
+ Contributed by Andreas Olofsson <andreas@adapteva.com>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.This program is distributed in the hope 
+ that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
+ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. You should have received a copy 
+ of the GNU General Public License along with this program (see the file 
+ COPYING).  If not, see <http://www.gnu.org/licenses/>.
+ */

@@ -1,15 +1,19 @@
 module dv_elink(/*AUTOARG*/
    // Outputs
-   dut_passed, dut_failed, dut_wr_wait, dut_rd_wait, dut_access,
+   dut_passed, dut_failed, dut_rd_wait, dut_wr_wait, dut_access,
    dut_write, dut_datamode, dut_ctrlmode, dut_dstaddr, dut_srcaddr,
    dut_data,
    // Inputs
    clk, reset, ext_access, ext_write, ext_datamode, ext_ctrlmode,
-   ext_dstaddr, ext_data, ext_srcaddr, ext_wr_wait, ext_rd_wait
+   ext_dstaddr, ext_data, ext_srcaddr, ext_rd_wait, ext_wr_wait
    );
 
+   parameter AW=32;
+   parameter DW=32;
+   parameter CW=2;             //number of clocks to send int
+   
    //Basic
-   input           clk;        // Core clock
+   input  [CW-1:0] clk;        // Core clock
    input           reset;      // Reset
    output          dut_passed; // Indicates passing test
    output          dut_failed; // Indicates failing test
@@ -22,8 +26,8 @@ module dv_elink(/*AUTOARG*/
    input [31:0]    ext_dstaddr;
    input [31:0]    ext_data;
    input [31:0]    ext_srcaddr;      
+   output          dut_rd_wait;
    output          dut_wr_wait;
-   output 	   dut_rd_wait;
 
    //Output Transaction
    output          dut_access;
@@ -33,8 +37,8 @@ module dv_elink(/*AUTOARG*/
    output [31:0]   dut_dstaddr;
    output [31:0]   dut_srcaddr;
    output [31:0]   dut_data;  
-   input           ext_wr_wait;
    input           ext_rd_wait;
+   input           ext_wr_wait;
 
    
    /*AUTOINPUT*/
@@ -132,6 +136,13 @@ module dv_elink(/*AUTOARG*/
    wire [31:0]		emaxi_emwr_dstaddr;	// To emaxi of emaxi.v
    wire [31:0]		emaxi_emwr_srcaddr;	// To emaxi of emaxi.v
    wire 		emaxi_emwr_write;	// To emaxi of emaxi.v
+   wire 		emaxi_emrr_access;	// To emaxi of emaxi.v
+   wire [3:0]		emaxi_emrr_ctrlmode;	// To emaxi of emaxi.v
+   wire [31:0]		emaxi_emrr_data;	// To emaxi of emaxi.v
+   wire [1:0]		emaxi_emrr_datamode;	// To emaxi of emaxi.v
+   wire [31:0]		emaxi_emrr_dstaddr;	// To emaxi of emaxi.v
+   wire [31:0]		emaxi_emrr_srcaddr;	// To emaxi of emaxi.v
+   wire 		emaxi_emrr_write;	// To emaxi of emaxi.v
    
    wire 		esaxi_emrq_access;	// From esaxi of esaxi.v
    wire [3:0]		esaxi_emrq_ctrlmode;	// From esaxi of esaxi.v
@@ -154,9 +165,20 @@ module dv_elink(/*AUTOARG*/
    wire 		embox_not_empty;
    wire 		cclk_p, cclk_n;
    wire 		chip_resetb;
-   
+   wire 		dut_access;		// To dut_monitor of emesh_monitor.v
+   wire [3:0]		dut_ctrlmode;		// To dut_monitor of emesh_monitor.v
+   wire [DW-1:0]	dut_data;		// To dut_monitor of emesh_monitor.v
+   wire [1:0]		dut_datamode;		// To dut_monitor of emesh_monitor.v
+   wire [AW-1:0]	dut_dstaddr;		// To dut_monitor of emesh_monitor.v
+   wire [AW-1:0]	dut_srcaddr;		// To dut_monitor of emesh_monitor.v
+   wire		dut_write;		// To dut_monitor of emesh_monitor.v
    
 
+   //Clocks
+   wire clkin         = clk[0];
+   wire m_axi_aclk    = clk[1];
+   wire s_axi_aclk    = clk[1];
+   
    //Splitting transaction into read/write path
 
    //Read path
@@ -178,13 +200,47 @@ module dv_elink(/*AUTOARG*/
    assign emaxi_emwr_srcaddr[31:0] = ext_srcaddr[31:0];
 
    //Master pushback
-   assign dut_rd_wait           = ~emaxi_emrq_rd_en;
-   assign dut_wr_wait           = ~emaxi_emwr_rd_en;
+   assign dut_rd_wait           = ~emaxi_emrq_rd_en & emaxi_emrq_access;
+   assign dut_wr_wait           = ~emaxi_emwr_rd_en & emaxi_emwr_access;
+   
+   //Getting results back
+   //TODO: deal with collisions later
+   //btw, as I write this muxes...feeling that a datapacket is in order after all.
+   //maybe add a module for converting between packet and explicit signals....
 
+   assign dut_access        = emaxi_emrr_access | esaxi_emwr_access | esaxi_emrq_access;
+
+   assign dut_write         = emaxi_emrr_access ? emaxi_emrr_write :
+			      esaxi_emwr_access ? esaxi_emwr_write :
+                                                  esaxi_emrq_write;
+
+   assign dut_datamode[1:0] = emaxi_emrr_access ? emaxi_emrr_datamode[1:0] :
+			      esaxi_emwr_access ? esaxi_emwr_datamode[1:0] :
+                                                  esaxi_emrq_datamode[1:0];
+
+
+   assign dut_ctrlmode[3:0] = emaxi_emrr_access ? emaxi_emrr_ctrlmode[3:0] :
+			       esaxi_emwr_access ? esaxi_emwr_ctrlmode[3:0] :
+                                                   esaxi_emrq_ctrlmode[3:0];
+
+   assign dut_dstaddr[31:0] = emaxi_emrr_access ? emaxi_emrr_dstaddr[31:0] :
+ 			      esaxi_emwr_access ? esaxi_emwr_dstaddr[31:0] :
+                                                  esaxi_emrq_dstaddr[31:0];
+
+   assign dut_data[31:0] = emaxi_emrr_access ? emaxi_emrr_data[31:0]    :
+ 			   esaxi_emwr_access ? esaxi_emwr_data[31:0] :
+                                               esaxi_emrq_data[31:0];
+
+   assign dut_srcaddr[31:0] = emaxi_emrr_access ? emaxi_emrr_srcaddr[31:0] :
+ 			      esaxi_emwr_access ? esaxi_emwr_srcaddr[31:0] :
+                              esaxi_emrq_srcaddr[31:0];
+
+   
+
+  
    /*emaxi AUTO_TEMPLATE ( 
                         // Outputs
                         .m_\(.*\)         (dv_\1[]),
-                        .emrr_\(.*\)      (dut_\1[]),
                         .em\(.*\)         (emaxi_em\1[]),
                         
                              );
@@ -193,18 +249,18 @@ module dv_elink(/*AUTOARG*/
    //Drive the elink slave AXI interface
    emaxi emaxi(.emrr_progfull		(1'b0),
 	       .m_axi_aresetn		(~reset),
-	       .m_axi_aclk		(clk),
+	       .m_axi_aclk		(m_axi_aclk),
 	       .emwr_rd_en		(emaxi_emwr_rd_en),
 	       .emrq_rd_en		(emaxi_emrq_rd_en),
+	       .emrr_access		(emaxi_emrr_access),
+	       .emrr_write		(emaxi_emrr_write),
+	       .emrr_datamode		(emaxi_emrr_datamode[1:0]),
+	       .emrr_ctrlmode		(emaxi_emrr_ctrlmode[3:0]),
+	       .emrr_dstaddr		(emaxi_emrr_dstaddr[31:0]),
+	       .emrr_data		(emaxi_emrr_data[31:0]),
+	       .emrr_srcaddr		(emaxi_emrr_srcaddr[31:0]),
 	       /*AUTOINST*/
 	       // Outputs
-	       .emrr_access		(dut_access),		 // Templated
-	       .emrr_write		(dut_write),		 // Templated
-	       .emrr_datamode		(dut_datamode[1:0]),	 // Templated
-	       .emrr_ctrlmode		(dut_ctrlmode[3:0]),	 // Templated
-	       .emrr_dstaddr		(dut_dstaddr[31:0]),	 // Templated
-	       .emrr_data		(dut_data[31:0]),	 // Templated
-	       .emrr_srcaddr		(dut_srcaddr[31:0]),	 // Templated
 	       .m_axi_awaddr		(dv_axi_awaddr[31:0]),	 // Templated
 	       .m_axi_awlen		(dv_axi_awlen[7:0]),	 // Templated
 	       .m_axi_awsize		(dv_axi_awsize[2:0]),	 // Templated
@@ -274,7 +330,7 @@ module dv_elink(/*AUTOARG*/
 		.ecfg_coreid		(12'h808),
 		.ecfg_timeout_enable	(1'b0),
 		.s_axi_aresetn		(~reset),
-		.s_axi_aclk		(clk),
+		.s_axi_aclk		(s_axi_aclk),
 		.emwr_access		(esaxi_emwr_access),
 		.emwr_write		(esaxi_emwr_write),
 		.emwr_datamode		(esaxi_emwr_datamode[1:0]),
@@ -354,12 +410,12 @@ module dv_elink(/*AUTOARG*/
 		.rowid			(rowid[3:0]),
 		.s_axi_aresetn		(~reset),
 		.m_axi_aresetn		(~reset),
-		.s_axi_aclk		(clk),
-		.m_axi_aclk		(clk),
+		.s_axi_aclk		(s_axi_aclk),
+		.m_axi_aclk		(m_axi_aclk),
 		.cclk_p			(cclk_p),
 		.cclk_n			(cclk_n),
-		.clkin			(clk),
-		.bypass_clocks          ({clk,clk,clk}),
+		.clkin			(clkin),
+		.bypass_clocks          ({clkin,clkin,clkin}),
 		/*AUTOINST*/
 		// Outputs
 		.rxo_wr_wait_p		(wr_wait_p),		 // Templated
@@ -446,7 +502,77 @@ module dv_elink(/*AUTOARG*/
 		.s_axi_wstrb		(dv_axi_wstrb[3:0]),	 // Templated
 		.s_axi_wvalid		(dv_axi_wvalid));	 // Templated
 
+
+   //Transaction Monitor
+   reg [31:0] 		etime;  
+   always @ (posedge clkin or posedge reset)
+     if(reset)
+       etime[31:0] <= 32'b0;
+     else
+       etime[31:0] <= etime[31:0]+1'b1;
+
+   wire 		itrace = 1'b1;
+
+  /*emesh_monitor AUTO_TEMPLATE ( 
+                        // Outputs
+                        .txo_\(.*\)       (\1[]),
+                        .rxi_\(.*\)       (\1[]),  
+                        .rxo_\(.*\)       (\1[]),
+                        .txi_\(.*\)       (\1[]),  
+                        .s_\(.*\)         (dv_\1[]),
+                        .emesh_\(.*\)     (@"(substring vl-cell-name  0 3)"_\1[]),
+                        .m_axi_rdata	  ({32'b0,elink_axi_rdata[31:0]}), //restricted to slave width
+                        );
+   */
+
+
+   emesh_monitor #(.NAME("stimulus")) ext_monitor (.emesh_wait		((dut_rd_wait | dut_wr_wait)),//TODO:fix collisions
+						   /*AUTOINST*/
+						   // Inputs
+						   .clk			(m_axi_aclk),
+						   .reset		(reset),
+						   .itrace		(itrace),
+						   .etime		(etime[31:0]),
+						   .emesh_access	(ext_access),	 // Templated
+						   .emesh_write		(ext_write),	 // Templated
+						   .emesh_datamode	(ext_datamode[1:0]), // Templated
+						   .emesh_ctrlmode	(ext_ctrlmode[3:0]), // Templated
+						   .emesh_dstaddr	(ext_dstaddr[AW-1:0]), // Templated
+						   .emesh_data		(ext_data[DW-1:0]), // Templated
+						   .emesh_srcaddr	(ext_srcaddr[AW-1:0])); // Templated
+   
+   emesh_monitor #(.NAME("dut")) dut_monitor (.emesh_wait	(1'b0),
+					      /*AUTOINST*/
+					      // Inputs
+					      .clk		(s_axi_aclk),
+					      .reset		(reset),
+					      .itrace		(itrace),
+					      .etime		(etime[31:0]),
+					      .emesh_access	(dut_access),	 // Templated
+					      .emesh_write	(dut_write),	 // Templated
+					      .emesh_datamode	(dut_datamode[1:0]), // Templated
+					      .emesh_ctrlmode	(dut_ctrlmode[3:0]), // Templated
+					      .emesh_dstaddr	(dut_dstaddr[AW-1:0]), // Templated
+					      .emesh_data	(dut_data[DW-1:0]), // Templated
+					      .emesh_srcaddr	(dut_srcaddr[AW-1:0])); // Templated
+
 endmodule // dv_elink
 // Local Variables:
 // verilog-library-directories:("." "../hdl")
 // End:
+
+/*
+ Copyright (C) 2014 Adapteva, Inc. 
+ Contributed by Andreas Olofsson <andreas@adapteva.com>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.This program is distributed in the hope 
+ that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
+ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. You should have received a copy 
+ of the GNU General Public License along with this program (see the file 
+ COPYING).  If not, see <http://www.gnu.org/licenses/>.
+ */
+

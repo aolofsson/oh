@@ -15,8 +15,8 @@ module erx_disty (/*AUTOARG*/
    erx_data,
    // Inputs
    clk, mmu_en, emmu_access, emmu_write, emmu_datamode, emmu_ctrlmode,
-   emmu_dstaddr, emmu_srcaddr, emmu_data, emwr_full, emwr_progfull,
-   emrq_full, emrq_progfull, emrr_full, emrr_progfull, ecfg_rx_enable
+   emmu_dstaddr, emmu_srcaddr, emmu_data, emwr_progfull,
+   emrq_progfull, emrr_progfull, ecfg_rx_enable
    );
 
    parameter [11:0]  C_READ_TAG_ADDR = 12'h810;
@@ -42,17 +42,14 @@ module erx_disty (/*AUTOARG*/
  
    // Master FIFO port, writes
    output         emwr_wr_en;
-   input          emwr_full;       // full flags for debug only
    input          emwr_progfull;
    
    // Master FIFO port, read requests
    output         emrq_wr_en;
-   input          emrq_full;
    input          emrq_progfull;
    
    // Master FIFO port, read responses
    output         emrr_wr_en;
-   input          emrr_full;
    input          emrr_progfull;
 
    //Master Transaction for all FIFOs
@@ -81,12 +78,6 @@ module erx_disty (/*AUTOARG*/
    reg            emrq_wr_en;
    reg            emrr_wr_en;
 
-   reg [1:0] 	  rxmmu_sync;
-
-   //############
-   //# WIRES
-   //############
-   wire           rxmmu = rxmmu_sync[0];
    
    //############
    //# PIPELINE AND DISTRIBUTE
