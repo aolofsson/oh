@@ -32,7 +32,7 @@ module dv_elink_tb();
 	  datamode = 2'b11;	
 	#400 
           //clock config (fast /2)
-          dv_elink.elink.ecfg.ecfg_clk_reg[15:0] = 16'h0011;
+          dv_elink.elink.ecfg.ecfg_clk_reg[15:0] = 16'h0113;
           //tx config  (enable)
    	  dv_elink.elink.ecfg.ecfg_tx_reg[8:0]   = 9'h001;
           //rx config (enable)
