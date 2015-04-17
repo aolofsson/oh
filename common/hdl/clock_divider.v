@@ -40,19 +40,18 @@ module clock_divider(/*AUTOARG*/
 
    always @ (divcfg[3:0])
      casez (divcfg[3:0])
-	  4'b0110 : divcfg_dec[7:0] = 8'b00000010;  // Divide by 2
-	  4'b0101 : divcfg_dec[7:0] = 8'b00000100;  // Divide by 4
+	  4'b0010 : divcfg_dec[7:0] = 8'b00000010;  // Divide by 2
+	  4'b0011 : divcfg_dec[7:0] = 8'b00000100;  // Divide by 4
 	  4'b0100 : divcfg_dec[7:0] = 8'b00001000;  // Divide by 8
-	  4'b0011 : divcfg_dec[7:0] = 8'b00010000;  // Divide by 16
-	  4'b0010 : divcfg_dec[7:0] = 8'b00100000;  // Divide by 32
-          4'b0001 : divcfg_dec[7:0] = 8'b01000000;  // Divide by 64
-          4'b0000 : divcfg_dec[7:0] = 8'b10000000;  // Divide by 128
+	  4'b0101 : divcfg_dec[7:0] = 8'b00010000;  // Divide by 16
+	  4'b0110 : divcfg_dec[7:0] = 8'b00100000;  // Divide by 32
+          4'b0111 : divcfg_dec[7:0] = 8'b01000000;  // Divide by 64
 	  default : divcfg_dec[7:0] = 8'b0000000;   // others
 	endcase
    
    //Divide by two special case
-   assign div2_sel = divcfg[3:0]==4'b0110;
-   assign div1_sel = divcfg[3:0]==4'b0111;
+   assign div2_sel = divcfg[3:0]==4'b0010;
+   assign div1_sel = divcfg[3:0]==4'b0001;
     
    always @ (posedge clkin or posedge reset)
      if(reset)

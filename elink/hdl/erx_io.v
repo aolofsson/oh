@@ -102,7 +102,7 @@ module erx_io (/*AUTOARG*/
    clkout_bufr
      (.O (rx_lclk_div4),
       .CE(1'b1),
-      .CLR(1'b0),
+      .CLR(reset),
       .I (rx_lclk));
 
    //#############################

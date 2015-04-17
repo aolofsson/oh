@@ -31,11 +31,11 @@ module dv_elink_tb();
 	  clk      = 1'b0;
 	  datamode = 2'b11;	
 	#400 
-          //clock config
-          dv_elink.elink.ecfg.ecfg_clk_reg[15:0] = 16'h0066;
-          //tx config 
+          //clock config (fast /2)
+          dv_elink.elink.ecfg.ecfg_clk_reg[15:0] = 16'h0011;
+          //tx config  (enable)
    	  dv_elink.elink.ecfg.ecfg_tx_reg[8:0]   = 9'h001;
-          //rx config
+          //rx config (enable)
 	  dv_elink.elink.ecfg.ecfg_tx_reg[4:0]   = 5'h01;
 	 
 	  reset    = 1'b0;    // at time 100 release reset

@@ -30,29 +30,47 @@
                   11 - reserved
   -------------------------------------------------------------
  ESYSCLK          ***Epiphany clock frequency setting*** 
- [3:0]            Output divider
-                  0000 - CLKIN/128
-                  0001 - CLKIN/64
-                  0010 - CLKIN/32
-                  0011 - CLKIN/16
-                  0100 - CLKIN/8
-                  0101 - CLKIN/4
-                  0110 - CLKIN/2
-                  0111 - CLKIN/1 (full speed)
-                  1XXX - RESERVED
- [7:4]            Elink Transmit Clock
-                  0000 - CLKIN/128
-                  0001 - CLKIN/64
-                  0010 - CLKIN/32
-                  0011 - CLKIN/16
-                  0100 - CLKIN/8
-                  0101 - CLKIN/4
-                  0110 - CLKIN/2
-                  0111 - CLKIN/1 (full speed)
-                  1XXX - RESERVED
- [11:8]           PLL settings (TBD)
- [12]             CCLK PLL bypass mode (cclk is set to clkin)
- [13]             LCLK PLL bypass mode (lclk is set to clkin)
+ [0]              Enable CCLK
+ [1]              Enable TX_LCLK
+ [2]              CCLK PLL bypass mode (cclk is set to clkin)
+ [3]              LCLK PLL bypass mode (lclk is set to clkin) 
+ [7:4]            CCLK PLL Divider (1<<reg)
+                  0000 - CLKIN/1
+                  0001 - CLKIN/2
+                  0010 - CLKIN/4
+                  0011 - CLKIN/8
+                  0100 - CLKIN/16
+                  0101 - CLKIN/32
+                  0110 - CLKIN/64
+                  0111 - CLKIN/128
+                  1xxx - RESERVED                  
+ [11:8]           Elink PLL Divider (1<<reg)
+                  0000 - CLKIN/1
+                  0001 - CLKIN/2
+                  0010 - CLKIN/4
+                  0011 - CLKIN/8
+                  0100 - CLKIN/16
+                  0101 - CLKIN/32
+                  0110 - CLKIN/64
+                  0111 - CLKIN/128
+                  1xxx - RESERVED                 
+ [15:12]          PLL Frequency
+                  0000 - 
+                  0001 -
+                  0010 -
+                  0011 -
+                  0100 -
+                  0101 -
+                  0110 -
+                  0111 -
+                  1000 -
+                  1001 -
+                  1010 -
+                  1011 -
+                  1100 -
+                  1101 -
+                  1110 -
+                  1111 -
  -------------------------------------------------------------
  ESYSCOREID     ***CORE ID***
  [5:0]           Column ID-->default at powerup/reset             
@@ -130,6 +148,7 @@ module ecfg (/*AUTOARG*/
    parameter RFAW            = 5;         // 32 registers for now
    parameter DEFAULT_COREID  = 12'h808;   // reset value for ecfg_coreid
    parameter DEFAULT_VERSION = 16'h0000;  // reset value for version
+   parameter DEFAULT_CLKDIV  = 4'd7;
    
    /******************************/
    /*HARDWARE RESET (EXTERNAL)   */
@@ -270,7 +289,7 @@ module ecfg (/*AUTOARG*/
    //###########################
     always @ (posedge mi_clk)
      if(hard_reset)
-       ecfg_clk_reg[15:0] <= 16'h0000;
+       ecfg_clk_reg[15:0] <= {8'b0,DEFAULT_CLKDIV,DEFAULT_CLKDIV};
      else if (ecfg_clk_write)
        ecfg_clk_reg[15:0] <= mi_din[15:0];
 

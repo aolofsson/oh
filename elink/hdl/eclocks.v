@@ -250,7 +250,7 @@ endgenerate
 				  // Inputs
 				  .clkin	(clkin),
 				  .reset        (hard_reset),
-				  .divcfg	(ecfg_clk_settings[7:4] - 4'd2)
+				  .divcfg	(ecfg_clk_settings[7:4] + 4'd2)
 				  );
 
    
