@@ -83,10 +83,16 @@ module fifo_async_emesh (/*AUTOARG*/
 					);
    
 `elsif TARGET_CLEAN
+
+   wire 	 tmp_progfull;    
+   assign fifo_progfull = tmp_progfull | fifo_full;//HACK, need to fix this
+   
+
   fifo_async #(.DW(104), .AW(5))  fifo_async (
-					.rd_data	(fifo_dout[103:0]),
-					.wr_fifo_full	(fifo_progfull),
-					.rd_fifo_empty	(fifo_empty),
+					.rd_data	  (fifo_dout[103:0]),
+					.wr_fifo_progfull (tmp_progfull),
+					.wr_fifo_full	  (fifo_full),
+					.rd_fifo_empty	  (fifo_empty),
 					//inputs
 					.reset		(reset),
 					.wr_clk		(wr_clk),

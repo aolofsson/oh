@@ -2,7 +2,7 @@
 module fifo_async 
    (/*AUTOARG*/
    // Outputs
-   rd_data, rd_fifo_empty, wr_fifo_full,
+   rd_data, rd_fifo_empty, wr_fifo_full, wr_fifo_progfull,
    // Inputs
    reset, wr_clk, rd_clk, wr_write, wr_data, rd_read
    );
@@ -27,6 +27,7 @@ module fifo_async
    output [DW-1:0] rd_data;
    output          rd_fifo_empty;
    output          wr_fifo_full;
+   output          wr_fifo_progfull;
 
    //Wires
    wire [DW/8-1:0] wr_en;
@@ -67,7 +68,8 @@ module fifo_async
    //Write State Machine
    fifo_full_block #(.AW(AW)) fifo_full_block(
 					      // Outputs
-					      .wr_fifo_full	(wr_fifo_full),
+					      .wr_fifo_progfull	(wr_fifo_progfull),
+					      .wr_fifo_full	(wr_fifo_full),					      
 					      .wr_addr		(wr_addr[AW-1:0]),
 					      .wr_gray_pointer	(wr_gray_pointer[AW:0]),
 					      // Inputs
