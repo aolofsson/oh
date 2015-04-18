@@ -1,10 +1,10 @@
- ###DESCRIPTION
+###DESCRIPTION
  The "elink" is a low-latency/high-speed interface for communicating between 
  FPGAs and ASICs (such as Epiphany) that implement the elink protocol.
  The interface "should" achieve a peak throughput of 8 Gbit/s in FPGAs with 
  24 available LVDS signal pairs.  
  
- ###ELINK INTERFACE I/O SIGNALS
+###ELINK INTERFACE I/O SIGNALS
    
   SIGNAL         |DIR| DESCRIPTION 
   ---------------|---|--------------
@@ -30,12 +30,15 @@
   embox_not_empty| O | Mailbox not empty (connect to interrupt line)   
   embox_full     | O | Mailbox is full indicator
  
- ###BUS INTERFACE
+###BUS INTERFACE
 
  The elink has a 64 bit data AXI master and 32-bit data AXI slave interface 
  for connecting to a standard AXI network.
  
- ###EMESH PACKET
+###EMESH PACKET FORMAT
+ The elink was born out of a need to connect multiple Epiphany chips together
+ and uses the eMesh 104 bit atomic packet structure for communication. 
+ The eMesh atomic packet consists of the following sub fields.
  
  PACKET SUBFIELD | DESCRIPTION 
  ----------------|----------------
@@ -46,15 +49,8 @@
  dstraddr[31:0]  | Address for write, read-request, or read-responses
  data[31:0]      | Data for write transaction, return data for read response
  srcaddr[31:0]   | Return address for read-request, upper data for 64 bit write
- 
- ###PACKET-FORMAT:
- 
- The elink was born out of a need to connect multiple Epiphany chips together
- and uses the eMesh 104 bit atomic packet structure for communication. 
- The eMesh atomic packet consists of the following sub fields.
 
- 
- ###FRAMING:
+###PACKET FRAMING
   
  The number of bytes to be received is determined by the data of the first 
  “valid” byte (byte0) and the level of the FRAME signal. The data captured 
@@ -68,7 +64,7 @@
  last byte of the previous transaction (byte8 or byte12) will be followed 
  by byte5 of the new transaction. 
  
- ###PUSHBACK:
+###PUSHBACK
  
  The WAIT_RD and WAIT_WR signals are used to stall transmission when a receiver
  is unable to accept more transactions. The receiver will raise its WAIT output
@@ -89,13 +85,13 @@
  to indicate to the transmit logic that no more transactions can be received 
  because the receiver buffer full. 
  
- ###ELINK MEMORY MAP
+###ELINK MEMORY MAP
  
  The elink has an parameter called 'ELINKID' that can be configured by 
  the module instantiating the elink. 
  
- REGISTER    | ADDRESS | NOTES 
- ------------| --------|------
+ REGISTER    |ADDRESS  |NOTES 
+ ------------|---------|--------------------------------------------
  ESYSRESET   | 0xF0000 | Soft reset
  ESYSTX      | 0xF0004 | Elink tranmit config
  ESYSRX      | 0xF0008 | Elink receiver config
@@ -110,13 +106,13 @@
  ESYSMMURX   | 0xE0000 | Start of receiver MMU lookup table
  ESYSMMUTX   | 0xD0000 | Start of transmit MMU lookup table (tbd)
           
- ###ELINK CONFIGURATION REGISTERS
+###ELINK CONFIGURATION REGISTERS
  REGISTER   | DESCRIPTION 
- ---------- | --------------
+ ---------- | --------------------------------------------------
  ESYSRESET  | (elink reset register)
  [0]        | 0:  elink is active
             | 1:  elink in reset
- ---------- |-------------------
+ ---------- |---------------------------------------------------
  ESYSTX     | (elink transmit configuration register)
  [0]        | 0:  TX disable
             | 1:  TX enable
@@ -127,7 +123,7 @@
             | 1x: reserved
  [7:4]      | Transmit control mode for eMesh
  [8]        | AXI slave read timeout enable
- ---------- |-------------------
+ -----------|----------------------------------------------------
  ESYSRX     | (elink receive configuration register)
  [0]        | 0:  elink RX disable
             | 1:  elink RX enable
@@ -136,7 +132,7 @@
  [3:2]      | 00: default elink packet receive mode
             | 01: stores input pin data in ESYSDATAIN register
             | 1x: reserved
- ---------- |-------------------
+ -----------|---------------------------------------------------
  ESYSCLk    | (elink PLL configuration register)
  [0]        | 0:cclk clock disabled
             | 1:cclk clock enabled 
@@ -165,27 +161,27 @@
             | 0111: lclk=pllclk/128
             | 1xxx: RESERVED        
  [15:12]    | PLL frequency
- ---------- |-------------------
+ -----------|-------------------------------------------------
  ESYSCOREID | (coordinate ID for Epiphany)
  [5:0]      | Column ID for connected Epiphany chip
  [11:6]     | Row ID for connected Epiphany chip  
- -------------------------------------------------------------
- ESYSLATFORM| (platform ID)
+ -----------|-------------------------------------------------
+ ESYSID     | (platform and version ID)
  [7:0]      | Platform model number
  [7:0]      | Revision number
- -------------------------------------------------------------
+ -----------|-------------------------------------------------
  ESYSDATAIN | (data on elink input pins)
  [7:0]      | rx_data[7:0]         
  [8]        | tx_frame
  [9]        | tx_wait_rd
  [10]       | tx_wait_wr
- -------------------------------------------------------------
+ -----------|-------------------------------------------------
  ESYSDATAOUT| (data on eLink output pins)
  [7:0]      | tx_data[7:0]         
  [8]        | tx_frame
  [9]        | rx_wait_rd
  [10]       | rx_wait_wr
- -------------------------------------------------------------
+ -----------|-------------------------------------------------
  ESYSDEBUG  | (various debug signals from elink) 
  [31]       | embox_not_empty
  [30]       | emesh_rx_rd_wait
