@@ -87,7 +87,7 @@ module esaxi (/*autoarg*/
    input 	      s_axi_aresetn;
    
    //Read address channel
-   input [29:0]       s_axi_araddr;
+   input [31:0]       s_axi_araddr;
    input [1:0] 	      s_axi_arburst;
    input [3:0] 	      s_axi_arcache;
    input [7:0] 	      s_axi_arlen;
@@ -98,7 +98,7 @@ module esaxi (/*autoarg*/
    input 	      s_axi_arvalid;
    
    //Write address channel
-   input [29:0]       s_axi_awaddr;
+   input [31:0]       s_axi_awaddr;
    input [1:0] 	      s_axi_awburst;
    input [3:0] 	      s_axi_awcache;
    input [7:0] 	      s_axi_awlen;
@@ -159,14 +159,14 @@ module esaxi (/*autoarg*/
    reg 		      write_active;
    reg 		      b_wait;      // waiting to issue write response (unlikely?)
    
-   reg 		      emwr_access;
+   reg 		      emwr_access_all;
    reg [3:0] 	      emwr_ctrlmode;
    reg [1:0] 	      emwr_datamode;
    reg [31:0] 	      emwr_dstaddr;
    reg [31:0] 	      emwr_data;
    reg [31:0] 	      emwr_srcaddr;  //upper 32 bits in case 64 bit writes are supported
 
-   reg 		      emrq_access;
+   reg 		      emrq_access_all;
    reg [3:0] 	      emrq_ctrlmode;
    reg [1:0] 	      emrq_datamode;
    reg [31:0] 	      emrq_dstaddr;
@@ -199,6 +199,7 @@ module esaxi (/*autoarg*/
    //addr_lsb = 3 for 64 bits (n downto 3)
    //TODO? Do we really need this?
    localparam integer            addr_lsb = 2;
+   wire [11:0] 			 elinkid=ELINKID;
 
    //###################################################
    //#WRITE ADDRESS CHANNEL
@@ -248,13 +249,9 @@ module esaxi (/*autoarg*/
        begin	  
           if( s_axi_awready & s_axi_awvalid ) 
 	    begin	     
-	       //TODO: If we support only one host read, why the need?
-               //s_axi_bid      <= s_axi_awid;
-	       //TODO: something is wrong here!!!
-               axi_awaddr[31:0]   <= { ecfg_coreid[11:c_s_axi_addr_width-20],
-				       s_axi_awaddr[29:0] };
-               axi_awsize   <= s_axi_awsize;  // 0=byte, 1=16b, 2=32b
-               axi_awburst  <= s_axi_awburst; // type, 0=fixed, 1=incr, 2=wrap
+               axi_awaddr[31:0] <= s_axi_awaddr[31:0];
+               axi_awsize       <= s_axi_awsize;  // 0=byte, 1=16b, 2=32b
+               axi_awburst      <= s_axi_awburst; // type, 0=fixed, 1=incr, 2=wrap
 	       
             end 
 	  else if( s_axi_wvalid & s_axi_wready ) 
@@ -354,13 +351,12 @@ module esaxi (/*autoarg*/
 	begin         
          if( s_axi_arready & s_axi_arvalid ) 
 	   begin
-	      //TODO: something is wrong..
-              axi_araddr[31:0]  <= { ecfg_coreid[11:c_s_axi_addr_width-20],
-				     s_axi_araddr[29:0] };     // start address of transfer
-              axi_arlen   <= s_axi_arlen;
-              axi_arburst <= s_axi_arburst;
-              axi_arsize  <= s_axi_arsize;
-              s_axi_rlast   <= ~(|s_axi_arlen);
+	      //NOTE: upper 2 bits get chopped by Zynq
+              axi_araddr[31:0]  <= s_axi_araddr[31:0]; //transfer start address
+              axi_arlen         <= s_axi_arlen;
+              axi_arburst       <= s_axi_arburst;
+              axi_arsize        <= s_axi_arsize;
+              s_axi_rlast       <= ~(|s_axi_arlen);
               //s_axi_rid     <= s_axi_arid;              
          end 
 	 else if( s_axi_rvalid & s_axi_rready) 
@@ -393,17 +389,17 @@ module esaxi (/*autoarg*/
           emwr_dstaddr_reg[31:0]  <= 32'd0;	 
 	  emwr_ctrlmode_reg[3:0]  <= 4'd0;
           emwr_datamode_reg[1:0]  <= 2'd0;
-          emwr_access             <= 1'b0;
+          emwr_access_all         <= 1'b0;
           pre_wr_en               <= 1'b0;
        end 
      else 
        begin
 	  pre_wr_en                 <= s_axi_wready & s_axi_wvalid;
-          emwr_access               <= pre_wr_en;
+          emwr_access_all           <= pre_wr_en;
 	  emwr_ctrlmode_reg[3:0]    <= ecfg_tx_ctrlmode[3:0];//static
 	  emwr_datamode_reg[1:0]    <= axi_awsize[1:0];	
           emwr_dstaddr_reg[31:2]    <= axi_awaddr[31:2]; //set lsbs of address based on write strobes	 
-	  if(s_axi_wstrb[0])
+	  if(s_axi_wstrb[0] | (axi_awsize[1:0]==2'b10))
 	    begin
 	       emwr_data_reg[31:0]   <= s_axi_wdata[31:0];
 	       emwr_dstaddr_reg[1:0] <= 2'd0;
@@ -434,7 +430,6 @@ module esaxi (/*autoarg*/
           emwr_dstaddr[31:0]  <= 32'd0;	 
 	  emwr_ctrlmode[3:0]  <= 4'd0;
           emwr_datamode[1:0]  <= 2'd0;
-          emwr_access         <= 1'b0;		 
        end
      else
        begin
@@ -444,6 +439,9 @@ module esaxi (/*autoarg*/
 	  emwr_ctrlmode[3:0]  <= emwr_ctrlmode_reg[3:0];	  
           emwr_datamode[1:0]  <= emwr_datamode_reg[1:0];	  
        end // else: !if(~s_axi_aresetn)
+
+   assign emwr_access=emwr_access_all & ~(emwr_dstaddr[31:20]==elinkid[11:0]);
+   
    
    //###################################################
    //#READ REQUEST (DATA CHANNEL)
@@ -470,7 +468,7 @@ module esaxi (/*autoarg*/
    always @( posedge s_axi_aclk )
      if (~s_axi_aresetn) 
        begin
-	  emrq_access         <= 1'b0;      
+	  emrq_access_all     <= 1'b0;      
 	  emrq_datamode[1:0]  <= 2'd0;
 	  emrq_ctrlmode[3:0]  <= 4'd0;
 	  emrq_dstaddr[31:0]  <= 32'd0;
@@ -482,7 +480,7 @@ module esaxi (/*autoarg*/
        begin
           ractive_reg         <= read_active; //read request state machone
           rnext               <= s_axi_rvalid & s_axi_rready & ~s_axi_rlast;         
-          emrq_access         <= ( ~ractive_reg & read_active ) | rnext;         
+          emrq_access_all     <= ( ~ractive_reg & read_active ) | rnext;         
 	  emrq_datamode[1:0]  <= axi_arsize[1:0];
 	  emrq_ctrlmode[3:0]  <= ecfg_tx_ctrlmode;	  
 	  emrq_dstaddr[31:0]  <= axi_araddr[31:0];
@@ -514,18 +512,18 @@ module esaxi (/*autoarg*/
            s_axi_rvalid <= 1'b0;
 	end // else: !if( s_axi_aresetn == 1'b0 )
 
-
-   
+   assign emrq_access=emrq_access_all & ~(emrq_dstaddr[31:20]==elinkid[11:0]);
+  
    //###################################################
    //#Register Inteface Logic
    //###################################################  
-   
-   
+
+        
    assign mi_clk = s_axi_aclk;
    
    //Register file access (from slave)
-   assign mi_wr = emwr_access & (emwr_dstaddr[31:20]==ELINKID);   
-   assign mi_rd = emrq_access & (emrq_dstaddr[31:20]==ELINKID);
+   assign mi_wr = emwr_access_all & (emwr_dstaddr[31:20]==elinkid[11:0]);   
+   assign mi_rd = emrq_access_all & (emrq_dstaddr[31:20]==elinkid[11:0]);
    
    //Only 32 bit writes supported
    assign mi_we         =  mi_wr;   
@@ -539,8 +537,9 @@ module esaxi (/*autoarg*/
    assign mi_ecfg_sel     = mi_en & (mi_addr[19:16]==`EGROUP_MMR);
    assign mi_rx_emmu_sel  = mi_en & (mi_addr[19:16]==`EGROUP_RXMMU);
    assign mi_tx_emmu_sel  = mi_en & (mi_addr[19:16]==`EGROUP_TXMMU);
-   assign mi_embox_sel    = mi_en & (mi_addr[19:16]==`EGROUP_EMBOX);
-   				  
+   assign mi_embox_sel    = mi_ecfg_sel & (mi_addr[6:2]==`EMBOXLO |
+					  mi_addr[6:2]==`EMBOXHI)
+					  ;			   
    //Data
    assign mi_din[31:0]     = emwr_data[31:0];
 	 
@@ -550,7 +549,8 @@ module esaxi (/*autoarg*/
 	mi_ecfg_reg    <= mi_ecfg_sel;
 	mi_rx_emmu_reg <= mi_rx_emmu_sel;	
 	mi_tx_emmu_reg <= mi_tx_emmu_sel;
-	mi_embox_reg   <= mi_embox_sel;
+	//feel hacky, clean up?
+	mi_embox_reg   <= mi_embox_sel;	
 	mi_rd_reg      <= mi_rd;
      end
 
