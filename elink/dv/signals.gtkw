@@ -1,0 +1,66 @@
+[*]
+[*] GTKWave Analyzer v3.3.64 (w)1999-2014 BSI
+[*] Sat Apr 18 20:41:55 2015
+[*]
+[dumpfile] "/home/aolofsson/Work_all/parallella-hw/fpga/src/elink/dv/test.vcd"
+[dumpfile_mtime] "Sat Apr 18 20:06:59 2015"
+[dumpfile_size] 1981983
+[savefile] "/home/aolofsson/Work_all/parallella-hw/fpga/src/elink/dv/signals.gtkw"
+[timestart] 1018000000000000
+[size] 1920 1171
+[pos] -1 -1
+*-49.728096 1073000000000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] dv_elink_tb.
+[treeopen] dv_elink_tb.dv_elink.
+[treeopen] dv_elink_tb.dv_elink.elink.
+[sst_width] 223
+[signals_width] 380
+[sst_expanded] 1
+[sst_vpaned_height] 353
+@28
+dv_elink_tb.dv_elink.elink.reset
+dv_elink_tb.dv_elink.elink.eclocks.clkin
+dv_elink_tb.dv_elink.elink.cclk_p
+dv_elink_tb.dv_elink.lclk_p
+dv_elink_tb.dv_elink.elink.etx.tx_lclk
+dv_elink_tb.dv_elink.elink.etx.tx_lclk_par
+dv_elink_tb.dv_elink.elink.erx.rx_lclk_div4
+dv_elink_tb.dv_elink.elink.etx.m_axi_aclk
+dv_elink_tb.dv_elink.elink.etx.s_axi_aclk
+dv_elink_tb.dv_elink.frame_p
+@22
+dv_elink_tb.dv_elink.data_p[7:0]
+@28
+dv_elink_tb.dv_elink.elink.ecfg.ecfg_reset_reg
+@22
+dv_elink_tb.dv_elink.elink.ecfg.ecfg_clk_reg[15:0]
+dv_elink_tb.dv_elink.elink.ecfg.ecfg_tx_reg[8:0]
+dv_elink_tb.dv_elink.elink.ecfg.ecfg_rx_reg[4:0]
+dv_elink_tb.dv_elink.elink.ecfg.ecfg_datain_reg[10:0]
+dv_elink_tb.dv_elink.elink.ecfg.ecfg_coreid_reg[11:0]
+dv_elink_tb.dv_elink.elink.ecfg.ecfg_version_reg[15:0]
+dv_elink_tb.dv_elink.elink.ecfg.ecfg_dataout_reg[10:0]
+@c00022
+dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
+@28
+(0)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
+(1)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
+(2)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
+(3)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
+(4)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
+(5)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
+(6)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
+(7)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
+@1401200
+-group_end
+@28
+dv_elink_tb.ext_access
+@22
+dv_elink_tb.ext_dstaddr[31:0]
+dv_elink_tb.dut_dstaddr[31:0]
+@28
+dv_elink_tb.dut_access
+@29
+dv_elink_tb.dv_elink.embox_not_empty
+[pattern_trace] 1
+[pattern_trace] 0
