@@ -1,28 +1,30 @@
 /*
  ########################################################################
  Epiphany eLink AXI Master Module
- ########################################################################
- 
+ ######################################################################## 
  */
 
 module emaxi(/*autoarg*/
    // Outputs
    emwr_rd_en, emrq_rd_en, emrr_access, emrr_write, emrr_datamode,
-   emrr_ctrlmode, emrr_dstaddr, emrr_data, emrr_srcaddr, m_axi_awaddr,
-   m_axi_awlen, m_axi_awsize, m_axi_awburst, m_axi_awcache,
-   m_axi_awprot, m_axi_awqos, m_axi_awvalid, m_axi_wdata, m_axi_wstrb,
-   m_axi_wlast, m_axi_wvalid, m_axi_bready, m_axi_araddr, m_axi_arlen,
-   m_axi_arsize, m_axi_arburst, m_axi_arcache, m_axi_arprot,
-   m_axi_arqos, m_axi_arvalid, m_axi_rready,
+   emrr_ctrlmode, emrr_dstaddr, emrr_data, emrr_srcaddr, m_axi_awid,
+   m_axi_awaddr, m_axi_awlen, m_axi_awsize, m_axi_awburst,
+   m_axi_awlock, m_axi_awcache, m_axi_awprot, m_axi_awqos,
+   m_axi_awvalid, m_axi_wid, m_axi_wdata, m_axi_wstrb, m_axi_wlast,
+   m_axi_wvalid, m_axi_bready, m_axi_arid, m_axi_araddr, m_axi_arlen,
+   m_axi_arsize, m_axi_arburst, m_axi_arlock, m_axi_arcache,
+   m_axi_arprot, m_axi_arqos, m_axi_arvalid, m_axi_rready,
    // Inputs
    emwr_access, emwr_write, emwr_datamode, emwr_ctrlmode,
    emwr_dstaddr, emwr_data, emwr_srcaddr, emrq_access, emrq_write,
    emrq_datamode, emrq_ctrlmode, emrq_dstaddr, emrq_data,
    emrq_srcaddr, emrr_progfull, m_axi_aclk, m_axi_aresetn,
-   m_axi_awready, m_axi_wready, m_axi_bresp, m_axi_bvalid,
-   m_axi_arready, m_axi_rdata, m_axi_rresp, m_axi_rlast, m_axi_rvalid
+   m_axi_awready, m_axi_wready, m_axi_bid, m_axi_bresp, m_axi_bvalid,
+   m_axi_arready, m_axi_rid, m_axi_rdata, m_axi_rresp, m_axi_rlast,
+   m_axi_rvalid
    );
 
+   parameter IDW = 12;
    
    // fifo read-master port, writes from rx
    input 	       emwr_access;
@@ -60,38 +62,55 @@ module emaxi(/*autoarg*/
    /*****************************/  
    
    input  	       m_axi_aclk;    // global clock signal.
-   input  	       m_axi_aresetn; // global reset singal. this signal is active low   
+   input  	       m_axi_aresetn; // global reset singal.
+
+   //Write address channel
+   output [IDW-1:0]    m_axi_awid;    // write address ID
    output [31 : 0]     m_axi_awaddr;  // master interface write address   
-   output [7 : 0]      m_axi_awlen;   // burst length. the burst length gives the exact number of transfers in a burst		
-   output [2 : 0]      m_axi_awsize;  // burst size. this signal indicates the size of each transfer in the burst
-   output [1 : 0]      m_axi_awburst; // burst type. the burst type and the size information; 
-   output [3 : 0]      m_axi_awcache; // memory type. this signal indicates how transactions
-   output [2 : 0]      m_axi_awprot;  // protection type. this signal indicates the privilege
-   output [3 : 0]      m_axi_awqos;   // quality of service; qos identifier sent for each write transaction.       
-   output 	       m_axi_awvalid; // write address valid.channel is signaling valid write address and control information.
-   input 	       m_axi_awready; // write address ready.the slave is ready to accept an address and associated control signals
+   output [7 : 0]      m_axi_awlen;   // burst length.
+   output [2 : 0]      m_axi_awsize;  // burst size.
+   output [1 : 0]      m_axi_awburst; // burst type.
+   output [1 : 0]      m_axi_awlock;  // lock type   
+   output [3 : 0]      m_axi_awcache; // memory type.
+   output [2 : 0]      m_axi_awprot;  // protection type.
+   output [3 : 0]      m_axi_awqos;   // quality of service
+   output 	       m_axi_awvalid; // write address valid
+   input 	       m_axi_awready; // write address ready
+
+   //Write data channel
+   output [IDW-1:0]    m_axi_wid;     
    output [63 : 0]     m_axi_wdata;   // master interface write data.
-   output [7 : 0]      m_axi_wstrb;   // write strobes.indicates which byte lanes hold valid data
-   output 	       m_axi_wlast;   // write last. indicates the last transfer in a write burst.
-   output 	       m_axi_wvalid;  // write valid. indicates that valid write data and strobes are available
-   input 	       m_axi_wready;  // write ready. indicates that the slave can accept the write data.
-   input [1 : 0]       m_axi_bresp;   // master interface write response. indicates the status of the write transaction.
-   input 	       m_axi_bvalid;  // write response valid. channel is signaling a valid write response.
-   output 	       m_axi_bready;  // response ready. indicates that master can accept write response.
-   output [31 : 0]     m_axi_araddr;  // master interface read address. initial address of a read burst transaction.
-   output [7 : 0]      m_axi_arlen;   // burst length. the burst length gives the exact number of transfers in a burst
-   output [2 : 0]      m_axi_arsize;  // burst size. this signal indicates the size of each transfer in the burst
-   output [1 : 0]      m_axi_arburst; // burst type. the burst type and the size information; 
+   output [7 : 0]      m_axi_wstrb;   // byte write strobes
+   output 	       m_axi_wlast;   // indicates last transfer in a write burst.
+   output 	       m_axi_wvalid;  // indicates data is ready to go
+   input 	       m_axi_wready;  // indicates that the slave is ready for data
+
+   //Write response channel
+   input [IDW-1:0]     m_axi_bid;
+   input [1 : 0]       m_axi_bresp;   // status of the write transaction.
+   input 	       m_axi_bvalid;  // channel is signaling a valid write response
+   output 	       m_axi_bready;  // master can accept write response.
+
+   //Read address channel
+   output [IDW-1:0]    m_axi_arid;    // read address ID
+   output [31 : 0]     m_axi_araddr;  // initial address of a read burst
+   output [7 : 0]      m_axi_arlen;   // burst length
+   output [2 : 0]      m_axi_arsize;  // burst size
+   output [1 : 0]      m_axi_arburst; // burst type
+   output [1 : 0]      m_axi_arlock;  //lock type   
    output [3 : 0]      m_axi_arcache; // memory type
    output [2 : 0]      m_axi_arprot;  // protection type
-   output [3 : 0]      m_axi_arqos;   // qos identifier sent for each read transaction
-   output 	       m_axi_arvalid; // write address valid. channel is signaling valid read address and control information
-   input 	       m_axi_arready; // read address ready. indicates that slave is ready to accept an address
+   output [3 : 0]      m_axi_arqos;   // 
+   output 	       m_axi_arvalid; // valid read address and control information
+   input 	       m_axi_arready; // slave is ready to accept an address
+
+   //Read data channel   
+   input [IDW-1:0]     m_axi_rid; 
    input [63 : 0]      m_axi_rdata;   // master read data
-   input [1 : 0]       m_axi_rresp;   // read response. indicates the status of the read transfer
-   input 	       m_axi_rlast;   // read last. indicates the last transfer in a read burst
-   input 	       m_axi_rvalid;  // read valid. channel is signaling the required read data
-   output 	       m_axi_rready;  // read ready. indicates that master can accept the read data and response
+   input [1 : 0]       m_axi_rresp;   // status of the read transfer
+   input 	       m_axi_rlast;   // signals last transfer in a read burst
+   input 	       m_axi_rvalid;  // signaling the required read data
+   output 	       m_axi_rready;  // master can accept the readback data
   
    //registers   
    
@@ -339,9 +358,9 @@ module emaxi(/*autoarg*/
    always @( posedge m_axi_aclk )
      if( ~m_axi_aresetn ) 
        begin      
-	  emrr_data[31:0]      <= 32'b0;
-	  emrr_srcaddr[31:0]   <= 32'b0;
-          emrr_access          <= 1'b0;         
+	  emrr_data[31:0]     <= 32'b0;
+	  emrr_srcaddr[31:0]  <= 32'b0;
+          emrr_access         <= 1'b0;         
       end 
      else 
        begin

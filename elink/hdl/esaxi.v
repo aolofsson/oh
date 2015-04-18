@@ -5,130 +5,138 @@ module esaxi (/*autoarg*/
    emrq_datamode, emrq_ctrlmode, emrq_dstaddr, emrq_data,
    emrq_srcaddr, emrr_rd_en, mi_clk, mi_rx_emmu_sel, mi_tx_emmu_sel,
    mi_ecfg_sel, mi_embox_sel, mi_we, mi_addr, mi_din, s_axi_arready,
-   s_axi_awready, s_axi_bresp, s_axi_bvalid, s_axi_rdata, s_axi_rlast,
-   s_axi_rresp, s_axi_rvalid, s_axi_wready,
+   s_axi_awready, s_axi_bid, s_axi_bresp, s_axi_bvalid, s_axi_rid,
+   s_axi_rdata, s_axi_rlast, s_axi_rresp, s_axi_rvalid, s_axi_wready,
    // Inputs
    emwr_progfull, emrq_progfull, emrr_data, emrr_access, mi_ecfg_dout,
    mi_tx_emmu_dout, mi_rx_emmu_dout, mi_embox_dout, ecfg_tx_ctrlmode,
    ecfg_coreid, ecfg_timeout_enable, s_axi_aclk, s_axi_aresetn,
-   s_axi_araddr, s_axi_arburst, s_axi_arcache, s_axi_arlen,
-   s_axi_arprot, s_axi_arqos, s_axi_arsize, s_axi_arvalid,
-   s_axi_awaddr, s_axi_awburst, s_axi_awcache, s_axi_awlen,
-   s_axi_awprot, s_axi_awqos, s_axi_awsize, s_axi_awvalid,
-   s_axi_bready, s_axi_rready, s_axi_wdata, s_axi_wlast, s_axi_wstrb,
+   s_axi_arid, s_axi_araddr, s_axi_arburst, s_axi_arcache,
+   s_axi_arlock, s_axi_arlen, s_axi_arprot, s_axi_arqos, s_axi_arsize,
+   s_axi_arvalid, s_axi_awid, s_axi_awaddr, s_axi_awburst,
+   s_axi_awcache, s_axi_awlock, s_axi_awlen, s_axi_awprot,
+   s_axi_awqos, s_axi_awsize, s_axi_awvalid, s_axi_bready,
+   s_axi_rready, s_axi_wid, s_axi_wdata, s_axi_wlast, s_axi_wstrb,
    s_axi_wvalid
    );
 
    parameter [11:0]  c_read_tag_addr     = 12'h810;//emesh srcaddr tag  
    parameter integer c_s_axi_addr_width  = 30;     //address width
    parameter [11:0]  ELINKID             = 12'h810;
+   parameter         IDW                 = 12;
    
    /*****************************/
    /*Write request for TX fifo  */
    /*****************************/  
-   output 	     emwr_access;   
-   output 	     emwr_write;
-   output [1:0]      emwr_datamode;
-   output [3:0]      emwr_ctrlmode;
-   output [31:0]     emwr_dstaddr;
-   output [31:0]     emwr_data;
-   output [31:0]     emwr_srcaddr;   
-   input 	     emwr_progfull;
+   output 	  emwr_access;   
+   output 	  emwr_write;
+   output [1:0]   emwr_datamode;
+   output [3:0]   emwr_ctrlmode;
+   output [31:0]  emwr_dstaddr;
+   output [31:0]  emwr_data;
+   output [31:0]  emwr_srcaddr;   
+   input 	  emwr_progfull;
    
    /*****************************/
    /*Read request for TX fifo   */
    /*****************************/  
-   output 	     emrq_access;   
-   output 	     emrq_write;
-   output [1:0]      emrq_datamode;
-   output [3:0]      emrq_ctrlmode;
-   output [31:0]     emrq_dstaddr;
-   output [31:0]     emrq_data;
-   output [31:0]     emrq_srcaddr;      
-   input 	     emrq_progfull; //TODO? used for?
-
+   output 	  emrq_access;   
+   output 	  emrq_write;
+   output [1:0]   emrq_datamode;
+   output [3:0]   emrq_ctrlmode;
+   output [31:0]  emrq_dstaddr;
+   output [31:0]  emrq_data;
+   output [31:0]  emrq_srcaddr;      
+   input 	  emrq_progfull; //TODO? used for?
+   
    /*****************************/
    /*Read response from RX fifo */
    /*****************************/  
    //Only data needed
-   input [31:0]       emrr_data;
-   input 	      emrr_access;         
-   output 	      emrr_rd_en; //update read fifo
-
-
+   input [31:0]   emrr_data;
+   input 	  emrr_access;         
+   output 	  emrr_rd_en; //update read fifo
+   
+   
    /*****************************/
    /*Register RD/WR Interface   */
    /*****************************/  
-   output 	      mi_clk;
-   output 	      mi_rx_emmu_sel;
-   output 	      mi_tx_emmu_sel;
-   output 	      mi_ecfg_sel;
-   output 	      mi_embox_sel;
-   output 	      mi_we;   
-   output [19:0]      mi_addr;   
-   output [31:0]      mi_din;     
-   input [31:0]       mi_ecfg_dout;
-   input [31:0]       mi_tx_emmu_dout;
-   input [31:0]       mi_rx_emmu_dout;
-   input [31:0]       mi_embox_dout;
+   output 	  mi_clk;
+   output 	  mi_rx_emmu_sel;
+   output 	  mi_tx_emmu_sel;
+   output 	  mi_ecfg_sel;
+   output 	  mi_embox_sel;
+   output 	  mi_we;   
+   output [19:0]  mi_addr;   
+   output [31:0]  mi_din;     
+   input [31:0]   mi_ecfg_dout;
+   input [31:0]   mi_tx_emmu_dout;
+   input [31:0]   mi_rx_emmu_dout;
+   input [31:0]   mi_embox_dout;
    
    /*****************************/
    /*Config Settings            */
    /*****************************/  
-   input [3:0] 	      ecfg_tx_ctrlmode;
-   input [11:0]       ecfg_coreid;
-   input 	      ecfg_timeout_enable;
+   input [3:0] 	  ecfg_tx_ctrlmode;
+   input [11:0]   ecfg_coreid;
+   input 	  ecfg_timeout_enable;
    
    /*****************************/
    /*AXI slave interface        */
    /*****************************/  
    //Clock and reset
-   input 	      s_axi_aclk;
-   input 	      s_axi_aresetn;
+   input 	  s_axi_aclk;
+   input 	  s_axi_aresetn;
    
    //Read address channel
-   input [31:0]       s_axi_araddr;
-   input [1:0] 	      s_axi_arburst;
-   input [3:0] 	      s_axi_arcache;
-   input [7:0] 	      s_axi_arlen;
-   input [2:0] 	      s_axi_arprot;
-   input [3:0] 	      s_axi_arqos;
-   output 	      s_axi_arready;
-   input [2:0] 	      s_axi_arsize;
-   input 	      s_axi_arvalid;
+   input [IDW-1:0] s_axi_arid;    //write address ID
+   input [31:0]    s_axi_araddr;
+   input [1:0] 	   s_axi_arburst;
+   input [3:0] 	   s_axi_arcache;
+   input [1:0] 	   s_axi_arlock;
+   input [7:0] 	   s_axi_arlen;
+   input [2:0] 	   s_axi_arprot;
+   input [3:0] 	   s_axi_arqos;
+   output 	   s_axi_arready;
+   input [2:0] 	   s_axi_arsize;
+   input 	   s_axi_arvalid;
    
    //Write address channel
-   input [31:0]       s_axi_awaddr;
-   input [1:0] 	      s_axi_awburst;
-   input [3:0] 	      s_axi_awcache;
-   input [7:0] 	      s_axi_awlen;
-   input [2:0] 	      s_axi_awprot;
-   input [3:0] 	      s_axi_awqos;
-   output 	      s_axi_awready;
-   input [2:0] 	      s_axi_awsize;
-   input 	      s_axi_awvalid;
+   input [IDW-1:0] s_axi_awid;    //write address ID
+   input [31:0]    s_axi_awaddr;
+   input [1:0] 	   s_axi_awburst;
+   input [3:0] 	   s_axi_awcache;
+   input [1:0] 	   s_axi_awlock;
+   input [7:0] 	   s_axi_awlen;
+   input [2:0] 	   s_axi_awprot;
+   input [3:0] 	   s_axi_awqos;   
+   input [2:0] 	   s_axi_awsize;
+   input 	   s_axi_awvalid;
+   output 	   s_axi_awready;
    
-
    //Buffered write response channel
-   input 	      s_axi_bready;
-   output [1:0]       s_axi_bresp;
-   output 	      s_axi_bvalid;
-
+   output [IDW-1:0] s_axi_bid;    //write address ID
+   output [1:0]     s_axi_bresp;
+   output 	    s_axi_bvalid;
+   input 	    s_axi_bready;
+   
    //Read channel
-   output [31:0]      s_axi_rdata;
-   output 	      s_axi_rlast;
-   input 	      s_axi_rready;
-   output [1:0]       s_axi_rresp;
-   output 	      s_axi_rvalid;
-   
+   output [IDW-1:0] s_axi_rid;    //write address ID
+   output [31:0]    s_axi_rdata;
+   output 	    s_axi_rlast;   
+   output [1:0]     s_axi_rresp;
+   output 	    s_axi_rvalid;
+   input 	    s_axi_rready;
+
    //Write channel
-   input [31:0]       s_axi_wdata;
-   input 	      s_axi_wlast;
-   output 	      s_axi_wready;
-   input [3:0] 	      s_axi_wstrb;
-   input 	      s_axi_wvalid;
+   input [IDW-1:0]  s_axi_wid;    //write address ID
+   input [31:0]     s_axi_wdata;
+   input 	    s_axi_wlast;   
+   input [3:0] 	    s_axi_wstrb;
+   input 	    s_axi_wvalid;
+   output 	    s_axi_wready;
    
-   // axi4full signals
+   /*-------------------------BODY----------------------------------*/
    reg 		      s_axi_awready;
    reg 		      s_axi_wready;
    reg 		      s_axi_bvalid;

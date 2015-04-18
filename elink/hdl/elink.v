@@ -254,32 +254,34 @@ module elink(/*AUTOARG*/
    colid, rowid, chip_resetb, cclk_p, cclk_n, rxo_wr_wait_p,
    rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n, txo_lclk_p,
    txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p, txo_data_n,
-   m_axi_araddr, m_axi_arburst, m_axi_arcache, m_axi_arlen,
-   m_axi_arprot, m_axi_arqos, m_axi_arsize, m_axi_arvalid,
-   m_axi_awaddr, m_axi_awburst, m_axi_awcache, m_axi_awlen,
-   m_axi_awprot, m_axi_awqos, m_axi_awsize, m_axi_awvalid,
-   m_axi_bready, m_axi_rready, m_axi_wdata, m_axi_wlast, m_axi_wstrb,
-   m_axi_wvalid, s_axi_arready, s_axi_awready, s_axi_bresp,
-   s_axi_bvalid, s_axi_rdata, s_axi_rlast, s_axi_rresp, s_axi_rvalid,
+   m_axi_awid, m_axi_awaddr, m_axi_awlen, m_axi_awsize, m_axi_awburst,
+   m_axi_awlock, m_axi_awcache, m_axi_awprot, m_axi_awqos,
+   m_axi_awvalid, m_axi_wid, m_axi_wdata, m_axi_wstrb, m_axi_wlast,
+   m_axi_wvalid, m_axi_bready, m_axi_arid, m_axi_araddr, m_axi_arlen,
+   m_axi_arsize, m_axi_arburst, m_axi_arlock, m_axi_arcache,
+   m_axi_arprot, m_axi_arqos, m_axi_arvalid, m_axi_rready,
+   s_axi_arready, s_axi_awready, s_axi_bid, s_axi_bresp, s_axi_bvalid,
+   s_axi_rid, s_axi_rdata, s_axi_rlast, s_axi_rresp, s_axi_rvalid,
    s_axi_wready, embox_not_empty, embox_full,
    // Inputs
    hard_reset, clkin, clkbypass, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
    rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
    txi_rd_wait_p, txi_rd_wait_n, m_axi_aclk, m_axi_aresetn,
-   m_axi_arready, m_axi_awready, m_axi_bresp, m_axi_bvalid,
-   m_axi_rdata, m_axi_rlast, m_axi_rresp, m_axi_rvalid, m_axi_wready,
-   s_axi_aclk, s_axi_aresetn, s_axi_araddr, s_axi_arburst,
-   s_axi_arcache, s_axi_arlen, s_axi_arprot, s_axi_arqos,
-   s_axi_arsize, s_axi_arvalid, s_axi_awaddr, s_axi_awburst,
-   s_axi_awcache, s_axi_awlen, s_axi_awprot, s_axi_awqos,
-   s_axi_awsize, s_axi_awvalid, s_axi_bready, s_axi_rready,
-   s_axi_wdata, s_axi_wlast, s_axi_wstrb, s_axi_wvalid
+   m_axi_awready, m_axi_wready, m_axi_bid, m_axi_bresp, m_axi_bvalid,
+   m_axi_arready, m_axi_rid, m_axi_rdata, m_axi_rresp, m_axi_rlast,
+   m_axi_rvalid, s_axi_aclk, s_axi_aresetn, s_axi_arid, s_axi_araddr,
+   s_axi_arburst, s_axi_arcache, s_axi_arlock, s_axi_arlen,
+   s_axi_arprot, s_axi_arqos, s_axi_arsize, s_axi_arvalid, s_axi_awid,
+   s_axi_awaddr, s_axi_awburst, s_axi_awcache, s_axi_awlock,
+   s_axi_awlen, s_axi_awprot, s_axi_awqos, s_axi_awsize,
+   s_axi_awvalid, s_axi_bready, s_axi_rready, s_axi_wid, s_axi_wdata,
+   s_axi_wlast, s_axi_wstrb, s_axi_wvalid
    );
    
    parameter DEF_COREID  = 12'h810;
    parameter AW          = 32;
    parameter DW          = 32;
-   parameter IDW         = 32;
+   parameter IDW         = 12;
    parameter RFAW        = 13;
    parameter MW          = 44;
    parameter INC_PLL     = 1;        //include pll
@@ -322,98 +324,112 @@ module elink(/*AUTOARG*/
    /*AXI master interface       */
    /*****************************/  
    //Clock and reset
-   input 	 m_axi_aclk;    //axi master clock
-   input 	 m_axi_aresetn; //axi master reset (active low)
-
-   //Read address channel
-   output [31:0] m_axi_araddr;  //read address
-   output [1:0]  m_axi_arburst; //burst type
-   output [3:0]  m_axi_arcache; //memory type
-   output [7:0]  m_axi_arlen;   //burst length (number of data transfers)
-   output [2:0]  m_axi_arprot;  //protection type
-   output [3:0]  m_axi_arqos;   //quality of service (setting?)
-   input 	 m_axi_arready; //read ready
-   output [2:0]  m_axi_arsize;  //burst size (the size of each transfer)
-   output 	 m_axi_arvalid; //write address valid
+   input 	    m_axi_aclk;    //axi master clock
+   input 	    m_axi_aresetn; //axi master reset (active low)
 
    //Write address channel
-   output [31:0] m_axi_awaddr;
-   output [1:0]  m_axi_awburst; 
-   output [3:0]  m_axi_awcache;
-   output [7:0]  m_axi_awlen;
-   output [2:0]  m_axi_awprot;
-   output [3:0]  m_axi_awqos;
-   input 	 m_axi_awready;
-   output [2:0]  m_axi_awsize;
-   output 	 m_axi_awvalid;
-   
-   //Write response channel
-   output 	 m_axi_bready;
-   input [1:0] 	 m_axi_bresp;
-   input 	 m_axi_bvalid;
-   
-   //Read data channel
-   input [63:0]  m_axi_rdata;
-   input 	 m_axi_rlast;   //indicates last transfer of a burst
-   output 	 m_axi_rready;  //read ready signal
-   input [1:0] 	 m_axi_rresp;
-   input 	 m_axi_rvalid;
-   
+   output [IDW-1:0]    m_axi_awid;    // write address ID
+   output [31 : 0]     m_axi_awaddr;  // master interface write address   
+   output [7 : 0]      m_axi_awlen;   // burst length.
+   output [2 : 0]      m_axi_awsize;  // burst size.
+   output [1 : 0]      m_axi_awburst; // burst type.
+   output [1:0]        m_axi_awlock;  // lock type   
+   output [3 : 0]      m_axi_awcache; // memory type.
+   output [2 : 0]      m_axi_awprot;  // protection type.
+   output [3 : 0]      m_axi_awqos;   // quality of service
+   output 	       m_axi_awvalid; // write address valid
+   input 	       m_axi_awready; // write address ready
+
    //Write data channel
-   output [63:0] m_axi_wdata;
-   output 	 m_axi_wlast;   //indicates last transfer of a burs
-   input 	 m_axi_wready;  //response ready
-   output [7:0]  m_axi_wstrb;
-   output 	 m_axi_wvalid;
+   output [IDW-1:0]    m_axi_wid;     
+   output [63 : 0]     m_axi_wdata;   // master interface write data.
+   output [7 : 0]      m_axi_wstrb;   // byte write strobes
+   output 	       m_axi_wlast;   // indicates last transfer in a write burst.
+   output 	       m_axi_wvalid;  // indicates data is ready to go
+   input 	       m_axi_wready;  // indicates that the slave is ready for data
+
+   //Write response channel
+   input [IDW-1:0]     m_axi_bid;
+   input [1 : 0]       m_axi_bresp;   // status of the write transaction.
+   input 	       m_axi_bvalid;  // channel is signaling a valid write response
+   output 	       m_axi_bready;  // master can accept write response.
+
+   //Read address channel
+   output [IDW-1:0]    m_axi_arid;    // read address ID
+   output [31 : 0]     m_axi_araddr;  // initial address of a read burst
+   output [7 : 0]      m_axi_arlen;   // burst length
+   output [2 : 0]      m_axi_arsize;  // burst size
+   output [1 : 0]      m_axi_arburst; // burst type
+   output [1 : 0]      m_axi_arlock;  //lock type   
+   output [3 : 0]      m_axi_arcache; // memory type
+   output [2 : 0]      m_axi_arprot;  // protection type
+   output [3 : 0]      m_axi_arqos;   // 
+   output 	       m_axi_arvalid; // valid read address and control information
+   input 	       m_axi_arready; // slave is ready to accept an address
+
+   //Read data channel   
+   input [IDW-1:0]     m_axi_rid; 
+   input [63 : 0]      m_axi_rdata;   // master read data
+   input [1 : 0]       m_axi_rresp;   // status of the read transfer
+   input 	       m_axi_rlast;   // signals last transfer in a read burst
+   input 	       m_axi_rvalid;  // signaling the required read data
+   output 	       m_axi_rready;  // master can accept the readback data
    
    /*****************************/
    /*AXI slave interface        */
    /*****************************/  
    //Clock and reset
-   input 	 s_axi_aclk;
-   input 	 s_axi_aresetn;
+   input 	    s_axi_aclk;
+   input 	    s_axi_aresetn;
 
    //Read address channel
-   input [31:0]  s_axi_araddr;
-   input [1:0] 	 s_axi_arburst;
-   input [3:0] 	 s_axi_arcache;
-   input [7:0] 	 s_axi_arlen;
-   input [2:0] 	 s_axi_arprot;
-   input [3:0] 	 s_axi_arqos;
-   output 	 s_axi_arready;
-   input [2:0] 	 s_axi_arsize;
-   input 	 s_axi_arvalid;
+   input [IDW-1:0]  s_axi_arid;    //write address ID
+   input [31:0]     s_axi_araddr;
+   input [1:0] 	    s_axi_arburst;
+   input [3:0] 	    s_axi_arcache;
+   input [1:0] 	    s_axi_arlock;
+   input [7:0] 	    s_axi_arlen;
+   input [2:0] 	    s_axi_arprot;
+   input [3:0] 	    s_axi_arqos;
+   output 	    s_axi_arready;
+   input [2:0] 	    s_axi_arsize;
+   input 	    s_axi_arvalid;
 
    //Write address channel
-   input [31:0]  s_axi_awaddr;
-   input [1:0] 	 s_axi_awburst;
-   input [3:0] 	 s_axi_awcache;
-   input [7:0] 	 s_axi_awlen;
-   input [2:0] 	 s_axi_awprot;
-   input [3:0] 	 s_axi_awqos;
-   output 	 s_axi_awready;
-   input [2:0] 	 s_axi_awsize;
-   input 	 s_axi_awvalid;
+   input [IDW-1:0]  s_axi_awid;    //write address ID
+   input [31:0]     s_axi_awaddr;
+   input [1:0] 	    s_axi_awburst;
+   input [3:0] 	    s_axi_awcache;
+   input [1:0]      s_axi_awlock;
+   input [7:0] 	    s_axi_awlen;
+   input [2:0] 	    s_axi_awprot;
+   input [3:0] 	    s_axi_awqos;   
+   input [2:0] 	    s_axi_awsize;
+   input 	    s_axi_awvalid;
+   output 	    s_axi_awready;
 
    //Buffered write response channel
-   input 	 s_axi_bready;
-   output [1:0]  s_axi_bresp;
-   output 	 s_axi_bvalid;
-
-   //Read channel
-   output [31:0] s_axi_rdata;
-   output 	 s_axi_rlast;
-   input 	 s_axi_rready;
-   output [1:0]  s_axi_rresp;
-   output 	 s_axi_rvalid;
+   output [IDW-1:0] s_axi_bid;    //write address ID
+   output [1:0]     s_axi_bresp;
+   output 	    s_axi_bvalid;
+   input 	    s_axi_bready;
    
-   //Write channel
-   input [31:0]  s_axi_wdata;
-   input 	 s_axi_wlast;
-   output 	 s_axi_wready;
-   input [3:0] 	 s_axi_wstrb;
-   input 	 s_axi_wvalid;
+   //Read channel
+   output [IDW-1:0] s_axi_rid;    //write address ID
+   output [31:0]    s_axi_rdata;
+   output 	    s_axi_rlast;   
+   output [1:0]     s_axi_rresp;
+   output 	    s_axi_rvalid;
+   input 	    s_axi_rready;
 
+   //Write channel
+   input [IDW-1:0]  s_axi_wid;    //write address ID
+   input [31:0]     s_axi_wdata;
+   input 	    s_axi_wlast;   
+   input [3:0] 	    s_axi_wstrb;
+   input 	    s_axi_wvalid;
+   output 	    s_axi_wready;
+   
    /*****************************/
    /*MAILBOX (interrupts)       */
    /*****************************/
@@ -521,7 +537,8 @@ module elink(/*AUTOARG*/
                         .em\(.*\)         (emaxi_em\1[]),  
                         );
    */
-   
+   defparam emaxi.IDW    =IDW;     //ID width from instantiation
+
    emaxi emaxi(
 	       /*AUTOINST*/
 	       // Outputs
@@ -534,23 +551,28 @@ module elink(/*AUTOARG*/
 	       .emrr_dstaddr		(emaxi_emrr_dstaddr[31:0]), // Templated
 	       .emrr_data		(emaxi_emrr_data[31:0]), // Templated
 	       .emrr_srcaddr		(emaxi_emrr_srcaddr[31:0]), // Templated
+	       .m_axi_awid		(m_axi_awid[IDW-1:0]),
 	       .m_axi_awaddr		(m_axi_awaddr[31:0]),
 	       .m_axi_awlen		(m_axi_awlen[7:0]),
 	       .m_axi_awsize		(m_axi_awsize[2:0]),
 	       .m_axi_awburst		(m_axi_awburst[1:0]),
+	       .m_axi_awlock		(m_axi_awlock[1:0]),
 	       .m_axi_awcache		(m_axi_awcache[3:0]),
 	       .m_axi_awprot		(m_axi_awprot[2:0]),
 	       .m_axi_awqos		(m_axi_awqos[3:0]),
 	       .m_axi_awvalid		(m_axi_awvalid),
+	       .m_axi_wid		(m_axi_wid[IDW-1:0]),
 	       .m_axi_wdata		(m_axi_wdata[63:0]),
 	       .m_axi_wstrb		(m_axi_wstrb[7:0]),
 	       .m_axi_wlast		(m_axi_wlast),
 	       .m_axi_wvalid		(m_axi_wvalid),
 	       .m_axi_bready		(m_axi_bready),
+	       .m_axi_arid		(m_axi_arid[IDW-1:0]),
 	       .m_axi_araddr		(m_axi_araddr[31:0]),
 	       .m_axi_arlen		(m_axi_arlen[7:0]),
 	       .m_axi_arsize		(m_axi_arsize[2:0]),
 	       .m_axi_arburst		(m_axi_arburst[1:0]),
+	       .m_axi_arlock		(m_axi_arlock[1:0]),
 	       .m_axi_arcache		(m_axi_arcache[3:0]),
 	       .m_axi_arprot		(m_axi_arprot[2:0]),
 	       .m_axi_arqos		(m_axi_arqos[3:0]),
@@ -576,9 +598,11 @@ module elink(/*AUTOARG*/
 	       .m_axi_aresetn		(m_axi_aresetn),
 	       .m_axi_awready		(m_axi_awready),
 	       .m_axi_wready		(m_axi_wready),
+	       .m_axi_bid		(m_axi_bid[IDW-1:0]),
 	       .m_axi_bresp		(m_axi_bresp[1:0]),
 	       .m_axi_bvalid		(m_axi_bvalid),
 	       .m_axi_arready		(m_axi_arready),
+	       .m_axi_rid		(m_axi_rid[IDW-1:0]),
 	       .m_axi_rdata		(m_axi_rdata[63:0]),
 	       .m_axi_rresp		(m_axi_rresp[1:0]),
 	       .m_axi_rlast		(m_axi_rlast),
@@ -596,7 +620,9 @@ module elink(/*AUTOARG*/
                         );
    */
    
-   defparam esaxi.ELINKID=ELINKID; //passing along ID from top level 
+   defparam esaxi.ELINKID=ELINKID; //passing along ID from top level
+   defparam esaxi.IDW    =IDW;     //ID width from instantiation
+
    esaxi esaxi(
 	       /*AUTOINST*/
 	       // Outputs
@@ -625,8 +651,10 @@ module elink(/*AUTOARG*/
 	       .mi_din			(mi_din[31:0]),
 	       .s_axi_arready		(s_axi_arready),
 	       .s_axi_awready		(s_axi_awready),
+	       .s_axi_bid		(s_axi_bid[IDW-1:0]),
 	       .s_axi_bresp		(s_axi_bresp[1:0]),
 	       .s_axi_bvalid		(s_axi_bvalid),
+	       .s_axi_rid		(s_axi_rid[IDW-1:0]),
 	       .s_axi_rdata		(s_axi_rdata[31:0]),
 	       .s_axi_rlast		(s_axi_rlast),
 	       .s_axi_rresp		(s_axi_rresp[1:0]),
@@ -646,17 +674,21 @@ module elink(/*AUTOARG*/
 	       .ecfg_timeout_enable	(ecfg_timeout_enable),
 	       .s_axi_aclk		(s_axi_aclk),
 	       .s_axi_aresetn		(s_axi_aresetn),
+	       .s_axi_arid		(s_axi_arid[IDW-1:0]),
 	       .s_axi_araddr		(s_axi_araddr[31:0]),
 	       .s_axi_arburst		(s_axi_arburst[1:0]),
 	       .s_axi_arcache		(s_axi_arcache[3:0]),
+	       .s_axi_arlock		(s_axi_arlock[1:0]),
 	       .s_axi_arlen		(s_axi_arlen[7:0]),
 	       .s_axi_arprot		(s_axi_arprot[2:0]),
 	       .s_axi_arqos		(s_axi_arqos[3:0]),
 	       .s_axi_arsize		(s_axi_arsize[2:0]),
 	       .s_axi_arvalid		(s_axi_arvalid),
+	       .s_axi_awid		(s_axi_awid[IDW-1:0]),
 	       .s_axi_awaddr		(s_axi_awaddr[31:0]),
 	       .s_axi_awburst		(s_axi_awburst[1:0]),
 	       .s_axi_awcache		(s_axi_awcache[3:0]),
+	       .s_axi_awlock		(s_axi_awlock[1:0]),
 	       .s_axi_awlen		(s_axi_awlen[7:0]),
 	       .s_axi_awprot		(s_axi_awprot[2:0]),
 	       .s_axi_awqos		(s_axi_awqos[3:0]),
@@ -664,6 +696,7 @@ module elink(/*AUTOARG*/
 	       .s_axi_awvalid		(s_axi_awvalid),
 	       .s_axi_bready		(s_axi_bready),
 	       .s_axi_rready		(s_axi_rready),
+	       .s_axi_wid		(s_axi_wid[IDW-1:0]),
 	       .s_axi_wdata		(s_axi_wdata[31:0]),
 	       .s_axi_wlast		(s_axi_wlast),
 	       .s_axi_wstrb		(s_axi_wstrb[3:0]),
