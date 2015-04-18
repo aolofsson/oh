@@ -22,7 +22,7 @@ module eclocks (/*AUTOARG*/
    // Outputs
    cclk_p, cclk_n, tx_lclk, tx_lclk_out, tx_lclk_par,
    // Inputs
-   clkin, hard_reset, ecfg_clk_settings, bypass_clocks
+   clkin, hard_reset, ecfg_clk_settings, clkbypass
    );
 
    // Parameters must be set as follows:
@@ -43,7 +43,7 @@ module eclocks (/*AUTOARG*/
    input        clkin;              // primary input clock
    input        hard_reset;         //
    input [15:0] ecfg_clk_settings;  // clock settings
-   input [2:0] 	bypass_clocks;      // for bypassing PLL
+   input [2:0] 	clkbypass;          // for bypassing PLL
  	
    
    //Output Clocks
@@ -53,8 +53,14 @@ module eclocks (/*AUTOARG*/
    output       tx_lclk_par;        // lclk/8 slow clock for tx parallel logic 
 
    // Wires
- 
-   
+   wire 	cclk_en;
+   wire 	lclk_en;
+
+
+   //Register decoding
+   assign cclk_en=ecfg_clk_settings[0];
+   assign lclk_en=ecfg_clk_settings[1];
+	
 `ifdef TARGET_XILINX
    wire         clkfb;
    wire 	pll_cclk;          //full speed cclk
@@ -117,7 +123,9 @@ generate
            .CLKFBIN(clkfb)             //feedback clock input
            );
  
-   
+ 
+   //TODO!! Redesign this all together!!!
+  
    // Output buffering
    BUFG cclk_buf       (.O   (cclk_base),   .I   (pll_cclk));
    BUFG cclk_div_buf   (.O   (cclk_div),    .I   (pll_cclk_div));   
@@ -131,18 +139,18 @@ generate
       // Create adjustable (but fast) CCLK
       wire      rxi_cclk_out;
       reg [8:1] cclk_pattern;
-      reg [3:0] clk_div_sync;
+      reg [4:0] clk_div_sync;
       reg       enb_sync;
    
       always @ (posedge cclk_div) begin  // Might need x-clock TIG here
 
-	 clk_div_sync <= ecfg_clk_settings[3:0];
-	 enb_sync     <= ~(|ecfg_clk_settings[3:0]);
+	 clk_div_sync <= {cclk_en,ecfg_clk_settings[7:4]};
+
 	 
 	 if(enb_sync)
            case(clk_div_sync)
              4'h0:    cclk_pattern <= 8'd0;         // Clock OFF
-             4'h7:    cclk_pattern <= 8'b10101010;  // Divide by 1
+             4'h0:    cclk_pattern <= 8'b10101010;  // Divide by 1
              4'h6:    cclk_pattern <= 8'b11001100;  // Divide by 2
              4'h5:    cclk_pattern <= 8'b11110000;  // Divide by 4
              default: cclk_pattern <= {8{~cclk_pattern[1]}}; // /8
@@ -218,7 +226,11 @@ endgenerate
 
 `elsif TARGET_CLEAN
    wire 	  cclk;
-      
+   wire 	  lclk_par;
+   wire 	  lclk;
+   wire 	  lclk_out;
+   
+   
    clock_divider cclk_divider(
 			      // Outputs
 			      .clkout		(cclk),
@@ -226,33 +238,38 @@ endgenerate
 			      // Inputs
 			      .clkin		(clkin), 
 			      .reset            (hard_reset),
-			      .divcfg		(ecfg_clk_settings[3:0])
+			      .divcfg		(ecfg_clk_settings[7:4])
 			      );
 
 
-   assign cclk_p = cclk;
-   assign cclk_n = ~cclk;
+   assign cclk_p = cclk & cclk_en ;
+   assign cclk_n = ~cclk_p;
    
    clock_divider lclk_divider(
 			      // Outputs
-			      .clkout		(tx_lclk),
-			      .clkout90		(tx_lclk_out),
+			      .clkout		(lclk),
+			      .clkout90		(lclk_out),
 			      // Inputs
 			      .clkin		(clkin),
 			      .reset            (hard_reset),
-			      .divcfg		(ecfg_clk_settings[7:4])
+			      .divcfg		(ecfg_clk_settings[11:8])
 			      );
    
    clock_divider lclk_par_divider(
 				  // Outputs
-				  .clkout	(tx_lclk_par),
+				  .clkout	(lclk_par),
 				  .clkout90	(),
 				  // Inputs
 				  .clkin	(clkin),
 				  .reset        (hard_reset),
-				  .divcfg	(ecfg_clk_settings[7:4] + 4'd2)
+				  .divcfg	(ecfg_clk_settings[11:8] + 4'd2)
 				  );
 
+
+   //Clock enables
+   assign tx_lclk_par = lclk_par & lclk_en;
+   assign tx_lclk     = lclk     & lclk_en;
+   assign tx_lclk_out = lclk_out & lclk_en;
    
 `endif
    
