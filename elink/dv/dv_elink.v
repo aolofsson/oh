@@ -175,8 +175,8 @@ module dv_elink(/*AUTOARG*/
    
 
    //Clocks
-   wire clkin         = clk[0];
-   wire m_axi_aclk    = clk[1];
+   wire clkin         = clk[0]; //for pll-->cclk, rxclk, txclk
+   wire m_axi_aclk    = clk[1]; 
    wire s_axi_aclk    = clk[1];
    
    //Splitting transaction into read/write path
@@ -366,7 +366,7 @@ module dv_elink(/*AUTOARG*/
 		.s_axi_rvalid		(elink_axi_rvalid),	 // Templated
 		.s_axi_wready		(elink_axi_wready),	 // Templated
 		// Inputs
-		.s_axi_araddr		(elink_axi_araddr[29:0]), // Templated
+		.s_axi_araddr		(elink_axi_araddr[31:0]), // Templated
 		.s_axi_arburst		(elink_axi_arburst[1:0]), // Templated
 		.s_axi_arcache		(elink_axi_arcache[3:0]), // Templated
 		.s_axi_arlen		(elink_axi_arlen[7:0]),	 // Templated
@@ -374,7 +374,7 @@ module dv_elink(/*AUTOARG*/
 		.s_axi_arqos		(elink_axi_arqos[3:0]),	 // Templated
 		.s_axi_arsize		(elink_axi_arsize[2:0]), // Templated
 		.s_axi_arvalid		(elink_axi_arvalid),	 // Templated
-		.s_axi_awaddr		(elink_axi_awaddr[29:0]), // Templated
+		.s_axi_awaddr		(elink_axi_awaddr[31:0]), // Templated
 		.s_axi_awburst		(elink_axi_awburst[1:0]), // Templated
 		.s_axi_awcache		(elink_axi_awcache[3:0]), // Templated
 		.s_axi_awlen		(elink_axi_awlen[7:0]),	 // Templated
@@ -402,6 +402,8 @@ module dv_elink(/*AUTOARG*/
                         );
    */
 
+   defparam elink.ELINKID = 12'h800;
+
    elink elink (.hard_reset		(reset),
 		.embox_not_empty	(embox_full),
 		.embox_full		(embox_not_empty),
@@ -415,7 +417,7 @@ module dv_elink(/*AUTOARG*/
 		.cclk_p			(cclk_p),
 		.cclk_n			(cclk_n),
 		.clkin			(clkin),
-		.bypass_clocks          ({clkin,clkin,clkin}),
+		.clkbypass              ({clkin,clkin,clkin}),
 		/*AUTOINST*/
 		// Outputs
 		.rxo_wr_wait_p		(wr_wait_p),		 // Templated
@@ -479,7 +481,7 @@ module dv_elink(/*AUTOARG*/
 		.m_axi_rresp		(elink_axi_rresp[1:0]),	 // Templated
 		.m_axi_rvalid		(elink_axi_rvalid),	 // Templated
 		.m_axi_wready		(elink_axi_wready),	 // Templated
-		.s_axi_araddr		(dv_axi_araddr[29:0]),	 // Templated
+		.s_axi_araddr		(dv_axi_araddr[31:0]),	 // Templated
 		.s_axi_arburst		(dv_axi_arburst[1:0]),	 // Templated
 		.s_axi_arcache		(dv_axi_arcache[3:0]),	 // Templated
 		.s_axi_arlen		(dv_axi_arlen[7:0]),	 // Templated
@@ -487,7 +489,7 @@ module dv_elink(/*AUTOARG*/
 		.s_axi_arqos		(dv_axi_arqos[3:0]),	 // Templated
 		.s_axi_arsize		(dv_axi_arsize[2:0]),	 // Templated
 		.s_axi_arvalid		(dv_axi_arvalid),	 // Templated
-		.s_axi_awaddr		(dv_axi_awaddr[29:0]),	 // Templated
+		.s_axi_awaddr		(dv_axi_awaddr[31:0]),	 // Templated
 		.s_axi_awburst		(dv_axi_awburst[1:0]),	 // Templated
 		.s_axi_awcache		(dv_axi_awcache[3:0]),	 // Templated
 		.s_axi_awlen		(dv_axi_awlen[7:0]),	 // Templated
@@ -527,9 +529,9 @@ module dv_elink(/*AUTOARG*/
 
 
    emesh_monitor #(.NAME("stimulus")) ext_monitor (.emesh_wait		((dut_rd_wait | dut_wr_wait)),//TODO:fix collisions
+						   .clk			(m_axi_aclk),
 						   /*AUTOINST*/
 						   // Inputs
-						   .clk			(m_axi_aclk),
 						   .reset		(reset),
 						   .itrace		(itrace),
 						   .etime		(etime[31:0]),
@@ -542,9 +544,9 @@ module dv_elink(/*AUTOARG*/
 						   .emesh_srcaddr	(ext_srcaddr[AW-1:0])); // Templated
    
    emesh_monitor #(.NAME("dut")) dut_monitor (.emesh_wait	(1'b0),
+					      .clk		(s_axi_aclk),
 					      /*AUTOINST*/
 					      // Inputs
-					      .clk		(s_axi_aclk),
 					      .reset		(reset),
 					      .itrace		(itrace),
 					      .etime		(etime[31:0]),

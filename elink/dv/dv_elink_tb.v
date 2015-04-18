@@ -1,7 +1,13 @@
 module dv_elink_tb();
    parameter AW=32;
    parameter DW=32;
-   parameter CW=2;             //number of clocks to send int
+   parameter CW=2;    //number of clocks to send int
+   parameter MW=104;
+   parameter MAW=10;    
+   parameter MD=1<<MAW;//limit test to 1K transactions
+   //TODO:generealize
+   
+
 /* verilator lint_off STMTDLY */
 /* verilator lint_off UNOPTFLAT */
    //REGS
@@ -19,18 +25,32 @@ module dv_elink_tb();
    reg           ext_wr_wait;
    reg           ext_rd_wait;
    reg 		 init;
+   reg [MW-1:0]  stimarray[MD-1:0];
+   reg [MW-1:0]  transaction;
+   reg [MAW-1:0] stim_addr;
 
+   integer 	 i;
    
+`ifdef MANUAL   
+   //TODO: make test name a parameter, fancify,...   
+   initial
+     begin
+	for(i=0;i<MD;i++)
+	  stimarray[i]='d0;
+	//$readmemh(`TESTNAME,stimarray,0,`TRANS-1);//How to?
+	$readmemh("test.memh",stimarray,0,`TRANS-1);
+     end
+`endif
+
    //Forever clock
    always
-     #10  clk[0] = ~clk[0];//clock for elink
+     #1  clk[0] = ~clk[0];//clock for elink
     always
-     #100 clk[1] = ~clk[1];//clock for axi interface
+     #10 clk[1] = ~clk[1];//clock for axi interface
                            //should make variable to really test all fifos
 
    wire clkstim = clk[1];
-   
-   
+      
    //Reset
    initial
      begin
@@ -40,22 +60,22 @@ module dv_elink_tb();
 	  clk[1:0] = 2'b0;
 	  datamode = 2'b10;	
 	#400 
+
+`ifdef AUTO
           //clock config (fast /2)
           dv_elink.elink.ecfg.ecfg_clk_reg[15:0] = 16'h0113;
           //tx config  (enable)
    	  dv_elink.elink.ecfg.ecfg_tx_reg[8:0]   = 9'h001;
           //rx config (enable)
 	  dv_elink.elink.ecfg.ecfg_rx_reg[4:0]   = 5'h01;
-	 
+`endif
 	  reset    = 1'b0;    // at time 100 release reset
 	#1000
 	  go       = 1'b1;	
 	#2000
-	  datamode = 2'b01;
-	#3000
-	  datamode = 2'b00;
-	#4000
+`ifdef AUTO
 	  go       = 1'b0;
+`endif
 	#10000	  
 	  $finish;
      end
@@ -67,24 +87,38 @@ module dv_elink_tb();
 always @ (posedge clkstim)
   if(reset | ~go)
     begin
-       ext_access        <= 1'b0; //empty
-       ext_write         <= 1'b1;
-       ext_datamode[1:0] <= 2'b0;
-       ext_ctrlmode[3:0] <= 4'b0;
-       ext_data[31:0]    <= 32'b0;
-       ext_dstaddr[31:0] <= 32'b0;
-       ext_srcaddr[31:0] <= 32'b0;
-       ext_rd_wait       <= 1'b0;
-       ext_wr_wait       <= 1'b0;
+       ext_access          <= 1'b0; //empty
+       ext_write           <= 1'b0;
+       ext_datamode[1:0]   <= 2'b0;
+       ext_ctrlmode[3:0]   <= 4'b0;
+       ext_data[31:0]      <= 32'b0;
+       ext_dstaddr[31:0]   <= 32'b0;
+       ext_srcaddr[31:0]   <= 32'b0;
+       ext_rd_wait         <= 1'b0;
+       ext_wr_wait         <= 1'b0;
+       stim_addr[MAW-1:0]  <= 'd0;
+       transaction[MW-1:0] <= 'd0;
     end   
   else if (go & ~dut_wr_wait)
     //else if ((go & ~ext_access) | (go & ext_access & ~dut_wr_wait))    
     begin
-       ext_access        <=  1'b1;
-       ext_data[31:0]    <=  ext_data[31:0]    + 32'b1;
-       ext_dstaddr[31:0] <=  ext_dstaddr[31:0] + 32'd8;//(32'b1<<datamode)
-       ext_datamode[1:0] <=  datamode[1:0];
-    end  
+`ifdef MANUAL
+       transaction[MW-1:0] <= stimarray[stim_addr];
+       ext_access          <= transaction[0];
+       ext_write           <= transaction[1];
+       ext_datamode[1:0]   <= transaction[3:2];
+       ext_ctrlmode[3:0]   <= transaction[7:4];
+       ext_dstaddr[31:0]   <= transaction[39:8];
+       ext_data[31:0]      <= transaction[71:40];
+       ext_srcaddr[31:0]   <= transaction[103:72];
+       stim_addr[MAW-1:0]  <= stim_addr[MAW-1:0] + 1'b1; 
+`else
+       ext_access          <=  1'b1;
+       ext_data[31:0]      <=  ext_data[31:0]    + 32'b1;
+       ext_dstaddr[31:0]   <=  ext_dstaddr[31:0] + 32'd8;//(32'b1<<datamode)
+       ext_datamode[1:0]   <=  datamode[1:0];       
+`endif 
+    end     
    //Waveform dump
 `ifndef TARGET_VERILATOR
    initial
