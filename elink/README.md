@@ -90,30 +90,30 @@
  The elink has an parameter called 'ELINKID' that can be configured by 
  the module instantiating the elink. 
  
- REGISTER    |ADDRESS  |NOTES 
- ------------|---------|--------------------------------------------
- ESYSRESET   | 0xF0000 | Soft reset
- ESYSTX      | 0xF0004 | Elink tranmit config
- ESYSRX      | 0xF0008 | Elink receiver config
- ESYSCLK     | 0xF000C | Clock config
- ESYSCOREID  | 0xF0010 | ID to drive to Epiphany chip
- ESYSVERSION | 0xF0014 | Platform version
- ESYSDATAIN  | 0xF0018 | Direct data from elink receiver
- ESYSDATAOUT | 0xF001C | Direct data for elink transmitter
- ESYSDEBUG   | 0xF0020 | Various debug signals
- EMBOXLO     | 0xC0004 | Lower 32 bits of 64 bit wide mail box fifo
- EMBOXHI     | 0xC0008 | Upper 32 bits of 64 bit wide mail box fifo
- ESYSMMURX   | 0xE0000 | Start of receiver MMU lookup table
- ESYSMMUTX   | 0xD0000 | Start of transmit MMU lookup table (tbd)
+ REGISTER  |ADDRESS  |NOTES 
+ ----------|---------|--------------------------------------------
+ ELRESET   | 0xF0000 | Soft reset
+ ELTX      | 0xF0004 | Elink tranmit config
+ ELRX      | 0xF0008 | Elink receiver config
+ ELCLK     | 0xF000C | Clock config
+ ELCOREID  | 0xF0010 | ID to drive to Epiphany chip
+ ELVERSION | 0xF0014 | Platform version
+ ELDATAIN  | 0xF0018 | Direct data from elink receiver
+ ELDATAOUT | 0xF001C | Direct data for elink transmitter
+ ELDEBUG   | 0xF0020 | Various debug signals
+ EMBOXLO   | 0xF0024 | Lower 32 bits of 64b wide mail box fifo
+ EMBOXHI   | 0xF0028 | Upper 32 bits of 64b wide mail box fifo
+ EMMURX    | 0xE0000 | Start of receiver MMU lookup table
+ EMMUTX    | 0xD0000 | Start of transmit MMU lookup table (tbd)
           
 ###ELINK CONFIGURATION REGISTERS
  REGISTER   | DESCRIPTION 
  ---------- | --------------------------------------------------
- ESYSRESET  | (elink reset register)
+ ELRESET    | (elink reset register)
  [0]        | 0:  elink is active
             | 1:  elink in reset
  ---------- |---------------------------------------------------
- ESYSTX     | (elink transmit configuration register)
+ ELTX       | (elink transmit configuration register)
  [0]        | 0:  TX disable
             | 1:  TX enable
  [1]        | 0:  static address translation
@@ -124,7 +124,7 @@
  [7:4]      | Transmit control mode for eMesh
  [8]        | AXI slave read timeout enable
  -----------|----------------------------------------------------
- ESYSRX     | (elink receive configuration register)
+ ELRX       | (elink receive configuration register)
  [0]        | 0:  elink RX disable
             | 1:  elink RX enable
  [1]        | 0:  static address translation
@@ -133,7 +133,7 @@
             | 01: stores input pin data in ESYSDATAIN register
             | 1x: reserved
  -----------|---------------------------------------------------
- ESYSCLk    | (elink PLL configuration register)
+ ELCLK      | (elink PLL configuration register)
  [0]        | 0:cclk clock disabled
             | 1:cclk clock enabled 
  [1]        | 0:tx_lclk clock disabled
@@ -162,27 +162,27 @@
             | 1xxx: RESERVED        
  [15:12]    | PLL frequency
  -----------|-------------------------------------------------
- ESYSCOREID | (coordinate ID for Epiphany)
+ ELCOREID   | (coordinate ID for Epiphany)
  [5:0]      | Column ID for connected Epiphany chip
  [11:6]     | Row ID for connected Epiphany chip  
  -----------|-------------------------------------------------
- ESYSID     | (platform and version ID)
+ ELVERSION  | (platform and version ID)
  [7:0]      | Platform model number
  [7:0]      | Revision number
  -----------|-------------------------------------------------
- ESYSDATAIN | (data on elink input pins)
+ EDATAIN    | (data on elink input pins)
  [7:0]      | rx_data[7:0]         
  [8]        | tx_frame
  [9]        | tx_wait_rd
  [10]       | tx_wait_wr
  -----------|-------------------------------------------------
- ESYSDATAOUT| (data on eLink output pins)
+ ELDATAOUT  | (data on eLink output pins)
  [7:0]      | tx_data[7:0]         
  [8]        | tx_frame
  [9]        | rx_wait_rd
  [10]       | rx_wait_wr
  -----------|-------------------------------------------------
- ESYSDEBUG  | (various debug signals from elink) 
+ ELDEBUG    | (various debug signals from elink) 
  [31]       | embox_not_empty
  [30]       | emesh_rx_rd_wait
  [29]       | emesh_rx_wr_wait
