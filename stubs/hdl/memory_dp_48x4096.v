@@ -1,4 +1,3 @@
-
 module memory_dp_48x4096 (/*AUTOARG*/
    // Outputs
    doutb,

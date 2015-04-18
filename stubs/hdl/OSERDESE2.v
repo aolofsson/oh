@@ -1,30 +1,3 @@
-
-
-/*
-
-
-An OSERDESE2 is a device with an input register running on the rising edge of the CLKDIV
-clock and a loadable parallel-to-serial register running on the rising edges of the CLK clock. An
-internal state machine with the DATA_WIDTH parameter as set point makes sure the data from
-the parallel input register is transferred at the right moment into the parallel-to-serial register.
-
-An internal state machine controls the connection between the two registers. The state
-machine bounds CLK, CLKDIV, and the DATA_WITDH attribute to make sure data is always
-transferred from the parallel input register into the parallel-to-serial register at the correct
-moment.
-
-  The parallel input register has no enable (OCE) or reset (RST). This means that as soon
-as a rising CLKDIV edge is applied, any data available on the input pins of the
-OSERDESE2 is loaded into the register.
-
-  To prevent the OSERDESE2 from starting to generate unknown data immediately after
-release of the reset, keep the enable input deasserted for a number of CLKDIV clock
-cycles by using a LUT as programmable shift register (SRL32). The amount of clock
-cycles the enable input is held deasserted after releasing the reset is now programmable
-via the address input of the SRL32.
-
- */
-
 module OSERDESE2 ( /*AUTOARG*/
    // Outputs
    OFB, OQ, SHIFTOUT1, SHIFTOUT2, TBYTEOUT, TFB, TQ,

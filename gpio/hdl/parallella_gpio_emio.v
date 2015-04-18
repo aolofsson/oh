@@ -1,25 +1,4 @@
-/*
-  File: parallella_gpio_emio.v
- 
-  This file is part of the Parallella FPGA Reference Design.
 
-  Copyright (C) 2013-2014 Adapteva, Inc.
-  Contributed by Fred Huettig
-
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program (see the file COPYING).  If not, see
-  <http://www.gnu.org/licenses/>.
-*/
 
 // Implements GPIO pins from the PS/EMIO
 // Works with 7010 (24 pins) or 7020 (48 pins) and
@@ -136,3 +115,25 @@ module parallella_gpio_emio
    endgenerate
    
 endmodule // parallella_gpio_emio
+/*
+  File: parallella_gpio_emio.v
+ 
+  This file is part of the Parallella FPGA Reference Design.
+
+  Copyright (C) 2013-2014 Adapteva, Inc.
+  Contributed by Fred Huettig
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program (see the file COPYING).  If not, see
+  <http://www.gnu.org/licenses/>.
+*/
