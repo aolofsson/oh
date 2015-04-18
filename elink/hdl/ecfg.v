@@ -113,15 +113,16 @@ module ecfg (/*AUTOARG*/
    assign ecfg_read   = mi_en & ~mi_we;   
 
    //Config write enables
-   assign ecfg_reset_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSRESET);
-   assign ecfg_tx_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSTX);
-   assign ecfg_rx_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSRX);
-   assign ecfg_clk_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSCLK);
-   assign ecfg_coreid_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSCOREID);
-   assign ecfg_dataout_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ESYSDATAOUT);
-
+   assign ecfg_reset_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ELRESET);
+   assign ecfg_clk_write      = ecfg_write & (mi_addr[RFAW+1:2]==`ELCLK);
+   assign ecfg_tx_write       = ecfg_write & (mi_addr[RFAW+1:2]==`ELTX);
+   assign ecfg_rx_write       = ecfg_write & (mi_addr[RFAW+1:2]==`ELRX);
+   assign ecfg_coreid_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ELCOREID);
+   assign ecfg_dataout_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ELDATAOUT);
+   assign ecfg_version_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ELVERSION);
+   
    //###########################
-   //# ESYSRESET
+   //# RESET
    //###########################
     always @ (posedge mi_clk)
       if(hard_reset)
@@ -132,7 +133,7 @@ module ecfg (/*AUTOARG*/
    assign soft_reset    = ecfg_reset_reg;
 
    //###########################
-   //# ESYSTX
+   //# TX
    //###########################
    always @ (posedge mi_clk)
      if(hard_reset)
@@ -147,7 +148,7 @@ module ecfg (/*AUTOARG*/
    assign ecfg_timeout_enable     = ecfg_tx_reg[8];
    
    //###########################
-   //# ESYSRX
+   //# RX
    //###########################
    always @ (posedge mi_clk)
      if(hard_reset)
@@ -160,11 +161,11 @@ module ecfg (/*AUTOARG*/
    assign ecfg_rx_gpio_enable   = ecfg_rx_reg[3:2]==2'b01;
 
    //###########################
-   //# ESYSCLK
+   //# CCLK/LCLK (PLL)
    //###########################
     always @ (posedge mi_clk)
      if(hard_reset)
-       ecfg_clk_reg[15:0] <= {8'b0,DEFAULT_CLKDIV,DEFAULT_CLKDIV};
+       ecfg_clk_reg[15:0] <= 'd0;   
      else if (ecfg_clk_write)
        ecfg_clk_reg[15:0] <= mi_din[15:0];
 
@@ -176,7 +177,7 @@ module ecfg (/*AUTOARG*/
    //assign ecfg_cclk_bypass         = ecfg_clk_reg[8];
 
    //###########################
-   //# ESYSCOREID
+   //# COREID
    //###########################
    always @ (posedge mi_clk)
      if(hard_reset)
@@ -187,7 +188,7 @@ module ecfg (/*AUTOARG*/
    assign ecfg_coreid[11:0] = ecfg_coreid_reg[11:0];
 
    //###########################
-   //# ESYSVERSION
+   //# VERSION
    //###########################
    always @ (posedge mi_clk)
      if(hard_reset)
@@ -196,13 +197,13 @@ module ecfg (/*AUTOARG*/
        ecfg_version_reg[15:0] <= mi_din[15:0];   
    
    //###########################
-   //# ESYSDATAIN
+   //# DATAIN
    //###########################
    always @ (posedge mi_clk)
      ecfg_datain_reg[10:0] <= {ecfg_rx_datain[1:0], ecfg_rx_datain[8:0]};
    
    //###########################
-   //# ESYSDATAOUT
+   //# DATAOUT
    //###########################
    always @ (posedge mi_clk)
      if(hard_reset)
@@ -212,8 +213,8 @@ module ecfg (/*AUTOARG*/
 
    assign ecfg_dataout[10:0] = ecfg_dataout_reg[10:0];
 
-   //###########################
-   //# ESYSDEBUG
+   //###########################1
+   //# DEBUG
    //###########################
    assign ecfg_debug_vector[31:0]= {embox_not_empty,
 				    ecfg_rx_debug[14:3],
@@ -237,16 +238,16 @@ module ecfg (/*AUTOARG*/
    always @ (posedge mi_clk)
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
-         `ESYSRESET:   mi_dout[31:0] <= {31'b0, ecfg_reset_reg};
-         `ESYSTX:      mi_dout[31:0] <= {23'b0, ecfg_tx_reg[8:0]};
-         `ESYSRX:      mi_dout[31:0] <= {27'b0, ecfg_rx_reg[4:0]};
-         `ESYSCLK:     mi_dout[31:0] <= {24'b0, ecfg_clk_reg[7:0]};
-         `ESYSCOREID:  mi_dout[31:0] <= {20'b0, ecfg_coreid_reg[11:0]};
-         `ESYSVERSION: mi_dout[31:0] <= {16'b0, ecfg_version_reg[15:0]};
-         `ESYSDATAIN:  mi_dout[31:0] <= {21'b0, ecfg_datain_reg[10:0]};
-         `ESYSDATAOUT: mi_dout[31:0] <= {21'b0, ecfg_dataout_reg[10:0]};
-	 `ESYSDEBUG:   mi_dout[31:0] <= {ecfg_debug_vector[31:8],ecfg_debug_reg[7:0]};
-         default:      mi_dout[31:0] <= 32'd0;
+         `ELRESET:   mi_dout[31:0] <= {31'b0, ecfg_reset_reg};
+         `ELTX:      mi_dout[31:0] <= {23'b0, ecfg_tx_reg[8:0]};
+         `ELRX:      mi_dout[31:0] <= {27'b0, ecfg_rx_reg[4:0]};
+         `ELCLK:     mi_dout[31:0] <= {24'b0, ecfg_clk_reg[7:0]};
+         `ELCOREID:  mi_dout[31:0] <= {20'b0, ecfg_coreid_reg[11:0]};
+         `ELVERSION: mi_dout[31:0] <= {16'b0, ecfg_version_reg[15:0]};
+         `ELDATAIN:  mi_dout[31:0] <= {21'b0, ecfg_datain_reg[10:0]};
+         `ELDATAOUT: mi_dout[31:0] <= {21'b0, ecfg_dataout_reg[10:0]};
+	 `ELDEBUG:   mi_dout[31:0] <= {ecfg_debug_vector[31:8],ecfg_debug_reg[7:0]};
+         default:    mi_dout[31:0] <= 32'd0;
        endcase
 
 endmodule // ecfg
