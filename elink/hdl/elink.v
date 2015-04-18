@@ -6,6 +6,8 @@
  between Epiphany chips and FPGAs. The interface "should" achieve a peak
  throughput of 8 Gbit/s in FPGAs with 24 available LVDS signal pairs.  
  
+  TRANSMIT
+   
   SIGNAL         | DESCRIPTION 
   ---------------|--------------
   TXO_FRAME      | Packet framing signal. Rising edge signals new packet.
@@ -14,7 +16,7 @@
   TXI_RD_WAIT    | Push back signal for read transactions
   TXI_WR_WAIT    | Push back signal for write transactions
  
- A symmetrical set of signals exit on the receiver side.
+  RECEIVE
 
  The elink has a 64 bit data AXI master and 32-bit data AXI slave interface 
  for connecting to a standard AXI network.
@@ -25,27 +27,32 @@
  write           | A write transaction. Access & ~write indicates a read.
  datamode[1:0]   | Datasize (00=8b,01=16b,10=32b,11=64b)
  ctrlmode[3:0]   | Various packet modes for the Epiphany chip
- dstraddr[31:0]  | Address for write, read-request, or read-respones transaction
- data[31:0]      | Data for write transation, return data for read response
+ dstraddr[31:0]  | Address for write, read-request, or read-responses transaction
+ data[31:0]      | Data for write transaction, return data for read response
  srcaddr[31:0]   | Return address for read-request, upper data for 64 bit write
  
- More gory details:
+ PACKET-FORMAT:
  
  The elink was born out of a need to connect multiple Epiphany chips together
  and uses the eMesh 104 bit atomic packet structure for communication. 
- The eMesh atomic patcket consists of the following sub fields.
+ The eMesh atomic packet consists of the following sub fields.
+
  
+ FRAMING:
+  
  The number of bytes to be received is determined by the data of the first 
  “valid” byte (byte0) and the level of the FRAME signal. The data captured 
  on the rising edge of the LCLK is considered to be byte0 if the FRAME control
- captured at the same cycle (rising edge) is high but was low at the rising 
- edge of the previous LCLK cycle.  The cycle after the last byte of the 
+ captured at the same cycle is high but was low at the rising edge of the 
+ previous LCLK cycle (ie rising edge).  The cycle after the last byte of the 
  transaction (byte8 or byte12) will determine if the receiver should go into 
  data streaming mode based on the level of the FRAME control signal. If the 
  FRAME signal is low, the transaction is complete. If the FRAME control 
  signal stays high, the eLink goes into “streaming mode”, meaning that the 
  last byte of the previous transaction (byte8 or byte12) will be followed 
  by byte5 of the new transaction. 
+ 
+ PUSHBACK:
  
  The WAIT_RD and WAIT_WR signals are used to stall transmission when a receiver
  is unable to accept more transactions. The receiver will raise its WAIT output
@@ -120,7 +127,7 @@
                   10 - reserved
                   11 - reserved
   -------------------------------------------------------------
- ESYSCLK          ***Epiphany clock frequency setting*** 
+ ESYSCLK          ***Elink clock setting*** 
  [0]              Enable CCLK
  [1]              Enable TX_LCLK
  [2]              CCLK PLL bypass mode (cclk is set to clkin)
@@ -146,26 +153,11 @@
                   0111 - CLKIN/128
                   1xxx - RESERVED                 
  [15:12]          PLL Frequency
-                  0000 - 
-                  0001 -
-                  0010 -
-                  0011 -
-                  0100 -
-                  0101 -
-                  0110 -
-                  0111 -
-                  1000 -
-                  1001 -
-                  1010 -
-                  1011 -
-                  1100 -
-                  1101 -
-                  1110 -
-                  1111 -
+                  XXXX - TBD
  -------------------------------------------------------------
  ESYSCOREID     ***CORE ID***
- [5:0]           Column ID-->default at powerup/reset             
- [11:6]          Row ID  
+ [5:0]          Column ID for connected Epiphany chip
+ [11:6]         Row ID for connected Epiphany chip 
  -------------------------------------------------------------
  ESYSLATFORM   ***Platform ID (read only)***
  [7:0]          Platform model number
