@@ -25,15 +25,15 @@ module fifo_sync
     output reg           wr_full
     );
    
-   reg [AW-1:0]          waddr;
-   reg [AW-1:0]          raddr;
+   reg [AW-1:0]          wr_addr;
+   reg [AW-1:0]          rd_addr;
    reg [AW-1:0]          count;
    
    always @ ( posedge clk ) begin
       if( reset ) 
 	begin	   
-           waddr[AW-1:0] <= 'd0;
-           raddr[AW-1:0] <= 'b0;
+           wr_addr[AW-1:0] <= 'd0;
+           rd_addr[AW-1:0] <= 'b0;
            count[AW-1:0] <= 'b0;
            rd_empty      <= 1'b1;
            wr_full       <= 1'b0;         
@@ -41,12 +41,12 @@ module fifo_sync
 	begin
            if( wr_en & rd_en ) 
 	     begin
-		waddr <= waddr + 'd1;
-		raddr <= raddr + 'd1;	      
+		wr_addr <= wr_addr + 'd1;
+		rd_addr <= rd_addr + 'd1;	      
              end 
 	   else if( wr_en ) 
 	     begin
-		waddr <= waddr + 'd1;
+		wr_addr <= wr_addr + 'd1;
 		count <= count + 'd1;
 		rd_empty <= 1'b0;
 		if( & count )
@@ -54,7 +54,7 @@ module fifo_sync
          end 
 	   else if( rd_en ) 
 	   begin	      
-              raddr <= raddr + 'd1;
+              rd_addr <= rd_addr + 'd1;
               count <= count - 'd1;
               wr_full <= 1'b0;
               if( count == 'd1 )
@@ -71,28 +71,52 @@ module fifo_sync
           (
            .DPO(rd_data[dn] ),   // Read-only 1-bit data output
            .SPO(),            // Rw/ 1-bit data output
-           .A0(waddr[0]),     // Rw/ address[0] input bit
-           .A1(waddr[1]),     // Rw/ address[1] input bit
-           .A2(waddr[2]),     // Rw/ address[2] input bit
-           .A3(waddr[3]),     // Rw/ address[3] input bit
-           .A4(waddr[4]),     // Rw/ address[4] input bit
+           .A0(wr_addr[0]),     // Rw/ address[0] input bit
+           .A1(wr_addr[1]),     // Rw/ address[1] input bit
+           .A2(wr_addr[2]),     // Rw/ address[2] input bit
+           .A3(wr_addr[3]),     // Rw/ address[3] input bit
+           .A4(wr_addr[4]),     // Rw/ address[4] input bit
            .D(wr_data[dn]),     // Write 1-bit data input
-           .DPRA0(raddr[0]),  // Read-only address[0] input bit
-           .DPRA1(raddr[1]),  // Read-only address[1] input bit
-           .DPRA2(raddr[2]),  // Read-only address[2] input bit
-           .DPRA3(raddr[3]),  // Read-only address[3] input bit
-           .DPRA4(raddr[4]),  // Read-only address[4] input bit
+           .DPRA0(rd_addr[0]),  // Read-only address[0] input bit
+           .DPRA1(rd_addr[1]),  // Read-only address[1] input bit
+           .DPRA2(rd_addr[2]),  // Read-only address[2] input bit
+           .DPRA3(rd_addr[3]),  // Read-only address[3] input bit
+           .DPRA4(rd_addr[4]),  // Read-only address[4] input bit
            .WCLK(clk),        // Write clock input
            .WE(wr_en)           // Write enable input
            );
      end
    endgenerate
-`endif   
-endmodule // syncfifo
+`elsif TARGET_CLEAN
+
+   defparam mem.DW=DW;
+   defparam mem.AW=AW;
+   
+   memory_dp mem (
+			// Outputs
+			.rd_data	(rd_data[DW-1:0]),
+			// Inputs
+			.wr_clk		(clk),
+			.wr_en		({(DW/8){we_en}}),
+			.wr_addr	(wr_addr[AW-1:0]),
+			.wr_data	(wr_data[DW-1:0]),
+			.rd_clk		(rd_clk),
+			.rd_en		(rd_en),
+			.rd_addr	(rd_addr[AW-1:0]));
+
+`endif
+
+   
+endmodule // fifo_sync
+// Local Variables:
+// verilog-library-directories:(".")
+// End:
+
 
 /*
  Copyright (C) 2014 Adapteva, Inc.
  Contributed by Fred Huettig <fred@adapteva.com>
+ Contributed by Andreas Olofsson <andreas@adapteva.com>
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
