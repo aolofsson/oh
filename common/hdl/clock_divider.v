@@ -20,20 +20,18 @@ module clock_divider(/*AUTOARG*/
    reg        clkout_reg;
    reg [7:0]  counter;   
    reg [7:0]  divcfg_dec;
-
+   reg [3:0]  divcfg_reg;
+   reg [3:0]  divcfg_change;
+   
    wire       div2_sel;
    wire       div1_sel;   
    wire       posedge_match;
    wire       negedge_match;  
    wire       posedge90_match;
    wire       negedge90_match; 
-   
-   wire       clkout90_div2_in;
-   wire       clkout90_div4_in;
-   
    reg 	      clkout90_div4;
    reg 	      clkout90_div2;
-
+   
    // ###################
    // # Decode divcfg
    // ###################
@@ -44,21 +42,31 @@ module clock_divider(/*AUTOARG*/
 	  4'b0010 : divcfg_dec[7:0] = 8'b00000100;  // Divide by 4
 	  4'b0011 : divcfg_dec[7:0] = 8'b00001000;  // Divide by 8
 	  4'b0100 : divcfg_dec[7:0] = 8'b00010000;  // Divide by 16
-	  4'b0101 : divcfg_dec[7:0] = 8'b00100000;  // Divide by 32
+          4'b0101 : divcfg_dec[7:0] = 8'b00100000;  // Divide by 32
           4'b0110 : divcfg_dec[7:0] = 8'b01000000;  // Divide by 64
-          4'b0111 : divcfg_dec[7:0] = 8'b01000000;  // Divide by 128
-	  default : divcfg_dec[7:0] = 8'b0000000;   // others
+          4'b0111 : divcfg_dec[7:0] = 8'b10000000;  // Divide by 128
+	  default : divcfg_dec[7:0] = 8'b00000000;   // others
 	endcase
    
    //Divide by two special case
    assign div2_sel = divcfg[3:0]==4'b0001;
    assign div1_sel = divcfg[3:0]==4'b0000;
-    
+   
+   
+   //Edge change detector (no need for synchronizer)
+   always @ (posedge clkin or posedge reset)
+     if(reset)              
+       divcfg_change <=1'b0;
+     else
+       begin
+	  divcfg_change <= (divcfg_reg[3:0]^divcfg[3:0]);	  
+	  divcfg_reg[3:0] <=divcfg[3:0];	  
+       end
    always @ (posedge clkin or posedge reset)
      if(reset)
        counter[7:0] <= 8'b000001;
      else      
-       if(posedge_match)
+       if(posedge_match | divcfg_change)
 	 counter[7:0] <= 8'b000001;// Self resetting
        else
 	 counter[7:0] <= (counter[7:0] + 8'b000001);
@@ -79,20 +87,15 @@ module clock_divider(/*AUTOARG*/
   
    assign clkout    = div1_sel ? clkin : clkout_reg;
  
-   assign clkout90_div4_in = posedge90_match ? 1'b1 :
-                             negedge90_match ? 1'b0 :
-			                       clkout90_div4;
-    
-   assign clkout90_div2_in = negedge_match ? 1'b1 :
-                             posedge_match ? 1'b0 :
-			                     clkout90_div2;
-   
-    
    always @ (posedge clkin)
-     clkout90_div4 <= clkout90_div4_in;
+     clkout90_div4 <= posedge90_match ? 1'b1 :
+                      negedge90_match ? 1'b0 :
+		                        clkout90_div4;
 
    always @ (negedge clkin)
-     clkout90_div2 <= clkout90_div2_in;
+     clkout90_div2 <= negedge_match ? 1'b1 :
+                      posedge_match ? 1'b0 :
+		                     clkout90_div2;
      
    assign clkout90  = div2_sel ? clkout90_div2 : clkout90_div4;
       
