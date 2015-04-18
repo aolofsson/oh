@@ -92,19 +92,19 @@
  
  REGISTER  |ADDRESS  |NOTES 
  ----------|---------|--------------------------------------------
- ELRESET   | 0xF0000 | Soft reset
- ELTX      | 0xF0004 | Elink tranmit config
- ELRX      | 0xF0008 | Elink receiver config
- ELCLK     | 0xF000C | Clock config
- ELCOREID  | 0xF0010 | ID to drive to Epiphany chip
- ELVERSION | 0xF0014 | Platform version
- ELDATAIN  | 0xF0018 | Direct data from elink receiver
- ELDATAOUT | 0xF001C | Direct data for elink transmitter
- ELDEBUG   | 0xF0020 | Various debug signals
- EMBOXLO   | 0xF0024 | Lower 32 bits of 64b wide mail box fifo
- EMBOXHI   | 0xF0028 | Upper 32 bits of 64b wide mail box fifo
- EMMURX    | 0xE0000 | Start of receiver MMU lookup table
- EMMUTX    | 0xD0000 | Start of transmit MMU lookup table (tbd)
+ ELRESET   | 0xE0000 | Soft reset
+ ELTX      | 0xE0004 | Elink tranmit config
+ ELRX      | 0xE0008 | Elink receiver config
+ ELCLK     | 0xE000C | Clock config
+ ELCOREID  | 0xE0010 | ID to drive to Epiphany chip
+ ELVERSION | 0xE0014 | Platform version
+ ELDATAIN  | 0xE0018 | Direct data from elink receiver
+ ELDATAOUT | 0xE001C | Direct data for elink transmitter
+ ELDEBUG   | 0xE0020 | Various debug signals
+ EMBOXLO   | 0xE0024 | Lower 32 bits of 64b wide mail box fifo
+ EMBOXHI   | 0xE0028 | Upper 32 bits of 64b wide mail box fifo
+ EMMURX    | 0xD0000 | Start of receiver MMU lookup table
+ EMMUTX    | 0xC0000 | Start of transmit MMU lookup table (tbd)
           
 ###ELINK CONFIGURATION REGISTERS
  REGISTER   | DESCRIPTION 

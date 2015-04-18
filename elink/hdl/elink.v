@@ -1,25 +1,43 @@
 /*
- ########################################################################
- DESCRIPTION
- ########################################################################
- The "eLink" is a low latency chip to chip interface used by for communication
- between Epiphany chips and FPGAs. The interface "should" achieve a peak
- throughput of 8 Gbit/s in FPGAs with 24 available LVDS signal pairs.  
+
+ ###DESCRIPTION
+ The "elink" is a low-latency/high-speed interface for communicating between 
+ FPGAs and ASICs (such as Epiphany) that implement the elink protocol.
+ The interface "should" achieve a peak throughput of 8 Gbit/s in FPGAs with 
+ 24 available LVDS signal pairs.  
  
-  TRANSMIT
+ ###ELINK INTERFACE I/O SIGNALS
    
-  SIGNAL         | DESCRIPTION 
-  ---------------|--------------
-  TXO_FRAME      | Packet framing signal. Rising edge signals new packet.
-  TXO_LCLK       | A clock aligned in the center of the data eye
-  TXO_DATA[7:0]  | Dual data rate (DDR) that transmits packet
-  TXI_RD_WAIT    | Push back signal for read transactions
-  TXI_WR_WAIT    | Push back signal for write transactions
+  SIGNAL         |DIR| DESCRIPTION 
+  ---------------|---|--------------
+  txo_frame      | O | TX Packet framing signal.
+  txo_lclk       | O | TX A clock aligned in the center of the data eye
+  txo_data[7:0]  | O | TX Dual data rate (DDR) that transmits packet
+  txi_rd_wait    | I | TX Push back (input) for read transactions
+  txi_wd_wait    | I | TX Push back (input) for write transactions
+  rxi_frame      | I | RX Packet framing signal. Rising edge signals new packet.
+  rxi_lclk       | I | RX A clock aligned in the center of the data eye
+  rxi_data[7:0]  | I | RX Dual data rate (DDR) that transmits packet
+  rxo_rd_wait    | O | RX Push back (output) for read transactions
+  rxo_wr_wait    | O | RX Push back (output) for write transactions
+  m_axi*         | - | AXI master interface
+  s_axi*         | - | AXI slave interface
+  hard_reset     | I | Reset input
+  clkin          | I | Input clock for PLL
+  clkbypass[2:0] | I | Input clocks for bypassing PLL
+  cclk_n/cclk_p  | O | Differential clock output for Epiphany  
+  chip_resetb    | O | Reset for Epiphany
+  colid[3:0]     | O | Column coordinate pins for Epiphany 
+  rowid[3:0]     | O | Row coordinate pins for Epiphany 
+  embox_not_empty| O | Mailbox not empty (connect to interrupt line)   
+  embox_full     | O | Mailbox is full indicator
  
-  RECEIVE
+ ###BUS INTERFACE
 
  The elink has a 64 bit data AXI master and 32-bit data AXI slave interface 
  for connecting to a standard AXI network.
+ 
+ ###EMESH PACKET
  
  PACKET SUBFIELD | DESCRIPTION 
  ----------------|----------------
@@ -27,18 +45,18 @@
  write           | A write transaction. Access & ~write indicates a read.
  datamode[1:0]   | Datasize (00=8b,01=16b,10=32b,11=64b)
  ctrlmode[3:0]   | Various packet modes for the Epiphany chip
- dstraddr[31:0]  | Address for write, read-request, or read-responses transaction
+ dstraddr[31:0]  | Address for write, read-request, or read-responses
  data[31:0]      | Data for write transaction, return data for read response
  srcaddr[31:0]   | Return address for read-request, upper data for 64 bit write
  
- PACKET-FORMAT:
+ ###PACKET-FORMAT:
  
  The elink was born out of a need to connect multiple Epiphany chips together
  and uses the eMesh 104 bit atomic packet structure for communication. 
  The eMesh atomic packet consists of the following sub fields.
 
  
- FRAMING:
+ ###FRAMING:
   
  The number of bytes to be received is determined by the data of the first 
  “valid” byte (byte0) and the level of the FRAME signal. The data captured 
@@ -52,7 +70,7 @@
  last byte of the previous transaction (byte8 or byte12) will be followed 
  by byte5 of the new transaction. 
  
- PUSHBACK:
+ ###PUSHBACK:
  
  The WAIT_RD and WAIT_WR signals are used to stall transmission when a receiver
  is unable to accept more transactions. The receiver will raise its WAIT output
@@ -73,144 +91,162 @@
  to indicate to the transmit logic that no more transactions can be received 
  because the receiver buffer full. 
  
- ########################################################################
- ELINK MEMORY MAP
- ########################################################################
+ ###ELINK MEMORY MAP
+ 
  The elink has an parameter called 'ELINKID' that can be configured by 
  the module instantiating the elink. 
  
- REGISTER    |   ADDRESS    | NOTES 
- ------------| -------------|------
- ESYSRESET   |   0xF0000    | Soft reset
- ESYSTX      |   0xF0004    | Elink tranmit config
- ESYSRX      |   0xF0008    | Elink receiver config
- ESYSCLK     |   0xF000C    | Clock config
- ESYSCOREID  |   0xF0010    | ID to drive to Epiphany chip
- ESYSVERSION |   0xF0014    | Platform version
- ESYSDATAIN  |   0xF0018    | Direct data from elink receiver
- ESYSDATAOUT |   0xF001C    | Direct data for elink transmitter
- ESYSDEBUG   |   0xF0020    | Various debug signals
----------------------------------------------------------------------------
- EMBOXLO     |   0xC0004    | Lower 32 bits of 64 bit wide mail box fifo
- EMBOXHI     |   0xC0008    | Upper 32 bits of 64 bit wide mail box fifo
----------------------------------------------------------------------------
- ESYSMMURX   |   0xE0000    | Start of receiver MMU lookup table
- ESYSMMUTX   |   0xD0000    | Start of transmit MMU lookup table (tbd)
+ REGISTER    | ADDRESS | NOTES 
+ ------------| --------|------
+ ESYSRESET   | 0xF0000 | Soft reset
+ ESYSTX      | 0xF0004 | Elink tranmit config
+ ESYSRX      | 0xF0008 | Elink receiver config
+ ESYSCLK     | 0xF000C | Clock config
+ ESYSCOREID  | 0xF0010 | ID to drive to Epiphany chip
+ ESYSVERSION | 0xF0014 | Platform version
+ ESYSDATAIN  | 0xF0018 | Direct data from elink receiver
+ ESYSDATAOUT | 0xF001C | Direct data for elink transmitter
+ ESYSDEBUG   | 0xF0020 | Various debug signals
+ EMBOXLO     | 0xC0004 | Lower 32 bits of 64 bit wide mail box fifo
+ EMBOXHI     | 0xC0008 | Upper 32 bits of 64 bit wide mail box fifo
+ ESYSMMURX   | 0xE0000 | Start of receiver MMU lookup table
+ ESYSMMUTX   | 0xD0000 | Start of transmit MMU lookup table (tbd)
           
- ########################################################################
- ELINK CONFIGURATION REGISTER (32bit access)
- ########################################################################
--------------------------------------------------------------
- ESYSRESET        ***Elink reset***
- [0]              0  - elink active 
-                  1  - elink in reset
--------------------------------------------------------------
- ESYSTX           ***Elink transmitter configuration***
- [0]              0  - link TX disable
-                  1  - link TX enable
- [1]              0  - normal pass through transaction mode
-                  1  - mmu mode
- [3:2]            00 - normal mode
-                  01 - gpio drive mode
-                  10 - reserved
-                  11 - reserved
- [7:4]            Transmit control mode for eMesh
- [8]             AXI slave read timeout enable
-  -------------------------------------------------------------
- ESYSRX           ***Elink receiver configuration***
- [0]              0  - link RX disable
-                  1  - link RX enable
- [1]              0  - normal transaction mode
-                  1  - mmu mode
- [3:2]            00 - normal mode
-                  01 - gpio sample mode (drive rd wait pins from registers)
-                  10 - reserved
-                  11 - reserved
-  -------------------------------------------------------------
- ESYSCLK          ***Elink clock setting*** 
- [0]              Enable CCLK
- [1]              Enable TX_LCLK
- [2]              CCLK PLL bypass mode (cclk is set to clkin)
- [3]              LCLK PLL bypass mode (lclk is set to clkin) 
- [7:4]            CCLK PLL Divider (1<<reg)
-                  0000 - CLKIN/1
-                  0001 - CLKIN/2
-                  0010 - CLKIN/4
-                  0011 - CLKIN/8
-                  0100 - CLKIN/16
-                  0101 - CLKIN/32
-                  0110 - CLKIN/64
-                  0111 - CLKIN/128
-                  1xxx - RESERVED                  
- [11:8]           Elink PLL Divider (1<<reg)
-                  0000 - CLKIN/1
-                  0001 - CLKIN/2
-                  0010 - CLKIN/4
-                  0011 - CLKIN/8
-                  0100 - CLKIN/16
-                  0101 - CLKIN/32
-                  0110 - CLKIN/64
-                  0111 - CLKIN/128
-                  1xxx - RESERVED                 
- [15:12]          PLL Frequency
-                  XXXX - TBD
+ ###ELINK CONFIGURATION REGISTERS
+ REGISTER   | DESCRIPTION 
+ ---------- | --------------
+ ESYSRESET  | (elink reset register)
+ [0]        | 0:  elink is active
+            | 1:  elink in reset
+ ---------- |-------------------
+ ESYSTX     | (elink transmit configuration register)
+ [0]        | 0:  TX disable
+            | 1:  TX enable
+ [1]        | 0:  static address translation
+            | 1:  enables MMU based address translation
+ [3:2]      | 00: default elink packet transfer mode
+            | 01: forces values from ESYSDATAOUT on output pins
+            | 1x: reserved
+ [7:4]      | Transmit control mode for eMesh
+ [8]        | AXI slave read timeout enable
+ ---------- |-------------------
+ ESYSRX     | (elink receive configuration register)
+ [0]        | 0:  elink RX disable
+            | 1:  elink RX enable
+ [1]        | 0:  static address translation
+            | 1:  enables MMU based address translation
+ [3:2]      | 00: default elink packet receive mode
+            | 01: stores input pin data in ESYSDATAIN register
+            | 1x: reserved
+ ---------- |-------------------
+ ESYSCLk    | (elink PLL configuration register)
+ [0]        | 0:cclk clock disabled
+            | 1:cclk clock enabled 
+ [1]        | 0:tx_lclk clock disabled
+            | 1:tx_lclk clock enabled 
+ [2]        | 0: cclk driven from internal PLL
+            | 1: cclk driven from clkbypass[2:0] input 
+ [3]        | 0: lclk driven from internal PLL
+            | 1: lclk driven from clkbypass[2:0] input   
+ [7:4]      | 0000: cclk=pllclk/1
+            | 0001: cclk=pllclk/2
+            | 0010: cclk=pllclk/4
+            | 0011: cclk=pllclk/8
+            | 0100: cclk=pllclk/16
+            | 0101: cclk=pllclk/32
+            | 0110: cclk=pllclk/64
+            | 0111: cclk=pllclk/128
+            | 1xxx: RESERVED
+ [11:8]     | 0000: lclk=pllclk/1
+            | 0001: lclk=pllclk/2
+            | 0010: lclk=pllclk/4
+            | 0011: lclk=pllclk/8
+            | 0100: lclk=pllclk/16
+            | 0101: lclk=pllclk/32
+            | 0110: lclk=pllclk/64
+            | 0111: lclk=pllclk/128
+            | 1xxx: RESERVED        
+ [15:12]    | PLL frequency
+ ---------- |-------------------
+ ESYSCOREID | (coordinate ID for Epiphany)
+ [5:0]      | Column ID for connected Epiphany chip
+ [11:6]     | Row ID for connected Epiphany chip  
  -------------------------------------------------------------
- ESYSCOREID     ***CORE ID***
- [5:0]          Column ID for connected Epiphany chip
- [11:6]         Row ID for connected Epiphany chip 
+ ESYSLATFORM| (platform ID)
+ [7:0]      | Platform model number
+ [7:0]      | Revision number
  -------------------------------------------------------------
- ESYSLATFORM   ***Platform ID (read only)***
- [7:0]          Platform model number
+ ESYSDATAIN | (data on elink input pins)
+ [7:0]      | rx_data[7:0]         
+ [8]        | tx_frame
+ [9]        | tx_wait_rd
+ [10]       | tx_wait_wr
  -------------------------------------------------------------
- ESYSDATAIN     ***Data on elink input pins
- [7:0]          rx_data[7:0]         
- [8]            tx_frame
- [9]            tx_wait_rd
- [10]           tx_wait_wr
+ ESYSDATAOUT| (data on eLink output pins)
+ [7:0]      | tx_data[7:0]         
+ [8]        | tx_frame
+ [9]        | rx_wait_rd
+ [10]       | rx_wait_wr
  -------------------------------------------------------------
- ESYSDATAOUT    ***Data on eLink output pins
- [7:0]          tx_data[7:0]         
- [8]            tx_frame
- [9]            rx_wait_rd
- [10]           rx_wait_wr
- -------------------------------------------------------------
- ESYSDEBUG      ***Various debug signals from elink 
- [31] embox_not_empty
- //RX signals
- [30] emesh_rx_rd_wait
- [29] emesh_rx_wr_wait
- [28] esaxi_emrr_rd_en
- [27] emrr_full
- [26] emrr_progfull
- [25] emrr_wr_en
- [24] emaxi_emrq_rd_en
- [23] emrq_progfull
- [22] emrq_wr_en
- [21] emaxi_emwr_rd_en
- [20] emwr_progfull
- [19] emwr_wr_en (rx)
- //TX signals
- [18] e_tx_rd_wait 
- [17] e_tx_wr_wait
- [16] emrr_rd_en
- [15] emaxi_emrr_prog_full
- [14] emaxi_emrr_wr_en
- [13] emrq_rd_en
- [12  esaxi_emrq_prog_full
- [11] esaxi_emrq_wr_en
- [10] emwr_rd_en
- [9]  esaxi_emwr_prog_full
- [8]  esaxi_emwr_wr_en  
- ##########Sticky signals below#############
- [7] reserved
- [6] emrr_full (rx)
- [5] emrq_full (rx)
- [4] emwr_full (rx)
- [3] emaxi_emrr_full (tx)
- [2] esaxi_emrq_full (tx)
- [1] esaxi_emwr_full (tx)
- [0] embox_full (mailbox)
-  ########################################################################
+ ESYSDEBUG  | (various debug signals from elink) 
+ [31]       | embox_not_empty
+ [30]       | emesh_rx_rd_wait
+ [29]       | emesh_rx_wr_wait
+ [28]       | esaxi_emrr_rd_en
+ [27]       | emrr_full
+ [26]       | emrr_progfull
+ [25]       | emrr_wr_en
+ [24]       | emaxi_emrq_rd_en
+ [23]       | emrq_progfull
+ [22]       | emrq_wr_en
+ [21]       | emaxi_emwr_rd_en
+ [20]       | emwr_progfull
+ [19]       | emwr_wr_en (rx)
+ [18]       | e_tx_rd_wait 
+ [17]       | e_tx_wr_wait
+ [16]       | emrr_rd_en
+ [15]       | emaxi_emrr_prog_full
+ [14]       | emaxi_emrr_wr_en
+ [13]       | emrq_rd_en
+ [12]       | esaxi_emrq_prog_full
+ [11]       | esaxi_emrq_wr_en
+ [10]       | emwr_rd_en
+ [9]        | esaxi_emwr_prog_full
+ [8]        | esaxi_emwr_wr_en  
+ [7]        | reserved
+ [6]        | sticky emrr_full (rx)
+ [5]        | sticky emrq_full (rx)
+ [4]        | sticky emwr_full (rx)
+ [3]        | sticky emaxi_emrr_full (tx)
+ [2]        | sticky esaxi_emrq_full (tx)
+ [1]        | sticky esaxi_emwr_full (tx)
+ [0]        | sticky embox_full (mailbox)
+
+###INTERNAL STRUCTURE
+```
+elink               -  Top level level AXI elink peripheral
+  emaxi             -  AXI master interface
+  exaxi             -  AXI slave interface
+  etx               -  Elink transmit block
+      etx_io        -  Converts packet to high speed serial
+      etx_protocol  -  Creates an elink transaction packet
+      etx_arbiter   -  Selects one of three AXI traffic sources (rd, wr, rr)
+      s_rq_fifo     -  Read request fifo for slave AXI interface
+      s_wr_fifo     -  Write request fifo for slave AXI interface
+      m_rr_fifo     -  Read response fifo for master AXI interface 
+  erx               -  Elink receiver block
+      etx_io        -  Converts serial packet received to parallel
+      etx_protocol  -  Converts the elink packet to 104 bit emesh transaction
+      etx_disty     -  Decodes emesh transaction and sends to AXI interface
+      emmu          -  Translates the dstaddr of incoming transaction  
+      m_rq_fifo     -  Read request fifo for master AXI interface
+      m_wr_fifo     -  Write request fifo for master AXI interface
+      s_rr_fifo     -  Read response fifo for slave AXI interface 
+  ecfg              -  Configurationr register file for elink
+  embox             -  Mail box (with interrupt output)
+  eclocks           -  PLL/clock generator
+  ereset            -  Reset generator
+
  */
 
 module elink(/*AUTOARG*/
@@ -227,17 +263,17 @@ module elink(/*AUTOARG*/
    s_axi_bvalid, s_axi_rdata, s_axi_rlast, s_axi_rresp, s_axi_rvalid,
    s_axi_wready, embox_not_empty, embox_full,
    // Inputs
-   hard_reset, clkin, bypass_clocks, rxi_lclk_p, rxi_lclk_n,
-   rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p,
-   txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n, m_axi_aclk,
-   m_axi_aresetn, m_axi_arready, m_axi_awready, m_axi_bresp,
-   m_axi_bvalid, m_axi_rdata, m_axi_rlast, m_axi_rresp, m_axi_rvalid,
-   m_axi_wready, s_axi_aclk, s_axi_aresetn, s_axi_araddr,
-   s_axi_arburst, s_axi_arcache, s_axi_arlen, s_axi_arprot,
-   s_axi_arqos, s_axi_arsize, s_axi_arvalid, s_axi_awaddr,
-   s_axi_awburst, s_axi_awcache, s_axi_awlen, s_axi_awprot,
-   s_axi_awqos, s_axi_awsize, s_axi_awvalid, s_axi_bready,
-   s_axi_rready, s_axi_wdata, s_axi_wlast, s_axi_wstrb, s_axi_wvalid
+   hard_reset, clkin, clkbypass, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
+   rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
+   txi_rd_wait_p, txi_rd_wait_n, m_axi_aclk, m_axi_aresetn,
+   m_axi_arready, m_axi_awready, m_axi_bresp, m_axi_bvalid,
+   m_axi_rdata, m_axi_rlast, m_axi_rresp, m_axi_rvalid, m_axi_wready,
+   s_axi_aclk, s_axi_aresetn, s_axi_araddr, s_axi_arburst,
+   s_axi_arcache, s_axi_arlen, s_axi_arprot, s_axi_arqos,
+   s_axi_arsize, s_axi_arvalid, s_axi_awaddr, s_axi_awburst,
+   s_axi_awcache, s_axi_awlen, s_axi_awprot, s_axi_awqos,
+   s_axi_awsize, s_axi_awvalid, s_axi_bready, s_axi_rready,
+   s_axi_wdata, s_axi_wlast, s_axi_wstrb, s_axi_wvalid
    );
    
    parameter DEF_COREID  = 12'h810;
@@ -255,7 +291,7 @@ module elink(/*AUTOARG*/
    /****************************/
    input         hard_reset;          // active high synhcronous hardware reset
    input 	 clkin;               // clock for pll
-   input [2:0] 	 bypass_clocks;       // bypass clocks for elinks w/o pll
+   input [2:0] 	 clkbypass;           // bypass clocks for elinks w/o pll
                                       // "advanced", tie to zero if not used
 
    /********************************/
@@ -338,7 +374,7 @@ module elink(/*AUTOARG*/
    input 	 s_axi_aresetn;
 
    //Read address channel
-   input [29:0]  s_axi_araddr;
+   input [31:0]  s_axi_araddr;
    input [1:0] 	 s_axi_arburst;
    input [3:0] 	 s_axi_arcache;
    input [7:0] 	 s_axi_arlen;
@@ -349,7 +385,7 @@ module elink(/*AUTOARG*/
    input 	 s_axi_arvalid;
 
    //Write address channel
-   input [29:0]  s_axi_awaddr;
+   input [31:0]  s_axi_awaddr;
    input [1:0] 	 s_axi_awburst;
    input [3:0] 	 s_axi_awcache;
    input [7:0] 	 s_axi_awlen;
@@ -560,6 +596,7 @@ module elink(/*AUTOARG*/
                         );
    */
    
+   defparam esaxi.ELINKID=ELINKID; //passing along ID from top level 
    esaxi esaxi(
 	       /*AUTOINST*/
 	       // Outputs
@@ -609,7 +646,7 @@ module elink(/*AUTOARG*/
 	       .ecfg_timeout_enable	(ecfg_timeout_enable),
 	       .s_axi_aclk		(s_axi_aclk),
 	       .s_axi_aresetn		(s_axi_aresetn),
-	       .s_axi_araddr		(s_axi_araddr[29:0]),
+	       .s_axi_araddr		(s_axi_araddr[31:0]),
 	       .s_axi_arburst		(s_axi_arburst[1:0]),
 	       .s_axi_arcache		(s_axi_arcache[3:0]),
 	       .s_axi_arlen		(s_axi_arlen[7:0]),
@@ -617,7 +654,7 @@ module elink(/*AUTOARG*/
 	       .s_axi_arqos		(s_axi_arqos[3:0]),
 	       .s_axi_arsize		(s_axi_arsize[2:0]),
 	       .s_axi_arvalid		(s_axi_arvalid),
-	       .s_axi_awaddr		(s_axi_awaddr[29:0]),
+	       .s_axi_awaddr		(s_axi_awaddr[31:0]),
 	       .s_axi_awburst		(s_axi_awburst[1:0]),
 	       .s_axi_awcache		(s_axi_awcache[3:0]),
 	       .s_axi_awlen		(s_axi_awlen[7:0]),
@@ -855,7 +892,7 @@ module elink(/*AUTOARG*/
 		    .clkin		(clkin),
 		    .hard_reset		(hard_reset),
 		    .ecfg_clk_settings	(ecfg_clk_settings[15:0]),
-		    .bypass_clocks	(bypass_clocks[2:0]));
+		    .clkbypass		(clkbypass[2:0]));
          
 endmodule // elink
 // Local Variables:

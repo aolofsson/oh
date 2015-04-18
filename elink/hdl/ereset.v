@@ -11,7 +11,7 @@ module ereset (/*AUTOARG*/
 
    //outputs
    output 	reset;             //reset for elink
-   output       chip_resetb;       //reset for epiphany
+   output       chip_resetb;      //reset for epiphany
  
    //Reset for link logic
    assign reset    = hard_reset | soft_reset;
@@ -23,7 +23,7 @@ module ereset (/*AUTOARG*/
    //the rising edge of chip_resetb it may be beneficial to have one
    //reset per chip and to stagger the 
 
-   assign chip_resetb =  ~(hard_reset | soft_reset); 
+   assign chip_resetb   = ~(hard_reset | soft_reset); 
    
 endmodule // ereset
 

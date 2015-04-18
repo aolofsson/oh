@@ -191,7 +191,6 @@ module erx (/*AUTOARG*/
 
    //Read response fifo (for host)
    fifo_async_emesh s_rr_fifo(.fifo_full	(emrr_full),
-			      .emesh_access_out	(),
 			      .emesh_write_out	(),
 			      .emesh_datamode_out(),
 			      .emesh_ctrlmode_out(),
@@ -199,6 +198,7 @@ module erx (/*AUTOARG*/
 			      .emesh_srcaddr_out(),
 			      /*AUTOINST*/
 			      // Outputs
+			      .emesh_access_out	(emrr_access),	 // Templated
 			      .emesh_data_out	(emrr_data[31:0]), // Templated
 			      .fifo_progfull	(emrr_progfull), // Templated
 			      // Inputs

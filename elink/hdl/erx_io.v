@@ -260,6 +260,7 @@ module erx_io (/*AUTOARG*/
    reg [63:0]  rx_data_reg;
    reg [7:0]   rx_frame_reg;
 
+   
    wire        rxreset = reset | ~ecfg_rx_enable;
    
    always @ (posedge rx_lclk_div4 or posedge rxreset) 
@@ -269,7 +270,8 @@ module erx_io (/*AUTOARG*/
 	else
           rxenb_sync[1:0] <= {1'b1, rxenb_sync[1]};
      end
-   
+
+   //TODO: Is this the right place for the enable signal?
    always @ (posedge rx_lclk_div4) 
      begin      
 	rxgpio_sync       <= {ecfg_rx_gpio_enable, rxgpio_sync[1]};      
