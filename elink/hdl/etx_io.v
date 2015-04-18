@@ -49,7 +49,7 @@ module etx_io (/*AUTOARG*/
    reg [7:0] 	pframe;
    reg [1:0]    txenb_sync;  
    reg [1:0] 	txgpio_sync;
-   reg [1:0] 	txenb_out_sync;
+  
 
    //############
    //# WIRES
@@ -193,11 +193,10 @@ module etx_io (/*AUTOARG*/
    //################################
    //# LCLK Creation (and gating)
    //################################
-
-   // sync the enable signal to the phase-shifted output clock
-   always @ (posedge tx_lclk_out)
-     txenb_out_sync[1:0] <= {txenb_out_sync[0],ecfg_tx_enable};
    
+   //Don't worry about glitching, no dynamic frequency switching
+   //TODO: Enable dynamic frequency throttling (but why?)
+
    ODDR 
      #(
        .DDR_CLK_EDGE  ("SAME_EDGE"), 
@@ -207,10 +206,10 @@ module etx_io (/*AUTOARG*/
      (
       .Q  (tx_lclk_buf),
       .C  (tx_lclk_out),
-      .CE (1'b1),
-      .D1 (txenb_out_sync[1]), //TODO: meaning of D1? Shouldn't this be on CE?
+      .CE (1'b0),
+      .D1 (ecfg_tx_enable),
       .D2 (1'b0),
-      .R  (1'b0),
+      .R  (reset),
       .S  (1'b0));
 
    //################################
