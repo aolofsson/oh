@@ -1,4 +1,3 @@
-
 module erx_io (/*AUTOARG*/
    // Outputs
    rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n,
