@@ -434,8 +434,8 @@ module dv_elink(/*AUTOARG*/
    defparam elink.ELINKID = 12'h800;
 
    elink elink (.hard_reset		(reset),
-		.embox_not_empty	(embox_full),
-		.embox_full		(embox_not_empty),
+		.embox_not_empty	(embox_not_empty),
+		.embox_full		(embox_full),
 		.chip_resetb		(chip_resetb),
 		.colid			(colid[3:0]),
 		.rowid			(rowid[3:0]),

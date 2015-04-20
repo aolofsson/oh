@@ -862,8 +862,6 @@ module elink(/*AUTOARG*/
 	     .ecfg_clk_settings		(ecfg_clk_settings[15:0]),
 	     .ecfg_coreid		(ecfg_coreid[11:0]),
 	     .ecfg_dataout		(ecfg_dataout[10:0]),
-	     .embox_not_empty		(embox_not_empty),
-	     .embox_full		(embox_full),
 	     // Inputs
 	     .hard_reset		(hard_reset),
 	     .mi_clk			(mi_clk),
@@ -873,6 +871,8 @@ module elink(/*AUTOARG*/
 	     .mi_din			(mi_din[31:0]),
 	     .ecfg_rx_datain		(ecfg_rx_datain[8:0]),
 	     .ecfg_tx_datain		(ecfg_tx_datain[1:0]),
+	     .embox_not_empty		(embox_not_empty),
+	     .embox_full		(embox_full),
 	     .ecfg_tx_debug		(ecfg_tx_debug[15:0]),
 	     .ecfg_rx_debug		(ecfg_rx_debug[15:0]));
 

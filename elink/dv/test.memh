@@ -21,8 +21,8 @@
 00000000_00000555_800e0010_0b //writing to coreid
 00000000_00000555_800e0014_0b //writing to version
 00000000_00000555_800e001C_0b //writing to dataout (dummy)
-00000000_AAAAAAAA_800e0020_0b //write to embox
-00000000_BBBBBBBB_800e0024_0b //write to embox
+00000000_AAAAAAAA_800e0024_0b //write to embox
+00000000_BBBBBBBB_800e0028_0b //write to embox
 00000000_00000808_800d4040_0b //write to emmurx
 00000000_00000000_80800000_0b //write to epiphany
 00000000_ABCD0001_80800004_0b //write to epiphany
@@ -33,7 +33,7 @@
 00000000_ABCD0006_80800018_0b //write to epiphany
 00000000_ABCD0007_8080001c_0b //write to epiphany
 00000000_00000000_800e001C_09 //read from dataout register
-00000000_00000000_800e0020_09 //read from embox
 00000000_00000000_800e0024_09 //read from embox
+00000000_00000000_800e0028_09 //read from embox
 00000000_00000000_800c0000_09 //read from emmurx
 00000000_00000000_80800000_09 //read from epiphany

@@ -10,11 +10,11 @@ module ecfg (/*AUTOARG*/
    soft_reset, mi_dout, ecfg_tx_enable, ecfg_tx_mmu_enable,
    ecfg_tx_gpio_enable, ecfg_tx_ctrlmode, ecfg_timeout_enable,
    ecfg_rx_enable, ecfg_rx_mmu_enable, ecfg_rx_gpio_enable,
-   ecfg_clk_settings, ecfg_coreid, ecfg_dataout, embox_not_empty,
-   embox_full,
+   ecfg_clk_settings, ecfg_coreid, ecfg_dataout,
    // Inputs
    hard_reset, mi_clk, mi_en, mi_we, mi_addr, mi_din, ecfg_rx_datain,
-   ecfg_tx_datain, ecfg_tx_debug, ecfg_rx_debug
+   ecfg_tx_datain, embox_not_empty, embox_full, ecfg_tx_debug,
+   ecfg_rx_debug
    );
 
    /******************************/
@@ -70,8 +70,8 @@ module ecfg (/*AUTOARG*/
    output [10:0] ecfg_dataout;         // data for elink outputs
 
    //debug
-   output 	 embox_not_empty;      // not-empty interrupt
-   output 	 embox_full;           // full debug signal 
+   input 	 embox_not_empty;      // not-empty interrupt
+   input 	 embox_full;           // full debug signal 
    input [15:0]  ecfg_tx_debug;        // etx debug signals
    input [15:0]  ecfg_rx_debug;        // etx debug signals
    
