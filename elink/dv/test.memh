@@ -17,13 +17,13 @@
 00000000_00000000_800e0000_0b //deassert reset
 00000000_00000213_800e0004_0b //start cclk and lclk at max speed
 00000000_00000001_800e0008_0b //enable tx
-00000000_00000001_800e000C_0b //enable rx
+00000000_00000003_800e000C_0b //enable rx
 00000000_00000555_800e0010_0b //writing to coreid
 00000000_00000555_800e0014_0b //writing to version
 00000000_00000555_800e001C_0b //writing to dataout (dummy)
 00000000_AAAAAAAA_800e0020_0b //write to embox
 00000000_BBBBBBBB_800e0024_0b //write to embox
-00000000_CCCCCCCC_800d0000_0b //write to emmurx
+00000000_00000808_800d4040_0b //write to emmurx
 00000000_00000000_80800000_0b //write to epiphany
 00000000_ABCD0001_80800004_0b //write to epiphany
 00000000_ABCD0002_80800008_0b //write to epiphany

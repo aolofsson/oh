@@ -102,29 +102,20 @@ module emmu (/*AUTOARG*/
    //write data
    assign emmu_wr_data[63:0] = {mi_din[31:0], mi_din[31:0]};
 
-
+   memory_dp #(.DW(48),.AW(12)) memory_dp (
+					   // Outputs
+					   .rd_data		(emmu_lookup_data[47:0]),
+					   // Inputs
+					   .wr_clk		(mi_clk),
+					   .wr_en		(emmu_wr_en[5:0]),
+					   .wr_addr		(mi_addr[14:3]),
+					   .wr_data		(emmu_wr_data[47:0]),
+					   .rd_clk		(clk),
+					   .rd_en		(emesh_access_in),
+					   .rd_addr		(emesh_dstaddr_in[31:20])
+					   );
    
-`ifdef TARGET_XILINX
-   memory_dp_48x4096 memory_dp_48x4096(
-				       //write (portA)
-				       .clka	(mi_clk),
-				       .ena	(mi_en),
-				       .wea	(emmu_wr_en[5:0]),
-				       .addra	(mi_addr[14:3]),
-				       .dina	(emmu_wr_data[47:0]),
-				       //read (portB)
-				       .doutb	(emmu_lookup_data[47:0]),
-				       .clkb	(clk),
-				       .enb	(emesh_access_in),
-				       .addrb	(emesh_dstaddr_in[31:20])
-				       );
-
-`else // !`ifdef TARGET_XILINX
-   
-   assign emmu_lookup_data[47:0]=48'b0;
-				 
-`endif // !`ifdef TARGET_XILINX
-				       
+       				       
    /*****************************/
    /*EMESH OUTPUT TRANSACTION   */
    /*****************************/   
@@ -153,7 +144,7 @@ module emmu (/*AUTOARG*/
 
 endmodule // emmu
 // Local Variables:
-// verilog-library-directories:("." "../../stubs/hdl")
+// verilog-library-directories:("." "../../stubs/hdl" "../../memory/hdl")
 // End:
 
 /*
