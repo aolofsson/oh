@@ -100,7 +100,7 @@ module fifo_sync
 			.wr_en		({(DW/8){we_en}}),
 			.wr_addr	(wr_addr[AW-1:0]),
 			.wr_data	(wr_data[DW-1:0]),
-			.rd_clk		(rd_clk),
+			.rd_clk		(clk),
 			.rd_en		(rd_en),
 			.rd_addr	(rd_addr[AW-1:0]));
 
