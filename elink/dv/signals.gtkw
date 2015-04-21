@@ -1,66 +1,132 @@
 [*]
 [*] GTKWave Analyzer v3.3.64 (w)1999-2014 BSI
-[*] Sat Apr 18 20:41:55 2015
+[*] Tue Apr 21 19:38:50 2015
 [*]
 [dumpfile] "/home/aolofsson/Work_all/parallella-hw/fpga/src/elink/dv/test.vcd"
-[dumpfile_mtime] "Sat Apr 18 20:06:59 2015"
-[dumpfile_size] 1981983
+[dumpfile_mtime] "Tue Apr 21 19:26:41 2015"
+[dumpfile_size] 2035120
 [savefile] "/home/aolofsson/Work_all/parallella-hw/fpga/src/elink/dv/signals.gtkw"
-[timestart] 1018000000000000
+[timestart] 4920600000000000
 [size] 1920 1171
 [pos] -1 -1
-*-49.728096 1073000000000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-47.081383 5110000000000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] dv_elink_tb.
 [treeopen] dv_elink_tb.dv_elink.
 [treeopen] dv_elink_tb.dv_elink.elink.
-[sst_width] 223
-[signals_width] 380
+[treeopen] dv_elink_tb.dv_elink.elink.emaxi.
+[treeopen] dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.
+[treeopen] dv_elink_tb.dv_elink.elink.embox.
+[treeopen] dv_elink_tb.dv_elink.elink.embox.mbox.
+[treeopen] dv_elink_tb.dv_elink.elink.erx.
+[treeopen] dv_elink_tb.dv_elink.elink.erx.emmu.
+[treeopen] dv_elink_tb.dv_elink.elink.erx.m_rq_fifo.
+[treeopen] dv_elink_tb.dv_elink.elink.etx.
+[treeopen] dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.
+[treeopen] dv_elink_tb.dv_elink.elink.etx.s_rq_fifo.
+[treeopen] dv_elink_tb.dv_elink.emem.
+[sst_width] 346
+[signals_width] 486
 [sst_expanded] 1
-[sst_vpaned_height] 353
-@28
-dv_elink_tb.dv_elink.elink.reset
-dv_elink_tb.dv_elink.elink.eclocks.clkin
-dv_elink_tb.dv_elink.elink.cclk_p
-dv_elink_tb.dv_elink.lclk_p
-dv_elink_tb.dv_elink.elink.etx.tx_lclk
-dv_elink_tb.dv_elink.elink.etx.tx_lclk_par
-dv_elink_tb.dv_elink.elink.erx.rx_lclk_div4
-dv_elink_tb.dv_elink.elink.etx.m_axi_aclk
-dv_elink_tb.dv_elink.elink.etx.s_axi_aclk
-dv_elink_tb.dv_elink.frame_p
+[sst_vpaned_height] 743
 @22
-dv_elink_tb.dv_elink.data_p[7:0]
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.rd_addr[4:0]
 @28
-dv_elink_tb.dv_elink.elink.ecfg.ecfg_reset_reg
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.rd_clk
 @22
-dv_elink_tb.dv_elink.elink.ecfg.ecfg_clk_reg[15:0]
-dv_elink_tb.dv_elink.elink.ecfg.ecfg_tx_reg[8:0]
-dv_elink_tb.dv_elink.elink.ecfg.ecfg_rx_reg[4:0]
-dv_elink_tb.dv_elink.elink.ecfg.ecfg_datain_reg[10:0]
-dv_elink_tb.dv_elink.elink.ecfg.ecfg_coreid_reg[11:0]
-dv_elink_tb.dv_elink.elink.ecfg.ecfg_version_reg[15:0]
-dv_elink_tb.dv_elink.elink.ecfg.ecfg_dataout_reg[10:0]
-@c00022
-dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.rd_data[103:0]
 @28
-(0)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
-(1)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
-(2)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
-(3)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
-(4)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
-(5)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
-(6)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
-(7)dv_elink_tb.dv_elink.elink.ecfg.ecfg_debug_reg[7:0]
-@1401200
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.rd_fifo_empty
+@22
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.rd_gray_pointer[5:0]
+@28
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.rd_read
+@22
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.rd_wr_gray_pointer[5:0]
+@28
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.reset
+@22
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.wr_addr[4:0]
+@28
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.wr_clk
+@22
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.wr_data[103:0]
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.wr_en[12:0]
+@28
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.wr_fifo_full
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.wr_fifo_progfull
+@22
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.wr_gray_pointer[5:0]
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.wr_rd_gray_pointer[5:0]
+@28
+dv_elink_tb.dv_elink.elink.etx.m_rr_fifo.fifo_async.wr_write
+dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.clk
+@22
+dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.count[4:0]
+dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.rd_addr[4:0]
+dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.rd_data[47:0]
+@28
+dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.rd_empty
+dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.rd_en
+dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.reset
+@22
+dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_addr[4:0]
+@800023
+dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+@29
+(0)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(1)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(2)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(3)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(4)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(5)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(6)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(7)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(8)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(9)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(10)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(11)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(12)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(13)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(14)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(15)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(16)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(17)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(18)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(19)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(20)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(21)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(22)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(23)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(24)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(25)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(26)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(27)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(28)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(29)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(30)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(31)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(32)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(33)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(34)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(35)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(36)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(37)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(38)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(39)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(40)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(41)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(42)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(43)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(44)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(45)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(46)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+(47)dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_data[47:0]
+@1001201
 -group_end
 @28
-dv_elink_tb.ext_access
+dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_en
+dv_elink_tb.dv_elink.elink.emaxi.fifo_readinfo_i.wr_full
 @22
-dv_elink_tb.ext_dstaddr[31:0]
-dv_elink_tb.dut_dstaddr[31:0]
-@28
-dv_elink_tb.dut_access
-@29
-dv_elink_tb.dv_elink.embox_not_empty
+dv_elink_tb.dv_elink.elink.emaxi.emrq_dstaddr[31:0]
 [pattern_trace] 1
 [pattern_trace] 0

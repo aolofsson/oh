@@ -49,43 +49,43 @@ module dv_elink(/*AUTOARG*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [7:0]		data_n;			// From elink of elink.v
    wire [7:0]		data_p;			// From elink of elink.v
-   wire [31:0]		dv_axi_araddr;		// From emaxi of emaxi.v
-   wire [1:0]		dv_axi_arburst;		// From emaxi of emaxi.v
-   wire [3:0]		dv_axi_arcache;		// From emaxi of emaxi.v
-   wire [IDW-1:0]	dv_axi_arid;		// From emaxi of emaxi.v
-   wire [7:0]		dv_axi_arlen;		// From emaxi of emaxi.v
-   wire [1:0]		dv_axi_arlock;		// From emaxi of emaxi.v
-   wire [2:0]		dv_axi_arprot;		// From emaxi of emaxi.v
-   wire [3:0]		dv_axi_arqos;		// From emaxi of emaxi.v
+   wire [31:0]		dv_axi_araddr;		// From dv_emaxi of emaxi.v
+   wire [1:0]		dv_axi_arburst;		// From dv_emaxi of emaxi.v
+   wire [3:0]		dv_axi_arcache;		// From dv_emaxi of emaxi.v
+   wire [IDW-1:0]	dv_axi_arid;		// From dv_emaxi of emaxi.v
+   wire [7:0]		dv_axi_arlen;		// From dv_emaxi of emaxi.v
+   wire [1:0]		dv_axi_arlock;		// From dv_emaxi of emaxi.v
+   wire [2:0]		dv_axi_arprot;		// From dv_emaxi of emaxi.v
+   wire [3:0]		dv_axi_arqos;		// From dv_emaxi of emaxi.v
    wire			dv_axi_arready;		// From elink of elink.v
-   wire [2:0]		dv_axi_arsize;		// From emaxi of emaxi.v
-   wire			dv_axi_arvalid;		// From emaxi of emaxi.v
-   wire [31:0]		dv_axi_awaddr;		// From emaxi of emaxi.v
-   wire [1:0]		dv_axi_awburst;		// From emaxi of emaxi.v
-   wire [3:0]		dv_axi_awcache;		// From emaxi of emaxi.v
-   wire [IDW-1:0]	dv_axi_awid;		// From emaxi of emaxi.v
-   wire [7:0]		dv_axi_awlen;		// From emaxi of emaxi.v
-   wire [1:0]		dv_axi_awlock;		// From emaxi of emaxi.v
-   wire [2:0]		dv_axi_awprot;		// From emaxi of emaxi.v
-   wire [3:0]		dv_axi_awqos;		// From emaxi of emaxi.v
+   wire [2:0]		dv_axi_arsize;		// From dv_emaxi of emaxi.v
+   wire			dv_axi_arvalid;		// From dv_emaxi of emaxi.v
+   wire [31:0]		dv_axi_awaddr;		// From dv_emaxi of emaxi.v
+   wire [1:0]		dv_axi_awburst;		// From dv_emaxi of emaxi.v
+   wire [3:0]		dv_axi_awcache;		// From dv_emaxi of emaxi.v
+   wire [IDW-1:0]	dv_axi_awid;		// From dv_emaxi of emaxi.v
+   wire [7:0]		dv_axi_awlen;		// From dv_emaxi of emaxi.v
+   wire [1:0]		dv_axi_awlock;		// From dv_emaxi of emaxi.v
+   wire [2:0]		dv_axi_awprot;		// From dv_emaxi of emaxi.v
+   wire [3:0]		dv_axi_awqos;		// From dv_emaxi of emaxi.v
    wire			dv_axi_awready;		// From elink of elink.v
-   wire [2:0]		dv_axi_awsize;		// From emaxi of emaxi.v
-   wire			dv_axi_awvalid;		// From emaxi of emaxi.v
+   wire [2:0]		dv_axi_awsize;		// From dv_emaxi of emaxi.v
+   wire			dv_axi_awvalid;		// From dv_emaxi of emaxi.v
    wire [IDW-1:0]	dv_axi_bid;		// From elink of elink.v
-   wire			dv_axi_bready;		// From emaxi of emaxi.v
+   wire			dv_axi_bready;		// From dv_emaxi of emaxi.v
    wire [1:0]		dv_axi_bresp;		// From elink of elink.v
    wire			dv_axi_bvalid;		// From elink of elink.v
    wire [IDW-1:0]	dv_axi_rid;		// From elink of elink.v
    wire			dv_axi_rlast;		// From elink of elink.v
-   wire			dv_axi_rready;		// From emaxi of emaxi.v
+   wire			dv_axi_rready;		// From dv_emaxi of emaxi.v
    wire [1:0]		dv_axi_rresp;		// From elink of elink.v
    wire			dv_axi_rvalid;		// From elink of elink.v
-   wire [63:0]		dv_axi_wdata;		// From emaxi of emaxi.v
-   wire [IDW-1:0]	dv_axi_wid;		// From emaxi of emaxi.v
-   wire			dv_axi_wlast;		// From emaxi of emaxi.v
+   wire [63:0]		dv_axi_wdata;		// From dv_emaxi of emaxi.v
+   wire [IDW-1:0]	dv_axi_wid;		// From dv_emaxi of emaxi.v
+   wire			dv_axi_wlast;		// From dv_emaxi of emaxi.v
    wire			dv_axi_wready;		// From elink of elink.v
-   wire [7:0]		dv_axi_wstrb;		// From emaxi of emaxi.v
-   wire			dv_axi_wvalid;		// From emaxi of emaxi.v
+   wire [7:0]		dv_axi_wstrb;		// From dv_emaxi of emaxi.v
+   wire			dv_axi_wvalid;		// From dv_emaxi of emaxi.v
    wire [31:0]		elink_axi_araddr;	// From elink of elink.v
    wire [1:0]		elink_axi_arburst;	// From elink of elink.v
    wire [3:0]		elink_axi_arcache;	// From elink of elink.v
@@ -94,7 +94,7 @@ module dv_elink(/*AUTOARG*/
    wire [1:0]		elink_axi_arlock;	// From elink of elink.v
    wire [2:0]		elink_axi_arprot;	// From elink of elink.v
    wire [3:0]		elink_axi_arqos;	// From elink of elink.v
-   wire			elink_axi_arready;	// From esaxi of esaxi.v
+   wire			elink_axi_arready;	// From dv_esaxi of esaxi.v
    wire [2:0]		elink_axi_arsize;	// From elink of elink.v
    wire			elink_axi_arvalid;	// From elink of elink.v
    wire [31:0]		elink_axi_awaddr;	// From elink of elink.v
@@ -105,28 +105,28 @@ module dv_elink(/*AUTOARG*/
    wire [1:0]		elink_axi_awlock;	// From elink of elink.v
    wire [2:0]		elink_axi_awprot;	// From elink of elink.v
    wire [3:0]		elink_axi_awqos;	// From elink of elink.v
-   wire			elink_axi_awready;	// From esaxi of esaxi.v
+   wire			elink_axi_awready;	// From dv_esaxi of esaxi.v
    wire [2:0]		elink_axi_awsize;	// From elink of elink.v
    wire			elink_axi_awvalid;	// From elink of elink.v
-   wire [IDW-1:0]	elink_axi_bid;		// From esaxi of esaxi.v
+   wire [IDW-1:0]	elink_axi_bid;		// From dv_esaxi of esaxi.v
    wire			elink_axi_bready;	// From elink of elink.v
-   wire [1:0]		elink_axi_bresp;	// From esaxi of esaxi.v
-   wire			elink_axi_bvalid;	// From esaxi of esaxi.v
-   wire [31:0]		elink_axi_rdata;	// From esaxi of esaxi.v
-   wire [IDW-1:0]	elink_axi_rid;		// From esaxi of esaxi.v
-   wire			elink_axi_rlast;	// From esaxi of esaxi.v
+   wire [1:0]		elink_axi_bresp;	// From dv_esaxi of esaxi.v
+   wire			elink_axi_bvalid;	// From dv_esaxi of esaxi.v
+   wire [31:0]		elink_axi_rdata;	// From dv_esaxi of esaxi.v
+   wire [IDW-1:0]	elink_axi_rid;		// From dv_esaxi of esaxi.v
+   wire			elink_axi_rlast;	// From dv_esaxi of esaxi.v
    wire			elink_axi_rready;	// From elink of elink.v
-   wire [1:0]		elink_axi_rresp;	// From esaxi of esaxi.v
-   wire			elink_axi_rvalid;	// From esaxi of esaxi.v
+   wire [1:0]		elink_axi_rresp;	// From dv_esaxi of esaxi.v
+   wire			elink_axi_rvalid;	// From dv_esaxi of esaxi.v
    wire [63:0]		elink_axi_wdata;	// From elink of elink.v
    wire [IDW-1:0]	elink_axi_wid;		// From elink of elink.v
    wire			elink_axi_wlast;	// From elink of elink.v
-   wire			elink_axi_wready;	// From esaxi of esaxi.v
+   wire			elink_axi_wready;	// From dv_esaxi of esaxi.v
    wire [7:0]		elink_axi_wstrb;	// From elink of elink.v
    wire			elink_axi_wvalid;	// From elink of elink.v
-   wire			emem_emrq_wait;		// From emem of emesh_memory.v
-   wire			esaxi_emrr_access;	// From emem of emesh_memory.v
-   wire [DW-1:0]	esaxi_emrr_data;	// From emem of emesh_memory.v
+   wire			emem_emrq_wait;		// From emem of ememory.v
+   wire			esaxi_emrr_access;	// From emem of ememory.v
+   wire [DW-1:0]	esaxi_emrr_data;	// From emem of ememory.v
    wire			frame_n;		// From elink of elink.v
    wire			frame_p;		// From elink of elink.v
    wire			lclk_n;			// From elink of elink.v
@@ -190,7 +190,6 @@ module dv_elink(/*AUTOARG*/
    wire [AW-1:0]	dut_dstaddr;		// To dut_monitor of emesh_monitor.v
    wire [AW-1:0]	dut_srcaddr;		// To dut_monitor of emesh_monitor.v
    wire		        dut_write;		// To dut_monitor of emesh_monitor.v
-   wire 	        emem_wait;		// To emem of emesh_memory.v
   
    
    //Clocks
@@ -223,39 +222,14 @@ module dv_elink(/*AUTOARG*/
    assign dut_wr_wait           = ~emaxi_emwr_rd_en & emaxi_emwr_access;
    
    //Getting results back
-   //TODO: deal with collisions later
-   //btw, as I write this muxes...feeling that a datapacket is in order after all.
-   //maybe add a module for converting between packet and explicit signals....
 
-   assign dut_access        = emaxi_emrr_access | esaxi_emwr_access | esaxi_emrq_access;
-
-   assign dut_write         = emaxi_emrr_access ? emaxi_emrr_write :
-			      esaxi_emwr_access ? esaxi_emwr_write :
-                                                  esaxi_emrq_write;
-
-   assign dut_datamode[1:0] = emaxi_emrr_access ? emaxi_emrr_datamode[1:0] :
-			      esaxi_emwr_access ? esaxi_emwr_datamode[1:0] :
-                                                  esaxi_emrq_datamode[1:0];
-
-
-   assign dut_ctrlmode[3:0] = emaxi_emrr_access ? emaxi_emrr_ctrlmode[3:0] :
-			       esaxi_emwr_access ? esaxi_emwr_ctrlmode[3:0] :
-                                                   esaxi_emrq_ctrlmode[3:0];
-
-   assign dut_dstaddr[31:0] = emaxi_emrr_access ? emaxi_emrr_dstaddr[31:0] :
- 			      esaxi_emwr_access ? esaxi_emwr_dstaddr[31:0] :
-                                                  esaxi_emrq_dstaddr[31:0];
-
-   assign dut_data[31:0] = emaxi_emrr_access ? emaxi_emrr_data[31:0]    :
- 			   esaxi_emwr_access ? esaxi_emwr_data[31:0] :
-                                               esaxi_emrq_data[31:0];
-
-   assign dut_srcaddr[31:0] = emaxi_emrr_access ? emaxi_emrr_srcaddr[31:0] :
- 			      esaxi_emwr_access ? esaxi_emwr_srcaddr[31:0] :
-                              esaxi_emrq_srcaddr[31:0];
-
-   
-
+   assign dut_access        = emaxi_emrr_access;
+   assign dut_write         = emaxi_emrr_write;
+   assign dut_datamode[1:0] = emaxi_emrr_datamode[1:0];
+   assign dut_ctrlmode[3:0] = emaxi_emrr_ctrlmode[3:0];
+   assign dut_dstaddr[31:0] = emaxi_emrr_dstaddr[31:0];
+   assign dut_data[31:0]    = emaxi_emrr_data[31:0];
+   assign dut_srcaddr[31:0] = emaxi_emrr_srcaddr[31:0];
   
    /*emaxi AUTO_TEMPLATE ( 
                         // Outputs
@@ -266,7 +240,7 @@ module dv_elink(/*AUTOARG*/
    */
    
    //Drive the elink slave AXI interface
-   emaxi emaxi(.emrr_progfull		(1'b0),
+   emaxi dv_emaxi(.emrr_progfull		(1'b0),
 	       .m_axi_aresetn		(~reset),
 	       .m_axi_aclk		(m_axi_aclk),
 	       .emwr_rd_en		(emaxi_emwr_rd_en),
@@ -279,60 +253,60 @@ module dv_elink(/*AUTOARG*/
 	       .emrr_data		(emaxi_emrr_data[31:0]),
 	       .emrr_srcaddr		(emaxi_emrr_srcaddr[31:0]),
 	       /*AUTOINST*/
-	       // Outputs
-	       .m_axi_awid		(dv_axi_awid[IDW-1:0]),	 // Templated
-	       .m_axi_awaddr		(dv_axi_awaddr[31:0]),	 // Templated
-	       .m_axi_awlen		(dv_axi_awlen[7:0]),	 // Templated
-	       .m_axi_awsize		(dv_axi_awsize[2:0]),	 // Templated
-	       .m_axi_awburst		(dv_axi_awburst[1:0]),	 // Templated
-	       .m_axi_awlock		(dv_axi_awlock[1:0]),	 // Templated
-	       .m_axi_awcache		(dv_axi_awcache[3:0]),	 // Templated
-	       .m_axi_awprot		(dv_axi_awprot[2:0]),	 // Templated
-	       .m_axi_awqos		(dv_axi_awqos[3:0]),	 // Templated
-	       .m_axi_awvalid		(dv_axi_awvalid),	 // Templated
-	       .m_axi_wid		(dv_axi_wid[IDW-1:0]),	 // Templated
-	       .m_axi_wdata		(dv_axi_wdata[63:0]),	 // Templated
-	       .m_axi_wstrb		(dv_axi_wstrb[7:0]),	 // Templated
-	       .m_axi_wlast		(dv_axi_wlast),		 // Templated
-	       .m_axi_wvalid		(dv_axi_wvalid),	 // Templated
-	       .m_axi_bready		(dv_axi_bready),	 // Templated
-	       .m_axi_arid		(dv_axi_arid[IDW-1:0]),	 // Templated
-	       .m_axi_araddr		(dv_axi_araddr[31:0]),	 // Templated
-	       .m_axi_arlen		(dv_axi_arlen[7:0]),	 // Templated
-	       .m_axi_arsize		(dv_axi_arsize[2:0]),	 // Templated
-	       .m_axi_arburst		(dv_axi_arburst[1:0]),	 // Templated
-	       .m_axi_arlock		(dv_axi_arlock[1:0]),	 // Templated
-	       .m_axi_arcache		(dv_axi_arcache[3:0]),	 // Templated
-	       .m_axi_arprot		(dv_axi_arprot[2:0]),	 // Templated
-	       .m_axi_arqos		(dv_axi_arqos[3:0]),	 // Templated
-	       .m_axi_arvalid		(dv_axi_arvalid),	 // Templated
-	       .m_axi_rready		(dv_axi_rready),	 // Templated
-	       // Inputs
-	       .emwr_access		(emaxi_emwr_access),	 // Templated
-	       .emwr_write		(emaxi_emwr_write),	 // Templated
-	       .emwr_datamode		(emaxi_emwr_datamode[1:0]), // Templated
-	       .emwr_ctrlmode		(emaxi_emwr_ctrlmode[3:0]), // Templated
-	       .emwr_dstaddr		(emaxi_emwr_dstaddr[31:0]), // Templated
-	       .emwr_data		(emaxi_emwr_data[31:0]), // Templated
-	       .emwr_srcaddr		(emaxi_emwr_srcaddr[31:0]), // Templated
-	       .emrq_access		(emaxi_emrq_access),	 // Templated
-	       .emrq_write		(emaxi_emrq_write),	 // Templated
-	       .emrq_datamode		(emaxi_emrq_datamode[1:0]), // Templated
-	       .emrq_ctrlmode		(emaxi_emrq_ctrlmode[3:0]), // Templated
-	       .emrq_dstaddr		(emaxi_emrq_dstaddr[31:0]), // Templated
-	       .emrq_data		(emaxi_emrq_data[31:0]), // Templated
-	       .emrq_srcaddr		(emaxi_emrq_srcaddr[31:0]), // Templated
-	       .m_axi_awready		(dv_axi_awready),	 // Templated
-	       .m_axi_wready		(dv_axi_wready),	 // Templated
-	       .m_axi_bid		(dv_axi_bid[IDW-1:0]),	 // Templated
-	       .m_axi_bresp		(dv_axi_bresp[1:0]),	 // Templated
-	       .m_axi_bvalid		(dv_axi_bvalid),	 // Templated
-	       .m_axi_arready		(dv_axi_arready),	 // Templated
-	       .m_axi_rid		(dv_axi_rid[IDW-1:0]),	 // Templated
-	       .m_axi_rdata		({dv_axi_rdata[31:0],dv_axi_rdata[31:0]}), // Templated
-	       .m_axi_rresp		(dv_axi_rresp[1:0]),	 // Templated
-	       .m_axi_rlast		(dv_axi_rlast),		 // Templated
-	       .m_axi_rvalid		(dv_axi_rvalid));	 // Templated
+		  // Outputs
+		  .m_axi_awid		(dv_axi_awid[IDW-1:0]),	 // Templated
+		  .m_axi_awaddr		(dv_axi_awaddr[31:0]),	 // Templated
+		  .m_axi_awlen		(dv_axi_awlen[7:0]),	 // Templated
+		  .m_axi_awsize		(dv_axi_awsize[2:0]),	 // Templated
+		  .m_axi_awburst	(dv_axi_awburst[1:0]),	 // Templated
+		  .m_axi_awlock		(dv_axi_awlock[1:0]),	 // Templated
+		  .m_axi_awcache	(dv_axi_awcache[3:0]),	 // Templated
+		  .m_axi_awprot		(dv_axi_awprot[2:0]),	 // Templated
+		  .m_axi_awqos		(dv_axi_awqos[3:0]),	 // Templated
+		  .m_axi_awvalid	(dv_axi_awvalid),	 // Templated
+		  .m_axi_wid		(dv_axi_wid[IDW-1:0]),	 // Templated
+		  .m_axi_wdata		(dv_axi_wdata[63:0]),	 // Templated
+		  .m_axi_wstrb		(dv_axi_wstrb[7:0]),	 // Templated
+		  .m_axi_wlast		(dv_axi_wlast),		 // Templated
+		  .m_axi_wvalid		(dv_axi_wvalid),	 // Templated
+		  .m_axi_bready		(dv_axi_bready),	 // Templated
+		  .m_axi_arid		(dv_axi_arid[IDW-1:0]),	 // Templated
+		  .m_axi_araddr		(dv_axi_araddr[31:0]),	 // Templated
+		  .m_axi_arlen		(dv_axi_arlen[7:0]),	 // Templated
+		  .m_axi_arsize		(dv_axi_arsize[2:0]),	 // Templated
+		  .m_axi_arburst	(dv_axi_arburst[1:0]),	 // Templated
+		  .m_axi_arlock		(dv_axi_arlock[1:0]),	 // Templated
+		  .m_axi_arcache	(dv_axi_arcache[3:0]),	 // Templated
+		  .m_axi_arprot		(dv_axi_arprot[2:0]),	 // Templated
+		  .m_axi_arqos		(dv_axi_arqos[3:0]),	 // Templated
+		  .m_axi_arvalid	(dv_axi_arvalid),	 // Templated
+		  .m_axi_rready		(dv_axi_rready),	 // Templated
+		  // Inputs
+		  .emwr_access		(emaxi_emwr_access),	 // Templated
+		  .emwr_write		(emaxi_emwr_write),	 // Templated
+		  .emwr_datamode	(emaxi_emwr_datamode[1:0]), // Templated
+		  .emwr_ctrlmode	(emaxi_emwr_ctrlmode[3:0]), // Templated
+		  .emwr_dstaddr		(emaxi_emwr_dstaddr[31:0]), // Templated
+		  .emwr_data		(emaxi_emwr_data[31:0]), // Templated
+		  .emwr_srcaddr		(emaxi_emwr_srcaddr[31:0]), // Templated
+		  .emrq_access		(emaxi_emrq_access),	 // Templated
+		  .emrq_write		(emaxi_emrq_write),	 // Templated
+		  .emrq_datamode	(emaxi_emrq_datamode[1:0]), // Templated
+		  .emrq_ctrlmode	(emaxi_emrq_ctrlmode[3:0]), // Templated
+		  .emrq_dstaddr		(emaxi_emrq_dstaddr[31:0]), // Templated
+		  .emrq_data		(emaxi_emrq_data[31:0]), // Templated
+		  .emrq_srcaddr		(emaxi_emrq_srcaddr[31:0]), // Templated
+		  .m_axi_awready	(dv_axi_awready),	 // Templated
+		  .m_axi_wready		(dv_axi_wready),	 // Templated
+		  .m_axi_bid		(dv_axi_bid[IDW-1:0]),	 // Templated
+		  .m_axi_bresp		(dv_axi_bresp[1:0]),	 // Templated
+		  .m_axi_bvalid		(dv_axi_bvalid),	 // Templated
+		  .m_axi_arready	(dv_axi_arready),	 // Templated
+		  .m_axi_rid		(dv_axi_rid[IDW-1:0]),	 // Templated
+		  .m_axi_rdata		({dv_axi_rdata[31:0],dv_axi_rdata[31:0]}), // Templated
+		  .m_axi_rresp		(dv_axi_rresp[1:0]),	 // Templated
+		  .m_axi_rlast		(dv_axi_rlast),		 // Templated
+		  .m_axi_rvalid		(dv_axi_rvalid));	 // Templated
 
 
    /*esaxi AUTO_TEMPLATE ( 
@@ -340,12 +314,12 @@ module dv_elink(/*AUTOARG*/
                         .s_\(.*\)         (elink_\1[]),
                         .mi_\(.*\)        (),
                         .em\(.*\)         (esaxi_em\1[]),
-                        .emrq_progfull		(emem_emrq_wait),
+                        .emrq_progfull	  (emem_emrq_wait),
                         );
    */
 
 
-   esaxi esaxi (.emwr_progfull		(1'b0),
+   esaxi dv_esaxi (.emwr_progfull		(1'b0),
 		
 		.mi_ecfg_dout		(32'b0),
 		.mi_tx_emmu_dout	(32'b0),
@@ -372,57 +346,57 @@ module dv_elink(/*AUTOARG*/
 		.emrq_srcaddr		(esaxi_emrq_srcaddr[31:0]),
 		.emrr_rd_en		(esaxi_emrr_rd_en),
 		/*AUTOINST*/
-		// Outputs
-		.mi_clk			(),			 // Templated
-		.mi_rx_emmu_sel		(),			 // Templated
-		.mi_tx_emmu_sel		(),			 // Templated
-		.mi_ecfg_sel		(),			 // Templated
-		.mi_embox_sel		(),			 // Templated
-		.mi_we			(),			 // Templated
-		.mi_addr		(),			 // Templated
-		.mi_din			(),			 // Templated
-		.s_axi_arready		(elink_axi_arready),	 // Templated
-		.s_axi_awready		(elink_axi_awready),	 // Templated
-		.s_axi_bid		(elink_axi_bid[IDW-1:0]), // Templated
-		.s_axi_bresp		(elink_axi_bresp[1:0]),	 // Templated
-		.s_axi_bvalid		(elink_axi_bvalid),	 // Templated
-		.s_axi_rid		(elink_axi_rid[IDW-1:0]), // Templated
-		.s_axi_rdata		(elink_axi_rdata[31:0]), // Templated
-		.s_axi_rlast		(elink_axi_rlast),	 // Templated
-		.s_axi_rresp		(elink_axi_rresp[1:0]),	 // Templated
-		.s_axi_rvalid		(elink_axi_rvalid),	 // Templated
-		.s_axi_wready		(elink_axi_wready),	 // Templated
-		// Inputs
-		.emrq_progfull		(emem_emrq_wait),	 // Templated
-		.emrr_data		(esaxi_emrr_data[31:0]), // Templated
-		.emrr_access		(esaxi_emrr_access),	 // Templated
-		.s_axi_arid		(elink_axi_arid[IDW-1:0]), // Templated
-		.s_axi_araddr		(elink_axi_araddr[31:0]), // Templated
-		.s_axi_arburst		(elink_axi_arburst[1:0]), // Templated
-		.s_axi_arcache		(elink_axi_arcache[3:0]), // Templated
-		.s_axi_arlock		(elink_axi_arlock[1:0]), // Templated
-		.s_axi_arlen		(elink_axi_arlen[7:0]),	 // Templated
-		.s_axi_arprot		(elink_axi_arprot[2:0]), // Templated
-		.s_axi_arqos		(elink_axi_arqos[3:0]),	 // Templated
-		.s_axi_arsize		(elink_axi_arsize[2:0]), // Templated
-		.s_axi_arvalid		(elink_axi_arvalid),	 // Templated
-		.s_axi_awid		(elink_axi_awid[IDW-1:0]), // Templated
-		.s_axi_awaddr		(elink_axi_awaddr[31:0]), // Templated
-		.s_axi_awburst		(elink_axi_awburst[1:0]), // Templated
-		.s_axi_awcache		(elink_axi_awcache[3:0]), // Templated
-		.s_axi_awlock		(elink_axi_awlock[1:0]), // Templated
-		.s_axi_awlen		(elink_axi_awlen[7:0]),	 // Templated
-		.s_axi_awprot		(elink_axi_awprot[2:0]), // Templated
-		.s_axi_awqos		(elink_axi_awqos[3:0]),	 // Templated
-		.s_axi_awsize		(elink_axi_awsize[2:0]), // Templated
-		.s_axi_awvalid		(elink_axi_awvalid),	 // Templated
-		.s_axi_bready		(elink_axi_bready),	 // Templated
-		.s_axi_rready		(elink_axi_rready),	 // Templated
-		.s_axi_wid		(elink_axi_wid[IDW-1:0]), // Templated
-		.s_axi_wdata		(elink_axi_wdata[31:0]), // Templated
-		.s_axi_wlast		(elink_axi_wlast),	 // Templated
-		.s_axi_wstrb		(elink_axi_wstrb[3:0]),	 // Templated
-		.s_axi_wvalid		(elink_axi_wvalid));	 // Templated
+		   // Outputs
+		   .mi_clk		(),			 // Templated
+		   .mi_rx_emmu_sel	(),			 // Templated
+		   .mi_tx_emmu_sel	(),			 // Templated
+		   .mi_ecfg_sel		(),			 // Templated
+		   .mi_embox_sel	(),			 // Templated
+		   .mi_we		(),			 // Templated
+		   .mi_addr		(),			 // Templated
+		   .mi_din		(),			 // Templated
+		   .s_axi_arready	(elink_axi_arready),	 // Templated
+		   .s_axi_awready	(elink_axi_awready),	 // Templated
+		   .s_axi_bid		(elink_axi_bid[IDW-1:0]), // Templated
+		   .s_axi_bresp		(elink_axi_bresp[1:0]),	 // Templated
+		   .s_axi_bvalid	(elink_axi_bvalid),	 // Templated
+		   .s_axi_rid		(elink_axi_rid[IDW-1:0]), // Templated
+		   .s_axi_rdata		(elink_axi_rdata[31:0]), // Templated
+		   .s_axi_rlast		(elink_axi_rlast),	 // Templated
+		   .s_axi_rresp		(elink_axi_rresp[1:0]),	 // Templated
+		   .s_axi_rvalid	(elink_axi_rvalid),	 // Templated
+		   .s_axi_wready	(elink_axi_wready),	 // Templated
+		   // Inputs
+		   .emrq_progfull	(emem_emrq_wait),	 // Templated
+		   .emrr_data		(esaxi_emrr_data[31:0]), // Templated
+		   .emrr_access		(esaxi_emrr_access),	 // Templated
+		   .s_axi_arid		(elink_axi_arid[IDW-1:0]), // Templated
+		   .s_axi_araddr	(elink_axi_araddr[31:0]), // Templated
+		   .s_axi_arburst	(elink_axi_arburst[1:0]), // Templated
+		   .s_axi_arcache	(elink_axi_arcache[3:0]), // Templated
+		   .s_axi_arlock	(elink_axi_arlock[1:0]), // Templated
+		   .s_axi_arlen		(elink_axi_arlen[7:0]),	 // Templated
+		   .s_axi_arprot	(elink_axi_arprot[2:0]), // Templated
+		   .s_axi_arqos		(elink_axi_arqos[3:0]),	 // Templated
+		   .s_axi_arsize	(elink_axi_arsize[2:0]), // Templated
+		   .s_axi_arvalid	(elink_axi_arvalid),	 // Templated
+		   .s_axi_awid		(elink_axi_awid[IDW-1:0]), // Templated
+		   .s_axi_awaddr	(elink_axi_awaddr[31:0]), // Templated
+		   .s_axi_awburst	(elink_axi_awburst[1:0]), // Templated
+		   .s_axi_awcache	(elink_axi_awcache[3:0]), // Templated
+		   .s_axi_awlock	(elink_axi_awlock[1:0]), // Templated
+		   .s_axi_awlen		(elink_axi_awlen[7:0]),	 // Templated
+		   .s_axi_awprot	(elink_axi_awprot[2:0]), // Templated
+		   .s_axi_awqos		(elink_axi_awqos[3:0]),	 // Templated
+		   .s_axi_awsize	(elink_axi_awsize[2:0]), // Templated
+		   .s_axi_awvalid	(elink_axi_awvalid),	 // Templated
+		   .s_axi_bready	(elink_axi_bready),	 // Templated
+		   .s_axi_rready	(elink_axi_rready),	 // Templated
+		   .s_axi_wid		(elink_axi_wid[IDW-1:0]), // Templated
+		   .s_axi_wdata		(elink_axi_wdata[31:0]), // Templated
+		   .s_axi_wlast		(elink_axi_wlast),	 // Templated
+		   .s_axi_wstrb		(elink_axi_wstrb[3:0]),	 // Templated
+		   .s_axi_wvalid	(elink_axi_wvalid));	 // Templated
    
    
    /*elink AUTO_TEMPLATE ( 
@@ -590,10 +564,10 @@ module dv_elink(/*AUTOARG*/
    
    
    
-   assign emem_wait             = ~esaxi_emrr_rd_en & emem_access;
    
    
-   /*emesh_memory AUTO_TEMPLATE ( 
+   
+   /*ememory AUTO_TEMPLATE ( 
                         // Outputs
                         .\(.*\)_out       (esaxi_emrr_\1[]),
                         .\(.*\)_in        (emem_\1[]),
@@ -601,28 +575,28 @@ module dv_elink(/*AUTOARG*/
                          );
    */
 
-   emesh_memory emem (.clk		(s_axi_aclk),
-		      .datamode_out	(),
-		      .ctrlmode_out	(),
-		      .dstaddr_out	(),
-                      .srcaddr_out	(),
-		      .write_out	(),
-		      // Inputs
-		      /*AUTOINST*/
-		      // Outputs
-		      .wait_out		(emem_emrq_wait),	 // Templated
-		      .access_out	(esaxi_emrr_access),	 // Templated
-		      .data_out		(esaxi_emrr_data[DW-1:0]), // Templated
-		      // Inputs
-		      .reset		(reset),
-		      .access_in	(emem_access),		 // Templated
-		      .write_in		(emem_write),		 // Templated
-		      .datamode_in	(emem_datamode[1:0]),	 // Templated
-		      .ctrlmode_in	(emem_ctrlmode[3:0]),	 // Templated
-		      .dstaddr_in	(emem_dstaddr[AW-1:0]),	 // Templated
-		      .data_in		(emem_data[DW-1:0]),	 // Templated
-		      .srcaddr_in	(emem_srcaddr[AW-1:0]),	 // Templated
-		      .wait_in		(emem_wait));		 // Templated
+   ememory emem (.wait_in	(1'b0),       //only one read at a time, set to zero for no1
+		 .clk		(s_axi_aclk),
+		 .datamode_out	(),
+		 .ctrlmode_out	(),
+		 .dstaddr_out	(),
+                 .srcaddr_out	(),
+		 .write_out	(),
+		 // Inputs
+		 /*AUTOINST*/
+		 // Outputs
+		 .wait_out		(emem_emrq_wait),	 // Templated
+		 .access_out		(esaxi_emrr_access),	 // Templated
+		 .data_out		(esaxi_emrr_data[DW-1:0]), // Templated
+		 // Inputs
+		 .reset			(reset),
+		 .access_in		(emem_access),		 // Templated
+		 .write_in		(emem_write),		 // Templated
+		 .datamode_in		(emem_datamode[1:0]),	 // Templated
+		 .ctrlmode_in		(emem_ctrlmode[3:0]),	 // Templated
+		 .dstaddr_in		(emem_dstaddr[AW-1:0]),	 // Templated
+		 .data_in		(emem_data[DW-1:0]),	 // Templated
+		 .srcaddr_in		(emem_srcaddr[AW-1:0]));	 // Templated
    
    //Transaction Monitor
    reg [31:0] 		etime;  

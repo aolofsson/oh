@@ -500,7 +500,7 @@ module esaxi (/*autoarg*/
   
    //Read response AXI state machine
    always @( posedge s_axi_aclk ) 
-      if ( s_axi_aresetn == 1'b0 ) 
+      if (~s_axi_aresetn) 
 	begin
            s_axi_rvalid       <= 1'b0;
            s_axi_rdata[31:0]  <= 32'd0;
