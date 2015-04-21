@@ -24,6 +24,7 @@
 00000000_AAAAAAAA_800e0024_0b //write to embox
 00000000_BBBBBBBB_800e0028_0b //write to embox
 00000000_00000808_800d4040_0b //write to emmurx
+00000000_00000810_800d4080_0b //write to emmurx
 00000000_00000000_80800000_0b //write to epiphany
 00000000_ABCD0001_80800004_0b //write to epiphany
 00000000_ABCD0002_80800008_0b //write to epiphany
@@ -32,8 +33,12 @@
 00000000_ABCD0005_80800014_0b //write to epiphany
 00000000_ABCD0006_80800018_0b //write to epiphany
 00000000_ABCD0007_8080001c_0b //write to epiphany
-00000000_00000000_800e001C_09 //read from dataout register
-00000000_00000000_800e0024_09 //read from embox
-00000000_00000000_800e0028_09 //read from embox
-00000000_00000000_800c0000_09 //read from emmurx
-00000000_00000000_80800000_09 //read from epiphany
+11100000_00000000_800e001C_09 //read from dataout register
+22200000_00000000_800e0024_09 //read from embox
+33300000_00000000_800e0028_09 //read from embox
+44400000_00000000_800c0000_09 //read from emmurx
+55500000_DEADBEEF_80800010_09 //read from epiphany
+66600000_DEADBEEF_8080000c_09 //read from epiphany
+77700000_DEADBEEF_80800008_09 //read from epiphany
+88800000_DEADBEEF_80800004_09 //read from epiphany
+99900000_DEADBEEF_80800000_09 //read from epiphany
