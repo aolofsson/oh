@@ -133,9 +133,7 @@ module emaxi(/*autoarg*/
    reg [7 : 0] 		wstrb_aligned;
 
    reg 			emrr_access;
-   reg [1:0] 		emrr_datamode;
-   reg [3:0] 		emrr_ctrlmode;
-   reg [31:0] 		emrr_dstaddr;
+   reg 			emrr_access_reg;
    reg [31:0] 		emrr_data;
    reg [31:0] 		emrr_srcaddr;
    
@@ -337,6 +335,10 @@ module emaxi(/*autoarg*/
       .wr_data                          (readinfo_in[47:0]),
       .wr_en                            (emrq_rd_en),
       .rd_en                            (readinfo_rden));
+
+   assign emrr_datamode[1:0]  = readinfo_out[1:0];
+   assign emrr_ctrlmode[3:0]  = readinfo_out[5:2];
+   assign emrr_dstaddr[31:0]  = readinfo_out[40:9];
 	                                                                        
    //----------------------------
    // read address channel
@@ -363,14 +365,13 @@ module emaxi(/*autoarg*/
        begin      
 	  emrr_data[31:0]     <= 32'b0;
 	  emrr_srcaddr[31:0]  <= 32'b0;
-          emrr_access         <= 1'b0;         
+	  emrr_access_reg     <= 1'b0;
+	  emrr_access         <= 1'b0;         
       end 
      else 
        begin
-          emrr_access         <= m_axi_rready & m_axi_rvalid;
-          emrr_datamode[1:0]  <= readinfo_out[1:0];
-          emrr_ctrlmode[3:0]  <= readinfo_out[5:2];
-          emrr_dstaddr[31:0]  <= readinfo_out[40:9];
+          emrr_access_reg     <= m_axi_rready & m_axi_rvalid;
+	  emrr_access         <= emrr_access_reg;//added pipeline stage for data 
 	  emrr_srcaddr[31:0]  <= m_axi_rdata[63:32];
 	  // steer read data according to size & host address lsbs
 	  //all data needs to be right aligned
