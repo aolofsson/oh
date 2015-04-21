@@ -7,8 +7,10 @@
  */
 
 module memory_sp(/*AUTOARG*/
+   // Outputs
+   dout,
    // Inputs
-   clk, en, wen, addr, din, dout
+   clk, en, wen, addr, din
    );
 
    parameter AW      = 14;   
@@ -22,12 +24,13 @@ module memory_sp(/*AUTOARG*/
    input [WED-1:0]     wen; //write enable vector
    input [AW-1:0]      addr;//address
    input [DW-1:0]      din; //data input
-   input [DW-1:0]      dout;//data output
+   output [DW-1:0]     dout;//data output
       
 `ifdef TARGET_CLEAN     
 
    reg [DW-1:0]        ram    [MD-1:0];  
    reg [DW-1:0]        rd_data;
+   reg [DW-1:0]        dout;
    
    //read port
    always @ (posedge clk)
@@ -40,7 +43,7 @@ module memory_sp(/*AUTOARG*/
       for (i = 0; i < WED; i = i+1) begin: gen_ram
 	 always @(posedge clk)
            begin  
-              if (wen[i]) 
+              if (wen[i] & en) 
                 ram[addr[AW-1:0]][(i+1)*8-1:i*8] <= din[(i+1)*8-1:i*8];
            end
       end
