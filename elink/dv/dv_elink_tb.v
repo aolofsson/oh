@@ -99,7 +99,7 @@ always @ (posedge clkstim)
        stim_addr[MAW-1:0]  <= 'd0;
        transaction[MW-1:0] <= 'd0;
     end   
-  else if (go & ~dut_wr_wait)
+  else if (go & ~(dut_wr_wait|dut_rd_wait))
     //else if ((go & ~ext_access) | (go & ext_access & ~dut_wr_wait))    
     begin
 `ifdef MANUAL
