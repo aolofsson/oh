@@ -91,7 +91,7 @@ module etx_arbiter (/*AUTOARG*/
    wire 	  rq_ready;
    wire 	  wr_ready;
    wire           emrr_rd_en;
-   wire 	  emrq_rd_en;
+
    wire 	  emwr_rd_en;
 
 
@@ -120,11 +120,13 @@ module etx_arbiter (/*AUTOARG*/
 	   etx_data[31:0]    <= 32'b0;
 	   etx_srcaddr[31:0] <= 32'b0;
 	end 
-      else 
+      else if (emrr_rd_en | emrq_rd_en | emwr_rd_en )
 	begin
-	   etx_write  <= emrr_rd_en ? emrr_fifo_write :
-			 emrq_rd_en ? emrq_fifo_write :
-			              emwr_fifo_write;
+	   ready <= 1'b1;	   
+	   
+	   etx_write  <= emrr_rd_en ? 1'b1 :
+			 emrq_rd_en ? 1'b0 :
+			              1'b1;
 
 	   etx_datamode[1:0] <= emrr_rd_en ? emrr_fifo_datamode[1:0] :
 				emrq_rd_en ? emrq_fifo_datamode[1:0] :
@@ -150,12 +152,12 @@ module etx_arbiter (/*AUTOARG*/
 				emrq_rd_en ? emrq_fifo_srcaddr[31:0] :
 				emwr_fifo_srcaddr[31:0];
 	   
-	   ready   <= (emrr_rd_en | emrq_rd_en | emwr_rd_en ) ? 1'b1 : //ready
-                      (etx_ack)                               ? 1'b0 : //done
-		                                                 ready;//stay ubu
-                                          
-	end // else: !if( reset )
-
+	end   
+      else if (etx_ack)
+	begin
+	   ready <= 1'b0;	   
+	end   
+   	                                            
    assign etx_access = ready;
    
       
