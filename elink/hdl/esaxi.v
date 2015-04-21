@@ -494,7 +494,9 @@ module esaxi (/*autoarg*/
 	  emrq_dstaddr[31:0]  <= axi_araddr[31:0];
 	  emrq_srcaddr[31:0]  <= {c_read_tag_addr[11:0], 20'd0};//TODO? What can we do with lower 32 bits?
        end
-   
+
+   ///Only letting through proper read requests
+   assign emrq_access=emrq_access_all & ~(emrq_dstaddr[31:20]==elinkid[11:0]);
   
    //Read response AXI state machine
    always @( posedge s_axi_aclk ) 
@@ -519,8 +521,6 @@ module esaxi (/*autoarg*/
 	 else if( s_axi_rready ) 
            s_axi_rvalid <= 1'b0;
 	end // else: !if( s_axi_aresetn == 1'b0 )
-
-   assign emrq_access=emrq_access_all & ~(emrq_dstaddr[31:20]==elinkid[11:0]);
   
    //###################################################
    //#Register Inteface Logic

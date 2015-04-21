@@ -87,6 +87,7 @@ module fifo_sync
            );
      end
    endgenerate
+   
 `elsif TARGET_CLEAN
 
    defparam mem.DW=DW;
@@ -97,7 +98,7 @@ module fifo_sync
 			.rd_data	(rd_data[DW-1:0]),
 			// Inputs
 			.wr_clk		(clk),
-			.wr_en		({(DW/8){we_en}}),
+			.wr_en		({(DW/8){wr_en}}),
 			.wr_addr	(wr_addr[AW-1:0]),
 			.wr_data	(wr_data[DW-1:0]),
 			.rd_clk		(clk),
@@ -108,10 +109,10 @@ module fifo_sync
 
    
 endmodule // fifo_sync
+
 // Local Variables:
 // verilog-library-directories:(".")
 // End:
-
 
 /*
  Copyright (C) 2014 Adapteva, Inc.

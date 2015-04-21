@@ -145,8 +145,8 @@ module emaxi(/*autoarg*/
    wire 		readinfo_wren;
    wire 		readinfo_rden;
    wire 		readinfo_full;
-   wire [40:0] 		readinfo_out;
-   wire [40:0] 		readinfo_in;
+   wire [47:0] 		readinfo_out;
+   wire [47:0] 		readinfo_in;
 
    //i/o connections. write address (aw)
    assign m_axi_awburst[1:0]	= 2'b01;
@@ -309,29 +309,32 @@ module emaxi(/*autoarg*/
    //   read data comes back.
    //----------------------------
 
-   assign  readinfo_in[40:0] = 
+   //TODO: Can we improve this??
+   
+   assign  readinfo_in[47:0] = 
                {
+		7'b0,
                 emrq_srcaddr[31:0],//40:9
                 emrq_dstaddr[2:0], //8:6
                 emrq_ctrlmode[3:0], //5:2
                 emrq_datamode[1:0]
                 };
    
-   fifo_sync
+   fifo_sync 
      #(
        // parameters
        .AW                              (5),
-       .DW                              (41))
+       .DW                              (48)) 
    fifo_readinfo_i
      (
       // outputs
-      .rd_data                          (readinfo_out[40:0]),
+      .rd_data                          (readinfo_out[47:0]),
       .rd_empty                         (),
       .wr_full                          (readinfo_full),
       // inputs
       .clk                              (m_axi_aclk),
       .reset                            (~m_axi_aresetn),
-      .wr_data                          (readinfo_in[40:0]),
+      .wr_data                          (readinfo_in[47:0]),
       .wr_en                            (emrq_rd_en),
       .rd_en                            (readinfo_rden));
 	                                                                        
@@ -371,6 +374,7 @@ module emaxi(/*autoarg*/
 	  emrr_srcaddr[31:0]  <= m_axi_rdata[63:32];
 	  // steer read data according to size & host address lsbs
 	  //all data needs to be right aligned
+	  //(this is due to the Epiphany right aligning all words)
 	  case(readinfo_out[1:0])//datamode
             2'd0:  // byte read
               case(readinfo_out[8:6])

@@ -13,11 +13,11 @@ module memory_sp(/*AUTOARG*/
 
    parameter AW      = 14;   
    parameter DW      = 32;
-   parameter WED     = DW/8; //one per byte  
+   parameter WED     = DW/8; //one write enable per byte  
    parameter MD      = 1<<AW;//memory depth
 
    //write-port
-   input               clk; //write clock
+   input               clk; //clock
    input               en;  //memory access   
    input [WED-1:0]     wen; //write enable vector
    input [AW-1:0]      addr;//address

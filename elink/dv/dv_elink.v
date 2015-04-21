@@ -124,6 +124,9 @@ module dv_elink(/*AUTOARG*/
    wire			elink_axi_wready;	// From esaxi of esaxi.v
    wire [7:0]		elink_axi_wstrb;	// From elink of elink.v
    wire			elink_axi_wvalid;	// From elink of elink.v
+   wire			emem_emrq_wait;		// From emem of emesh_memory.v
+   wire			esaxi_emrr_access;	// From emem of emesh_memory.v
+   wire [DW-1:0]	esaxi_emrr_data;	// From emem of emesh_memory.v
    wire			frame_n;		// From elink of elink.v
    wire			frame_p;		// From elink of elink.v
    wire			lclk_n;			// From elink of elink.v
@@ -134,7 +137,7 @@ module dv_elink(/*AUTOARG*/
    wire			wr_wait_p;		// From elink of elink.v
    // End of automatics
 
-   wire [63:0] 		dv_axi_rdata; //restricted to 32 bits here
+   wire [31:0] 		dv_axi_rdata; //restricted to 32 bits here
    wire 		emaxi_emrq_rd_en;	// From emaxi of emaxi.v
    wire 		emaxi_emwr_rd_en;	// From emaxi of emaxi.v
    wire 		emaxi_emrq_access;	// To emaxi of emaxi.v
@@ -186,9 +189,10 @@ module dv_elink(/*AUTOARG*/
    wire [1:0]		dut_datamode;		// To dut_monitor of emesh_monitor.v
    wire [AW-1:0]	dut_dstaddr;		// To dut_monitor of emesh_monitor.v
    wire [AW-1:0]	dut_srcaddr;		// To dut_monitor of emesh_monitor.v
-   wire		dut_write;		// To dut_monitor of emesh_monitor.v
+   wire		        dut_write;		// To dut_monitor of emesh_monitor.v
+   wire 	        emem_wait;		// To emem of emesh_memory.v
+  
    
-
    //Clocks
    wire clkin         = clk[0]; //for pll-->cclk, rxclk, txclk
    wire m_axi_aclk    = clk[1]; 
@@ -255,10 +259,10 @@ module dv_elink(/*AUTOARG*/
   
    /*emaxi AUTO_TEMPLATE ( 
                         // Outputs
-                        .m_\(.*\)         (dv_\1[]),
-                        .em\(.*\)         (emaxi_em\1[]),
-                        
-                             );
+                        .m_\(.*\)    (dv_\1[]),
+                        .em\(.*\)    (emaxi_em\1[]),
+                        .m_axi_rdata ({dv_axi_rdata[31:0],dv_axi_rdata[31:0]}),
+    );
    */
    
    //Drive the elink slave AXI interface
@@ -325,7 +329,7 @@ module dv_elink(/*AUTOARG*/
 	       .m_axi_bvalid		(dv_axi_bvalid),	 // Templated
 	       .m_axi_arready		(dv_axi_arready),	 // Templated
 	       .m_axi_rid		(dv_axi_rid[IDW-1:0]),	 // Templated
-	       .m_axi_rdata		(dv_axi_rdata[63:0]),	 // Templated
+	       .m_axi_rdata		({dv_axi_rdata[31:0],dv_axi_rdata[31:0]}), // Templated
 	       .m_axi_rresp		(dv_axi_rresp[1:0]),	 // Templated
 	       .m_axi_rlast		(dv_axi_rlast),		 // Templated
 	       .m_axi_rvalid		(dv_axi_rvalid));	 // Templated
@@ -336,14 +340,13 @@ module dv_elink(/*AUTOARG*/
                         .s_\(.*\)         (elink_\1[]),
                         .mi_\(.*\)        (),
                         .em\(.*\)         (esaxi_em\1[]),
+                        .emrq_progfull		(emem_emrq_wait),
                         );
    */
 
 
    esaxi esaxi (.emwr_progfull		(1'b0),
-		.emrq_progfull		(1'b0),
-		.emrr_data		(32'b0),//no read from other side
-		.emrr_access		(1'b0),
+		
 		.mi_ecfg_dout		(32'b0),
 		.mi_tx_emmu_dout	(32'b0),
 		.mi_rx_emmu_dout	(32'b0),
@@ -390,6 +393,9 @@ module dv_elink(/*AUTOARG*/
 		.s_axi_rvalid		(elink_axi_rvalid),	 // Templated
 		.s_axi_wready		(elink_axi_wready),	 // Templated
 		// Inputs
+		.emrq_progfull		(emem_emrq_wait),	 // Templated
+		.emrr_data		(esaxi_emrr_data[31:0]), // Templated
+		.emrr_access		(esaxi_emrr_access),	 // Templated
 		.s_axi_arid		(elink_axi_arid[IDW-1:0]), // Templated
 		.s_axi_araddr		(elink_axi_araddr[31:0]), // Templated
 		.s_axi_arburst		(elink_axi_arburst[1:0]), // Templated
@@ -427,7 +433,7 @@ module dv_elink(/*AUTOARG*/
                         .txi_\(.*\)       (\1[]),  
                         .s_\(.*\)         (dv_\1[]),
                         .m_\(.*\)         (elink_\1[]),
-                        .m_axi_rdata	  ({32'b0,elink_axi_rdata[31:0]}), //restricted to slave width
+                        .m_axi_rdata	  ({elink_axi_rdata[31:0],elink_axi_rdata[31:0]}), //restricted to slave width
                         );
    */
 
@@ -515,7 +521,7 @@ module dv_elink(/*AUTOARG*/
 		.m_axi_bvalid		(elink_axi_bvalid),	 // Templated
 		.m_axi_arready		(elink_axi_arready),	 // Templated
 		.m_axi_rid		(elink_axi_rid[IDW-1:0]), // Templated
-		.m_axi_rdata		({32'b0,elink_axi_rdata[31:0]}), // Templated
+		.m_axi_rdata		({elink_axi_rdata[31:0],elink_axi_rdata[31:0]}), // Templated
 		.m_axi_rresp		(elink_axi_rresp[1:0]),	 // Templated
 		.m_axi_rlast		(elink_axi_rlast),	 // Templated
 		.m_axi_rvalid		(elink_axi_rvalid),	 // Templated
@@ -548,6 +554,76 @@ module dv_elink(/*AUTOARG*/
 		.s_axi_wvalid		(dv_axi_wvalid));	 // Templated
 
 
+   wire emem_access;
+   wire emem_write;
+   wire [1:0] emem_datamode;
+   wire [3:0] emem_ctrlmode;
+   wire [AW-1:0] emem_dstaddr;
+   wire [DW-1:0] emem_data;
+   wire [AW-1:0] emem_srcaddr;
+
+   assign  emem_access           = esaxi_emwr_access | esaxi_emrq_access;
+    
+   assign  emem_write            = esaxi_emwr_access;
+
+   assign  emem_datamode[1:0] = esaxi_emwr_access ? esaxi_emwr_datamode[1:0] :
+	  			                       esaxi_emrq_datamode[1:0];
+
+   assign  emem_ctrlmode[3:0] = esaxi_emwr_access ? esaxi_emwr_ctrlmode[3:0] :
+	  			                       esaxi_emrq_ctrlmode[3:0];
+
+
+   assign  emem_dstaddr[AW-1:0] = esaxi_emwr_access ? esaxi_emwr_dstaddr[AW-1:0] :
+	  			                       esaxi_emrq_dstaddr[AW-1:0];
+
+   assign  emem_dstaddr[AW-1:0] = esaxi_emwr_access ? esaxi_emwr_dstaddr[AW-1:0] :
+	  			                       esaxi_emrq_dstaddr[AW-1:0];
+   
+   assign  emem_dstaddr[AW-1:0] = esaxi_emwr_access ? esaxi_emwr_dstaddr[AW-1:0] :
+	  			                       esaxi_emrq_dstaddr[AW-1:0];
+   
+   assign  emem_data[DW-1:0]    = esaxi_emwr_access ? esaxi_emwr_data[DW-1:0] :
+	  			                        esaxi_emrq_data[DW-1:0];
+
+   assign  emem_srcaddr[AW-1:0] = esaxi_emwr_access ? esaxi_emwr_srcaddr[AW-1:0] :
+	  			                       esaxi_emrq_srcaddr[AW-1:0];
+   
+   
+   
+   assign emem_wait             = ~esaxi_emrr_rd_en & emem_access;
+   
+   
+   /*emesh_memory AUTO_TEMPLATE ( 
+                        // Outputs
+                        .\(.*\)_out       (esaxi_emrr_\1[]),
+                        .\(.*\)_in        (emem_\1[]),
+                        .wait_out	  (emem_emrq_wait),
+                         );
+   */
+
+   emesh_memory emem (.clk		(s_axi_aclk),
+		      .datamode_out	(),
+		      .ctrlmode_out	(),
+		      .dstaddr_out	(),
+                      .srcaddr_out	(),
+		      .write_out	(),
+		      // Inputs
+		      /*AUTOINST*/
+		      // Outputs
+		      .wait_out		(emem_emrq_wait),	 // Templated
+		      .access_out	(esaxi_emrr_access),	 // Templated
+		      .data_out		(esaxi_emrr_data[DW-1:0]), // Templated
+		      // Inputs
+		      .reset		(reset),
+		      .access_in	(emem_access),		 // Templated
+		      .write_in		(emem_write),		 // Templated
+		      .datamode_in	(emem_datamode[1:0]),	 // Templated
+		      .ctrlmode_in	(emem_ctrlmode[3:0]),	 // Templated
+		      .dstaddr_in	(emem_dstaddr[AW-1:0]),	 // Templated
+		      .data_in		(emem_data[DW-1:0]),	 // Templated
+		      .srcaddr_in	(emem_srcaddr[AW-1:0]),	 // Templated
+		      .wait_in		(emem_wait));		 // Templated
+   
    //Transaction Monitor
    reg [31:0] 		etime;  
    always @ (posedge clkin or posedge reset)
@@ -603,7 +679,7 @@ module dv_elink(/*AUTOARG*/
 
 endmodule // dv_elink
 // Local Variables:
-// verilog-library-directories:("." "../hdl")
+// verilog-library-directories:("." "../hdl" "../../memory/hdl")
 // End:
 
 /*
