@@ -4,7 +4,7 @@ module etx(/*AUTOARG*/
    emrr_progfull, txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n,
    txo_data_p, txo_data_n, mi_dout,
    // Inputs
-   reset, tx_lclk, tx_lclk_out, tx_lclk_par, s_axi_aclk, m_axi_aclk,
+   reset, tx_lclk, tx_lclk90, tx_lclk_div4, s_axi_aclk, m_axi_aclk,
    ecfg_tx_enable, ecfg_tx_gpio_enable, ecfg_tx_mmu_enable,
    ecfg_dataout, emrq_access, emrq_write, emrq_datamode,
    emrq_ctrlmode, emrq_dstaddr, emrq_data, emrq_srcaddr, emwr_access,
@@ -21,8 +21,8 @@ module etx(/*AUTOARG*/
    //Clocks and reset
    input         reset;
    input 	 tx_lclk;	       //high speed serdes clock
-   input 	 tx_lclk_out;	       //lclk output
-   input 	 tx_lclk_par;	       //slow speed parallel clock
+   input 	 tx_lclk90;	       //lclk output
+   input 	 tx_lclk_div4;	       //slow speed parallel clock
    input 	 s_axi_aclk;           //clock for read request and write fifos
    input 	 m_axi_aclk;           //clock for read response fifo
 
@@ -148,7 +148,7 @@ module etx(/*AUTOARG*/
 			       .fifo_full	(em@"(substring vl-cell-name  2 4)"_fifo_full),
 			       .fifo_progfull	(em@"(substring vl-cell-name  2 4)"_progfull),
 			       // Inputs
-			       .rd_clk		(tx_lclk_par),
+			       .rd_clk		(tx_lclk_div4),
 			       .wr_clk		(@"(substring vl-cell-name  0 1)"_axi_aclk),
 			       .reset		(reset),
 			       .fifo_read	(em@"(substring vl-cell-name  2 4)"_rd_en),
@@ -171,7 +171,7 @@ module etx(/*AUTOARG*/
 			      .emesh_srcaddr_out(emwr_fifo_srcaddr[31:0]), // Templated
 			      .fifo_progfull	(emwr_progfull), // Templated
 			      // Inputs
-			      .rd_clk		(tx_lclk_par),	 // Templated
+			      .rd_clk		(tx_lclk_div4),	 // Templated
 			      .wr_clk		(s_axi_aclk),	 // Templated
 			      .reset		(reset),	 // Templated
 			      .emesh_access_in	(emwr_access),	 // Templated
@@ -196,7 +196,7 @@ module etx(/*AUTOARG*/
 			       .emesh_srcaddr_out(emrq_fifo_srcaddr[31:0]), // Templated
 			       .fifo_progfull	(emrq_progfull), // Templated
 			       // Inputs
-			       .rd_clk		(tx_lclk_par),	 // Templated
+			       .rd_clk		(tx_lclk_div4),	 // Templated
 			       .wr_clk		(s_axi_aclk),	 // Templated
 			       .reset		(reset),	 // Templated
 			       .emesh_access_in	(emrq_access),	 // Templated
@@ -223,7 +223,7 @@ module etx(/*AUTOARG*/
 			       .emesh_srcaddr_out(emrr_fifo_srcaddr[31:0]), // Templated
 			       .fifo_progfull	(emrr_progfull), // Templated
 			       // Inputs
-			       .rd_clk		(tx_lclk_par),	 // Templated
+			       .rd_clk		(tx_lclk_div4),	 // Templated
 			       .wr_clk		(m_axi_aclk),	 // Templated
 			       .reset		(reset),	 // Templated
 			       .emesh_access_in	(emrr_access),	 // Templated
@@ -256,7 +256,7 @@ module etx(/*AUTOARG*/
 			    .etx_srcaddr	(etx_srcaddr[31:0]),
 			    .etx_data		(etx_data[31:0]),
 			    // Inputs
-			    .tx_lclk_par	(tx_lclk_par),
+			    .tx_lclk_div4	(tx_lclk_div4),
 			    .reset		(reset),
 			    .emwr_fifo_access	(emwr_fifo_access),
 			    .emwr_fifo_write	(emwr_fifo_write),
@@ -306,7 +306,7 @@ module etx(/*AUTOARG*/
 			      .etx_dstaddr	(etx_dstaddr[31:0]),
 			      .etx_srcaddr	(etx_srcaddr[31:0]),
 			      .etx_data		(etx_data[31:0]),
-			      .tx_lclk_par	(tx_lclk_par),
+			      .tx_lclk_div4	(tx_lclk_div4),
 			      .tx_rd_wait	(tx_rd_wait),
 			      .tx_wr_wait	(tx_wr_wait));
 
@@ -334,9 +334,9 @@ module etx(/*AUTOARG*/
 		  .txi_wr_wait_n	(txi_wr_wait_n),
 		  .txi_rd_wait_p	(txi_rd_wait_p),
 		  .txi_rd_wait_n	(txi_rd_wait_n),
-		  .tx_lclk_par		(tx_lclk_par),
+		  .tx_lclk_div4		(tx_lclk_div4),
 		  .tx_lclk		(tx_lclk),
-		  .tx_lclk_out		(tx_lclk_out),
+		  .tx_lclk90		(tx_lclk90),
 		  .tx_frame_par		(tx_frame_par[7:0]),
 		  .tx_data_par		(tx_data_par[63:0]),
 		  .ecfg_tx_enable	(ecfg_tx_enable),
@@ -347,7 +347,7 @@ module etx(/*AUTOARG*/
    /************************************************************/
    /*Debug signals                                             */
    /************************************************************/
-   always @ (posedge tx_lclk_par)
+   always @ (posedge tx_lclk_div4)
      begin
 	ecfg_tx_debug[15:0] <= {2'b0,                     //15:14
 				etx_rd_wait,              //13

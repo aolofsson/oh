@@ -4,7 +4,7 @@ module etx_io (/*AUTOARG*/
    txo_data_n, tx_wr_wait, tx_rd_wait,
    // Inputs
    reset, txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n,
-   tx_lclk_par, tx_lclk, tx_lclk_out, tx_frame_par, tx_data_par,
+   tx_lclk_div4, tx_lclk, tx_lclk90, tx_frame_par, tx_data_par,
    ecfg_tx_enable, ecfg_tx_gpio_enable, ecfg_dataout
    );
 
@@ -26,9 +26,9 @@ module etx_io (/*AUTOARG*/
    //#############
    //# Fabric interface
    //#############
-   input        tx_lclk_par;  // Slow lclk for parallel side (bit rate / 8)
-   input        tx_lclk;      // High speed clock for serdesd (bit rate / 2)
-   input        tx_lclk_out;  // High speed lclk output clock (90deg from tx_lclk)
+   input        tx_lclk_div4;  // Slow lclk for parallel side (bit rate / 8)
+   input        tx_lclk;       // High speed clock for serdesd (bit rate / 2)
+   input        tx_lclk90;     // High speed lclk output clock (90deg from tx_lclk)
 
    input [7:0]  tx_frame_par; // Parallel frame for serdes
    input [63:0] tx_data_par;  // Parallel data for serdes
@@ -68,7 +68,7 @@ module etx_io (/*AUTOARG*/
    assign         txgpio = txgpio_sync[0];
 
    // Sync these control bits into our domain
-   always @ (posedge tx_lclk_par) 
+   always @ (posedge tx_lclk_div4) 
      begin
 	txenb_sync[1:0]  <= {ecfg_tx_enable, txenb_sync[1]};
 	txgpio_sync[1:0] <= {ecfg_tx_gpio_enable, txgpio_sync[1]};      
@@ -117,7 +117,7 @@ module etx_io (/*AUTOARG*/
              .TFB(),            // 1-bit output: 3-state control
              .TQ(tx_data_t[i]), // 1-bit output: 3-state control
              .CLK(tx_lclk),      // 1-bit input: High speed clock
-             .CLKDIV(tx_lclk_par), // 1-bit input: Divided clock
+             .CLKDIV(tx_lclk_div4), // 1-bit input: Divided clock
              // D1 - D8: 1-bit (each) input: Parallel data inputs (1-bit each)
              .D1(pdata[i+56]),  // First data out
              .D2(pdata[i+48]),
@@ -166,7 +166,7 @@ module etx_io (/*AUTOARG*/
         .TFB(),            // 1-bit output: 3-state control
         .TQ(),             // 1-bit output: 3-state control
         .CLK(tx_lclk),      // 1-bit input: High speed clock
-        .CLKDIV(tx_lclk_par), // 1-bit input: Divided clock
+        .CLKDIV(tx_lclk_div4), // 1-bit input: Divided clock
         // D1 - D8: 1-bit (each) input: Parallel data inputs (1-bit each)
         .D1(pframe[7]),  // first data out
         .D2(pframe[6]),
@@ -205,7 +205,7 @@ module etx_io (/*AUTOARG*/
    oddr_lclk_inst
      (
       .Q  (tx_lclk_buf),
-      .C  (tx_lclk_out),
+      .C  (tx_lclk90),
       .CE (1'b0),
       .D1 (ecfg_tx_enable),
       .D2 (1'b0),

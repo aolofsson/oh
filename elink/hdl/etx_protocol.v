@@ -14,7 +14,7 @@ module etx_protocol (/*AUTOARG*/
    ecfg_tx_datain,
    // Inputs
    reset, etx_access, etx_write, etx_datamode, etx_ctrlmode,
-   etx_dstaddr, etx_srcaddr, etx_data, tx_lclk_par, tx_rd_wait,
+   etx_dstaddr, etx_srcaddr, etx_data, tx_lclk_div4, tx_rd_wait,
    tx_wr_wait
    );
 
@@ -34,7 +34,7 @@ module etx_protocol (/*AUTOARG*/
    output        etx_ack;
    
    // Parallel interface, 8 eLink bytes at a time
-   input         tx_lclk_par; // Parallel-rate clock from eClock block
+   input         tx_lclk_div4; // Parallel-rate clock from eClock block
    output [7:0]  tx_frame_par;
    output [63:0] tx_data_par;
    input         tx_rd_wait;  // The wait signals are passed through
@@ -56,7 +56,7 @@ module etx_protocol (/*AUTOARG*/
 
    // TODO: Bursts
 
-   always @( posedge tx_lclk_par or posedge reset ) 
+   always @( posedge tx_lclk_div4 or posedge reset ) 
      begin
 	if(reset) 
 	  begin	     
@@ -103,7 +103,7 @@ module etx_protocol (/*AUTOARG*/
    reg     etx_rd_wait;
    reg     etx_wr_wait;
    
-   always @ (posedge tx_lclk_par) 
+   always @ (posedge tx_lclk_div4) 
      begin
 	rd_wait_sync <= tx_rd_wait;
 	etx_rd_wait <= rd_wait_sync;

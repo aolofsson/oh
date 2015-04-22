@@ -19,7 +19,7 @@ module etx_arbiter (/*AUTOARG*/
    emwr_rd_en, emrq_rd_en, emrr_rd_en, etx_access, etx_write,
    etx_datamode, etx_ctrlmode, etx_dstaddr, etx_srcaddr, etx_data,
    // Inputs
-   tx_lclk_par, reset, emwr_fifo_access, emwr_fifo_write,
+   tx_lclk_div4, reset, emwr_fifo_access, emwr_fifo_write,
    emwr_fifo_datamode, emwr_fifo_ctrlmode, emwr_fifo_dstaddr,
    emwr_fifo_data, emwr_fifo_srcaddr, emrq_fifo_access,
    emrq_fifo_write, emrq_fifo_datamode, emrq_fifo_ctrlmode,
@@ -30,7 +30,7 @@ module etx_arbiter (/*AUTOARG*/
    );
 
    // tx clock
-   input          tx_lclk_par;
+   input          tx_lclk_div4;
    input          reset;
    
    //Write Request (from slave)
@@ -109,7 +109,7 @@ module etx_arbiter (/*AUTOARG*/
    assign     emrq_rd_en = rq_ready & (~ready | etx_ack);
    assign     emwr_rd_en = wr_ready & (~ready | etx_ack);
    
-   always @ (posedge tx_lclk_par)
+   always @ (posedge tx_lclk_div4)
       if( reset ) 
 	begin
            ready             <= 1'b0;

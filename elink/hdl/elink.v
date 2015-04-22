@@ -523,8 +523,8 @@ module elink(/*AUTOARG*/
    wire			reset;			// From ereset of ereset.v
    wire			soft_reset;		// From ecfg of ecfg.v
    wire			tx_lclk;		// From eclocks of eclocks.v
-   wire			tx_lclk_out;		// From eclocks of eclocks.v
-   wire			tx_lclk_par;		// From eclocks of eclocks.v
+   wire			tx_lclk90;		// From eclocks of eclocks.v
+   wire			tx_lclk_div4;		// From eclocks of eclocks.v
    // End of automatics
  
    
@@ -794,8 +794,8 @@ module elink(/*AUTOARG*/
 	   // Inputs
 	   .reset			(reset),
 	   .tx_lclk			(tx_lclk),
-	   .tx_lclk_out			(tx_lclk_out),
-	   .tx_lclk_par			(tx_lclk_par),
+	   .tx_lclk90			(tx_lclk90),
+	   .tx_lclk_div4		(tx_lclk_div4),
 	   .s_axi_aclk			(s_axi_aclk),
 	   .m_axi_aclk			(m_axi_aclk),
 	   .ecfg_tx_enable		(ecfg_tx_enable),
@@ -919,8 +919,8 @@ module elink(/*AUTOARG*/
 		    .cclk_p		(cclk_p),
 		    .cclk_n		(cclk_n),
 		    .tx_lclk		(tx_lclk),
-		    .tx_lclk_out	(tx_lclk_out),
-		    .tx_lclk_par	(tx_lclk_par),
+		    .tx_lclk90		(tx_lclk90),
+		    .tx_lclk_div4	(tx_lclk_div4),
 		    // Inputs
 		    .clkin		(clkin),
 		    .hard_reset		(hard_reset),
