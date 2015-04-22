@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ##DIRECTORY STRUCTURE
 * **elink**:   Top level elink block
 * **axi**:     Master and slave interface for elink
@@ -16,3 +17,7 @@
 Each block should be considered a reusabel entitity and include
 hdl source code as well as a basic test environment.
 
+=======
+# OH!
+Open Hardware (Pure and Simple)
+>>>>>>> a717a3b7449869fc16e5f9c33d1a8991ff0560a7
