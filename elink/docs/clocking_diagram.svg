@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="New document 1">
+   sodipodi:docname="clocking_diagram.svg">
   <defs
      id="defs4">
     <marker
@@ -45,10 +45,10 @@
      inkscape:current-layer="layer1"
      showgrid="true"
      showguides="false"
-     inkscape:window-width="1920"
-     inkscape:window-height="1171"
-     inkscape:window-x="1600"
-     inkscape:window-y="0"
+     inkscape:window-width="1600"
+     inkscape:window-height="823"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
      inkscape:window-maximized="1">
     <sodipodi:guide
        position="0,0"
@@ -82,7 +82,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -113,7 +113,7 @@
            height="388.90872"
            x="348.50262"
            y="3.6526666" /></flowRegion><flowPara
-         id="flowPara3830"></flowPara></flowRoot>    <rect
+         id="flowPara3830" /></flowRoot>    <rect
        style="fill:none;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect2985"
        width="166.77216"
@@ -404,7 +404,7 @@
            height="58.57143"
            x="465"
            y="579.09448" /></flowRegion><flowPara
-         id="flowPara4813"></flowPara></flowRoot>    <path
+         id="flowPara4813" /></flowRoot>    <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 570,664.09448 110,0"
        id="path4815"
@@ -582,27 +582,27 @@
          x="0"
          sodipodi:role="line">125MHz</tspan></text>
     <path
-       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
-       d="m 119.65015,772.71203 0,-229.93648 30.39623,0"
+       style="fill:none;stroke:#000000;stroke-width:1.16326344;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 119.73178,772.6304 0,-312.8261 30.23297,0"
        id="path5095"
        inkscape:connector-curvature="0" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 410,214.09448 0,-90 20,0"
+       style="fill:none;stroke:#000000;stroke-width:0.58197665px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 409.79099,462.0118 0,-29.85863 20.41802,0"
        id="path5097"
-       inkscape:connector-curvature="0"
-       transform="translate(0,308.2677)" />
+       inkscape:connector-curvature="0" />
     <text
        sodipodi:linespacing="125%"
        id="text4151-2-4-5-7-5-9-6"
-       y="752.36218"
-       x="130"
+       y="110"
+       x="-712.36218"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
-       xml:space="preserve"><tspan
+       xml:space="preserve"
+       transform="matrix(0,-1,1,0,0,0)"><tspan
          id="tspan4155-7-6-72-6-9-8-0"
          style="font-size:20px"
-         y="752.36218"
-         x="130"
+         y="110"
+         x="-712.36218"
          sodipodi:role="line">500MHz</tspan></text>
     <text
        xml:space="preserve"
@@ -670,32 +670,52 @@
        inkscape:connector-curvature="0" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 152.63875,508.26142 70,35 -70,35.00003 z"
+       d="m 151.77361,426.07368 70,35 -70,35.00003 z"
        id="path3900-4-1-9-3"
        inkscape:connector-curvature="0" />
     <text
        sodipodi:linespacing="125%"
        id="text4151-2-4-5-7-7-2"
-       y="582.36218"
-       x="190"
+       y="482.36218"
+       x="210"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
        xml:space="preserve"><tspan
          id="tspan4155-7-6-72-6-7-0"
          style="font-size:20px"
-         y="582.36218"
-         x="190"
+         y="482.36218"
+         x="210"
          sodipodi:role="line">BUFIO</tspan></text>
     <path
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 220,234.09448 210,0"
-       id="path5596"
-       inkscape:connector-curvature="0"
-       transform="translate(0,308.2677)" />
+       style="fill:none;stroke:#000000;stroke-width:1.0237143;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 138.69496,772.42047 0,-241.15951 30.37251,0"
+       id="path5095-3"
+       inkscape:connector-curvature="0" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 410,214.09448 0,20"
-       id="path5598"
-       inkscape:connector-curvature="0"
-       transform="translate(0,308.2677)" />
+       style="fill:none;stroke:#000000;stroke-width:0.88133943px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 168.12871,531.77674 264.09812,0"
+       id="path5070-8"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.74912953px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 218.28612,460.83574 190.8063,0"
+       id="path5070-8-3"
+       inkscape:connector-curvature="0" />
+    <text
+       sodipodi:linespacing="125%"
+       id="text4151-2-4-5-7-5-9-6-4"
+       y="532.36218"
+       x="170"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       xml:space="preserve"><tspan
+         id="tspan4155-7-6-72-6-9-8-0-1"
+         style="font-size:20px"
+         y="532.36218"
+         x="170"
+         sodipodi:role="line">500MHz</tspan><tspan
+         style="font-size:20px"
+         y="557.36218"
+         x="170"
+         sodipodi:role="line"
+         id="tspan3176">(delayed by 90deg)</tspan></text>
   </g>
 </svg>
