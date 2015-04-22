@@ -1,5 +1,5 @@
-../../constants/hdl/simulation_constants.v
-../../elink/hdl/elink_regmap.v
+../hdl/constants.v
+../hdl/elink_regmap.v
 dv_elink_tb.v
 -y .
 -y ../../elink/hdl
