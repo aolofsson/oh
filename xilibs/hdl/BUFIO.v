@@ -4,10 +4,10 @@ module BUFIO (/*AUTOARG*/
    // Inputs
    I
    );
-   input I;
+
    output O;
-
+   input  I;
+    
    assign O=I;
-   
-endmodule // BUFIO
-
+     
+endmodule
