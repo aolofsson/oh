@@ -1,16 +1,15 @@
 /*64 bit wide byte addressable memory*/
 module ememory(/*AUTOARG*/
    // Outputs
-   wait_out, access_out, write_out, datamode_out, ctrlmode_out,
-   dstaddr_out, data_out, srcaddr_out,
+   wait_out, access_out, packet_out,
    // Inputs
-   clk, reset, access_in, write_in, datamode_in, ctrlmode_in,
-   dstaddr_in, data_in, srcaddr_in, wait_in
+   clk, reset, access_in, packet_in, wait_in
    );
 
    parameter DW  = 32;   
    parameter AW  = 32;   
    parameter MAW = 10;
+   parameter PW  = 104;
    
    //Basic Interface
    input            clk;
@@ -18,22 +17,12 @@ module ememory(/*AUTOARG*/
 
    //incoming read/write
    input 	    access_in;
-   input 	    write_in;   
-   input [1:0] 	    datamode_in;
-   input [3:0] 	    ctrlmode_in;
-   input [AW-1:0]   dstaddr_in;
-   input [DW-1:0]   data_in;   
-   input [AW-1:0]   srcaddr_in;   
+   input [PW-1:0]   packet_in;      
    output 	    wait_out;   //pushback
      
    //back to mesh (readback data)
    output 	    access_out;
-   output 	    write_out;   
-   output [1:0]     datamode_out;
-   output [3:0]     ctrlmode_out;
-   output [AW-1:0]  dstaddr_out;
-   output [DW-1:0]  data_out;   
-   output [AW-1:0]  srcaddr_out;   
+   output [PW-1:0]  packet_out;        
    input 	    wait_in;   //pushback
 
    wire [MAW-1:0]   addr;
@@ -50,9 +39,29 @@ module ememory(/*AUTOARG*/
    reg [1:0] 	    datamode_out;
    reg [3:0] 	    ctrlmode_out;   
    reg [AW-1:0]     dstaddr_out;   
-   reg [AW-1:0]     srcaddr_out;   
+   reg [AW-1:0]     srcaddr_out;
+   wire [AW-1:0]    data_out;   
    reg 		    hilo_sel;
- 
+
+   wire 	    write_in;   
+   wire [1:0] 	    datamode_in;
+   wire [3:0] 	    ctrlmode_in;   
+   wire [AW-1:0]    dstaddr_in;
+   wire [DW-1:0]    data_in;   
+   wire [AW-1:0]    srcaddr_in;   
+
+   packet2emesh p2e (
+		     .access_out	(),
+		     .write_out		(write_in),
+		     .datamode_out	(datamode_in[1:0]),
+		     .ctrlmode_out	(ctrlmode_in[3:0]),
+		     .dstaddr_out	(dstaddr_in[AW-1:0]),
+		     .data_out		(data_in[DW-1:0]),
+		     .srcaddr_out	(srcaddr_in[AW-1:0]),
+		     .packet_in		(packet_in[PW-1:0])
+		     );
+   
+   
    //Access-in
    assign mem_rd = (access_in & ~write_in & ~wait_in);
    assign mem_wr = (access_in & write_in );
@@ -125,9 +134,21 @@ module ememory(/*AUTOARG*/
    assign data_out[DW-1:0]     = hilo_sel ? dout[63:32] :
 				             dout[31:0]; 
    
+   //Concatenate
+   emesh2packet e2p (.packet_out	(packet_out[PW-1:0]),
+		     .access_in		(),
+		     .write_in		(write_out),
+		     .datamode_in	(datamode_out[1:0]),
+		     .ctrlmode_in	(ctrlmode_out[3:0]),
+		     .dstaddr_in	(dstaddr_out[AW-1:0]),
+		     .data_in		(data_out[DW-1:0]),
+		     .srcaddr_in	(srcaddr_out[AW-1:0])
+		     );
+   
+		    
 endmodule // emesh_memory
 // Local Variables:
-// verilog-library-directories:("." )
+// verilog-library-directories:("." "../../common/hdl")
 // End:
 
 
