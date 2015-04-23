@@ -522,58 +522,7 @@ module esaxi (/*autoarg*/
            s_axi_rvalid <= 1'b0;
 	end // else: !if( s_axi_aresetn == 1'b0 )
   
-   //###################################################
-   //#Register Inteface Logic
-   //###################################################  
-
-        
-   assign mi_clk = s_axi_aclk;
-   
-   //Register file access (from slave)
-   assign mi_wr = emwr_access_all & (emwr_dstaddr[31:20]==elinkid[11:0]);   
-   assign mi_rd = emrq_access_all & (emrq_dstaddr[31:20]==elinkid[11:0]);
-   
-   //Only 32 bit writes supported
-   assign mi_we         =  mi_wr;   
-   assign mi_en         =  mi_wr | mi_rd;
-
-   //Read/write address
-   assign mi_addr[19:0] =  mi_we ? emwr_dstaddr[19:0] :
-			           emrq_dstaddr[19:0];
-   		
-   //Block select
-   assign mi_ecfg_sel     = mi_en & (mi_addr[19:16]==`EGROUP_MMR);
-   assign mi_rx_emmu_sel  = mi_en & (mi_addr[19:16]==`EGROUP_RXMMU);
-   assign mi_tx_emmu_sel  = mi_en & (mi_addr[19:16]==`EGROUP_TXMMU);
-   assign mi_embox_sel    = mi_ecfg_sel & (mi_addr[6:2]==`EMBOXLO |
-					  mi_addr[6:2]==`EMBOXHI)
-					  ;			   
-   //Data
-   assign mi_din[31:0]     = emwr_data[31:0];
-	 
-   //Readback
-   always@ (posedge mi_clk)
-     begin
-	mi_ecfg_reg    <= mi_ecfg_sel;
-	mi_rx_emmu_reg <= mi_rx_emmu_sel;	
-	mi_tx_emmu_reg <= mi_tx_emmu_sel;
-	//feel hacky, clean up?
-	mi_embox_reg   <= mi_embox_sel;	
-	mi_rd_reg      <= mi_rd;
-     end
-
-   //Data mux
-   assign mi_dout[31:0] = mi_ecfg_reg    ? mi_ecfg_dout[31:0]    :
-			  mi_rx_emmu_reg ? mi_rx_emmu_dout[31:0] :
-			  mi_tx_emmu_reg ? mi_tx_emmu_dout[31:0] :
-			                   mi_embox_dout[31:0];
-   /********************************/
-   /*INTERFACE TO AXI SLAVE        */
-   /********************************/  
-
-   //Read Response
-   assign   emrr_mux_data[31:0]       = mi_rd_reg ? mi_dout[31:0] :
-				                    emrr_data[31:0];
+  
 
 endmodule // esaxi
 
