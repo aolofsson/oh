@@ -2,35 +2,41 @@
 module fifo_async 
    (/*AUTOARG*/
    // Outputs
-   rd_data, rd_fifo_empty, wr_fifo_full, wr_fifo_progfull,
+   full, prog_full, dout, empty,
    // Inputs
-   reset, wr_clk, rd_clk, wr_write, wr_data, rd_read
+   reset, wr_clk, rd_clk, wr_en, din, rd_en
    );
    
    parameter DW = 104;
    parameter AW = 2;
 
+
    //##########
-   //# INPUTS
+   //# RESET/CLOCK
    //##########
    input           reset;     
    input           wr_clk;    //write clock   
-   input           rd_clk;    //read clock
-   
-   input           wr_write;   
-   input  [DW-1:0] wr_data;
-   input           rd_read;
+   input           rd_clk;    //read clock   
+
+   //##########
+   //# FIFO WRITE
+   //##########
+   input           wr_en;   
+   input  [DW-1:0] din;
+   output          full;
+   output          prog_full;
 
    //###########
-   //# OUTPUTS
+   //# FIFO READ
    //###########
-   output [DW-1:0] rd_data;
-   output          rd_fifo_empty;
-   output          wr_fifo_full;
-   output          wr_fifo_progfull;
+   input 	   rd_en;
+   output [DW-1:0] dout;
+   output          empty;
 
+
+`ifdef TARGET_CLEAN
    //Wires
-   wire [DW/8-1:0] wr_en;
+   wire [DW/8-1:0] wr_vec;
    wire [AW:0]	   wr_rd_gray_pointer;
    wire [AW:0] 	   rd_wr_gray_pointer;
    wire [AW:0] 	   wr_gray_pointer;
@@ -39,16 +45,16 @@ module fifo_async
    wire [AW-1:0]   wr_addr;
 
    
-   assign wr_en[DW/8-1:0] = {(DW/8){wr_write}};
+   assign wr_vec[DW/8-1:0] = {(DW/8){wr_en}};
    
    memory_dp #(.DW(DW),.AW(AW)) memory_dp (
 					   // Outputs
-					   .rd_data	(rd_data[DW-1:0]),
+					   .rd_data	(dout[DW-1:0]),
 					   // Inputs
 					   .wr_clk	(wr_clk),
-					   .wr_en	(wr_en[DW/8-1:0]),
+					   .wr_en	(wr_vec[DW/8-1:0]),
 					   .wr_addr	(wr_addr[AW-1:0]),
-					   .wr_data	(wr_data[DW-1:0]),
+					   .wr_data	(din[DW-1:0]),
 					   .rd_clk	(rd_clk),
 					   .rd_en	(1'b1),
 					   .rd_addr	(rd_addr[AW-1:0]));
@@ -63,7 +69,7 @@ module fifo_async
 						.reset		(reset),
 						.rd_clk		(rd_clk),
 						.rd_wr_gray_pointer(rd_wr_gray_pointer[AW:0]),
-						.rd_read	(rd_read));
+						.rd_read	(rd_en));
    
    //Write State Machine
    fifo_full_block #(.AW(AW)) fifo_full_block(
@@ -76,7 +82,7 @@ module fifo_async
 					      .reset		(reset),
 					      .wr_clk		(wr_clk),
 					      .wr_rd_gray_pointer(wr_rd_gray_pointer[AW:0]),
-					      .wr_write		(wr_write));
+					      .wr_write		(wr_wen));
    
 
    synchronizer #(.DW(AW+1)) rd2wr_sync (.out		(wr_rd_gray_pointer[AW:0]),
@@ -91,7 +97,12 @@ module fifo_async
 					 .clk		(rd_clk));
    
 
+`elsif TARGET_XILINX 
 
+   //insert generate FIFO
+
+`endif //  `ifdef TARGET_CLEAN
+   
 endmodule // fifo_async
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")
