@@ -16,151 +16,108 @@
 
 module etx_arbiter (/*AUTOARG*/
    // Outputs
-   emwr_rd_en, emrq_rd_en, emrr_rd_en, etx_access, etx_write,
-   etx_datamode, etx_ctrlmode, etx_dstaddr, etx_srcaddr, etx_data,
+   txwr_fifo_read, txrd_fifo_read, txrr_fifo_read, etx_access,
+   etx_packet,
    // Inputs
-   tx_lclk_div4, reset, emwr_fifo_access, emwr_fifo_write,
-   emwr_fifo_datamode, emwr_fifo_ctrlmode, emwr_fifo_dstaddr,
-   emwr_fifo_data, emwr_fifo_srcaddr, emrq_fifo_access,
-   emrq_fifo_write, emrq_fifo_datamode, emrq_fifo_ctrlmode,
-   emrq_fifo_dstaddr, emrq_fifo_data, emrq_fifo_srcaddr,
-   emrr_fifo_access, emrr_fifo_write, emrr_fifo_datamode,
-   emrr_fifo_ctrlmode, emrr_fifo_dstaddr, emrr_fifo_data,
-   emrr_fifo_srcaddr, etx_rd_wait, etx_wr_wait, etx_ack
+   tx_lclk_div4, reset, ecfg_tx_ctrlmode_bp, ecfg_tx_ctrlmode,
+   txwr_fifo_empty, txwr_fifo_packet, txrd_fifo_empty,
+   txrd_fifo_packet, txrr_fifo_empty, txrr_fifo_packet, etx_rd_wait,
+   etx_wr_wait, etx_ack
    );
 
-   // tx clock
+   parameter PW = 104;
+   
+   
+   // tx clock and reset
    input          tx_lclk_div4;
    input          reset;
+
+   //ctrlmode for slave transactions
+   input 	  ecfg_tx_ctrlmode_bp;
+   input [3:0] 	  ecfg_tx_ctrlmode;
    
    //Write Request (from slave)
-   input 	  emwr_fifo_access;
-   input 	  emwr_fifo_write;
-   input [1:0] 	  emwr_fifo_datamode;
-   input [3:0] 	  emwr_fifo_ctrlmode;
-   input [31:0]   emwr_fifo_dstaddr;
-   input [31:0]   emwr_fifo_data;
-   input [31:0]   emwr_fifo_srcaddr;
-   output         emwr_rd_en;
+   input 	  txwr_fifo_empty;
+   input [PW-1:0] txwr_fifo_packet;
+   output         txwr_fifo_read;
    
    //Read Request (from slave)
-   input 	  emrq_fifo_access;
-   input 	  emrq_fifo_write;
-   input [1:0] 	  emrq_fifo_datamode;
-   input [3:0] 	  emrq_fifo_ctrlmode;
-   input [31:0]   emrq_fifo_dstaddr;
-   input [31:0]   emrq_fifo_data;
-   input [31:0]   emrq_fifo_srcaddr;
-   output         emrq_rd_en;
+   input 	  txrd_fifo_empty;
+   input [PW-1:0] txrd_fifo_packet;
+   output         txrd_fifo_read;
    
    //Read Response (from master)
-   input 	  emrr_fifo_access;
-   input 	  emrr_fifo_write;
-   input [1:0] 	  emrr_fifo_datamode;
-   input [3:0] 	  emrr_fifo_ctrlmode;
-   input [31:0]   emrr_fifo_dstaddr;
-   input [31:0]   emrr_fifo_data;
-   input [31:0]   emrr_fifo_srcaddr;
-   output         emrr_rd_en;
+   input 	  txrr_fifo_empty;
+   input [PW-1:0] txrr_fifo_packet;
+   output         txrr_fifo_read;
 
-   // eMesh master port, to TX
-   output         etx_access;
-   output         etx_write;
-   output [1:0]   etx_datamode;
-   output [3:0]   etx_ctrlmode;
-   output [31:0]  etx_dstaddr;
-   output [31:0]  etx_srcaddr;
-   output [31:0]  etx_data;
-   input          etx_rd_wait;
-   input          etx_wr_wait;
-
-   // Ack from TX protocol module
-   input          etx_ack;
+   //Transaction for IO
+   output          etx_access;
+   output [PW-1:0] etx_packet;
+   input           etx_rd_wait;
+   input           etx_wr_wait;
+   input 	   etx_ack;   
 
    //regs
-   reg            ready;
-   reg 		  etx_write;
-   reg [1:0] 	  etx_datamode;
-   reg [3:0] 	  etx_ctrlmode;
-   reg [31:0] 	  etx_dstaddr;
-   reg [31:0] 	  etx_srcaddr;
-   reg [31:0] 	  etx_data;
+   reg 		   etx_access;
+   reg [PW-1:0]    etx_packet;
 
    //wires
-   wire 	  rr_ready;
-   wire 	  rq_ready;
-   wire 	  wr_ready;
-   wire           emrr_rd_en;
-
-   wire 	  emwr_rd_en;
-
-
-   //############
-   //# Arbitrate & forward
-   //############
-
-   // priority-based ready signals
-   assign     wr_ready = emwr_fifo_access & ~etx_wr_wait;                        //highest
-   assign     rq_ready = emrq_fifo_access & ~etx_rd_wait & ~wr_ready;
-   assign     rr_ready = emrr_fifo_access & ~etx_wr_wait & ~wr_ready & ~rq_ready;//lowest
+   wire 	   rr_ready;
+   wire 	   rd_ready;
+   wire 	   wr_ready;
+   wire [3:0] 	   txrd_ctrlmode;
+   wire [3:0] 	   txwr_ctrlmode;
    
-   // FIFO read enables, when we're idle or done with the current datum
-   assign     emrr_rd_en = rr_ready & (~ready | etx_ack);
-   assign     emrq_rd_en = rq_ready & (~ready | etx_ack);
-   assign     emwr_rd_en = wr_ready & (~ready | etx_ack);
+   //#############################################################################
+   //# Arbitrate & forward
+   //#############################################################################
+   //TODO: Change
+   //TODO: Add weighted round robin arbiter
+   //Host-slave should always be able to get "1" read or write in there.
+   //Current implementation can deadlock!! (move rd below rr)   
+   
+   // priority-based ready signals
+   assign     wr_ready = ~txwr_fifo_empty & ~etx_wr_wait;                        //highest
+   assign     rd_ready = ~txrd_fifo_empty & ~etx_rd_wait & ~wr_ready;
+   assign     rr_ready = ~txrr_fifo_empty & ~etx_wr_wait & ~wr_ready & ~rd_ready;//lowest
+   
+   // FIFO read enables (one hot)
+   // Hold until transaction has been accepted by IO
+   assign     txrr_fifo_read = rr_ready & (~etx_access | etx_ack);
+   assign     txrd_fifo_read = rd_ready & (~etx_access | etx_ack);
+   assign     txwr_fifo_read = wr_ready & (~etx_access | etx_ack);
+   
+   //Selecting control mode on slave transcations
+   assign txrd_ctrlmode[3:0] =  ecfg_tx_ctrlmode_bp ? ecfg_tx_ctrlmode[3:0] : 
+				                      txrd_fifo_packet[7:4];
+
+   assign txwr_ctrlmode[3:0] =  ecfg_tx_ctrlmode_bp ? ecfg_tx_ctrlmode[3:0] : 
+				                      txwr_fifo_packet[7:4];
+
    
    always @ (posedge tx_lclk_div4)
       if( reset ) 
 	begin
-           ready             <= 1'b0;
-	   etx_write         <= 1'b0;
-	   etx_datamode[1:0] <= 2'b0;
-	   etx_ctrlmode[3:0] <= 4'b0;
-	   etx_dstaddr[31:0] <= 32'b0;
-	   etx_data[31:0]    <= 32'b0;
-	   etx_srcaddr[31:0] <= 32'b0;
+           etx_access         <= 1'b0;
+	   etx_packet[PW-1:0] <= 'd0;
 	end 
-      else if (emrr_rd_en | emrq_rd_en | emwr_rd_en )
+      else if (txrr_fifo_read | txrd_fifo_read | txwr_fifo_read )
 	begin
-	   ready <= 1'b1;	   
-	   
-	   etx_write  <= emrr_rd_en ? 1'b1 :
-			 emrq_rd_en ? 1'b0 :
-			              1'b1;
-
-	   etx_datamode[1:0] <= emrr_rd_en ? emrr_fifo_datamode[1:0] :
-				emrq_rd_en ? emrq_fifo_datamode[1:0] :
-			        emwr_fifo_datamode[1:0];
-	   
-	   
-	   etx_ctrlmode[3:0] <= emrr_rd_en ? emrr_fifo_ctrlmode[3:0] :
-				emrq_rd_en ? emrq_fifo_ctrlmode[3:0] :
-			        emwr_fifo_ctrlmode[3:0];
-
-
-	   etx_dstaddr[31:0] <= emrr_rd_en ? emrr_fifo_dstaddr[31:0] :
-				emrq_rd_en ? emrq_fifo_dstaddr[31:0] :
-			        emwr_fifo_dstaddr[31:0];
-
-
-	   etx_data[31:0] <= emrr_rd_en ? emrr_fifo_data[31:0] :
-			     emrq_rd_en ? emrq_fifo_data[31:0] :
-			     emwr_fifo_data[31:0];
-	   
-	   
-	   etx_srcaddr[31:0] <= emrr_rd_en ? emrr_fifo_srcaddr[31:0] :
-				emrq_rd_en ? emrq_fifo_srcaddr[31:0] :
-				emwr_fifo_srcaddr[31:0];
-	   
-	end   
+	   etx_access <= 1'b1;	   	   
+ 	   etx_packet[PW-1:0] <= txrr_fifo_read ? txrr_fifo_packet[PW-1:0]   : 
+ 			         txrd_fifo_read ? {txrd_fifo_packet[PW-1:8], 
+						   txrd_ctrlmode[3:0],
+						   txrd_fifo_packet[3:0]}    : 
+                                                  {txwr_fifo_packet[PW-1:8], 
+						   txwr_ctrlmode[3:0],
+						   txwr_fifo_packet[3:0]};
+ 	end   
       else if (etx_ack)
 	begin
-	   ready <= 1'b0;	   
+	   etx_access <= 1'b0;	   
 	end   
    	                                            
-   assign etx_access = ready;
-   
-      
 endmodule // etx_arbiter
 
 /*
