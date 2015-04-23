@@ -11,51 +11,64 @@
 module etx_protocol (/*AUTOARG*/
    // Outputs
    etx_rd_wait, etx_wr_wait, etx_ack, tx_frame_par, tx_data_par,
-   ecfg_tx_datain,
    // Inputs
-   reset, etx_access, etx_write, etx_datamode, etx_ctrlmode,
-   etx_dstaddr, etx_srcaddr, etx_data, tx_lclk_div4, tx_rd_wait,
+   etx_access, etx_packet, reset, tx_lclk_div4, tx_rd_wait,
    tx_wr_wait
    );
 
-   // System reset input
-   input         reset;
-
-   // Input from TX Arbiter
-   input         etx_access;
-   input         etx_write;
-   input [1:0]   etx_datamode;
-   input [3:0]   etx_ctrlmode;
-   input [31:0]  etx_dstaddr;
-   input [31:0]  etx_srcaddr;
-   input [31:0]  etx_data;
-   output        etx_rd_wait;
-   output        etx_wr_wait;
-   output        etx_ack;
+   parameter PW = 104;
+   parameter AW = 32;   
+   parameter DW = 32;
    
-   // Parallel interface, 8 eLink bytes at a time
-   input         tx_lclk_div4; // Parallel-rate clock from eClock block
-   output [7:0]  tx_frame_par;
-   output [63:0] tx_data_par;
-   input         tx_rd_wait;  // The wait signals are passed through
-   input         tx_wr_wait;  // to the emesh interfaces
-
-   //Debug/gpio signals
-   output [1:0]  ecfg_tx_datain; // {wr_wait, rd_wait}
+   //Bus side
+   input          etx_access;
+   input [PW-1:0] etx_packet;  
+   output         etx_rd_wait;
+   output         etx_wr_wait;
+   output         etx_ack;
    
+   // IO side (8 eLink bytes at a time)
+   input 	  reset;
+   input          tx_lclk_div4;// Parallel-rate clock from eClock block
+   output [7:0]   tx_frame_par;
+   output [63:0]  tx_data_par;
+   input          tx_rd_wait;  // The wait signals are passed through
+   input          tx_wr_wait;  // to the emesh interfaces
+
    //############
    //# Local regs & wires
    //############
-   reg           etx_ack;  // Acknowledge transaction
+   reg           etx_ack;      // Acknowledge transaction
    reg [7:0]     tx_frame_par;
    reg [63:0]    tx_data_par;
+   reg 		 rd_wait_sync;
+   reg 		 wr_wait_sync;
+   reg 		 etx_rd_wait;
+   reg 		 etx_wr_wait;
+
+   wire 	 etx_write;
+   wire [1:0] 	 etx_datamode;
+   wire [3:0]	 etx_ctrlmode;
+   wire [AW-1:0] etx_dstaddr;
+   wire [DW-1:0] etx_data;
+   wire [AW-1:0] etx_srcaddr;
    
-   //############
-   //# Logic
-   //############
 
+ 
+   //packet to emesh bundle
+   packet2emesh p2m (
+		     // Outputs
+		     .access_out	(),
+		     .write_out		(etx_write),
+		     .datamode_out	(etx_datamode[1:0]),
+		     .ctrlmode_out	(etx_ctrlmode[3:0]),
+		     .dstaddr_out	(etx_dstaddr[31:0]),
+		     .data_out		(etx_data[31:0]),
+		     .srcaddr_out	(etx_srcaddr[31:0]),
+		     // Inputs
+		     .packet_in		(etx_packet[PW-1:0]));
+      
    // TODO: Bursts
-
    always @( posedge tx_lclk_div4 or posedge reset ) 
      begin
 	if(reset) 
@@ -66,7 +79,7 @@ module etx_protocol (/*AUTOARG*/
 	  end 
 	else 
 	  begin
-             if( etx_access & ~etx_ack ) 
+             if( etx_access & ~etx_ack ) //first cycle
 	       begin
 		  etx_ack  <= 1'b1;
 		  tx_frame_par[7:0] <= 8'h3F;
@@ -78,7 +91,7 @@ module etx_protocol (/*AUTOARG*/
 					 etx_dstaddr[3:0], etx_datamode[1:0], etx_write, etx_access // B5
 				   };
                end 
-	     else if( etx_ack ) 
+	     else if( etx_ack ) //second cycle
 	       begin
 		  etx_ack  <= 1'b0;
 		  tx_frame_par[7:0] <= 8'hFF;
@@ -93,16 +106,10 @@ module etx_protocol (/*AUTOARG*/
 	  end // else: !if(reset)	
      end // always @ ( posedge txlclk_p or posedge reset )
    
-   
    //#############################
    //# Wait signals
    //#############################
 
-   reg     rd_wait_sync;
-   reg     wr_wait_sync;
-   reg     etx_rd_wait;
-   reg     etx_wr_wait;
-   
    always @ (posedge tx_lclk_div4) 
      begin
 	rd_wait_sync <= tx_rd_wait;
@@ -110,12 +117,11 @@ module etx_protocol (/*AUTOARG*/
 	wr_wait_sync <= tx_wr_wait;
 	etx_wr_wait <= wr_wait_sync;
      end
-
-   assign ecfg_tx_datain[1:0] = {etx_wr_wait,
-				 etx_rd_wait};
    
 endmodule // etx_protocol
-
+// Local Variables:
+// verilog-library-directories:("." "../../common/hdl")
+// End:
 
 /*
   File: etx_protocol.v
