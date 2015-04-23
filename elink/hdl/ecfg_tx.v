@@ -8,7 +8,8 @@
 module ecfg_tx (/*AUTOARG*/
    // Outputs
    mi_dout, ecfg_tx_enable, ecfg_tx_mmu_enable, ecfg_tx_gpio_enable,
-   ecfg_tx_ctrlmode, ecfg_tx_ctrlmode_bp, ecfg_dataout,
+   ecfg_tx_tp_enable, ecfg_tx_ctrlmode, ecfg_tx_ctrlmode_bp,
+   ecfg_dataout,
    // Inputs
    reset, mi_clk, mi_en, mi_we, mi_addr, mi_din, ecfg_tx_debug
    );
@@ -42,6 +43,7 @@ module ecfg_tx (/*AUTOARG*/
    output 	 ecfg_tx_enable;       // enable signal for TX  
    output 	 ecfg_tx_mmu_enable;   // enables MMU on transmit path  
    output 	 ecfg_tx_gpio_enable;  // forces TX output pins to constants
+   output        ecfg_tx_tp_enable;    // enables 1/0 pattern on transmit  
    output [3:0]  ecfg_tx_ctrlmode;     // value for emesh ctrlmode tag
    output        ecfg_tx_ctrlmode_bp;  // bypass value for emesh ctrlmode tag
    output [8:0]  ecfg_dataout;         // data for elink outputs

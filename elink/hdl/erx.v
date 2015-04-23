@@ -70,7 +70,7 @@ module erx (/*AUTOARG*/
    wire			ecfg_rx_enable;		// From ecfg_rx of ecfg_rx.v
    wire			ecfg_rx_mmu_enable;	// From ecfg_rx of ecfg_rx.v
    wire			edma_access;		// From edma of edma.v
-   wire [103:1]		edma_packet;		// From edma of edma.v, ...
+  
    wire			edma_wait;		// From erx_disty of erx_disty.v
    wire			emmu_access;		// From emmu of emmu.v
    wire [PW-1:0]	emmu_packet;		// From emmu of emmu.v
@@ -94,10 +94,13 @@ module erx (/*AUTOARG*/
 
    //regs
    reg [15:0] 	ecfg_rx_debug;
-   wire 	emrq_full;
-   wire 	emwr_full;
-   wire 	emrr_full;
-
+   wire 	rxwr_fifo_full;
+   wire 	rxrr_fifo_full;
+   wire 	rxrd_fifo_full;
+   wire 	rxrd_empty;
+   wire 	rxwr_empty;
+   wire 	rxrr_empty;
+   wire [103:0] edma_packet;		// From edma of edma.v, ...
    /************************************************************/
    /* ERX CONFIGURATION                                        */
    /************************************************************/
@@ -202,7 +205,9 @@ module erx (/*AUTOARG*/
                       );
    */
    
-   emailbox emailbox(.clk		(s_axi_aclk),
+
+   //TODO!!: Should have two ports on interface!!
+   emailbox emailbox(.clk		(rx_lclk_div4),
 		     /*AUTOINST*/
 		     // Outputs
 		     .mi_dout		(mi_rx_mailbox_dout[DW-1:0]), // Templated

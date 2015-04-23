@@ -111,7 +111,7 @@ module emailbox (/*AUTOARG*/
    /*****************************/
    /*FIFO (64-BIT)              */
    /*****************************/
-   assign emmailbox_not_empty         = ~mailbox_empty;
+   assign mailbox_not_empty         = ~mailbox_empty;
 
    //BUG! This fifo is currently hard coded to 32 entries
    //Should be parametrized to up to 4096 entries

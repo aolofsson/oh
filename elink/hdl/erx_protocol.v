@@ -70,6 +70,10 @@ module erx_protocol (/*AUTOARG*/
    reg [31:0]     data_2;
    reg [31:0]     srcaddr_2;
    reg            stream_2;
+
+
+   wire 	  ecfg_rx_enable_sync;
+   wire 	  gated_access;
    
    // Here we handle any alignment of the frame within an 8-cycle group,
    // though in theory frames should only start on rising edges??

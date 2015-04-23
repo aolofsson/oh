@@ -53,8 +53,8 @@ module dv_elink(/*AUTOARG*/
  
    wire [3:0] 		colid;
    wire [3:0] 		rowid;
-   wire 		embox_full;
-   wire 		embox_not_empty;
+   wire 		mailbox_full;
+   wire 		mailbox_not_empty;
    wire 		cclk_p, cclk_n;
    wire 		chip_resetb;
 
@@ -80,7 +80,8 @@ module dv_elink(/*AUTOARG*/
    wire                 txrd_wait;
    wire                 txwr_wait;
    wire                 txrr_wait; 
-
+   wire                 rxrr_wait;
+   
    
    reg [31:0]    etime;  
    wire 	 itrace = 1'b1;
@@ -193,7 +194,7 @@ module dv_elink(/*AUTOARG*/
    */
 
    ememory emem (.wait_in	(1'b0),       //only one read at a time, set to zero for no1
-		 .clk		(s_axi_aclk),		 
+		 .clk		(clk[1]),		 
 		 /*AUTOINST*/
 		 // Outputs
 		 .wait_out		(rxrd_wait),		 // Templated
@@ -222,7 +223,7 @@ module dv_elink(/*AUTOARG*/
 
 
    emesh_monitor #(.NAME("stimulus")) ext_monitor (.emesh_wait		((dut_rd_wait | dut_wr_wait)),//TODO:fix collisions
-						   .clk			(m_axi_aclk),
+						   .clk			(clk[1]),
 						   /*AUTOINST*/
 						   // Inputs
 						   .reset		(reset),
@@ -232,7 +233,7 @@ module dv_elink(/*AUTOARG*/
 						   .emesh_packet	(ext_packet[PW-1:0])); // Templated
    
    emesh_monitor #(.NAME("dut")) dut_monitor (.emesh_wait	(1'b0),
-					      .clk		(s_axi_aclk),
+					      .clk		(clk[1]),
 					      /*AUTOINST*/
 					      // Inputs
 					      .reset		(reset),

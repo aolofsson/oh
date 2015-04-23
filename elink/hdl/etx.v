@@ -56,10 +56,10 @@ module etx(/*AUTOARG*/
 
    //debug declarations
    reg [15:0] 	 ecfg_tx_debug; 
-   wire 	 emwr_full;
-   wire 	 emrr_full;
-   wire 	 emrq_full;
-   
+   wire 	 txwr_fifo_full;
+   wire 	 txrr_fifo_full;
+   wire 	 txrd_fifo_full;
+
    /*AUTOOUTPUT*/
    /*AUTOINPUT*/
    
@@ -71,6 +71,7 @@ module etx(/*AUTOARG*/
    wire			ecfg_tx_enable;		// From ecfg_tx of ecfg_tx.v
    wire			ecfg_tx_gpio_enable;	// From ecfg_tx of ecfg_tx.v
    wire			ecfg_tx_mmu_enable;	// From ecfg_tx of ecfg_tx.v
+   wire			ecfg_tx_tp_enable;	// From ecfg_tx of ecfg_tx.v
    wire			emmu_access;		// From emmu of emmu.v
    wire [PW-1:0]	emmu_packet;		// From emmu of emmu.v
    wire			etx_access;		// From etx_arbiter of etx_arbiter.v
@@ -104,6 +105,7 @@ module etx(/*AUTOARG*/
 		    .ecfg_tx_enable	(ecfg_tx_enable),
 		    .ecfg_tx_mmu_enable	(ecfg_tx_mmu_enable),
 		    .ecfg_tx_gpio_enable(ecfg_tx_gpio_enable),
+		    .ecfg_tx_tp_enable	(ecfg_tx_tp_enable),
 		    .ecfg_tx_ctrlmode	(ecfg_tx_ctrlmode[3:0]),
 		    .ecfg_tx_ctrlmode_bp(ecfg_tx_ctrlmode_bp),
 		    .ecfg_dataout	(ecfg_dataout[8:0]),
@@ -272,6 +274,7 @@ module etx(/*AUTOARG*/
 			      // Inputs
 			      .etx_access	(emmu_access),	 // Templated
 			      .etx_packet	(emmu_packet[PW-1:0]), // Templated
+			      .ecfg_tx_tp_enable(ecfg_tx_tp_enable),
 			      .reset		(reset),
 			      .tx_lclk_div4	(tx_lclk_div4),
 			      .tx_rd_wait	(tx_rd_wait),

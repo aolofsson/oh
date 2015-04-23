@@ -12,8 +12,8 @@ module etx_protocol (/*AUTOARG*/
    // Outputs
    etx_rd_wait, etx_wr_wait, etx_ack, tx_frame_par, tx_data_par,
    // Inputs
-   etx_access, etx_packet, reset, tx_lclk_div4, tx_rd_wait,
-   tx_wr_wait
+   etx_access, etx_packet, ecfg_tx_tp_enable, reset, tx_lclk_div4,
+   tx_rd_wait, tx_wr_wait
    );
 
    parameter PW = 104;
@@ -26,6 +26,9 @@ module etx_protocol (/*AUTOARG*/
    output         etx_rd_wait;
    output         etx_wr_wait;
    output         etx_ack;
+
+   //Enables transmit test pattern
+   input 	  ecfg_tx_tp_enable;
    
    // IO side (8 eLink bytes at a time)
    input 	  reset;

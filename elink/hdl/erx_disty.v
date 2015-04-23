@@ -62,7 +62,8 @@ module erx_disty (/*AUTOARG*/
    wire [31:0]     emmu_dstaddr;
    wire [31:0]     emmu_srcaddr;
    wire [31:0]     emmu_data;
-
+   wire 	   emmu_read;
+   
    //regs
    reg 		   rxrd_fifo_access;
    reg 		   rxrr_fifo_access;

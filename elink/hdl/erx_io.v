@@ -213,7 +213,7 @@ module erx_io (/*AUTOARG*/
       .CLKDIVP(1'b0),  // 1-bit input: TBD
       // Clocks: 1-bit (each) input: ISERDESE2 clock input ports
       .CLK(rx_lclk_s),   // 1-bit input: High-speed clock
-      .CLKB(rx_lclk_sn),     // 1-bit input: High-speed secondary clock
+      .CLKB(~rx_lclk_s),     // 1-bit input: High-speed secondary clock
       .CLKDIV(rx_lclk_div4), // 1-bit input: Divided clock
       .OCLK(1'b0),     // 1-bit input: High speed output clock used when INTERFACE_TYPE="MEMORY"
       // Dynamic Clock Inversions: 1-bit (each) input: Dynamic clock inversion pins to switch clock polarity

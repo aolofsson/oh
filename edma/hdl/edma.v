@@ -59,6 +59,9 @@ module edma (/*AUTOARG*/
    wire 	 edma_count_write;
    wire 	 edma_message;
    wire 	 edma_expired;
+   wire          edma_last_tran;
+   wire 	 edma_error;
+   wire          edma_enable;
    
    /*****************************/
    /*ADDRESS DECODE LOGIC       */
@@ -94,6 +97,12 @@ module edma (/*AUTOARG*/
    //###########################
    //# DMASTATUS
    //###########################
+   //Misalignment
+   assign edma_error = ((edma_srcaddr_reg[0] | edma_dstaddr_reg[0]) & (edma_datamode[1:0]!=2'b00)) | //16/32/64
+                       ((edma_srcaddr_reg[1] | edma_dstaddr_reg[1]) & (edma_datamode[1]))          | //32/64
+                       ((edma_srcaddr_reg[2] | edma_dstaddr_reg[2]) & (edma_datamode[1:0]==2'b11));  //64
+
+
    always @ (posedge clk)
      if(reset)
        edma_status_reg[1:0] <= 'd0;   
@@ -105,10 +114,7 @@ module edma (/*AUTOARG*/
 	  edma_status_reg[1] <= edma_status_reg[1]  | (edma_enable & edma_error);
        end
 
-   //Misalignment error
-   assign edma_error = ((edma_srcaddr_reg[0] | edma_dstaddr_reg[0]) & (edma_datamode[1:0]!=2'b00)) | //16/32/64
-                       ((edma_srcaddr_reg[1] | edma_dstaddr_reg[1]) & (edma_datamode[1]))          | //32/64
-                       ((edma_srcaddr_reg[2] | edma_dstaddr_reg[2]) & (edma_datamode[1:0]==2'b11));  //64
+  
       
    //###########################
    //# DMASRC
