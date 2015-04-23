@@ -10,18 +10,18 @@
 
 module erx_disty (/*AUTOARG*/
    // Outputs
-   emesh_rd_wait, emesh_wr_wait, emwr_wr_en, emrq_wr_en, emrr_wr_en,
-   erx_write, erx_datamode, erx_ctrlmode, erx_dstaddr, erx_srcaddr,
-   erx_data,
+   rx_rd_wait, rx_wr_wait, edma_wait, rxwr_fifo_access,
+   rxwr_fifo_packet, rxrd_fifo_access, rxrd_fifo_packet,
+   rxrr_fifo_access, rxrr_fifo_packet,
    // Inputs
-   clk, mmu_en, emmu_access, emmu_write, emmu_datamode, emmu_ctrlmode,
-   emmu_dstaddr, emmu_srcaddr, emmu_data, emwr_progfull,
-   emrq_progfull, emrr_progfull, ecfg_rx_enable
+   clk, mmu_en, emmu_access, emmu_packet, edma_access, edma_packet,
+   rxwr_fifo_wait, rxrd_fifo_wait, rxrr_fifo_wait
    );
 
    parameter [11:0]  C_READ_TAG_ADDR = 12'h810;
-   parameter         C_REMAP_BITS    = 7;
-   parameter [31:0]  C_REMAP_ADDR    = 32'h3E000000;
+   parameter AW = 32;
+   parameter DW = 32;
+   parameter PW = 104;
 
    // RX clock
    input         clk;
@@ -29,93 +29,101 @@ module erx_disty (/*AUTOARG*/
    // MMU enable
    input 	 mmu_en;
 
-   //Inputs from MMU
-   input          emmu_access;
-   input          emmu_write;
-   input [1:0]    emmu_datamode;
-   input [3:0]    emmu_ctrlmode;
-   input [31:0]   emmu_dstaddr;
-   input [31:0]   emmu_srcaddr;
-   input [31:0]   emmu_data;
-   output         emesh_rd_wait;
-   output         emesh_wr_wait;
- 
+   //Transaction from MMU
+   input           emmu_access;
+   input [PW-1:0]  emmu_packet;
+   output          rx_rd_wait;
+   output          rx_wr_wait;
+
+   //Transaction from DMA
+   input           edma_access;
+   input [PW-1:0]  edma_packet;
+   output 	   edma_wait;
+   
    // Master FIFO port, writes
-   output         emwr_wr_en;
-   input          emwr_progfull;
+   output 	   rxwr_fifo_access;
+   output [PW-1:0] rxwr_fifo_packet;   
+   input           rxwr_fifo_wait;
    
    // Master FIFO port, read requests
-   output         emrq_wr_en;
-   input          emrq_progfull;
+   output 	   rxrd_fifo_access;
+   output [PW-1:0] rxrd_fifo_packet;   
+   input           rxrd_fifo_wait;
    
    // Master FIFO port, read responses
-   output         emrr_wr_en;
-   input          emrr_progfull;
+   output 	   rxrr_fifo_access;
+   output [PW-1:0] rxrr_fifo_packet;   
+   input           rxrr_fifo_wait;
+   
+   //wires
+   wire            emmu_write;
+   wire [1:0]      emmu_datamode;
+   wire [3:0]      emmu_ctrlmode;
+   wire [31:0]     emmu_dstaddr;
+   wire [31:0]     emmu_srcaddr;
+   wire [31:0]     emmu_data;
 
-   //Master Transaction for all FIFOs
-   output            erx_write;
-   output [1:0]      erx_datamode;
-   output [3:0]      erx_ctrlmode;
-   output [31:0]     erx_dstaddr;
-   output [31:0]     erx_srcaddr;
-   output [31:0]     erx_data;
+   //regs
+   reg 		   rxrd_fifo_access;
+   reg 		   rxrr_fifo_access;
+   reg 		   rxwr_fifo_access;
+   reg [PW-1:0]    rxrd_fifo_packet;
+   reg [PW-1:0]    rxwr_fifo_packet;
    
-   // Control bits inputs
-   input 	     ecfg_rx_enable;//TODO: what to do with this?
-   
-   //############
-   //# REGS
-   //############
-   
-   reg            erx_write;
-   reg [1:0]      erx_datamode;
-   reg [3:0]      erx_ctrlmode;
-   reg [31:0]     erx_dstaddr;
-   reg [31:0]     erx_srcaddr;
-   reg [31:0]     erx_data;
+   packet2emesh p2e (// Outputs
+		     .access_out	(),
+		     .write_out		(emmu_write),
+		     .datamode_out	(emmu_datamode[1:0]),
+		     .ctrlmode_out	(emmu_ctrlmode[3:0]),
+		     .dstaddr_out	(emmu_dstaddr[AW-1:0]),
+		     .data_out		(emmu_data[DW-1:0]),
+		     .srcaddr_out	(emmu_srcaddr[AW-1:0]),
+		     // Inputs
+		     .packet_in		(emmu_packet[PW-1:0])
+		     );
+    
+   //Read requests (emmu has priority over edma)
+   assign emmu_read = (emmu_access & ~emmu_write);
 
-   reg            emwr_wr_en;
-   reg            emrq_wr_en;
-   reg            emrr_wr_en;
-
-   
-   //############
-   //# PIPELINE AND DISTRIBUTE
-   //############   
    always @ (posedge clk) 
-     begin
-	erx_write          <= emmu_write;
-        erx_datamode[1:0]  <= emmu_datamode[1:0];
-        erx_ctrlmode[3:0]  <= emmu_ctrlmode[3:0];
-        erx_dstaddr[31:0]  <= mmu_en ? emmu_dstaddr[31:0] : {C_REMAP_ADDR[31:(32-C_REMAP_BITS)], 
-							    emmu_dstaddr[(31-C_REMAP_BITS):0]};
-        erx_srcaddr[31:0]  <= emmu_srcaddr[31:0];
-        erx_data[31:0]     <= emmu_data[31:0];
-     end
-	
-   always @ (posedge clk) 
-     if(emmu_access) 
+     if(emmu_read | edma_access )
        begin
-	  emrq_wr_en <= ~emmu_write;
-          emrr_wr_en <= emmu_write & (emmu_dstaddr[31:20] == C_READ_TAG_ADDR);
-          emwr_wr_en <= emmu_write & (emmu_dstaddr[31:20] != C_READ_TAG_ADDR);
+	  rxrd_fifo_access         <= 1'b1;
+	  rxrd_fifo_packet[PW-1:0] <= emmu_read ? emmu_packet[PW-1:0] :
+			   	                  edma_packet[PW-1:0];
        end
      else
        begin
-	  emrq_wr_en  <= 1'b0;
-	  emrr_wr_en  <= 1'b0;
-	  emwr_wr_en  <= 1'b0;	  
+	  rxrd_fifo_access  <= 1'b0;
        end
+
+   //Write and read response from emmu
+   always @ (posedge clk) 
+     if(emmu_access) 
+       begin	  
+	  rxwr_fifo_packet[PW-1:0] <= emmu_packet[PW-1:0];	    
+          rxrr_fifo_access         <= emmu_write & (emmu_dstaddr[31:20] == C_READ_TAG_ADDR);
+          rxwr_fifo_access         <= emmu_write & (emmu_dstaddr[31:20] != C_READ_TAG_ADDR);
+       end
+     else
+       begin
+	  rxrr_fifo_access  <= 1'b0;
+	  rxwr_fifo_access  <= 1'b0;	  
+       end
+
+   assign rxrr_fifo_packet[PW-1:0] = rxwr_fifo_packet[PW-1:0];
    
-   //#############################
-   //# Wait signal passthroughs
-   //#############################
-   
-   assign        emesh_rd_wait = emrq_progfull;
-   assign        emesh_wr_wait = emwr_progfull | emrr_progfull;
+   //wait signals   
+   assign        rx_rd_wait = rxrd_fifo_wait;
+   assign        rx_wr_wait = rxwr_fifo_wait | rxrr_fifo_wait;
+   assign        edma_wait   = rxrd_fifo_wait | emmu_read;
    
 endmodule // erx_disty
+// Local Variables:
+// verilog-library-directories:("." "../../common/hdl")
+// End:
 
+//#############################################################################
 /*
   This file is part of the Parallella Project.
 
