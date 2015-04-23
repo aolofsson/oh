@@ -6,8 +6,9 @@ dv_elink_tb.v
 -y ../../xilibs/hdl
 -y ../../common/hdl
 -y ../../memory/hdl
--y ../../embox/hdl
+-y ../../emailbox/hdl
 -y ../../emmu/hdl
+-y ../../edma/hdl
 
 
 

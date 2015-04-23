@@ -1,14 +1,14 @@
 /* verilator lint_off WIDTH */
 module emesh_monitor(/*AUTOARG*/
    // Inputs
-   clk, reset, itrace, etime, emesh_access, emesh_write,
-   emesh_datamode, emesh_ctrlmode, emesh_dstaddr, emesh_data,
-   emesh_srcaddr, emesh_wait
+   clk, reset, itrace, etime, emesh_access, emesh_packet, emesh_wait
    );
    parameter AW     =  32;
    parameter DW     =  32;
    parameter NAME   =  "cpu";
-
+   parameter PW     = 104;
+   
+   
    //BASIC INTERFACE
    input            clk;
    input            reset;
@@ -17,12 +17,7 @@ module emesh_monitor(/*AUTOARG*/
    
    //MESH TRANSCTION
    input            emesh_access;
-   input            emesh_write;
-   input [1:0]      emesh_datamode;
-   input [3:0] 	    emesh_ctrlmode;
-   input [AW-1:0]   emesh_dstaddr;
-   input [DW-1:0]   emesh_data;
-   input [AW-1:0]   emesh_srcaddr;
+   input [PW-1:0]   emesh_packet;   
    input            emesh_wait;
 
    //core name for trace
@@ -38,7 +33,8 @@ module emesh_monitor(/*AUTOARG*/
      if(itrace & ~reset & emesh_access & ~emesh_wait)
        begin	     	 
 	  //$fwrite(ftrace, "TIME=%h\n",etime[31:0]);
-	  $fwrite(ftrace, "%h_%h_%h_%h\n",emesh_srcaddr[AW-1:0], emesh_data[DW-1:0],emesh_dstaddr[DW-1:0],{emesh_ctrlmode[3:0],emesh_datamode[1:0],emesh_write,emesh_access});
+	  $fwrite(ftrace, "%h_%h_%h_%h\n",emesh_packet[103:72], emesh_packet[71:40],emesh_packet[39:8],
+		                          {emesh_packet[7:4],emesh_packet[3:2],emesh_packet[1],emesh_access});
        end   
 endmodule // emesh_monitor
 
