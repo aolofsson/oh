@@ -62,7 +62,7 @@ module fifo_async
    //Read State Machine
    fifo_empty_block #(.AW(AW)) fifo_empty_block(
 						// Outputs
-						.rd_fifo_empty	(rd_fifo_empty),
+						.rd_fifo_empty	(empty),
 						.rd_addr	(rd_addr[AW-1:0]),
 						.rd_gray_pointer(rd_gray_pointer[AW:0]),
 						// Inputs
@@ -74,15 +74,15 @@ module fifo_async
    //Write State Machine
    fifo_full_block #(.AW(AW)) fifo_full_block(
 					      // Outputs
-					      .wr_fifo_progfull	(wr_fifo_progfull),
-					      .wr_fifo_full	(wr_fifo_full),					      
+					      .wr_fifo_prog_full(prog_full),
+					      .wr_fifo_full	(full),					      
 					      .wr_addr		(wr_addr[AW-1:0]),
 					      .wr_gray_pointer	(wr_gray_pointer[AW:0]),
 					      // Inputs
 					      .reset		(reset),
 					      .wr_clk		(wr_clk),
 					      .wr_rd_gray_pointer(wr_rd_gray_pointer[AW:0]),
-					      .wr_write		(wr_wen));
+					      .wr_write		(wr_en));
    
 
    synchronizer #(.DW(AW+1)) rd2wr_sync (.out		(wr_rd_gray_pointer[AW:0]),
@@ -97,6 +97,7 @@ module fifo_async
 					 .clk		(rd_clk));
    
 
+   
 `elsif TARGET_XILINX 
 
    //insert generate FIFO

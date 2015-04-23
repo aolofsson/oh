@@ -1,6 +1,6 @@
 module fifo_full_block (/*AUTOARG*/
    // Outputs
-   wr_fifo_full, wr_fifo_progfull, wr_addr, wr_gray_pointer,
+   wr_fifo_full, wr_fifo_prog_full, wr_addr, wr_gray_pointer,
    // Inputs
    reset, wr_clk, wr_rd_gray_pointer, wr_write
    );
@@ -20,7 +20,7 @@ module fifo_full_block (/*AUTOARG*/
    //# OUTPUTS
    //###########
    output           wr_fifo_full;
-   output           wr_fifo_progfull;//TODO: hack!, fix this properly
+   output           wr_fifo_prog_full;//TODO: hack!, fix this properly
                                      //also make, programmable
    
    output [AW-1:0]  wr_addr;
@@ -40,8 +40,8 @@ module fifo_full_block (/*AUTOARG*/
    wire [AW:0]     wr_gray_next;
    wire [AW:0]     wr_binary_next;
    
-   wire 	   wr_fifo_progfull_next;
-   reg 		   wr_fifo_progfull;
+   wire 	   wr_fifo_prog_full_next;
+   reg 		   wr_fifo_prog_full;
    
    //Counter States
    always @(posedge wr_clk or posedge reset)
@@ -76,7 +76,7 @@ module fifo_full_block (/*AUTOARG*/
  
 
    //FIFO almost full
-   assign wr_fifo_progfull_next =
+   assign wr_fifo_prog_full_next =
 			 (wr_gray_next[AW-3:0] == wr_rd_gray_pointer[AW-3:0]) &
 			 (wr_gray_next[AW]     ^  wr_rd_gray_pointer[AW])     &
 			 (wr_gray_next[AW-1]   ^  wr_rd_gray_pointer[AW-1])   &
@@ -91,9 +91,9 @@ module fifo_full_block (/*AUTOARG*/
 
    always @ (posedge wr_clk or posedge reset)
      if(reset)
-       wr_fifo_progfull <= 1'b0;
+       wr_fifo_prog_full <= 1'b0;
      else
-       wr_fifo_progfull <=wr_fifo_progfull_next;
+       wr_fifo_prog_full <=wr_fifo_prog_full_next;
 
 endmodule // fifo_full_block
 
