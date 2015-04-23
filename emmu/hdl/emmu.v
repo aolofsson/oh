@@ -14,21 +14,15 @@
  
 module emmu (/*AUTOARG*/
    // Outputs
-   mi_dout, emmu_access_out, emmu_write_out, emmu_datamode_out,
-   emmu_ctrlmode_out, emmu_dstaddr_out, emmu_srcaddr_out,
-   emmu_data_out,
+   mi_dout, emmu_access_out, emmu_packet_out, emmu_packet_hi_out,
    // Inputs
    clk, reset, mmu_en, mi_clk, mi_en, mi_we, mi_addr, mi_din,
-   emesh_access_in, emesh_write_in, emesh_datamode_in,
-   emesh_ctrlmode_in, emesh_dstaddr_in, emesh_srcaddr_in,
-   emesh_data_in
+   emesh_access_in, emesh_packet_in
    );
    parameter DW     = 32;         //data width
    parameter AW     = 32;         //address width 
-   parameter IDW    = 12;         //index size of table
-   parameter PAW    = 64;         //physical address width of output
-   parameter MW     = PAW-AW+IDW; //table data width
-   parameter RFAW   = IDW+1;      //width of mi_addr
+   parameter PW     = 104;
+   parameter EPW    = 136;        //extended by 32 bits
    
    /*****************************/
    /*DATAPATH CLOCk             */
@@ -42,7 +36,7 @@ module emmu (/*AUTOARG*/
    input 	     mmu_en;              //enables mmu
 
    /*****************************/
-   /*MMU table access interface */
+   /*Register Access Interface  */
    /*****************************/
    input 	     mi_clk;              //source synchronous clock
    input 	     mi_en;               //memory access 
@@ -55,67 +49,52 @@ module emmu (/*AUTOARG*/
    /*EMESH INPUTS               */
    /*****************************/
    input              emesh_access_in;
-   input              emesh_write_in;
-   input [1:0]        emesh_datamode_in;
-   input [3:0]        emesh_ctrlmode_in;
-   input [AW-1:0]     emesh_dstaddr_in;
-   input [AW-1:0]     emesh_srcaddr_in;
-   input [DW-1:0]     emesh_data_in; 
-
+   input [PW-1:0]     emesh_packet_in;
+   
    /*****************************/
    /*EMESH OUTPUTS              */
    /*****************************/
    output 	      emmu_access_out;
-   output 	      emmu_write_out;
-   output [1:0]       emmu_datamode_out;
-   output [3:0]       emmu_ctrlmode_out;
-   output [63:0]      emmu_dstaddr_out;
-   output [AW-1:0]    emmu_srcaddr_out;
-   output [DW-1:0]    emmu_data_out; 
-
+   output [PW-1:0]    emmu_packet_out;   
+   output [31:0]      emmu_packet_hi_out;
+       
    /*****************************/
    /*REGISTERS                  */
    /*****************************/
    reg 		      emmu_access_out;
-   reg 		      emmu_write_out;
-   reg [1:0] 	      emmu_datamode_out;
-   reg [3:0] 	      emmu_ctrlmode_out;
-   reg [AW-1:0]       emmu_srcaddr_out;
-   reg [DW-1:0]	      emmu_data_out; 
-   reg [AW-1:0]       emmu_dstaddr_reg;
-
-   wire [47:0] 	      emmu_lookup_data;
-   wire [63:0] 	      emmu_wr_data;
-   wire 	      emmu_write;
-   wire [5:0] 	      emmu_wr_en;
+   reg [PW-1:0]       emmu_packet_reg;
+   wire [63:0] 	      emmu_dstaddr_out;
    
+   
+   wire [47:0] 	      emmu_lookup_data;
+   wire [63:0] 	      mi_wr_data;
+   wire [5:0] 	      mi_wr_vec;
+
+
    /*****************************/
    /*MMU WRITE LOGIC            */
    /*****************************/
-   assign emmu_write  = mi_en & mi_we;
-      
    //write controls
-   assign emmu_wr_en[5:0] = (emmu_write & ~mi_addr[2]) ? 6'b001111 :
-	                    (emmu_write & mi_addr[2])  ? 6'b110000 :
-			                                 6'b000000 ;
+   assign mi_wr_vec[5:0] = (mi_en & mi_we & ~mi_addr[2]) ? 6'b001111 :
+	                   (mi_en & mi_we & mi_addr[2])  ? 6'b110000 :
+			                                    6'b000000 ;
 
    //write data
-   assign emmu_wr_data[63:0] = {mi_din[31:0], mi_din[31:0]};
+   assign mi_wr_data[63:0] = {mi_din[31:0], mi_din[31:0]};
 
    memory_dp #(.DW(48),.AW(12)) memory_dp (
 					   // Outputs
 					   .rd_data		(emmu_lookup_data[47:0]),
 					   // Inputs
 					   .wr_clk		(mi_clk),
-					   .wr_en		(emmu_wr_en[5:0]),
+					   .wr_en		(mi_wr_vec[5:0]),
 					   .wr_addr		(mi_addr[14:3]),
-					   .wr_data		(emmu_wr_data[47:0]),
+					   .wr_data		(mi_wr_data[47:0]),
 					   .rd_clk		(clk),
 					   .rd_en		(emesh_access_in),
-					   .rd_addr		(emesh_dstaddr_in[31:20])
+					   .rd_addr		(emesh_packet_in[39:28])
 					   );
-   
-       				       
+   		       
    /*****************************/
    /*EMESH OUTPUT TRANSACTION   */
    /*****************************/   
@@ -127,24 +106,25 @@ module emmu (/*AUTOARG*/
    
    always @ (posedge clk)
      if(emesh_access_in)   
-       begin
-	  emmu_write_out           <= emesh_write_in;
-	  emmu_data_out[DW-1:0]    <= emesh_data_in[DW-1:0];
-	  emmu_srcaddr_out[AW-1:0] <= emesh_srcaddr_in[AW-1:0];
-	  emmu_dstaddr_reg[AW-1:0] <= emesh_dstaddr_in[AW-1:0];
-	  emmu_ctrlmode_out[3:0]   <= emesh_ctrlmode_in[3:0];
-	  emmu_datamode_out[1:0]   <= emesh_datamode_in[1:0];
-       end
+       emmu_packet_reg[PW-1:0]  <= emesh_packet_in[PW-1:0];	  
    
    assign emmu_dstaddr_out[63:0] = mmu_en ? {emmu_lookup_data[43:0],
-					     emmu_dstaddr_reg[19:0]} :
-				             {32'b0,emmu_dstaddr_reg[31:0]};
+					     emmu_packet_reg[27:8]} :      //20 bits
+				             {32'b0,emmu_packet_reg[39:8]};//ugly
+      
+
+   //Concatenating output packet
+   assign emmu_packet_out[PW-1:0] = {emmu_packet_reg[PW-1:40],
+                                     emmu_dstaddr_out[31:0],
+                                     emmu_packet_reg[7:0]
+				    };
    
 
-
+   assign emmu_packet_hi_out[31:0] = emmu_dstaddr_out[63:32];
+      
 endmodule // emmu
 // Local Variables:
-// verilog-library-directories:("." "../../stubs/hdl" "../../memory/hdl")
+// verilog-library-directories:("." "../../common/hdl" "../../memory/hdl")
 // End:
 
 /*
