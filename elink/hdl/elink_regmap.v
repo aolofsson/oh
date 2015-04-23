@@ -16,11 +16,13 @@
 `define ELDATAIN   5'h6 //E0018
 `define ELDATAOUT  5'h7 //E001C
 `define ELDEBUG    5'h8 //E0020
-`define EMBOXLO    5'h9 //E0024
-`define EMBOXHI    5'hA //E0028
+`define EMAILBOXLO 5'h9 //E0024
+`define EMAILBOXHI 5'hA //E0028
+`define EDMACFG    5'hB //E002C
+`define EDMASTATUS 5'hC //E0030
+`define EDMASRC    5'hD //E0034
+`define EDMADST    5'hE //E0038
+`define EDMACOUNT  5'hF //E0053C 
 
-//RX MMU addr[15:0]
-
-//TX MMU addr[15:0]
 
 
