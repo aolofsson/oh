@@ -1,3 +1,7 @@
+/*Differential output buffer primitive
+ *
+ * 
+ */
 
 module OBUFDS (/*AUTOARG*/
    // Outputs
