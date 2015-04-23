@@ -10,39 +10,28 @@
 
 module erx_protocol (/*AUTOARG*/
    // Outputs
-   rx_rd_wait, rx_wr_wait, emesh_rx_access, emesh_rx_write,
-   emesh_rx_datamode, emesh_rx_ctrlmode, emesh_rx_dstaddr,
-   emesh_rx_srcaddr, emesh_rx_data,
+   erx_access, erx_packet,
    // Inputs
-   reset, rx_lclk_div4, rx_frame_par, rx_data_par, emesh_rx_rd_wait,
-   emesh_rx_wr_wait
+   reset, ecfg_rx_enable, rx_lclk_div4, rx_frame_par, rx_data_par
    );
 
+   parameter AW = 32;
+   parameter DW = 32;
+   parameter PW = 104;   
+   
    // System reset input
    input          reset;
+   input 	  ecfg_rx_enable;//Enables receiver
 
    // Parallel interface, 8 eLink bytes at a time
    input          rx_lclk_div4; // Parallel clock input from IO block
    input [7:0]    rx_frame_par;
    input [63:0]   rx_data_par;
-   output         rx_rd_wait;  // The wait signals are passed through
-   output         rx_wr_wait;  // from the emesh interfaces
    
    // Output to MMU / filter
-   output         emesh_rx_access;
-   output         emesh_rx_write;
-   output [1:0]   emesh_rx_datamode;
-   output [3:0]   emesh_rx_ctrlmode;
-   output [31:0]  emesh_rx_dstaddr;
-   output [31:0]  emesh_rx_srcaddr;
-   output [31:0]  emesh_rx_data;
-   input          emesh_rx_rd_wait;
-   input          emesh_rx_wr_wait;
+   output          erx_access;
+   output [PW-1:0] erx_packet;
    
-   //#############
-   //# Configuration bits
-   //#############
-
    //######################
    //# Identify FRAME edges
    //######################
@@ -310,65 +299,44 @@ module erx_protocol (/*AUTOARG*/
 
    end // always @ ( posedge rx_lclk_div4 )
    
-/*  The spec says reads use the 'data' slot for src address, but apparently
-    the silicon has not read this spec.
-      if( write_1 ) begin
 
-         srcaddr_2 <= srcaddr_1;
-         
-         case( rxalign_1 )
-           // 7-5 Full packet is complete in 2nd cycle        
-           3'd4:
-             srcaddr_2[7:0]  <= rx_data_in[63:56];
-           3'd3:
-             srcaddr_2[15:0] <= rx_data_in[63:48];
-           3'd2:
-             srcaddr_2[23:0] <= rx_data_in[63:40];
-           3'd1:
-             srcaddr_2[31:0] <= rx_data_in[63:32];
-           3'd0: begin
-              data_2[7:0]     <= rx_data_in[63:56];
-              srcaddr_2[31:0] <= rx_data_in[55:24];
-           end
-         endcase // case ( rxalign_1 )
-         
-      end else begin  // on reads, source addr is in data slot
-
-         srcaddr_2 <= data_1;
-
-         if( rxalign_1 == )
-           srcaddr_2[7:0] <= rx_data_in[63:56];
-
-      end // else: !if( write_1 )
-      
-   end // always @ ( posedge rx_lclk_div4 )
-*/
-   // xxx_2 now has one complete transfer
-
-   // TODO: Handle burst mode, for now we stop after one xaction
-
-   assign emesh_rx_access   = access_2;
-   assign emesh_rx_write    = write_2;
-   assign emesh_rx_datamode = datamode_2;
-   assign emesh_rx_ctrlmode = ctrlmode_2;
-   assign emesh_rx_dstaddr  = dstaddr_2;
-   assign emesh_rx_srcaddr  = srcaddr_2;
-   assign emesh_rx_data     = data_2;
+   //Gating the rx with enable signal
+   synchronizer #(.DW(1)) sync (.out		(ecfg_rx_enable_sync),
+				.in		(ecfg_rx_enable),
+				.clk		(rx_lclk_div4),
+				.reset		(reset)
+				);
    
-   //################################
-   //# Wait signal passthrough
-   //################################
-   assign rx_rd_wait = emesh_rx_rd_wait;
-   assign rx_wr_wait = emesh_rx_wr_wait;
+   assign gated_access =  access_2 & ecfg_rx_enable_sync;
+
+   //Sending packet
+   emesh2packet e2p (
+		     // Outputs
+		     .packet_out	(erx_packet[PW-1:0]),
+		     // Inputs
+		     .access_in		(gated_access),
+		     .write_in		(write_2),
+		     .datamode_in	(datamode_2[1:0]),
+		     .ctrlmode_in	(ctrlmode_2[3:0]),
+		     .dstaddr_in	(dstaddr_2[AW-1:0]),
+		     .data_in		(data_2[DW-1:0]),
+		     .srcaddr_in	(srcaddr_2[AW-1:0])
+		     );
    
-endmodule
-/*
-  File: eproto_rx.v
+   
  
+   
+endmodule // erx_protocol
+// Local Variables:
+// verilog-library-directories:("." "../../common/hdl")
+// End:
+
+/*
   This file is part of the Parallella Project.
 
   Copyright (C) 2014 Adapteva, Inc.
   Contributed by Fred Huettig <fred@adapteva.com>
+  Contributed by Andreas Olofsson <andreas@adapteva.com>
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
