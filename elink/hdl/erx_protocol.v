@@ -311,14 +311,14 @@ module erx_protocol (/*AUTOARG*/
 				.reset		(reset)
 				);
    
-   assign gated_access =  access_2 & ecfg_rx_enable_sync;
+   assign erx_access =  access_2 & ecfg_rx_enable_sync;
 
    //Sending packet
    emesh2packet e2p (
 		     // Outputs
 		     .packet_out	(erx_packet[PW-1:0]),
 		     // Inputs
-		     .access_in		(gated_access),
+		     .access_in		(erx_access),
 		     .write_in		(write_2),
 		     .datamode_in	(datamode_2[1:0]),
 		     .ctrlmode_in	(ctrlmode_2[3:0]),
