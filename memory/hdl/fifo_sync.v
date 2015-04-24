@@ -29,7 +29,7 @@ module fifo_sync
    reg [AW-1:0]          rd_addr;
    reg [AW-1:0]          count;
    
-   always @ ( posedge clk ) begin
+   always @ ( posedge clk or posedge reset ) begin
       if( reset ) 
 	begin	   
            wr_addr[AW-1:0] <= 'd0;
