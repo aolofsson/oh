@@ -80,7 +80,7 @@ module edma (/*AUTOARG*/
    //###########################
    //# DMACFG
    //###########################
-   always @ (posedge clk)
+   always @ (posedge clk or posedge reset)
      if(reset)
        edma_cfg_reg[8:0] <= 'd0;   
      else if (edma_cfg_write)
@@ -103,7 +103,7 @@ module edma (/*AUTOARG*/
                        ((edma_srcaddr_reg[2] | edma_dstaddr_reg[2]) & (edma_datamode[1:0]==2'b11));  //64
 
 
-   always @ (posedge clk)
+   always @ (posedge clk or posedge reset)
      if(reset)
        edma_status_reg[1:0] <= 'd0;   
      else if (edma_cfg_write)
@@ -119,7 +119,7 @@ module edma (/*AUTOARG*/
    //###########################
    //# DMASRC
    //###########################
-   always @ (posedge clk)
+   always @ (posedge clk or posedge reset)
      if(reset)
        edma_srcaddr_reg[AW-1:0] <= 'd0;   
      else if (edma_srcaddr_write)
@@ -131,7 +131,7 @@ module edma (/*AUTOARG*/
    //###########################
    //# DMADST
    //###########################
-   always @ (posedge clk)
+   always @ (posedge clk or posedge reset)
      if(reset)
        edma_dstaddr_reg[AW-1:0] <= 'd0;   
      else if (edma_dstaddr_write)
@@ -144,7 +144,7 @@ module edma (/*AUTOARG*/
    //###########################
    //# DMACOUNT
    //###########################
-   always @ (posedge clk)
+   always @ (posedge clk or posedge reset)
      if(reset)
        edma_count_reg[AW-1:0] <= 'd0;   
      else if (edma_count_write)
