@@ -19,9 +19,10 @@ module erx_disty (/*AUTOARG*/
    );
 
    parameter [11:0]  C_READ_TAG_ADDR = 12'h810;
-   parameter AW = 32;
-   parameter DW = 32;
-   parameter PW = 104;
+   parameter AW   = 32;
+   parameter DW   = 32;
+   parameter PW   = 104;
+   parameter ID   = 12'h800; //link id
 
    // RX clock
    input         clk;
@@ -64,6 +65,7 @@ module erx_disty (/*AUTOARG*/
    wire [31:0]     emmu_srcaddr;
    wire [31:0]     emmu_data;
    wire 	   emmu_read;
+   wire 	   readtag_match;
    
    //regs
    reg 		   rxrd_fifo_access;
@@ -104,7 +106,7 @@ module erx_disty (/*AUTOARG*/
        end
 
    //Write and read response from emmu
-
+   assign readtag_match = (emmu_dstaddr[31:20] == ID) & (emmu_dstaddr[19:16]==`EGROUP_READTAG) ;
 
    always @ (posedge clk or posedge reset)
      if(reset)
@@ -115,8 +117,8 @@ module erx_disty (/*AUTOARG*/
      else if(emmu_access) 
        begin	  
 	  rxwr_fifo_packet[PW-1:0] <= emmu_packet[PW-1:0];	    
-          rxrr_fifo_access         <= emmu_write & (emmu_dstaddr[31:20] == C_READ_TAG_ADDR);
-          rxwr_fifo_access         <= emmu_write & (emmu_dstaddr[31:20] != C_READ_TAG_ADDR);
+          rxrr_fifo_access         <= emmu_write & readtag_match;	        //read response match
+          rxwr_fifo_access         <= emmu_write & ~(emmu_dstaddr[31:20] == ID);//pass through
        end
      else
        begin
@@ -129,7 +131,7 @@ module erx_disty (/*AUTOARG*/
    //wait signals   
    assign        rx_rd_wait = rxrd_fifo_wait;
    assign        rx_wr_wait = rxwr_fifo_wait | rxrr_fifo_wait;
-   assign        edma_wait   = rxrd_fifo_wait | emmu_read;
+   assign        edma_wait  = rxrd_fifo_wait | emmu_read;
    
 endmodule // erx_disty
 // Local Variables:
