@@ -118,7 +118,8 @@ module dv_elink(/*AUTOARG*/
                         );
    */
 
-   defparam elink.ELINKID = 12'h800;
+   defparam elink.TXID = 12'h810;
+   defparam elink.RXID = 12'h820;
 
    elink elink (.hard_reset		(reset),
 		.mailbox_not_empty	(mailbox_not_empty),
