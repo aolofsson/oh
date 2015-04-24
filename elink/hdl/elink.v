@@ -276,7 +276,7 @@ module elink(/*AUTOARG*/
    parameter MW          = 44;
    parameter INC_PLL     = 1;        //include pll
    parameter INC_SPI     = 1;        //include spi block
-   parameter ELINKID     = 12'h810;  //elink ID (used for registers)
+   parameter ELINKID     = 12'h800;  //elink ID (used for registers)
    parameter PW          = 104;      //packet width   
 
    /****************************/
@@ -394,6 +394,8 @@ module elink(/*AUTOARG*/
    /***********************************************************/
    /*ELINK CONFIGURATION INTERFACE                            */
    /***********************************************************/
+   defparam ecfg_if.ELINKID=ELINKID;
+
    ecfg_if ecfg_if(.rxrr_access		(),//TODO: readback, mux with rr
 		   .rxrr_packet		(),
 		   /*AUTOINST*/

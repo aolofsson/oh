@@ -15,7 +15,7 @@ module ecfg_if (/*AUTOARG*/
    mi_tx_emmu_dout
    );
 
-   parameter [11:0]  ELINKID             = 12'h810;
+   parameter [11:0]  ELINKID             = 12'h800;
    parameter DW     = 32;
    parameter AW     = 32;
    parameter PW     = 104;
@@ -34,7 +34,7 @@ module ecfg_if (/*AUTOARG*/
    input [PW-1:0]  txrd_packet;
 
    /******************************/
-   /*Host Write Interface        */
+   /*Host Readback Interface     */
    /******************************/
    input 	   rxrr_clk;   
    output 	   rxrr_access;
@@ -76,7 +76,6 @@ module ecfg_if (/*AUTOARG*/
 
    wire 		mi_wr;
    wire 		mi_rd;
-   
    
    //splicing packets
    packet2emesh p2e_wr(.access_out	(),
