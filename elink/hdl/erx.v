@@ -70,7 +70,6 @@ module erx (/*AUTOARG*/
    wire			ecfg_rx_enable;		// From ecfg_rx of ecfg_rx.v
    wire			ecfg_rx_mmu_enable;	// From ecfg_rx of ecfg_rx.v
    wire			edma_access;		// From edma of edma.v
-  
    wire			edma_wait;		// From erx_disty of erx_disty.v
    wire			emmu_access;		// From emmu of emmu.v
    wire [PW-1:0]	emmu_packet;		// From emmu of emmu.v
@@ -136,7 +135,7 @@ module erx (/*AUTOARG*/
 			       .rd_clk	   (@"(substring vl-cell-name  0 4)"_clk),
                                .wr_clk	   (rx_lclk_div4),
                                .wr_en      (@"(substring vl-cell-name  0 4)"_fifo_access),
-                               .rd_en      (~@"(substring vl-cell-name  0 4)"_wait),
+                               .rd_en      (~@"(substring vl-cell-name  0 4)"_wait & @"(substring vl-cell-name  0 4)"_access),
 			       .reset	   (reset),
                                .din	   (@"(substring vl-cell-name  0 4)"_fifo_packet[PW-1:0]),
     );
@@ -158,7 +157,7 @@ module erx (/*AUTOARG*/
 		.rd_clk			(rxrd_clk),		 // Templated
 		.wr_en			(rxrd_fifo_access),	 // Templated
 		.din			(rxrd_fifo_packet[PW-1:0]), // Templated
-		.rd_en			(~rxrd_wait));		 // Templated
+		.rd_en			(~rxrd_wait & rxrd_access)); // Templated
 
    assign rxwr_access=~rxwr_empty;
 
@@ -176,7 +175,7 @@ module erx (/*AUTOARG*/
 	     .rd_clk			(rxwr_clk),		 // Templated
 	     .wr_en			(rxwr_fifo_access),	 // Templated
 	     .din			(rxwr_fifo_packet[PW-1:0]), // Templated
-	     .rd_en			(~rxwr_wait));		 // Templated
+	     .rd_en			(~rxwr_wait & rxwr_access)); // Templated
    
    assign rxrr_access=~rxrr_empty;
 
@@ -194,7 +193,7 @@ module erx (/*AUTOARG*/
 	     .rd_clk			(rxrr_clk),		 // Templated
 	     .wr_en			(rxrr_fifo_access),	 // Templated
 	     .din			(rxrr_fifo_packet[PW-1:0]), // Templated
-	     .rd_en			(~rxrr_wait));		 // Templated
+	     .rd_en			(~rxrr_wait & rxrr_access)); // Templated
    
    
    /***********************************************************/
@@ -247,6 +246,7 @@ module erx (/*AUTOARG*/
 			.rxrr_fifo_packet(rxrr_fifo_packet[PW-1:0]),
 			// Inputs
 			.clk		(rx_lclk_div4),		 // Templated
+			.reset		(reset),
 			.mmu_en		(ecfg_rx_mmu_enable),	 // Templated
 			.emmu_access	(emmu_access),
 			.emmu_packet	(emmu_packet[PW-1:0]),
