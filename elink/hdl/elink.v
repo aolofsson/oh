@@ -268,16 +268,11 @@ module elink(/*AUTOARG*/
    txrr_packet
    );
    
-   parameter DEF_COREID  = 12'h810;
    parameter AW          = 32;
    parameter DW          = 32;
-   parameter IDW         = 12;
-   parameter RFAW        = 13;
-   parameter MW          = 44;
-   parameter INC_PLL     = 1;        //include pll
-   parameter INC_SPI     = 1;        //include spi block
-   parameter ELINKID     = 12'h800;  //elink ID (used for registers)
    parameter PW          = 104;      //packet width   
+   parameter TXID        = 12'h800;  //TX path ID
+   parameter RXID        = 12'h800;  //RX path match ID 
 
    /****************************/
    /*CLK AND RESET             */
@@ -394,7 +389,7 @@ module elink(/*AUTOARG*/
    /***********************************************************/
    /*ELINK CONFIGURATION INTERFACE                            */
    /***********************************************************/
-   defparam ecfg_if.ELINKID=ELINKID;
+   defparam ecfg_if.ID=TXID;
 
    ecfg_if ecfg_if(.rxrr_access		(),//TODO: readback, mux with rr
 		   .rxrr_packet		(),
@@ -430,7 +425,8 @@ module elink(/*AUTOARG*/
                         .clk        (mi_clk),
                       )
    */
-   
+
+   defparam ecfg_base.GROUP=`EGROUP_MMR;
    ecfg_base ecfg_base(
 		       /*AUTOINST*/
 		       // Outputs
@@ -488,7 +484,7 @@ module elink(/*AUTOARG*/
                         );
    */
    
-   
+   defparam erx.ID=RXID;
    erx erx(
 	   /*AUTOINST*/
 	   // Outputs
@@ -538,7 +534,8 @@ module elink(/*AUTOARG*/
                         .emrr_\(.*\)  (emaxi_emrr_\1[]),
                        );
    */
-   
+
+   defparam etx.ID=TXID;
    etx etx(
 	   /*AUTOINST*/
 	   // Outputs

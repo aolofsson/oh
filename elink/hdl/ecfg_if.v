@@ -15,7 +15,7 @@ module ecfg_if (/*AUTOARG*/
    mi_tx_emmu_dout
    );
 
-   parameter [11:0]  ELINKID             = 12'h800;
+   parameter ID     = 12'h800;
    parameter DW     = 32;
    parameter AW     = 32;
    parameter PW     = 104;
@@ -104,8 +104,8 @@ module ecfg_if (/*AUTOARG*/
    assign mi_clk = txwr_clk;
    
    //Register file access (from slave)
-   assign mi_wr = txwr_access & (txwr_dstaddr[31:20]==ELINKID);   
-   assign mi_rd = txrd_access & (txrd_dstaddr[31:20]==ELINKID);
+   assign mi_wr = txwr_access & (txwr_dstaddr[31:20]==ID);   
+   assign mi_rd = txrd_access & (txrd_dstaddr[31:20]==ID);
    
    //Only 32 bit writes supported
    assign mi_we         =  mi_wr;   

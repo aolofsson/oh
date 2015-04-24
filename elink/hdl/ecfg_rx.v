@@ -17,6 +17,7 @@ module ecfg_rx (/*AUTOARG*/
    /*Compile Time Parameters     */
    /******************************/
    parameter RFAW            = 5;         // 32 registers for now
+   parameter GROUP           = 4'h0;
    
    /******************************/
    /*HARDWARE RESET (EXTERNAL)   */
@@ -61,13 +62,12 @@ module ecfg_rx (/*AUTOARG*/
    /*****************************/
 
    //read/write decode
-   assign ecfg_write  = mi_en &  mi_we;
-   assign ecfg_read   = mi_en & ~mi_we;   
+   assign ecfg_write  = mi_en &  mi_we & (mi_addr[19:16]==GROUP);
+   assign ecfg_read   = mi_en & ~mi_we & (mi_addr[19:16]==GROUP);   
 
    //Config write enables
    assign ecfg_rx_write       = ecfg_write & (mi_addr[RFAW+1:2]==`ELRX);
    
-
    //###########################
    //# RXCFG
    //###########################

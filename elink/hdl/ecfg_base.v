@@ -19,7 +19,9 @@ module ecfg_base (/*AUTOARG*/
    parameter DEFAULT_COREID  = 12'h808;   // reset value for ecfg_coreid
    parameter DEFAULT_VERSION = 16'h0000;  // reset value for version
    parameter DEFAULT_CLKDIV  = 4'd7;
+   parameter GROUP           = 4'h0;
    
+
    /******************************/
    /*HARDWARE RESET (EXTERNAL)   */
    /******************************/
@@ -68,8 +70,8 @@ module ecfg_base (/*AUTOARG*/
    /*****************************/
 
    //read/write decode
-   assign ecfg_write  = mi_en &  mi_we;
-   assign ecfg_read   = mi_en & ~mi_we;   
+   assign ecfg_write  = mi_en &  mi_we & (mi_addr[19:16]==GROUP);
+   assign ecfg_read   = mi_en & ~mi_we & (mi_addr[19:16]==GROUP);   
 
    //Config write enables
    assign ecfg_reset_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ELRESET);

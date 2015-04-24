@@ -2,9 +2,10 @@
 //Group set with bits 19:16
 
 //Epiphany Register Memory Map
-`define EGROUP_MMR   4'hE
-`define EGROUP_RXMMU 4'hD
-`define EGROUP_TXMMU 4'hC
+`define EGROUP_MMR     4'hE
+`define EGROUP_RXMMU   4'hD
+`define EGROUP_TXMMU   4'hC
+`define EGROUP_READTAG 4'hB
 
 //ELINK REGISTERS addr[6:2]
 `define ELRESET    5'h0 //E0000
