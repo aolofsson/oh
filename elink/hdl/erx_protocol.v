@@ -119,7 +119,15 @@ module erx_protocol (/*AUTOARG*/
    end // always @ ( posedge rx_lclk_div4 )
 
    // 1st cycle
-   always @( posedge rx_lclk_div4 ) 
+   always @( posedge rx_lclk_div4 or posedge reset) 
+     if(reset)
+       begin
+	  rxactive_0 <= 1'b0;      
+	  rxalign_0  <= 1'b0;      
+	  stream_0   <= 1'b0;  
+	  access_0   <= 1'b0;
+       end
+     else
      begin
 	rxactive_0 <= rxactive_in;
 	rxalign_0  <= rxalign_in;
@@ -180,19 +188,25 @@ module erx_protocol (/*AUTOARG*/
    end // always @ ( posedge rx_lclk_div4 )
 
    // 2nd cycle
-   always @( posedge rx_lclk_div4 ) begin
-
-      rxactive_1 <= rxactive_0;
-      rxalign_1  <= rxalign_0;
-
-      // default pass-throughs
-      ctrlmode_1    <= ctrlmode_0;
-      dstaddr_1     <= dstaddr_0;
-      datamode_1    <= datamode_0;
-      write_1       <= write_0;
-      access_1      <= access_0;
-      data_1[31:16] <= data_0[31:16];
-      stream_1      <= stream_0;
+   always @( posedge rx_lclk_div4 or posedge reset)
+     if(reset)
+       begin
+	  rxactive_1 <= 1'b0;	  
+	  rxalign_1  <= 1'b0; 
+	  access_1   <= 1'b0;	  
+       end
+     else
+       begin
+	  rxactive_1 <= rxactive_0;
+	  rxalign_1  <= rxalign_0;
+	  // default pass-throughs
+	  ctrlmode_1    <= ctrlmode_0;
+	  dstaddr_1     <= dstaddr_0;
+	  datamode_1    <= datamode_0;
+	  write_1       <= write_0;
+	  access_1      <= access_0;
+	  data_1[31:16] <= data_0[31:16];
+	  stream_1      <= stream_0;
       
       case(rxalign_0)
         3'd7: begin
@@ -263,8 +277,14 @@ module erx_protocol (/*AUTOARG*/
    end // always @ ( posedge rx_lclk_div4 )
    
    // 3rd cycle
-   always @( posedge rx_lclk_div4 ) begin
-
+   always @( posedge rx_lclk_div4 or posedge reset) 
+     if (reset)
+       begin
+	  access_2 <= 1'b0;
+	  stream_2 <= 1'b0;	  
+       end
+     else
+       begin
       // default pass-throughs
       if(~stream_2) 
 	begin
