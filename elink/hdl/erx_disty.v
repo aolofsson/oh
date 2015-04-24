@@ -14,8 +14,8 @@ module erx_disty (/*AUTOARG*/
    rxwr_fifo_packet, rxrd_fifo_access, rxrd_fifo_packet,
    rxrr_fifo_access, rxrr_fifo_packet,
    // Inputs
-   clk, mmu_en, emmu_access, emmu_packet, edma_access, edma_packet,
-   rxwr_fifo_wait, rxrd_fifo_wait, rxrr_fifo_wait
+   clk, reset, mmu_en, emmu_access, emmu_packet, edma_access,
+   edma_packet, rxwr_fifo_wait, rxrd_fifo_wait, rxrr_fifo_wait
    );
 
    parameter [11:0]  C_READ_TAG_ADDR = 12'h810;
@@ -25,7 +25,8 @@ module erx_disty (/*AUTOARG*/
 
    // RX clock
    input         clk;
-
+   input 	 reset;
+   
    // MMU enable
    input 	 mmu_en;
 
@@ -86,8 +87,12 @@ module erx_disty (/*AUTOARG*/
    //Read requests (emmu has priority over edma)
    assign emmu_read = (emmu_access & ~emmu_write);
 
-   always @ (posedge clk) 
-     if(emmu_read | edma_access )
+   always @ (posedge clk or posedge reset)
+     if(reset)
+       begin
+	  rxrd_fifo_access         <= 1'b0;	  
+       end
+     else if (emmu_read | edma_access )
        begin
 	  rxrd_fifo_access         <= 1'b1;
 	  rxrd_fifo_packet[PW-1:0] <= emmu_read ? emmu_packet[PW-1:0] :
@@ -99,8 +104,15 @@ module erx_disty (/*AUTOARG*/
        end
 
    //Write and read response from emmu
-   always @ (posedge clk) 
-     if(emmu_access) 
+
+
+   always @ (posedge clk or posedge reset)
+     if(reset)
+       begin
+	  rxrr_fifo_access  <= 1'b0;
+	  rxwr_fifo_access  <= 1'b0;
+       end
+     else if(emmu_access) 
        begin	  
 	  rxwr_fifo_packet[PW-1:0] <= emmu_packet[PW-1:0];	    
           rxrr_fifo_access         <= emmu_write & (emmu_dstaddr[31:20] == C_READ_TAG_ADDR);
