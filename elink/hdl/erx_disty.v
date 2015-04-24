@@ -1,20 +1,10 @@
-/*
- ########################################################################
- EPIPHANY eMesh Filter / Distributor
- ########################################################################
- 
- This block takes one eMesh input, selected from two available 
- (MMU or direct), and distributes the transactions based on type
- (write, read request, read response).
- */
-
 module erx_disty (/*AUTOARG*/
    // Outputs
-   rx_rd_wait, rx_wr_wait, edma_wait, rxwr_fifo_access,
+   erx_wait, rx_rd_wait, rx_wr_wait, edma_wait, rxwr_fifo_access,
    rxwr_fifo_packet, rxrd_fifo_access, rxrd_fifo_packet,
    rxrr_fifo_access, rxrr_fifo_packet,
    // Inputs
-   clk, reset, mmu_en, emmu_access, emmu_packet, edma_access,
+   erx_access, erx_packet, emmu_access, emmu_packet, edma_access,
    edma_packet, rxwr_fifo_wait, rxrd_fifo_wait, rxrr_fifo_wait
    );
 
@@ -24,39 +14,37 @@ module erx_disty (/*AUTOARG*/
    parameter PW   = 104;
    parameter ID   = 12'h800; //link id
 
-   // RX clock
-   input         clk;
-   input 	 reset;
-   
-   // MMU enable
-   input 	 mmu_en;
+   //From IO
+   input           erx_access;
+   input [PW-1:0]  erx_packet;
+   output          erx_wait;   //for emmu/remap
+   output          rx_rd_wait; //for IO
+   output          rx_wr_wait; //for IO
 
-   //Transaction from MMU
+   //From EMMU
    input           emmu_access;
    input [PW-1:0]  emmu_packet;
-   output          rx_rd_wait;
-   output          rx_wr_wait;
-
-   //Transaction from DMA
+   
+   //From DMA
    input           edma_access;
    input [PW-1:0]  edma_packet;
    output 	   edma_wait;
    
-   // Master FIFO port, writes
+   //To Master Write FIFO
    output 	   rxwr_fifo_access;
    output [PW-1:0] rxwr_fifo_packet;   
    input           rxwr_fifo_wait;
    
-   // Master FIFO port, read requests
+   //To Master Read FIFO
    output 	   rxrd_fifo_access;
    output [PW-1:0] rxrd_fifo_packet;   
    input           rxrd_fifo_wait;
    
-   // Master FIFO port, read responses
+   //To Slave Read Response FIFO
    output 	   rxrr_fifo_access;
    output [PW-1:0] rxrr_fifo_packet;   
    input           rxrr_fifo_wait;
-   
+    
    //wires
    wire            emmu_write;
    wire [1:0]      emmu_datamode;
@@ -65,16 +53,32 @@ module erx_disty (/*AUTOARG*/
    wire [31:0]     emmu_srcaddr;
    wire [31:0]     emmu_data;
    wire 	   emmu_read;
-   wire 	   readtag_match;
+
+   wire            erx_write;
+   wire [1:0]      erx_datamode;
+   wire [3:0]      erx_ctrlmode;
+   wire [31:0]     erx_dstaddr;
+   wire [31:0]     erx_srcaddr;
+   wire [31:0]     erx_data;
+   wire 	   erx_read;
    
-   //regs
-   reg 		   rxrd_fifo_access;
-   reg 		   rxrr_fifo_access;
-   reg 		   rxwr_fifo_access;
-   reg [PW-1:0]    rxrd_fifo_packet;
-   reg [PW-1:0]    rxwr_fifo_packet;
-   
-   packet2emesh p2e (// Outputs
+   //####################################
+   //Splicing pakets
+   //####################################
+
+   packet2emesh p2e_erx (// Outputs
+		     .access_out	(),
+		     .write_out		(erx_write),
+		     .datamode_out	(erx_datamode[1:0]),
+		     .ctrlmode_out	(erx_ctrlmode[3:0]),
+		     .dstaddr_out	(erx_dstaddr[AW-1:0]),
+		     .data_out		(erx_data[DW-1:0]),
+		     .srcaddr_out	(erx_srcaddr[AW-1:0]),
+		     // Inputs
+		     .packet_in		(erx_packet[PW-1:0])
+		     );
+
+   packet2emesh p2e_mmu (// Outputs
 		     .access_out	(),
 		     .write_out		(emmu_write),
 		     .datamode_out	(emmu_datamode[1:0]),
@@ -85,57 +89,52 @@ module erx_disty (/*AUTOARG*/
 		     // Inputs
 		     .packet_in		(emmu_packet[PW-1:0])
 		     );
-    
-   //Read requests (emmu has priority over edma)
-   assign emmu_read = (emmu_access & ~emmu_write);
-
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       begin
-	  rxrd_fifo_access         <= 1'b0;	  
-       end
-     else if (emmu_read | edma_access )
-       begin
-	  rxrd_fifo_access         <= 1'b1;
-	  rxrd_fifo_packet[PW-1:0] <= emmu_read ? emmu_packet[PW-1:0] :
-			   	                  edma_packet[PW-1:0];
-       end
-     else
-       begin
-	  rxrd_fifo_access  <= 1'b0;
-       end
-
-   //Write and read response from emmu
-   assign readtag_match = (emmu_dstaddr[31:20] == ID) & (emmu_dstaddr[19:16]==`EGROUP_READTAG) ;
-
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       begin
-	  rxrr_fifo_access  <= 1'b0;
-	  rxwr_fifo_access  <= 1'b0;
-       end
-     else if(emmu_access) 
-       begin	  
-	  rxwr_fifo_packet[PW-1:0] <= emmu_packet[PW-1:0];	    
-          rxrr_fifo_access         <= emmu_write & readtag_match;	        //read response match
-          rxwr_fifo_access         <= emmu_write & ~(emmu_dstaddr[31:20] == ID);//pass through
-       end
-     else
-       begin
-	  rxrr_fifo_access  <= 1'b0;
-	  rxwr_fifo_access  <= 1'b0;	  
-       end
-
-   assign rxrr_fifo_packet[PW-1:0] = rxwr_fifo_packet[PW-1:0];
    
-   //wait signals   
+   //####################################
+   //Read response path (direct)
+   //####################################
+
+   assign rxrr_fifo_access         = erx_access & 
+				     erx_write & 
+				     (erx_dstaddr[31:20] == ID) & 
+				     (erx_dstaddr[19:16]==`EGROUP_READTAG);
+   
+   assign rxrr_fifo_packet[PW-1:0] = erx_packet[PW-1:0];
+      
+   //####################################
+   //Write Path (direct)
+   //####################################
+
+   assign rxwr_fifo_access        = emmu_access & 
+			            emmu_write & 
+			           ~(emmu_dstaddr[31:20] == ID);
+
+   assign rxwr_fifo_packet[PW-1:0] = emmu_packet[PW-1:0];
+         
+   //####################################
+   //Read Path 
+   //####################################
+
+   assign emmu_read               = (emmu_access & ~emmu_write);
+   
+   assign rxrd_fifo_access         = emmu_read | edma_access;
+   
+   assign rxrd_fifo_packet[PW-1:0] = emmu_read ? emmu_packet[PW-1:0] : 
+				                 edma_packet[PW-1:0];
+   
+   //####################################
+   //Wait Signals
+   //####################################   
+
    assign        rx_rd_wait = rxrd_fifo_wait;
    assign        rx_wr_wait = rxwr_fifo_wait | rxrr_fifo_wait;
    assign        edma_wait  = rxrd_fifo_wait | emmu_read;
+   assign        erx_wait   = rx_rd_wait |  rx_wr_wait;
+  
    
 endmodule // erx_disty
 // Local Variables:
-// verilog-library-directories:("." "../../common/hdl")
+// verilog-library-directories:("." "../../common/hdl" "../../emmu/hdl")
 // End:
 
 //#############################################################################
@@ -143,7 +142,6 @@ endmodule // erx_disty
   This file is part of the Parallella Project.
 
   Copyright (C) 2014 Adapteva, Inc.
-  Contributed by Fred Huettig <fred@adapteva.com>
   Contributed by Andreas Olofsson <andreas@adapteva.com>
 
   This program is free software: you can redistribute it and/or modify

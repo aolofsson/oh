@@ -1,8 +1,7 @@
 module etx(/*AUTOARG*/
    // Outputs
-   mi_tx_emmu_dout, mi_tx_cfg_dout, txrd_wait, txwr_wait, txrr_wait,
-   txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
-   txo_data_n,
+   mi_dout, txrd_wait, txwr_wait, txrr_wait, txo_lclk_p, txo_lclk_n,
+   txo_frame_p, txo_frame_n, txo_data_p, txo_data_n,
    // Inputs
    reset, tx_lclk, tx_lclk90, tx_lclk_div4, mi_clk, mi_en, mi_we,
    mi_addr, mi_din, txrd_clk, txrd_access, txrd_packet, txwr_clk,
@@ -26,8 +25,7 @@ module etx(/*AUTOARG*/
    input           mi_we;         // single we, must write 32 bit words
    input [19:0]    mi_addr;       // complete physical address (no shifting!)
    input [31:0]    mi_din;
-   output [DW-1:0] mi_tx_emmu_dout;
-   output [DW-1:0] mi_tx_cfg_dout;
+   output [31:0]   mi_dout;
    
    //Slave Read Request (to TX)
    input 	  txrd_clk;   
@@ -71,14 +69,20 @@ module etx(/*AUTOARG*/
    wire			ecfg_tx_enable;		// From ecfg_tx of ecfg_tx.v
    wire			ecfg_tx_gpio_enable;	// From ecfg_tx of ecfg_tx.v
    wire			ecfg_tx_mmu_enable;	// From ecfg_tx of ecfg_tx.v
+   wire			ecfg_tx_remap_enable;	// From ecfg_tx of ecfg_tx.v
    wire			ecfg_tx_tp_enable;	// From ecfg_tx of ecfg_tx.v
    wire			emmu_access;		// From emmu of emmu.v
    wire [PW-1:0]	emmu_packet;		// From emmu of emmu.v
    wire			etx_access;		// From etx_arbiter of etx_arbiter.v
-   wire			etx_ack;		// From etx_protocol of etx_protocol.v
    wire [PW-1:0]	etx_packet;		// From etx_arbiter of etx_arbiter.v
    wire			etx_rd_wait;		// From etx_protocol of etx_protocol.v
+   wire			etx_remap_access;	// From etx_remap of etx_remap.v
+   wire [PW-1:0]	etx_remap_packet;	// From etx_remap of etx_remap.v
+   wire			etx_rr;			// From etx_arbiter of etx_arbiter.v
+   wire			etx_wait;		// From etx_protocol of etx_protocol.v
    wire			etx_wr_wait;		// From etx_protocol of etx_protocol.v
+   wire [DW-1:0]	mi_tx_cfg_dout;		// From ecfg_tx of ecfg_tx.v
+   wire [DW-1:0]	mi_tx_emmu_dout;	// From emmu of emmu.v
    wire [63:0]		tx_data_par;		// From etx_protocol of etx_protocol.v
    wire [7:0]		tx_frame_par;		// From etx_protocol of etx_protocol.v
    wire			tx_rd_wait;		// From etx_io of etx_io.v
@@ -98,17 +102,22 @@ module etx(/*AUTOARG*/
    /************************************************************/
    /* ETX CONFIGURATION                                        */
    /************************************************************/
-   defparam ecfg_tx.GROUP=`EGROUP_MMR;
+    /*ecfg_tx AUTO_TEMPLATE (.mi_dout       (mi_tx_cfg_dout[DW-1:0]),
+    );
+        */
+   defparam ecfg_tx.GROUP=`EGROUP_TX;
    ecfg_tx ecfg_tx (
-		    .mi_dout		(mi_tx_cfg_dout[31:0]),
+		    
 		    /*AUTOINST*/
 		    // Outputs
+		    .mi_dout		(mi_tx_cfg_dout[DW-1:0]), // Templated
 		    .ecfg_tx_enable	(ecfg_tx_enable),
 		    .ecfg_tx_mmu_enable	(ecfg_tx_mmu_enable),
 		    .ecfg_tx_gpio_enable(ecfg_tx_gpio_enable),
 		    .ecfg_tx_tp_enable	(ecfg_tx_tp_enable),
 		    .ecfg_tx_ctrlmode	(ecfg_tx_ctrlmode[3:0]),
 		    .ecfg_tx_ctrlmode_bp(ecfg_tx_ctrlmode_bp),
+		    .ecfg_tx_remap_enable(ecfg_tx_remap_enable),
 		    .ecfg_dataout	(ecfg_dataout[8:0]),
 		    // Inputs
 		    .reset		(reset),
@@ -118,8 +127,20 @@ module etx(/*AUTOARG*/
 		    .mi_addr		(mi_addr[19:0]),
 		    .mi_din		(mi_din[31:0]),
 		    .ecfg_tx_debug	(ecfg_tx_debug[15:0]));
-   
 
+   /************************************************************/
+   /* ETX READBACK MUX                                         */
+   /************************************************************/
+
+   etx_mux etx_mux (/*AUTOINST*/
+		    // Outputs
+		    .mi_dout		(mi_dout[DW-1:0]),
+		    // Inputs
+		    .mi_clk		(mi_clk),
+		    .mi_en		(mi_en),
+		    .mi_addr		(mi_addr[19:0]),
+		    .mi_tx_emmu_dout	(mi_tx_emmu_dout[DW-1:0]),
+		    .mi_tx_cfg_dout	(mi_tx_cfg_dout[DW-1:0]));
    
    /************************************************************/
    /*FIFOs                                                     */
@@ -206,6 +227,7 @@ module etx(/*AUTOARG*/
 			    .txrr_fifo_read	(txrr_fifo_read),
 			    .etx_access		(etx_access),
 			    .etx_packet		(etx_packet[PW-1:0]),
+			    .etx_rr		(etx_rr),
 			    // Inputs
 			    .tx_lclk_div4	(tx_lclk_div4),
 			    .reset		(reset),
@@ -219,64 +241,99 @@ module etx(/*AUTOARG*/
 			    .txrr_fifo_packet	(txrr_fifo_packet[PW-1:0]),
 			    .etx_rd_wait	(etx_rd_wait),
 			    .etx_wr_wait	(etx_wr_wait),
-			    .etx_ack		(etx_ack));
+			    .etx_wait		(etx_wait));
    
+   /************************************************************/
+   /* REMAPPING (SHIFT) DESTINATION ADDRESS                    */
+   /************************************************************/
+    /*etx_remap  AUTO_TEMPLATE (	
+                          .emesh_\(.*\)_in (etx_\1[]),
+                          .emesh_\(.*\)_out (etx_remap_\1[]),
+                          .remap_en	   (ecfg_tx_remap_enable),
+                          .remap_bypass	   (etx_rr),
+                          .clk     	   (tx_lclk_div4),
+                          .emesh_wait      (etx_wait),
+                          );
+   */
+
+   etx_remap etx_remap (/*AUTOINST*/
+			// Outputs
+			.emesh_access_out(etx_remap_access),	 // Templated
+			.emesh_packet_out(etx_remap_packet[PW-1:0]), // Templated
+			// Inputs
+			.clk		(tx_lclk_div4),		 // Templated
+			.reset		(reset),
+			.emesh_access_in(etx_access),		 // Templated
+			.emesh_packet_in(etx_packet[PW-1:0]),	 // Templated
+			.remap_en	(ecfg_tx_remap_enable),	 // Templated
+			.remap_bypass	(etx_rr),		 // Templated
+			.emesh_wait_in	(etx_wait));		 // Templated
+   
+ 
    /************************************************************/
    /* EMMU                                                     */
    /************************************************************/
    /*emmu  AUTO_TEMPLATE (	
-                          .emmu_packet_out (emmu_packet[PW-1:0]),
-                          .emesh_\(.*\)_in (etx_\1[]),
+                          .emesh_\(.*\)_in (etx_remap_\1[]),
+                          .emesh_\(.*\)_out (emmu_\1[]),
                           .mmu_en	   (ecfg_tx_mmu_enable),
+                          .mmu_bp	   (etx_rr),
                           .clk     	   (tx_lclk_div4),
                           .emmu_access_out (emmu_access),
                           .emmu_packet_out (emmu_packet[PW-1:0]),
                           .mi_dout	   (mi_tx_emmu_dout[DW-1:0]),
-                          );
+                          .emesh_wait_in   (etx_wait),
+                          .emesh_packet_hi_out	(),
+                         );
    */
 
-   defparam emmu.GROUP=`EGROUP_TXMMU;
-   emmu emmu (.emmu_packet_hi_out	(),
+   defparam emmu.GROUP=`EGROUP_TX;
+   emmu emmu (
 	      /*AUTOINST*/
 	      // Outputs
 	      .mi_dout			(mi_tx_emmu_dout[DW-1:0]), // Templated
-	      .emmu_access_out		(emmu_access),		 // Templated
-	      .emmu_packet_out		(emmu_packet[PW-1:0]),	 // Templated
+	      .emesh_access_out		(emmu_access),		 // Templated
+	      .emesh_packet_out		(emmu_packet[PW-1:0]),	 // Templated
+	      .emesh_packet_hi_out	(),			 // Templated
 	      // Inputs
 	      .clk			(tx_lclk_div4),		 // Templated
 	      .reset			(reset),
 	      .mmu_en			(ecfg_tx_mmu_enable),	 // Templated
+	      .mmu_bp			(etx_rr),		 // Templated
 	      .mi_clk			(mi_clk),
 	      .mi_en			(mi_en),
 	      .mi_we			(mi_we),
 	      .mi_addr			(mi_addr[19:0]),
 	      .mi_din			(mi_din[DW-1:0]),
-	      .emesh_access_in		(etx_access),		 // Templated
-	      .emesh_packet_in		(etx_packet[PW-1:0]));	 // Templated
+	      .emesh_access_in		(etx_remap_access),	 // Templated
+	      .emesh_packet_in		(etx_remap_packet[PW-1:0]), // Templated
+	      .emesh_wait_in		(etx_wait));		 // Templated
    
 
    /************************************************************/
    /*ELINK PROTOCOL LOGIC                                      */
    /************************************************************/
    /*etx_protocol  AUTO_TEMPLATE (			       
-                                  .etx_ack	   (etx_ack),
                                   .etx_rd_wait     (etx_rd_wait),
                                   .etx_wr_wait     (etx_wr_wait),
                                   .etx_\(.*\)      (emmu_\1[]),
-    
+                                  .etx_wait	   (etx_wait),    
                              );
    */
    etx_protocol etx_protocol (/*AUTOINST*/
 			      // Outputs
 			      .etx_rd_wait	(etx_rd_wait),	 // Templated
 			      .etx_wr_wait	(etx_wr_wait),	 // Templated
-			      .etx_ack		(etx_ack),	 // Templated
+			      .etx_wait		(etx_wait),	 // Templated
 			      .tx_frame_par	(tx_frame_par[7:0]),
 			      .tx_data_par	(tx_data_par[63:0]),
 			      // Inputs
 			      .etx_access	(emmu_access),	 // Templated
 			      .etx_packet	(emmu_packet[PW-1:0]), // Templated
 			      .ecfg_tx_tp_enable(ecfg_tx_tp_enable),
+			      .ecfg_dataout	(ecfg_dataout[8:0]),
+			      .ecfg_tx_enable	(ecfg_tx_enable),
+			      .ecfg_tx_gpio_enable(ecfg_tx_gpio_enable),
 			      .reset		(reset),
 			      .tx_lclk_div4	(tx_lclk_div4),
 			      .tx_rd_wait	(tx_rd_wait),
@@ -308,10 +365,7 @@ module etx(/*AUTOARG*/
 		  .tx_lclk		(tx_lclk),
 		  .tx_lclk90		(tx_lclk90),
 		  .tx_frame_par		(tx_frame_par[7:0]),
-		  .tx_data_par		(tx_data_par[63:0]),
-		  .ecfg_tx_enable	(ecfg_tx_enable),
-		  .ecfg_tx_gpio_enable	(ecfg_tx_gpio_enable),
-		  .ecfg_dataout		(ecfg_dataout[8:0]));
+		  .tx_data_par		(tx_data_par[63:0]));
 
 
    /************************************************************/

@@ -14,15 +14,17 @@
  
 module emmu (/*AUTOARG*/
    // Outputs
-   mi_dout, emmu_access_out, emmu_packet_out, emmu_packet_hi_out,
+   mi_dout, emesh_access_out, emesh_packet_out, emesh_packet_hi_out,
    // Inputs
-   clk, reset, mmu_en, mi_clk, mi_en, mi_we, mi_addr, mi_din,
-   emesh_access_in, emesh_packet_in
+   clk, reset, mmu_en, mmu_bp, mi_clk, mi_en, mi_we, mi_addr, mi_din,
+   emesh_access_in, emesh_packet_in, emesh_wait_in
    );
    parameter DW     = 32;         //data width
    parameter AW     = 32;         //address width 
    parameter PW     = 104;
    parameter EPW    = 136;        //extended by 32 bits
+   parameter MW     = 48;         //width of table
+   parameter MAW    = 12;         //memory addres width (entries = 1<<MAW)   
    parameter GROUP  = 0;
    
    /*****************************/
@@ -34,7 +36,8 @@ module emmu (/*AUTOARG*/
    /*****************************/
    /*MMU LOOKUP DATA            */
    /*****************************/
-   input 	     mmu_en;              //enables mmu
+   input 	     mmu_en;              //enables mmu (static)
+   input 	     mmu_bp;              //bypass mmu dynamically
 
    /*****************************/
    /*Register Access Interface  */
@@ -51,26 +54,30 @@ module emmu (/*AUTOARG*/
    /*****************************/
    input              emesh_access_in;
    input [PW-1:0]     emesh_packet_in;
-   
+   input 	      emesh_wait_in;   //downstream pushback
+ 
    /*****************************/
    /*EMESH OUTPUTS              */
    /*****************************/
-   output 	      emmu_access_out;
-   output [PW-1:0]    emmu_packet_out;   
-   output [31:0]      emmu_packet_hi_out;
-       
+   output 	      emesh_access_out;
+   output [PW-1:0]    emesh_packet_out;   
+   output [31:0]      emesh_packet_hi_out;
+
+   
+  
    /*****************************/
    /*REGISTERS                  */
    /*****************************/
-   reg 		      emmu_access_out;
-   reg [PW-1:0]       emmu_packet_reg;
-   wire [63:0] 	      emmu_dstaddr_out;
+   reg 		      emesh_access_out;
+   reg [PW-1:0]       emesh_packet_reg;
+   wire [63:0] 	      emesh_dstaddr_out;
    
    
-   wire [47:0] 	      emmu_lookup_data;
+   wire [MW-1:0]      emmu_lookup_data;
    wire [63:0] 	      mi_wr_data;
    wire [5:0] 	      mi_wr_vec;
    wire 	      mi_match;
+   wire [MW-1:0]      emmu_rd_addr;
    
 
    /*****************************/
@@ -86,17 +93,24 @@ module emmu (/*AUTOARG*/
    //write data
    assign mi_wr_data[63:0] = {mi_din[31:0], mi_din[31:0]};
 
-   memory_dp #(.DW(48),.AW(12)) memory_dp (
+   /*****************************/
+   /*MMU READ  LOGIC            */
+   /*****************************/
+   //TODO: could we do with less entries?
+   assign emmu_rd_addr[MAW-1:0]=emesh_packet_in[39:28];
+   
+   
+   memory_dp #(.DW(MW),.AW(MAW)) memory_dp (
 					   // Outputs
-					   .rd_data		(emmu_lookup_data[47:0]),
+					   .rd_data		(emmu_lookup_data[MW-1:0]),
 					   // Inputs
 					   .wr_clk		(mi_clk),
 					   .wr_en		(mi_wr_vec[5:0]),
 					   .wr_addr		(mi_addr[14:3]),
-					   .wr_data		(mi_wr_data[47:0]),
+					   .wr_data		(mi_wr_data[MW-1:0]),
 					   .rd_clk		(clk),
 					   .rd_en		(emesh_access_in),
-					   .rd_addr		(emesh_packet_in[39:28])
+					   .rd_addr		(emmu_rd_addr[MAW-1:0])
 					   );
    		       
    /*****************************/
@@ -107,27 +121,25 @@ module emmu (/*AUTOARG*/
   
    always @ (posedge  clk or posedge reset)
      if(reset)
-       emmu_access_out <= 1'b0;
-     else
-       emmu_access_out               <= emesh_access_in;
+       emesh_access_out <= 1'b0;
+     else if(~emesh_wait_in)
+       emesh_access_out         <= emesh_access_in;
    
    always @ (posedge clk)
-     if(emesh_access_in)   
-       emmu_packet_reg[PW-1:0]  <= emesh_packet_in[PW-1:0];	  
+     if(emesh_access_in & ~emesh_wait_in)   
+       emesh_packet_reg[PW-1:0]  <= emesh_packet_in[PW-1:0];	  
    
-   assign emmu_dstaddr_out[63:0] = mmu_en ? {emmu_lookup_data[43:0],
-					     emmu_packet_reg[27:8]} :      //20 bits
-				             {32'b0,emmu_packet_reg[39:8]};//ugly
+   assign emesh_dstaddr_out[63:0] = (mmu_en & ~mmu_bp) ? {emmu_lookup_data[43:0], emesh_packet_reg[27:8]} :
+				                        {32'b0,emesh_packet_reg[39:8]}; 
       
-
    //Concatenating output packet
-   assign emmu_packet_out[PW-1:0] = {emmu_packet_reg[PW-1:40],
-                                     emmu_dstaddr_out[31:0],
-                                     emmu_packet_reg[7:0]
+   assign emesh_packet_out[PW-1:0] = {emesh_packet_reg[PW-1:40],
+                                     emesh_dstaddr_out[31:0],
+                                     emesh_packet_reg[7:0]
 				    };
    
 
-   assign emmu_packet_hi_out[31:0] = emmu_dstaddr_out[63:32];
+   assign emesh_packet_hi_out[31:0] = emesh_dstaddr_out[63:32];
       
 endmodule // emmu
 // Local Variables:

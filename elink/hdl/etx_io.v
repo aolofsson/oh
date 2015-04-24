@@ -4,8 +4,7 @@ module etx_io (/*AUTOARG*/
    txo_data_n, tx_wr_wait, tx_rd_wait,
    // Inputs
    reset, txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n,
-   tx_lclk_div4, tx_lclk, tx_lclk90, tx_frame_par, tx_data_par,
-   ecfg_tx_enable, ecfg_tx_gpio_enable, ecfg_dataout
+   tx_lclk_div4, tx_lclk, tx_lclk90, tx_frame_par, tx_data_par
    );
 
    parameter IOSTD_ELINK = "LVDS_25";
@@ -35,13 +34,6 @@ module etx_io (/*AUTOARG*/
    output       tx_wr_wait;
    output       tx_rd_wait;
    
-   //#############
-   //# Configuration bits
-   //#############
-   input         ecfg_tx_enable;     //enable signal for tx  
-   input         ecfg_tx_gpio_enable;//forces tx wait pins to constants
-   input [8:0] 	 ecfg_dataout;       // frame & data for GPIO mode
-
    //############
    //# REGS
    //############
@@ -58,38 +50,11 @@ module etx_io (/*AUTOARG*/
    wire [7:0]    tx_data_t;  // Tristate signal to OBUF's
    wire          tx_frame;   // serial frame signal
    wire          tx_lclk_buf;
-   wire 	 txenb;   
-   wire 	 txgpio;
    integer 	 n;
    //#############################
    //# Serializer instantiations
    //#############################  
-   assign         txenb = txenb_sync[0];   
-   assign         txgpio = txgpio_sync[0];
-
-   // Sync these control bits into our domain
-   always @ (posedge tx_lclk_div4) 
-     begin
-	txenb_sync[1:0]  <= {ecfg_tx_enable, txenb_sync[1]};
-	txgpio_sync[1:0] <= {ecfg_tx_gpio_enable, txgpio_sync[1]};      
-	if(txgpio) 
-	  begin
-             pframe <= {8{ecfg_dataout[8]}};           
-             for(n=0; n<8; n=n+1)
-               pdata[n*8+7 -: 8] <= ecfg_dataout[7:0];	   
-	  end else if(txenb) 
-	    begin
-               pframe[7:0]  <= tx_frame_par[7:0];
-               pdata[63:0]  <= tx_data_par[63:0];         
-	    end 
-	  else 
-	    begin	   
-               pframe[7:0] <= 8'd0;
-               pdata[63:0] <= 64'd0;	   
-	    end
-     end
-   
-
+  
    //FRAME SERDES
    genvar        i;
    generate for(i=0; i<8; i=i+1)
@@ -119,19 +84,19 @@ module etx_io (/*AUTOARG*/
              .CLK(tx_lclk),      // 1-bit input: High speed clock
              .CLKDIV(tx_lclk_div4), // 1-bit input: Divided clock
              // D1 - D8: 1-bit (each) input: Parallel data inputs (1-bit each)
-             .D1(pdata[i+56]),  // First data out
-             .D2(pdata[i+48]),
-             .D3(pdata[i+40]),
-             .D4(pdata[i+32]),
-             .D5(pdata[i+24]),
-             .D6(pdata[i+16]),
-             .D7(pdata[i+8]),
-             .D8(pdata[i]),   // Last data out
+             .D1(tx_data_par[i+56]),  // First data out
+             .D2(tx_data_par[i+48]),
+             .D3(tx_data_par[i+40]),
+             .D4(tx_data_par[i+32]),
+             .D5(tx_data_par[i+24]),
+             .D6(tx_data_par[i+16]),
+             .D7(tx_data_par[i+8]),
+             .D8(tx_data_par[i]),   // Last data out
              .OCE(1'b1),      // 1-bit input: Output data clock enable
              .RST(reset),   // 1-bit input: Reset
              .SHIFTIN1(1'b0),
              .SHIFTIN2(1'b0),
-             .T1(~ecfg_tx_enable), //TODO: Which clock is this one??
+             .T1(1'b0), //TODO: Which clock is this one??
              .T2(1'b0),
              .T3(1'b0),
              .T4(1'b0),
@@ -168,14 +133,14 @@ module etx_io (/*AUTOARG*/
         .CLK(tx_lclk),      // 1-bit input: High speed clock
         .CLKDIV(tx_lclk_div4), // 1-bit input: Divided clock
         // D1 - D8: 1-bit (each) input: Parallel data inputs (1-bit each)
-        .D1(pframe[7]),  // first data out
-        .D2(pframe[6]),
-        .D3(pframe[5]),
-        .D4(pframe[4]),
-        .D5(pframe[3]),
-        .D6(pframe[2]),
-        .D7(pframe[1]),
-        .D8(pframe[0]),  // last data out
+        .D1(tx_frame_par[7]),  // first data out
+        .D2(tx_frame_par[6]),
+        .D3(tx_frame_par[5]),
+        .D4(tx_frame_par[4]),
+        .D5(tx_frame_par[3]),
+        .D6(tx_frame_par[2]),
+        .D7(tx_frame_par[1]),
+        .D8(tx_frame_par[0]),  // last data out
         .OCE(1'b1),      // 1-bit input: Output data clock enable
         .RST(reset),   // 1-bit input: Reset
         // SHIFTIN1 / SHIFTIN2: 1-bit (each) input: Data input expansion (1-bit each)
@@ -197,6 +162,7 @@ module etx_io (/*AUTOARG*/
    //Don't worry about glitching, no dynamic frequency switching
    //TODO: Enable dynamic frequency throttling (but why?)
 
+   //TODO: FIX!!!!
    ODDR 
      #(
        .DDR_CLK_EDGE  ("SAME_EDGE"), 
@@ -207,7 +173,7 @@ module etx_io (/*AUTOARG*/
       .Q  (tx_lclk_buf),
       .C  (tx_lclk90),
       .CE (1'b0),
-      .D1 (ecfg_tx_enable),
+      .D1 (1'b1),
       .D2 (1'b0),
       .R  (reset),
       .S  (1'b0));

@@ -49,7 +49,7 @@ module dv_elink_tb();
    always
      #1  clk[0] = ~clk[0];//clock for elink
     always
-     #10 clk[1] = ~clk[1];//clock for axi interface
+     #50 clk[1] = ~clk[1];//clock for axi interface
                            //should make variable to really test all fifos
 
    wire clkstim = clk[1];

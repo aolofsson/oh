@@ -10,18 +10,20 @@
 
 module erx_protocol (/*AUTOARG*/
    // Outputs
-   erx_access, erx_packet,
+   erx_access, erx_packet, erx_rr,
    // Inputs
-   reset, ecfg_rx_enable, rx_lclk_div4, rx_frame_par, rx_data_par
+   reset, rx_enable, rx_lclk_div4, rx_frame_par, rx_data_par
    );
 
    parameter AW = 32;
    parameter DW = 32;
-   parameter PW = 104;   
+   parameter PW = 104;
+   parameter ID = 0;   
+   parameter [11:0]  C_READ_TAG_ADDR = 12'h810;
    
    // System reset input
    input          reset;
-   input 	  ecfg_rx_enable;//Enables receiver
+   input 	  rx_enable;//Enables receiver
 
    // Parallel interface, 8 eLink bytes at a time
    input          rx_lclk_div4; // Parallel clock input from IO block
@@ -31,6 +33,7 @@ module erx_protocol (/*AUTOARG*/
    // Output to MMU / filter
    output          erx_access;
    output [PW-1:0] erx_packet;
+   output 	   erx_rr;    //needed for remapping logic
    
    //######################
    //# Identify FRAME edges
@@ -62,17 +65,17 @@ module erx_protocol (/*AUTOARG*/
    reg [31:0]     srcaddr_1;
    reg            stream_1;
    
-   reg [3:0]      ctrlmode_2;
-   reg [31:0]     dstaddr_2;
-   reg [1:0]      datamode_2;
-   reg            write_2;
-   reg            access_2;
-   reg [31:0]     data_2;
-   reg [31:0]     srcaddr_2;
-   reg            stream_2;
+   reg [3:0]      ctrlmode_reg;
+   reg [31:0]     dstaddr_reg;
+   reg [1:0]      datamode_reg;
+   reg            write_reg;
+   reg            access_reg;
+   reg [31:0]     data_reg;
+   reg [31:0]     srcaddr_reg;
+   reg            stream_reg;
 
 
-   wire 	  ecfg_rx_enable_sync;
+   wire 	  rx_enable_sync;
    wire 	  gated_access;
    
    // Here we handle any alignment of the frame within an 8-cycle group,
@@ -280,43 +283,43 @@ module erx_protocol (/*AUTOARG*/
    always @( posedge rx_lclk_div4 or posedge reset) 
      if (reset)
        begin
-	  access_2 <= 1'b0;
-	  stream_2 <= 1'b0;	  
+	  access_reg <= 1'b0;
+	  stream_reg <= 1'b0;	  
        end
      else
        begin
       // default pass-throughs
-      if(~stream_2) 
+      if(~stream_reg) 
 	begin
-           ctrlmode_2    <= ctrlmode_1;
-           dstaddr_2     <= dstaddr_1;
-           datamode_2    <= datamode_1;
-           write_2       <= write_1;
-           access_2      <= access_1 & rxactive_1;
+           ctrlmode_reg    <= ctrlmode_1;
+           dstaddr_reg     <= dstaddr_1;
+           datamode_reg    <= datamode_1;
+           write_reg       <= write_1;
+           access_reg      <= access_1 & rxactive_1;
 	end 
       else 
 	begin
-           dstaddr_2     <= dstaddr_2 + 32'h00000008;
+           dstaddr_reg     <= dstaddr_reg + 32'h00000008;
 	end
 
-      data_2        <= data_1;
-      srcaddr_2     <= srcaddr_1;
-      stream_2      <= stream_1;
+      data_reg        <= data_1;
+      srcaddr_reg     <= srcaddr_1;
+      stream_reg      <= stream_1;
 
       case( rxalign_1[2:0] )
         // 7-5: Full packet is complete in 2nd cycle
         3'd4:
-          srcaddr_2[7:0]  <= rx_data_in[63:56];
+          srcaddr_reg[7:0]  <= rx_data_in[63:56];
         3'd3:
-          srcaddr_2[15:0] <= rx_data_in[63:48];
+          srcaddr_reg[15:0] <= rx_data_in[63:48];
         3'd2:
-          srcaddr_2[23:0] <= rx_data_in[63:40];
+          srcaddr_reg[23:0] <= rx_data_in[63:40];
         3'd1:
-          srcaddr_2[31:0] <= rx_data_in[63:32];
+          srcaddr_reg[31:0] <= rx_data_in[63:32];
         3'd0: 
 	  begin
-             data_2[7:0]     <= rx_data_in[63:56];
-             srcaddr_2[31:0] <= rx_data_in[55:24];
+             data_reg[7:0]     <= rx_data_in[63:56];
+             srcaddr_reg[31:0] <= rx_data_in[55:24];
           end
 	default:;//TODO: include error message
       endcase // case ( rxalign_1 )
@@ -325,13 +328,13 @@ module erx_protocol (/*AUTOARG*/
    
 
    //Gating the rx with enable signal
-   synchronizer #(.DW(1)) sync (.out		(ecfg_rx_enable_sync),
-				.in		(ecfg_rx_enable),
+   synchronizer #(.DW(1)) sync (.out		(rx_enable_sync),
+				.in		(rx_enable),
 				.clk		(rx_lclk_div4),
 				.reset		(reset)
 				);
    
-   assign erx_access =  access_2 & ecfg_rx_enable_sync;
+   assign erx_access =  access_reg & rx_enable_sync;
 
    //Sending packet
    emesh2packet e2p (
@@ -339,16 +342,20 @@ module erx_protocol (/*AUTOARG*/
 		     .packet_out	(erx_packet[PW-1:0]),
 		     // Inputs
 		     .access_in		(erx_access),
-		     .write_in		(write_2),
-		     .datamode_in	(datamode_2[1:0]),
-		     .ctrlmode_in	(ctrlmode_2[3:0]),
-		     .dstaddr_in	(dstaddr_2[AW-1:0]),
-		     .data_in		(data_2[DW-1:0]),
-		     .srcaddr_in	(srcaddr_2[AW-1:0])
+		     .write_in		(write_reg),
+		     .datamode_in	(datamode_reg[1:0]),
+		     .ctrlmode_in	(ctrlmode_reg[3:0]),
+		     .dstaddr_in	(dstaddr_reg[AW-1:0]),
+		     .data_in		(data_reg[DW-1:0]),
+		     .srcaddr_in	(srcaddr_reg[AW-1:0])
 		     );
    
-   
- 
+    assign erx_rr     = erx_access & 
+		        write_reg & 
+		        (dstaddr_reg[31:20] == ID) & 
+		        (dstaddr_reg[19:16]==`EGROUP_READTAG)
+			  ;
+
    
 endmodule // erx_protocol
 // Local Variables:

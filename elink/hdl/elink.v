@@ -368,16 +368,12 @@ module elink(/*AUTOARG*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [15:0]		ecfg_clk_settings;	// From ecfg_base of ecfg_base.v
    wire [19:0]		mi_addr;		// From ecfg_if of ecfg_if.v
-   wire [31:0]		mi_ba_cfg_dout;		// From ecfg_base of ecfg_base.v
    wire			mi_clk;			// From ecfg_if of ecfg_if.v
    wire [31:0]		mi_din;			// From ecfg_if of ecfg_if.v
+   wire [31:0]		mi_el_dout;		// From ecfg_base of ecfg_base.v
    wire			mi_en;			// From ecfg_if of ecfg_if.v
-   wire [DW-1:0]	mi_rx_cfg_dout;		// From erx of erx.v
-   wire [DW-1:0]	mi_rx_edma_dout;	// From erx of erx.v
-   wire [DW-1:0]	mi_rx_emmu_dout;	// From erx of erx.v, ...
-   wire [DW-1:0]	mi_rx_mailbox_dout;	// From erx of erx.v
-   wire [DW-1:0]	mi_tx_cfg_dout;		// From etx of etx.v
-   wire [DW-1:0]	mi_tx_emmu_dout;	// From etx of etx.v
+   wire [31:0]		mi_rx_dout;		// From erx of erx.v
+   wire [31:0]		mi_tx_dout;		// From etx of etx.v
    wire			mi_we;			// From ecfg_if of ecfg_if.v
    wire			reset;			// From ereset of ereset.v
    wire			soft_reset;		// From ecfg_base of ecfg_base.v
@@ -407,31 +403,27 @@ module elink(/*AUTOARG*/
 		   .txrd_access		(txrd_access),
 		   .txrd_packet		(txrd_packet[PW-1:0]),
 		   .rxrr_clk		(rxrr_clk),
-		   .mi_ba_cfg_dout	(mi_ba_cfg_dout[31:0]),
-		   .mi_rx_cfg_dout	(mi_rx_cfg_dout[DW-1:0]),
-		   .mi_rx_edma_dout	(mi_rx_edma_dout[DW-1:0]),
-		   .mi_rx_emmu_dout	(mi_rx_emmu_dout[DW-1:0]),
-		   .mi_rx_mailbox_dout	(mi_rx_mailbox_dout[DW-1:0]),
-		   .mi_tx_cfg_dout	(mi_tx_cfg_dout[DW-1:0]),
-		   .mi_tx_emmu_dout	(mi_tx_emmu_dout[DW-1:0]));
+		   .mi_el_dout		(mi_el_dout[31:0]),
+		   .mi_rx_dout		(mi_rx_dout[DW-1:0]),
+		   .mi_tx_dout		(mi_tx_dout[DW-1:0]));
 
    /***********************************************************/
    /*ELINK CONFIGURATION REGISTERES                           */
    /***********************************************************/
   
    /*ecfg_base AUTO_TEMPLATE ( 
-	                .mi_dout    (mi_ba_cfg_dout[]),
+	                .mi_dout    (mi_el_dout[]),
                         .ecfg_reset (reset),
                         .clk        (mi_clk),
                       )
    */
 
-   defparam ecfg_base.GROUP=`EGROUP_MMR;
+   defparam ecfg_base.GROUP=`EGROUP_CFG;
    ecfg_base ecfg_base(
 		       /*AUTOINST*/
 		       // Outputs
 		       .soft_reset	(soft_reset),
-		       .mi_dout		(mi_ba_cfg_dout[31:0]),	 // Templated
+		       .mi_dout		(mi_el_dout[31:0]),	 // Templated
 		       .ecfg_clk_settings(ecfg_clk_settings[15:0]),
 		       .colid		(colid[3:0]),
 		       .rowid		(rowid[3:0]),
@@ -477,7 +469,7 @@ module elink(/*AUTOARG*/
    /*RECEIVER                                                 */
    /***********************************************************/
    /*erx AUTO_TEMPLATE ( 
-	                .mi_dout      (mi_rx_emmu_dout[]),
+	                .mi_dout      (mi_rx_dout[]),
                         .emwr_\(.*\)  (emaxi_emwr_\1[]),
                         .emrq_\(.*\)  (emaxi_emrq_\1[]),
                         .emrr_\(.*\)  (esaxi_emrr_\1[]),
@@ -498,11 +490,7 @@ module elink(/*AUTOARG*/
 	   .rxrd_packet			(rxrd_packet[PW-1:0]),
 	   .rxrr_access			(rxrr_access),
 	   .rxrr_packet			(rxrr_packet[PW-1:0]),
-	   .mi_dout			(mi_rx_emmu_dout[31:0]), // Templated
-	   .mi_rx_edma_dout		(mi_rx_edma_dout[DW-1:0]),
-	   .mi_rx_emmu_dout		(mi_rx_emmu_dout[DW-1:0]),
-	   .mi_rx_cfg_dout		(mi_rx_cfg_dout[DW-1:0]),
-	   .mi_rx_mailbox_dout		(mi_rx_mailbox_dout[DW-1:0]),
+	   .mi_dout			(mi_rx_dout[31:0]),	 // Templated
 	   .mailbox_full		(mailbox_full),
 	   .mailbox_not_empty		(mailbox_not_empty),
 	   // Inputs
@@ -528,7 +516,7 @@ module elink(/*AUTOARG*/
    /***********************************************************/
    /*TRANSMITTER                                              */
    /***********************************************************/
-   /*etx AUTO_TEMPLATE ( 
+   /*etx AUTO_TEMPLATE (.mi_dout      (mi_tx_dout[]),
                         .emwr_\(.*\)  (esaxi_emwr_\1[]),
                         .emrq_\(.*\)  (esaxi_emrq_\1[]),
                         .emrr_\(.*\)  (emaxi_emrr_\1[]),
@@ -539,8 +527,7 @@ module elink(/*AUTOARG*/
    etx etx(
 	   /*AUTOINST*/
 	   // Outputs
-	   .mi_tx_emmu_dout		(mi_tx_emmu_dout[DW-1:0]),
-	   .mi_tx_cfg_dout		(mi_tx_cfg_dout[DW-1:0]),
+	   .mi_dout			(mi_tx_dout[31:0]),	 // Templated
 	   .txrd_wait			(txrd_wait),
 	   .txwr_wait			(txwr_wait),
 	   .txrr_wait			(txrr_wait),

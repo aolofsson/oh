@@ -2,9 +2,7 @@ module erx (/*AUTOARG*/
    // Outputs
    rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n,
    rxwr_access, rxwr_packet, rxrd_access, rxrd_packet, rxrr_access,
-   rxrr_packet, mi_dout, mi_rx_edma_dout, mi_rx_emmu_dout,
-   mi_rx_cfg_dout, mi_rx_mailbox_dout, mailbox_full,
-   mailbox_not_empty,
+   rxrr_packet, mi_dout, mailbox_full, mailbox_not_empty,
    // Inputs
    reset, rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n,
    rxi_data_p, rxi_data_n, rxwr_clk, rxwr_wait, rxrd_clk, rxrd_wait,
@@ -51,11 +49,7 @@ module erx (/*AUTOARG*/
    input [19:0]    mi_addr;
    input [31:0]    mi_din;
    output [31:0]   mi_dout;
-   output [DW-1:0] mi_rx_edma_dout;
-   output [DW-1:0] mi_rx_emmu_dout;
-   output [DW-1:0] mi_rx_cfg_dout;
-   output [DW-1:0] mi_rx_mailbox_dout;	// From emailbox of emailbox.v
-
+  
    //Mailbox signals
    output 	   mailbox_full;
    output 	   mailbox_not_empty;
@@ -65,16 +59,28 @@ module erx (/*AUTOARG*/
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [8:0]		ecfg_rx_datain;		// From erx_io of erx_io.v
-   wire			ecfg_rx_enable;		// From ecfg_rx of ecfg_rx.v
-   wire			ecfg_rx_mmu_enable;	// From ecfg_rx of ecfg_rx.v
    wire			edma_access;		// From edma of edma.v
    wire			edma_wait;		// From erx_disty of erx_disty.v
+   wire			emesh_remap_access;	// From erx_remap of erx_remap.v
+   wire [PW-1:0]	emesh_remap_packet;	// From erx_remap of erx_remap.v
    wire			emmu_access;		// From emmu of emmu.v
    wire [PW-1:0]	emmu_packet;		// From emmu of emmu.v
    wire			erx_access;		// From erx_protocol of erx_protocol.v
    wire [PW-1:0]	erx_packet;		// From erx_protocol of erx_protocol.v
+   wire			erx_rr;			// From erx_protocol of erx_protocol.v
+   wire			erx_wait;		// From erx_disty of erx_disty.v
+   wire [8:0]		gpio_datain;		// From erx_io of erx_io.v
+   wire [DW-1:0]	mi_rx_cfg_dout;		// From ecfg_rx of ecfg_rx.v
+   wire [DW-1:0]	mi_rx_edma_dout;	// From edma of edma.v
+   wire [DW-1:0]	mi_rx_emmu_dout;	// From emmu of emmu.v
+   wire [DW-1:0]	mi_rx_mailbox_dout;	// From emailbox of emailbox.v
+   wire			mmu_enable;		// From ecfg_rx of ecfg_rx.v
+   wire [31:0]		remap_base;		// From ecfg_rx of ecfg_rx.v
+   wire [1:0]		remap_mode;		// From ecfg_rx of ecfg_rx.v
+   wire [11:0]		remap_pattern;		// From ecfg_rx of ecfg_rx.v
+   wire [11:0]		remap_sel;		// From ecfg_rx of ecfg_rx.v
    wire [63:0]		rx_data_par;		// From erx_io of erx_io.v
+   wire			rx_enable;		// From ecfg_rx of ecfg_rx.v
    wire [7:0]		rx_frame_par;		// From erx_io of erx_io.v
    wire			rx_lclk_div4;		// From erx_io of erx_io.v
    wire			rx_rd_wait;		// From erx_disty of erx_disty.v
@@ -91,7 +97,7 @@ module erx (/*AUTOARG*/
    // End of automatics
 
    //regs
-   reg [15:0] 	ecfg_rx_debug;
+   reg [15:0] 	debug_vector;
    wire 	rxwr_fifo_full;
    wire 	rxrr_fifo_full;
    wire 	rxrd_fifo_full;
@@ -99,16 +105,28 @@ module erx (/*AUTOARG*/
    wire 	rxwr_empty;
    wire 	rxrr_empty;
    wire [103:0] edma_packet;		// From edma of edma.v, ...
+
+  
+
    /************************************************************/
    /* ERX CONFIGURATION                                        */
    /************************************************************/
-   defparam ecfg_rx.GROUP=`EGROUP_MMR;
+   defparam ecfg_rx.GROUP=`EGROUP_RX;
+
+   /*ecfg_rx AUTO_TEMPLATE (.mi_dout       (mi_rx_cfg_dout[DW-1:0]),
+    );
+        */
    
-   ecfg_rx ecfg_rx (.mi_dout	        (mi_rx_cfg_dout[31:0]),
+   ecfg_rx ecfg_rx (.debug_vector		(debug_vector[15:0]),
 		     /*AUTOINST*/
 		    // Outputs
-		    .ecfg_rx_enable	(ecfg_rx_enable),
-		    .ecfg_rx_mmu_enable	(ecfg_rx_mmu_enable),
+		    .mi_dout		(mi_rx_cfg_dout[DW-1:0]), // Templated
+		    .rx_enable		(rx_enable),
+		    .mmu_enable		(mmu_enable),
+		    .remap_mode		(remap_mode[1:0]),
+		    .remap_base		(remap_base[31:0]),
+		    .remap_pattern	(remap_pattern[11:0]),
+		    .remap_sel		(remap_sel[11:0]),
 		    // Inputs
 		    .reset		(reset),
 		    .mi_clk		(mi_clk),
@@ -116,9 +134,25 @@ module erx (/*AUTOARG*/
 		    .mi_we		(mi_we),
 		    .mi_addr		(mi_addr[19:0]),
 		    .mi_din		(mi_din[31:0]),
-		    .ecfg_rx_datain	(ecfg_rx_datain[8:0]),
-		    .ecfg_rx_debug	(ecfg_rx_debug[15:0]));
+		    .gpio_datain	(gpio_datain[8:0]));
     
+   /************************************************************/
+   /* ERX READBACK MUX                                         */
+   /************************************************************/
+   defparam ecfg_rx.GROUP=`EGROUP_RX;
+
+   erx_mux erx_mux (/*AUTOINST*/
+		    // Outputs
+		    .mi_dout		(mi_dout[DW-1:0]),
+		    // Inputs
+		    .mi_clk		(mi_clk),
+		    .mi_en		(mi_en),
+		    .mi_addr		(mi_addr[19:0]),
+		    .mi_rx_cfg_dout	(mi_rx_cfg_dout[DW-1:0]),
+		    .mi_rx_mailbox_dout	(mi_rx_mailbox_dout[DW-1:0]),
+		    .mi_rx_edma_dout	(mi_rx_edma_dout[DW-1:0]),
+		    .mi_rx_emmu_dout	(mi_rx_emmu_dout[DW-1:0]));
+   
    
    /************************************************************/
    /*FIFOs                                                     */
@@ -206,12 +240,13 @@ module erx (/*AUTOARG*/
    */
    
 
-   defparam emailbox.GROUP =`EGROUP_MMR;
+   defparam emailbox.GROUP =`EGROUP_RX;
    defparam emailbox.ID    = ID;
 
-   emailbox emailbox(.clk		(rx_lclk_div4),
-		     .emesh_access	(emmu_access),
-		     .emesh_packet	(emmu_packet[PW-1:0]),
+   emailbox emailbox(
+		     .emesh_clk		(rx_lclk_div4),
+		     .emesh_access	(erx_access),
+		     .emesh_packet	(erx_packet[PW-1:0]),
 		     /*AUTOINST*/
 		     // Outputs
 		     .mi_dout		(mi_rx_mailbox_dout[DW-1:0]), // Templated
@@ -219,6 +254,7 @@ module erx (/*AUTOARG*/
 		     .mailbox_not_empty	(mailbox_not_empty),
 		     // Inputs
 		     .reset		(reset),
+		     .mi_clk		(mi_clk),
 		     .mi_en		(mi_en),
 		     .mi_we		(mi_we),
 		     .mi_addr		(mi_addr[19:0]),
@@ -242,6 +278,7 @@ module erx (/*AUTOARG*/
    erx_disty erx_disty (
 			/*AUTOINST*/
 			// Outputs
+			.erx_wait	(erx_wait),
 			.rx_rd_wait	(rx_rd_wait),
 			.rx_wr_wait	(rx_wr_wait),
 			.edma_wait	(edma_wait),
@@ -252,9 +289,8 @@ module erx (/*AUTOARG*/
 			.rxrr_fifo_access(rxrr_fifo_access),
 			.rxrr_fifo_packet(rxrr_fifo_packet[PW-1:0]),
 			// Inputs
-			.clk		(rx_lclk_div4),		 // Templated
-			.reset		(reset),
-			.mmu_en		(ecfg_rx_mmu_enable),	 // Templated
+			.erx_access	(erx_access),
+			.erx_packet	(erx_packet[PW-1:0]),
 			.emmu_access	(emmu_access),
 			.emmu_packet	(emmu_packet[PW-1:0]),
 			.edma_access	(edma_access),
@@ -280,7 +316,7 @@ module erx (/*AUTOARG*/
 	                 .edma_srcaddr	(edma_packet[103:72]),
                                );
    */
-
+   assign edma_packet[0]=edma_access;   
    edma edma(/*AUTOINST*/
 	     // Outputs
 	     .mi_dout			(mi_rx_edma_dout[DW-1:0]), // Templated
@@ -305,48 +341,85 @@ module erx (/*AUTOARG*/
    /*ELINK MEMORY MANAGEMENT UNIT                              */
    /************************************************************/
    /*emmu AUTO_TEMPLATE ( 
-                        .emmu_packet_out	(emmu_packet[PW-1:0]),
-                        .emmu_\(.*\)_out	(emmu_\1[]),   
+                        .emesh_\(.*\)_out	(emmu_\1[]),   
                          //Inputs
-                        .emesh_\(.*\)_in	(erx_\1[]),   
-                        .mmu_en			(ecfg_rx_mmu_enable),
+                        .emesh_\(.*\)_in	(emesh_remap_\1[]),   
+                        .mmu_en			(mmu_enable),
                         .clk			(rx_lclk_div4),
                         .mi_dout   	        (mi_rx_emmu_dout[DW-1:0]),
+                        .emesh_packet_hi_out	(),
+                        .mmu_bp	    	        (erx_rr),
+                        .emesh_wait_in		(erx_wait),	 
                            );
    */
 
-   defparam emmu.GROUP=`EGROUP_RXMMU;
-
-   emmu emmu (.emmu_packet_hi_out	(),
+   defparam emmu.GROUP=`EGROUP_RX;
+   emmu emmu (
 	      /*AUTOINST*/
 	      // Outputs
 	      .mi_dout			(mi_rx_emmu_dout[DW-1:0]), // Templated
-	      .emmu_access_out		(emmu_access),		 // Templated
-	      .emmu_packet_out		(emmu_packet[PW-1:0]),	 // Templated
+	      .emesh_access_out		(emmu_access),		 // Templated
+	      .emesh_packet_out		(emmu_packet[PW-1:0]),	 // Templated
+	      .emesh_packet_hi_out	(),			 // Templated
 	      // Inputs
 	      .clk			(rx_lclk_div4),		 // Templated
 	      .reset			(reset),
-	      .mmu_en			(ecfg_rx_mmu_enable),	 // Templated
+	      .mmu_en			(mmu_enable),		 // Templated
+	      .mmu_bp			(erx_rr),		 // Templated
 	      .mi_clk			(mi_clk),
 	      .mi_en			(mi_en),
 	      .mi_we			(mi_we),
 	      .mi_addr			(mi_addr[19:0]),
 	      .mi_din			(mi_din[DW-1:0]),
-	      .emesh_access_in		(erx_access),		 // Templated
-	      .emesh_packet_in		(erx_packet[PW-1:0]));	 // Templated
+	      .emesh_access_in		(emesh_remap_access),	 // Templated
+	      .emesh_packet_in		(emesh_remap_packet[PW-1:0]), // Templated
+	      .emesh_wait_in		(erx_wait));		 // Templated
    
+   /**************************************************************/
+   /*ADDRESS REMPAPPING                                          */
+   /**************************************************************/
+   /*erx_remap AUTO_TEMPLATE ( 
+                        .emesh_\(.*\)_out	(emesh_remap_\1[]),   
+                         //Inputs
+                        .emesh_\(.*\)_in	(erx_\1[]),   
+                        .mmu_en			(ecfg_rx_mmu_enable),
+                        .clk			(rx_lclk_div4),
+                        .mi_dout   	        (mi_rx_emmu_dout[DW-1:0]),
+                        .emesh_packet_hi_out	(),
+                        .remap_bypass  	        (erx_rr),	 
+                           );
+   */
 
+   defparam erx_remap.ID = ID;
+   erx_remap erx_remap (/*AUTOINST*/
+			// Outputs
+			.emesh_access_out(emesh_remap_access),	 // Templated
+			.emesh_packet_out(emesh_remap_packet[PW-1:0]), // Templated
+			// Inputs
+			.clk		(rx_lclk_div4),		 // Templated
+			.reset		(reset),
+			.emesh_access_in(erx_access),		 // Templated
+			.emesh_packet_in(erx_packet[PW-1:0]),	 // Templated
+			.remap_mode	(remap_mode[1:0]),
+			.remap_sel	(remap_sel[11:0]),
+			.remap_pattern	(remap_pattern[11:0]),
+			.remap_base	(remap_base[31:0]),
+			.remap_bypass	(erx_rr),		 // Templated
+			.emesh_wait_in	(erx_wait));		 // Templated
+   
    /**************************************************************/
    /*ELINK PROTOCOL LOGIC                                        */
    /**************************************************************/
-   
+
+   defparam erx_protocol.ID=ID;     
    erx_protocol erx_protocol (/*AUTOINST*/
 			      // Outputs
 			      .erx_access	(erx_access),
 			      .erx_packet	(erx_packet[PW-1:0]),
+			      .erx_rr		(erx_rr),
 			      // Inputs
 			      .reset		(reset),
-			      .ecfg_rx_enable	(ecfg_rx_enable),
+			      .rx_enable	(rx_enable),
 			      .rx_lclk_div4	(rx_lclk_div4),
 			      .rx_frame_par	(rx_frame_par[7:0]),
 			      .rx_data_par	(rx_data_par[63:0]));
@@ -366,7 +439,7 @@ module erx (/*AUTOARG*/
 		  .rx_lclk_div4		(rx_lclk_div4),
 		  .rx_frame_par		(rx_frame_par[7:0]),
 		  .rx_data_par		(rx_data_par[63:0]),
-		  .ecfg_rx_datain	(ecfg_rx_datain[8:0]),
+		  .gpio_datain		(gpio_datain[8:0]),
 		  // Inputs
 		  .reset		(reset),
 		  .rxi_lclk_p		(rxi_lclk_p),
@@ -383,7 +456,7 @@ module erx (/*AUTOARG*/
    /************************************************************/
    always @ (posedge rx_lclk_div4)
      begin
-	ecfg_rx_debug[15:0] <= {2'b0,                     //15:14
+	debug_vector[15:0] <= {2'b0,                     //15:14
 				rx_rd_wait,               //13
 				rx_wr_wait,               //12
 				rxrr_wait,                //11

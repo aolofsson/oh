@@ -1,7 +1,7 @@
 module erx_io (/*AUTOARG*/
    // Outputs
    rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n,
-   rx_lclk_div4, rx_frame_par, rx_data_par, ecfg_rx_datain,
+   rx_lclk_div4, rx_frame_par, rx_data_par, gpio_datain,
    // Inputs
    reset, rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n,
    rxi_data_p, rxi_data_n, rx_wr_wait, rx_rd_wait
@@ -35,7 +35,7 @@ module erx_io (/*AUTOARG*/
    //#############
    //# Direct sampling mode
    //##############
-   output [8:0]  ecfg_rx_datain;         //gpio data in (data in and frame)
+   output [8:0]  gpio_datain;       //gpio data in (data in and frame)
 
    //############
    //# WIRES
@@ -255,7 +255,21 @@ module erx_io (/*AUTOARG*/
         .OB(rxo_rd_wait_n),
         .I(rx_rd_wait)
         );
-   
+
+   //#############
+   //# Statis data signals
+   //#############   
+   assign gpio_datain[8:0]= {rx_frame_par,
+			     rx_data_par[7],
+			     rx_data_par[6],
+			     rx_data_par[5],
+			     rx_data_par[4],
+			     rx_data_par[3],
+			     rx_data_par[2],
+			     rx_data_par[1],
+			     rx_data_par[0]
+			     };
+     
 endmodule // erx_io
 
 /*

@@ -17,12 +17,12 @@
 module etx_arbiter (/*AUTOARG*/
    // Outputs
    txwr_fifo_read, txrd_fifo_read, txrr_fifo_read, etx_access,
-   etx_packet,
+   etx_packet, etx_rr,
    // Inputs
    tx_lclk_div4, reset, ecfg_tx_ctrlmode_bp, ecfg_tx_ctrlmode,
    txwr_fifo_empty, txwr_fifo_packet, txrd_fifo_empty,
    txrd_fifo_packet, txrr_fifo_empty, txrr_fifo_packet, etx_rd_wait,
-   etx_wr_wait, etx_ack
+   etx_wr_wait, etx_wait
    );
 
    parameter PW = 104;
@@ -54,14 +54,17 @@ module etx_arbiter (/*AUTOARG*/
    //Transaction for IO
    output          etx_access;
    output [PW-1:0] etx_packet;
+   output 	   etx_rr; 
    input           etx_rd_wait;
    input           etx_wr_wait;
-   input 	   etx_ack;   
+   input 	   etx_wait;   
 
+   
    //regs
    reg 		   etx_access;
    reg [PW-1:0]    etx_packet;
-
+   reg 		   etx_rr;     //bypass translation on read request
+   
    //wires
    wire 	   rr_ready;
    wire 	   rd_ready;
@@ -83,9 +86,9 @@ module etx_arbiter (/*AUTOARG*/
    
    // FIFO read enables (one hot)
    // Hold until transaction has been accepted by IO
-   assign     txrr_fifo_read = rr_ready & (~etx_access | etx_ack);
-   assign     txrd_fifo_read = rd_ready & (~etx_access | etx_ack);
-   assign     txwr_fifo_read = wr_ready & (~etx_access | etx_ack);
+   assign     txrr_fifo_read = rr_ready & (~etx_access | etx_wait);
+   assign     txrd_fifo_read = rd_ready & (~etx_access | etx_wait);
+   assign     txwr_fifo_read = wr_ready & (~etx_access | etx_wait);
    
    //Selecting control mode on slave transcations
    assign txrd_ctrlmode[3:0] =  ecfg_tx_ctrlmode_bp ? ecfg_tx_ctrlmode[3:0] : 
@@ -94,16 +97,17 @@ module etx_arbiter (/*AUTOARG*/
    assign txwr_ctrlmode[3:0] =  ecfg_tx_ctrlmode_bp ? ecfg_tx_ctrlmode[3:0] : 
 				                      txwr_fifo_packet[7:4];
 
-   
    always @ (posedge tx_lclk_div4)
       if( reset ) 
 	begin
            etx_access         <= 1'b0;
+	   etx_rr             <= 1'b0;//only way to differentiate between 'rr' and 'wr'
 	   etx_packet[PW-1:0] <= 'd0;
 	end 
       else if (txrr_fifo_read | txrd_fifo_read | txwr_fifo_read )
 	begin
-	   etx_access <= 1'b1;	   	   
+	   etx_rr             <= txrr_fifo_read;	   
+	   etx_access         <= 1'b1;	   	   
  	   etx_packet[PW-1:0] <= txrr_fifo_read ? txrr_fifo_packet[PW-1:0]   : 
  			         txrd_fifo_read ? {txrd_fifo_packet[PW-1:8], 
 						   txrd_ctrlmode[3:0],
@@ -112,13 +116,12 @@ module etx_arbiter (/*AUTOARG*/
 						   txwr_ctrlmode[3:0],
 						   txwr_fifo_packet[3:0]};
  	end   
-      else if (etx_ack)
+      else if (etx_wait)
 	begin
 	   etx_access <= 1'b0;	   
 	end   
    	                                            
 endmodule // etx_arbiter
-
 /*
   File: etx_arbiter.v
  
