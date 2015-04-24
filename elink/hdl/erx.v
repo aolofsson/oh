@@ -11,11 +11,10 @@ module erx (/*AUTOARG*/
    rxrr_clk, rxrr_wait, mi_clk, mi_en, mi_we, mi_addr, mi_din
    );
 
-   parameter AW   = 32;
-   parameter DW   = 32;
-   parameter PW   = 104;
-   parameter RFAW = 13;
-   parameter MW   = 44; //width of MMU lookup table
+   parameter AW      = 32;
+   parameter DW      = 32;
+   parameter PW      = 104;
+   parameter ID      = 12'h800;
    
    //reset
    input           reset;
@@ -103,6 +102,8 @@ module erx (/*AUTOARG*/
    /************************************************************/
    /* ERX CONFIGURATION                                        */
    /************************************************************/
+   defparam ecfg_rx.GROUP=`EGROUP_MMR;
+   
    ecfg_rx ecfg_rx (.mi_dout	        (mi_rx_cfg_dout[31:0]),
 		     /*AUTOINST*/
 		    // Outputs
@@ -205,8 +206,12 @@ module erx (/*AUTOARG*/
    */
    
 
-   //TODO!!: Should have two ports on interface!!
+   defparam emailbox.GROUP =`EGROUP_MMR;
+   defparam emailbox.ID    = ID;
+
    emailbox emailbox(.clk		(rx_lclk_div4),
+		     .emesh_access	(emmu_access),
+		     .emesh_packet	(emmu_packet[PW-1:0]),
 		     /*AUTOINST*/
 		     // Outputs
 		     .mi_dout		(mi_rx_mailbox_dout[DW-1:0]), // Templated
@@ -231,7 +236,9 @@ module erx (/*AUTOARG*/
                         .clk		(rx_lclk_div4),
     )
     */
-   
+
+   defparam erx_disty.ID    = ID;
+
    erx_disty erx_disty (
 			/*AUTOINST*/
 			// Outputs
@@ -308,6 +315,8 @@ module erx (/*AUTOARG*/
                            );
    */
 
+   defparam emmu.GROUP=`EGROUP_RXMMU;
+
    emmu emmu (.emmu_packet_hi_out	(),
 	      /*AUTOINST*/
 	      // Outputs
@@ -321,7 +330,7 @@ module erx (/*AUTOARG*/
 	      .mi_clk			(mi_clk),
 	      .mi_en			(mi_en),
 	      .mi_we			(mi_we),
-	      .mi_addr			(mi_addr[15:0]),
+	      .mi_addr			(mi_addr[19:0]),
 	      .mi_din			(mi_din[DW-1:0]),
 	      .emesh_access_in		(erx_access),		 // Templated
 	      .emesh_packet_in		(erx_packet[PW-1:0]));	 // Templated

@@ -132,11 +132,11 @@ module ememory(/*AUTOARG*/
        end
 
    assign data_out[DW-1:0]     = hilo_sel ? dout[63:32] :
-				             dout[31:0]; 
+				            dout[31:0]; 
    
    //Concatenate
    emesh2packet e2p (.packet_out	(packet_out[PW-1:0]),
-		     .access_in		(),
+		     .access_in		(access_out),
 		     .write_in		(write_out),
 		     .datamode_in	(datamode_out[1:0]),
 		     .ctrlmode_in	(ctrlmode_out[3:0]),

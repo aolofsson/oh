@@ -9,11 +9,11 @@ module etx(/*AUTOARG*/
    txwr_access, txwr_packet, txrr_clk, txrr_access, txrr_packet,
    txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n
    );
-   parameter AW   = 32;
-   parameter DW   = 32;
-   parameter PW   = 104;
-   parameter RFAW = 12;
-
+   parameter AW      = 32;
+   parameter DW      = 32;
+   parameter PW      = 104;
+   parameter ID      = 12'h0;
+   
    //Clocks and reset
    input          reset;
    input 	  tx_lclk;	  // high speed serdes clock
@@ -98,6 +98,7 @@ module etx(/*AUTOARG*/
    /************************************************************/
    /* ETX CONFIGURATION                                        */
    /************************************************************/
+   defparam ecfg_tx.GROUP=`EGROUP_MMR;
    ecfg_tx ecfg_tx (
 		    .mi_dout		(mi_tx_cfg_dout[31:0]),
 		    /*AUTOINST*/
@@ -143,7 +144,8 @@ module etx(/*AUTOARG*/
     */
 
    //Write fifo (from slave)
-   fifo_async #(.DW(104), .AW(5)) txwr_fifo(
+   wire txwr_access_gated = txwr_access & ~(txwr_packet[39:28]==ID); 
+   fifo_async #(.DW(104), .AW(5)) txwr_fifo(.wr_en		(txwr_access_gated),
 					    .prog_full		(txwr_wait),
 					    .full		(txwr_fifo_full),
 			                    /*AUTOINST*/
@@ -154,12 +156,12 @@ module etx(/*AUTOARG*/
 					    .reset		(reset),	 // Templated
 					    .wr_clk		(txwr_clk),	 // Templated
 					    .rd_clk		(tx_lclk_div4),	 // Templated
-					    .wr_en		(txwr_access),	 // Templated
 					    .din		(txwr_packet[PW-1:0]), // Templated
 					    .rd_en		(txwr_fifo_read)); // Templated
    
    //Read request fifo (from slave)
-   fifo_async  #(.DW(104), .AW(5)) txrd_fifo(
+   wire txrd_access_gated = txrd_access & ~(txrd_packet[39:28]==ID); 
+   fifo_async  #(.DW(104), .AW(5)) txrd_fifo(.wr_en		(txrd_access_gated),
 					     .prog_full		(txrd_wait),
 					     .full		(txrd_fifo_full),
 				             /*AUTOINST*/
@@ -170,7 +172,6 @@ module etx(/*AUTOARG*/
 					     .reset		(reset),	 // Templated
 					     .wr_clk		(txrd_clk),	 // Templated
 					     .rd_clk		(tx_lclk_div4),	 // Templated
-					     .wr_en		(txrd_access),	 // Templated
 					     .din		(txrd_packet[PW-1:0]), // Templated
 					     .rd_en		(txrd_fifo_read)); // Templated
    
@@ -196,7 +197,7 @@ module etx(/*AUTOARG*/
    /************************************************************/
    /*ELINK TRANSMIT ARBITER                                    */
    /************************************************************/
-
+   defparam etx_arbiter.ID=ID;   
    etx_arbiter etx_arbiter (
 			      /*AUTOINST*/
 			    // Outputs
@@ -234,6 +235,7 @@ module etx(/*AUTOARG*/
                           );
    */
 
+   defparam emmu.GROUP=`EGROUP_TXMMU;
    emmu emmu (.emmu_packet_hi_out	(),
 	      /*AUTOINST*/
 	      // Outputs
@@ -247,7 +249,7 @@ module etx(/*AUTOARG*/
 	      .mi_clk			(mi_clk),
 	      .mi_en			(mi_en),
 	      .mi_we			(mi_we),
-	      .mi_addr			(mi_addr[15:0]),
+	      .mi_addr			(mi_addr[19:0]),
 	      .mi_din			(mi_din[DW-1:0]),
 	      .emesh_access_in		(etx_access),		 // Templated
 	      .emesh_packet_in		(etx_packet[PW-1:0]));	 // Templated

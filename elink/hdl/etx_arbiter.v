@@ -26,7 +26,7 @@ module etx_arbiter (/*AUTOARG*/
    );
 
    parameter PW = 104;
-   
+   parameter ID = 0;
    
    // tx clock and reset
    input          tx_lclk_div4;
@@ -72,7 +72,6 @@ module etx_arbiter (/*AUTOARG*/
    //#############################################################################
    //# Arbitrate & forward
    //#############################################################################
-   //TODO: Change
    //TODO: Add weighted round robin arbiter
    //Host-slave should always be able to get "1" read or write in there.
    //Current implementation can deadlock!! (move rd below rr)   

@@ -23,6 +23,7 @@ module emmu (/*AUTOARG*/
    parameter AW     = 32;         //address width 
    parameter PW     = 104;
    parameter EPW    = 136;        //extended by 32 bits
+   parameter GROUP  = 0;
    
    /*****************************/
    /*DATAPATH CLOCk             */
@@ -41,7 +42,7 @@ module emmu (/*AUTOARG*/
    input 	     mi_clk;              //source synchronous clock
    input 	     mi_en;               //memory access 
    input  	     mi_we;               //byte wise write enable
-   input [15:0]      mi_addr;             //address
+   input [19:0]      mi_addr;             //address
    input [DW-1:0]    mi_din;              //input data  
    output [DW-1:0]   mi_dout;             //read back (TODO?? not implemented)
   
@@ -69,15 +70,18 @@ module emmu (/*AUTOARG*/
    wire [47:0] 	      emmu_lookup_data;
    wire [63:0] 	      mi_wr_data;
    wire [5:0] 	      mi_wr_vec;
-
+   wire 	      mi_match;
+   
 
    /*****************************/
    /*MMU WRITE LOGIC            */
    /*****************************/
+   assign mi_match       = mi_en & (mi_addr[19:16]==GROUP);
+
    //write controls
-   assign mi_wr_vec[5:0] = (mi_en & mi_we & ~mi_addr[2]) ? 6'b001111 :
-	                   (mi_en & mi_we & mi_addr[2])  ? 6'b110000 :
-			                                    6'b000000 ;
+   assign mi_wr_vec[5:0] = (mi_match & mi_we & ~mi_addr[2]) ? 6'b001111 :
+	                   (mi_match & mi_we & mi_addr[2])  ? 6'b110000 :
+			                                      6'b000000 ;
 
    //write data
    assign mi_wr_data[63:0] = {mi_din[31:0], mi_din[31:0]};
@@ -101,8 +105,11 @@ module emmu (/*AUTOARG*/
    //pipeline to compensate for table lookup pipeline 
    //assumes one cycle memory access!     
   
-   always @ (posedge  clk)
-     emmu_access_out               <= emesh_access_in;
+   always @ (posedge  clk or posedge reset)
+     if(reset)
+       emmu_access_out <= 1'b0;
+     else
+       emmu_access_out               <= emesh_access_in;
    
    always @ (posedge clk)
      if(emesh_access_in)   
