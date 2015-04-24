@@ -143,8 +143,8 @@ module dv_elink(/*AUTOARG*/
 		.txrd_wait		(txrd_wait),
 		.txrr_wait		(txrr_wait),
 		.txwr_wait		(txwr_wait),
-		.rxrr_wait		(rxrr_wait),
-		.rxwr_wait		(rxwr_wait),
+		.rxrr_wait		(ext_wr_wait),
+		.rxwr_wait		(1'b0),
 		/*AUTOINST*/
 		// Outputs
 		.rxo_wr_wait_p		(wr_wait_p),		 // Templated

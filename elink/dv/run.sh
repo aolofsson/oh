@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Linting in Verilator
-verilator --lint-only -F elink.cmd -DTARGET_VERILATOR dv_elink.v
+#verilator --lint-only -F elink.cmd -DTARGET_VERILATOR dv_elink.v
 
 #a sorry hack, too tired to get it right, please fix...
 TRANS=$(wc -l test.memh)
