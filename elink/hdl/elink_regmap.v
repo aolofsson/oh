@@ -1,29 +1,42 @@
 //MEMORY MAP
-//Group set with bits 19:16
 
-//Epiphany Register Memory Map
-`define EGROUP_MMR     4'hE
-`define EGROUP_RXMMU   4'hD
-`define EGROUP_TXMMU   4'hC
+//[31:20] = LINKID
+//[19:16] = GROUP SELECT
+//[15]    = MMU SELECT (for RX/TX)
+//[14:6]  = USED BY MMU ONLY 
+//[5:2]   = REGISTER ADDRESS (0..15)
+//[1:0]   = IGNORED (no byte access)
+
+//Link register groups addr[19:16]
+`define EGROUP_CFG     4'hE
+`define EGROUP_TX      4'hD
+`define EGROUP_RX      4'hC
 `define EGROUP_READTAG 4'hB
 
-//ELINK REGISTERS addr[6:2]
-`define ELRESET    5'h0 //E0000
-`define ELCLK      5'h1 //E0004
-`define ELTX       5'h2 //E0008 
-`define ELRX       5'h3 //E000C
-`define ELCOREID   5'h4 //E0010
-`define ELVERSION  5'h5 //E0014
-`define ELDATAIN   5'h6 //E0018
-`define ELDATAOUT  5'h7 //E001C
-`define ELDEBUG    5'h8 //E0020
-`define EMAILBOXLO 5'h9 //E0024
-`define EMAILBOXHI 5'hA //E0028
-`define EDMACFG    5'hB //E002C
-`define EDMASTATUS 5'hC //E0030
-`define EDMASRC    5'hD //E0034
-`define EDMADST    5'hE //E0038
-`define EDMACOUNT  5'hF //E0053C 
+//ELINK CONFIG REGISTERS 
+`define ELRESET       4'h0 //E0000-reset
+`define ELCLK         4'h1 //E0004-clock configuration
+`define ELCOREID      4'h2 //E0008-core id
+`define ELVERSION     4'h3 //E000C-version
 
+//ELINK TX registers
+`define ELTXCFG       4'h0 //D0000-config
+`define ELTXSTATUS    4'h1 //D0004-tx status
+`define ELTXDOUT      4'h2 //D0008-data for pins
 
+//ELINK RX registers
+`define ELRXCFG      4'h0 //C0000-config
+`define ELRXSTATUS   4'h1 //C000C-status register
+`define ELRXBASE     4'h2 //C0004-memory base
+`define ELRXREMAP    4'h2 //C0004-memory base
+`define ELRXDIN      4'h3 //C0008-sampled data
+`define EMAILBOXLO   4'h4 //C000C-mailbox
+`define EMAILBOXHI   4'h5 //C0010-mailbox
+`define ERXRES0      4'h6 //C0014-reserved
+`define ERXRES1      4'h7 //C0018-reserved
+`define EDMACFG      4'h8 //C001C-dma
+`define EDMASTATUS   4'h9 //C0020-dma
+`define EDMASRC      4'hA //C0024-dma
+`define EDMADST      4'hB //C0028-dma
+`define EDMACOUNT    4'hC //C002C-dma 
 

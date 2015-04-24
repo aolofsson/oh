@@ -4,12 +4,11 @@
  ########################################################################
  
  */
-
 module ecfg_tx (/*AUTOARG*/
    // Outputs
    mi_dout, ecfg_tx_enable, ecfg_tx_mmu_enable, ecfg_tx_gpio_enable,
    ecfg_tx_tp_enable, ecfg_tx_ctrlmode, ecfg_tx_ctrlmode_bp,
-   ecfg_dataout,
+   ecfg_tx_remap_enable, ecfg_dataout,
    // Inputs
    reset, mi_clk, mi_en, mi_we, mi_addr, mi_din, ecfg_tx_debug
    );
@@ -17,7 +16,7 @@ module ecfg_tx (/*AUTOARG*/
    /******************************/
    /*Compile Time Parameters     */
    /******************************/
-   parameter RFAW            = 5;         // 32 registers for now
+   parameter RFAW            = 4;
    parameter GROUP           = 4'h0;
    
    /******************************/
@@ -44,6 +43,7 @@ module ecfg_tx (/*AUTOARG*/
    output        ecfg_tx_tp_enable;    // enables 1/0 pattern on transmit  
    output [3:0]  ecfg_tx_ctrlmode;     // value for emesh ctrlmode tag
    output        ecfg_tx_ctrlmode_bp;  // bypass value for emesh ctrlmode tag
+   output 	 ecfg_tx_remap_enable; // enable address remapping
    output [8:0]  ecfg_dataout;         // data for elink outputs
    input [15:0]  ecfg_tx_debug;        // etx debug signals
    
@@ -51,7 +51,7 @@ module ecfg_tx (/*AUTOARG*/
    
    //registers
 
-   reg [8:0] 	ecfg_tx_reg;
+   reg [9:0] 	ecfg_tx_reg;
    reg [8:0] 	ecfg_dataout_reg;
    reg [2:0] 	ecfg_tx_debug_reg;
    reg [31:0] 	mi_dout;
@@ -71,24 +71,25 @@ module ecfg_tx (/*AUTOARG*/
    assign ecfg_read   = mi_en & ~mi_we & (mi_addr[19:16]==GROUP);   
 
    //Config write enables
-   assign ecfg_tx_write       = ecfg_write & (mi_addr[RFAW+1:2]==`ELTX);
-   assign ecfg_dataout_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ELDATAOUT);
+   assign ecfg_tx_write       = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXCFG);
+   assign ecfg_dataout_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXDOUT);
      
    //###########################
    //# TX
    //###########################
    always @ (posedge mi_clk)
      if(reset)
-       ecfg_tx_reg[8:0] <= 9'b0;
+       ecfg_tx_reg[9:0] <= 10'b0;
      else if (ecfg_tx_write)
-       ecfg_tx_reg[8:0] <= mi_din[8:0];
+       ecfg_tx_reg[9:0] <= mi_din[9:0];
 
    assign ecfg_tx_enable          = ecfg_tx_reg[0];
    assign ecfg_tx_mmu_enable      = ecfg_tx_reg[1];   
    assign ecfg_tx_gpio_enable     = (ecfg_tx_reg[3:2]==2'b01);
-   assign ecfg_tx_tp_enable       = (ecfg_tx_reg[3:2]==2'b10);//test clock pattern
+   assign ecfg_tx_tp_enable       = (ecfg_tx_reg[3:2]==2'b10);//test pattern
    assign ecfg_tx_ctrlmode[3:0]   = ecfg_tx_reg[7:4];
    assign ecfg_tx_ctrlmode_bp     = ecfg_tx_reg[8];
+   assign ecfg_tx_remap_enable    = ecfg_tx_reg[9];
    
    //###########################
    //# DATAOUT
@@ -119,9 +120,8 @@ module ecfg_tx (/*AUTOARG*/
    always @ (posedge mi_clk)
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
-         `ELTX:      mi_dout[31:0] <= {23'b0, ecfg_tx_reg[8:0]};
-         `ELDATAOUT: mi_dout[31:0] <= {23'b0, ecfg_dataout_reg[8:0]};
-	 `ELDEBUG:   mi_dout[31:0] <= {16'b0,ecfg_tx_debug[15:3],ecfg_tx_debug_reg[2:0]};
+         `ELTXCFG:   mi_dout[31:0] <= {23'b0, ecfg_tx_reg[8:0]};
+         `ELTXDOUT:  mi_dout[31:0] <= {23'b0, ecfg_dataout_reg[8:0]};
          default:    mi_dout[31:0] <= 32'd0;
        endcase
 

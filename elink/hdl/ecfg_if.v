@@ -10,9 +10,7 @@ module ecfg_if (/*AUTOARG*/
    rxrr_access, rxrr_packet, mi_clk, mi_en, mi_we, mi_addr, mi_din,
    // Inputs
    txwr_clk, txwr_access, txwr_packet, txrd_access, txrd_packet,
-   rxrr_clk, mi_ba_cfg_dout, mi_rx_cfg_dout, mi_rx_edma_dout,
-   mi_rx_emmu_dout, mi_rx_mailbox_dout, mi_tx_cfg_dout,
-   mi_tx_emmu_dout
+   rxrr_clk, mi_el_dout, mi_rx_dout, mi_tx_dout
    );
 
    parameter ID     = 12'h800;
@@ -52,20 +50,11 @@ module ecfg_if (/*AUTOARG*/
    /******************************/
    /*Readback Data               */
    /******************************/
-
-   //base
-   input [31:0]   mi_ba_cfg_dout;
-   //rx
-   input [DW-1:0] mi_rx_cfg_dout;   
-   input [DW-1:0] mi_rx_edma_dout;
-   input [DW-1:0] mi_rx_emmu_dout;
-   input [DW-1:0] mi_rx_mailbox_dout;
-   //tx
-   input [DW-1:0] mi_tx_cfg_dout;
-   input [DW-1:0] mi_tx_emmu_dout;
+   input [31:0]   mi_el_dout;
+   input [DW-1:0] mi_rx_dout;   
+   input [DW-1:0] mi_tx_dout;
    
    //wires
-
    wire [DW-1:0]	txwr_data;	
    wire [AW-1:0]	txwr_dstaddr;
    wire [AW-1:0]	txwr_srcaddr;
@@ -118,8 +107,12 @@ module ecfg_if (/*AUTOARG*/
    //Data
    assign mi_din[31:0]  = txwr_data[31:0];
 
-   //TODO: Do readback later....     
-endmodule // ecfg_base
+   //TODO: Do readback later....   
+
+
+
+//   
+endmodule // ecfg_if
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")
 // End:
