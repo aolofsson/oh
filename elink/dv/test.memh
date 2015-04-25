@@ -16,14 +16,13 @@
 00000000_00000000_810e0004_0b //stop cclk 
 00000000_00000000_810e0000_0b //deassert reset
 00000000_00000213_810e0004_0b //start cclk and lclk at max speed
-00000000_00000001_810e0008_0b //enable tx
-00000000_00000001_810e000C_0b //enable rx
-00000000_00000555_810e0010_0b //writing to coreid
-00000000_00000555_810e0014_0b //writing to version
-00000000_00000555_810e001C_0b //writing to dataout (dummy)
-BBBBBBBB_AAAAAAAA_820e0024_0f //write to mailbox
-00000000_00000808_810d4040_0b //write to emmurx
-00000000_00000810_810d4080_0b //write to emmurx
+00000000_00000001_810d0000_0b //enable tx
+00000000_00000001_810c0000_0b //enable rx
+00000000_00000555_810e0008_0b //writing to coreid
+00000000_00000555_810e000c_0b //writing to version
+BBBBBBBB_AAAAAAAA_820c0014_0f //write to mailbox
+00000000_00000808_810cc040_0b //write to emmurx
+00000000_00000810_810cc080_0b //write to emmurx
 FFFFFFFF_12345678_808ABCDE_0b //write to epiphany
 12345678_FFFFFFFF_808ABCDE_09 //read from epiphany
 00000000_ABCD0001_80800004_0b //write to epiphany
@@ -33,9 +32,9 @@ FFFFFFFF_12345678_808ABCDE_0b //write to epiphany
 00000000_ABCD0005_80800014_0b //write to epiphany
 00000000_ABCD0006_80800018_0b //write to epiphany
 00000000_ABCD0007_8080001c_0b //write to epiphany
-11100000_00000000_810e001C_09 //read from dataout register
-22200000_00000000_810e0024_09 //read from embox
-33300000_00000000_810e0028_09 //read from embox
+11100000_00000000_810c0008_09 //read from datain register
+22200000_00000000_810c0010_09 //read from embox
+33300000_00000000_810c0014_09 //read from embox
 44400000_00000000_810c0000_09 //read from emmurx
 820B0000_DEADBEEF_80800010_09 //read from epiphany
 820B0000_DEADBEEF_8080000c_09 //read from epiphany
