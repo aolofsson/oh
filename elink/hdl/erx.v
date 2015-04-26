@@ -106,7 +106,10 @@ module erx (/*AUTOARG*/
    wire 	rxrr_empty;
    wire [103:0] edma_packet;		// From edma of edma.v, ...
 
-  
+   reg 		rxrd_access;
+   reg 		rxwr_access;
+   reg 		rxrr_access;
+   
 
    /************************************************************/
    /* ERX CONFIGURATION                                        */
@@ -170,13 +173,15 @@ module erx (/*AUTOARG*/
 			       .rd_clk	   (@"(substring vl-cell-name  0 4)"_clk),
                                .wr_clk	   (rx_lclk_div4),
                                .wr_en      (@"(substring vl-cell-name  0 4)"_fifo_access),
-                               .rd_en      (~@"(substring vl-cell-name  0 4)"_wait & @"(substring vl-cell-name  0 4)"_access),
+                               .rd_en      (~@"(substring vl-cell-name  0 4)"_wait & ~@"(substring vl-cell-name  0 4)"_empty),
 			       .reset	   (reset),
                                .din	   (@"(substring vl-cell-name  0 4)"_fifo_packet[PW-1:0]),
     );
    */
    
-   assign rxrd_access=~rxrd_empty;
+  
+
+ 
       
    //Read request fifo (from Epiphany)
    fifo_async #(.DW(104), .AW(5)) 
@@ -192,9 +197,9 @@ module erx (/*AUTOARG*/
 		.rd_clk			(rxrd_clk),		 // Templated
 		.wr_en			(rxrd_fifo_access),	 // Templated
 		.din			(rxrd_fifo_packet[PW-1:0]), // Templated
-		.rd_en			(~rxrd_wait & rxrd_access)); // Templated
+		.rd_en			(~rxrd_wait & ~rxrd_empty)); // Templated
 
-   assign rxwr_access=~rxwr_empty;
+ 
 
    //Write fifo (from Epiphany)
    fifo_async #(.DW(104), .AW(5)) 
@@ -210,9 +215,9 @@ module erx (/*AUTOARG*/
 	     .rd_clk			(rxwr_clk),		 // Templated
 	     .wr_en			(rxwr_fifo_access),	 // Templated
 	     .din			(rxwr_fifo_packet[PW-1:0]), // Templated
-	     .rd_en			(~rxwr_wait & rxwr_access)); // Templated
+	     .rd_en			(~rxwr_wait & ~rxwr_empty)); // Templated
    
-   assign rxrr_access=~rxrr_empty;
+ 
 
    //Read response fifo (for host)
    fifo_async #(.DW(104), .AW(5))  
@@ -228,7 +233,25 @@ module erx (/*AUTOARG*/
 	     .rd_clk			(rxrr_clk),		 // Templated
 	     .wr_en			(rxrr_fifo_access),	 // Templated
 	     .din			(rxrr_fifo_packet[PW-1:0]), // Templated
-	     .rd_en			(~rxrr_wait & rxrr_access)); // Templated
+	     .rd_en			(~rxrr_wait & ~rxrr_empty)); // Templated
+   
+   always @ (posedge rxwr_clk or posedge reset)
+     if(reset)       
+	  rxwr_access <= 1'b0;
+     else
+       rxwr_access = ~rxwr_empty;
+   
+  always @ (posedge rxrd_clk or posedge reset)
+     if(reset)       
+	  rxrd_access <= 1'b0;
+     else
+       rxrd_access = ~rxrd_empty;
+   
+  always @ (posedge rxrr_clk or posedge reset)
+     if(reset)       
+	  rxrr_access <= 1'b0;
+     else
+       rxrr_access = ~rxrr_empty;
    
    
    /***********************************************************/
