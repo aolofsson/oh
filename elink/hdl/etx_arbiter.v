@@ -22,7 +22,7 @@ module etx_arbiter (/*AUTOARG*/
    tx_lclk_div4, reset, ecfg_tx_ctrlmode_bp, ecfg_tx_ctrlmode,
    txwr_fifo_empty, txwr_fifo_packet, txrd_fifo_empty,
    txrd_fifo_packet, txrr_fifo_empty, txrr_fifo_packet, etx_rd_wait,
-   etx_wr_wait, etx_wait
+   etx_wr_wait, etx_io_wait
    );
 
    parameter PW = 104;
@@ -57,7 +57,7 @@ module etx_arbiter (/*AUTOARG*/
    output 	   etx_rr; 
    input           etx_rd_wait;
    input           etx_wr_wait;
-   input 	   etx_wait;   
+   input 	   etx_io_wait;   
 
    
    //regs
@@ -86,9 +86,9 @@ module etx_arbiter (/*AUTOARG*/
    
    // FIFO read enables (one hot)
    // Hold until transaction has been accepted by IO
-   assign     txrr_fifo_read = rr_ready & (~etx_access | etx_wait);
-   assign     txrd_fifo_read = rd_ready & (~etx_access | etx_wait);
-   assign     txwr_fifo_read = wr_ready & (~etx_access | etx_wait);
+   assign     txrr_fifo_read = rr_ready & (~etx_access | etx_io_wait);
+   assign     txrd_fifo_read = rd_ready & (~etx_access | etx_io_wait);
+   assign     txwr_fifo_read = wr_ready & (~etx_access | etx_io_wait);
    
    //Selecting control mode on slave transcations
    assign txrd_ctrlmode[3:0] =  ecfg_tx_ctrlmode_bp ? ecfg_tx_ctrlmode[3:0] : 
@@ -116,7 +116,7 @@ module etx_arbiter (/*AUTOARG*/
 						   txwr_ctrlmode[3:0],
 						   txwr_fifo_packet[3:0]};
  	end   
-      else if (etx_wait)
+      else if (~etx_io_wait)
 	begin
 	   etx_access <= 1'b0;	   
 	end   

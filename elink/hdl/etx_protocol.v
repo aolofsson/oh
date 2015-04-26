@@ -10,7 +10,8 @@
 
 module etx_protocol (/*AUTOARG*/
    // Outputs
-   etx_rd_wait, etx_wr_wait, etx_wait, tx_frame_par, tx_data_par,
+   etx_rd_wait, etx_wr_wait, etx_wait, etx_io_wait, tx_frame_par,
+   tx_data_par,
    // Inputs
    etx_access, etx_packet, ecfg_tx_tp_enable, ecfg_dataout,
    ecfg_tx_enable, ecfg_tx_gpio_enable, reset, tx_lclk_div4,
@@ -26,7 +27,8 @@ module etx_protocol (/*AUTOARG*/
    input [PW-1:0] etx_packet;  
    output         etx_rd_wait;
    output         etx_wr_wait;
-   output         etx_wait;
+   output         etx_wait;     //for pipeline
+   output         etx_io_wait;  //for arbiter
 
    //Enables transmit test pattern
    input 	  ecfg_tx_tp_enable;
@@ -45,7 +47,7 @@ module etx_protocol (/*AUTOARG*/
    //############
    //# Local regs & wires
    //############
-   reg           etx_cycle;    //Cycle 0 or 1
+   reg           etx_sample;   //hold for second cycle
    reg [7:0]     tx_frame_par;
    reg [127:0]   tx_data_reg;  //sample transaction on one clock cycle
    reg 		 rd_wait_sync;
@@ -80,15 +82,15 @@ module etx_protocol (/*AUTOARG*/
      begin
 	if(reset) 
 	  begin	     
-             etx_cycle          <= 1'b0;
+             etx_sample         <= 1'b1;
              tx_frame_par[7:0]  <= 8'd0;
              tx_data_reg[127:0] <= 'd0;	     
 	  end 
 	else 
 	  begin
-             if( etx_access & ~etx_cycle ) //first cycle (0)
+             if( etx_access & etx_sample ) //first cycle
 	       begin
-		  etx_cycle           <= 1'b1;
+		  etx_sample          <= 1'b0;
 		  tx_frame_par[7:0]   <= 8'h3F;
 		  tx_data_reg[127:0]  <= {etx_data[31:0], 
 					 etx_srcaddr[31:0],
@@ -100,24 +102,24 @@ module etx_protocol (/*AUTOARG*/
 					 etx_dstaddr[3:0], etx_datamode[1:0], etx_write, etx_access // B5
 				   };
                end 
-	     else if( etx_cycle ) //second cycle (1)
+	     else if(~etx_sample ) //second cycle (1)
 	       begin
-		  etx_cycle  <= 1'b0;
+		  etx_sample        <= 1'b1;
 		  tx_frame_par[7:0] <= 8'hFF;
                end 
 	     else 
 	       begin
-		  etx_cycle           <= 1'b0;
-		  tx_frame_par[7:0]   <= 8'h00;
-		  tx_data_reg[127:0]  <= 64'd0;
+		  etx_sample          <= 1'b1;
+		  tx_frame_par[7:0]   <= 'd0;
+		  tx_data_reg[127:0]  <= 'd0;
                end
 	  end // else: !if(reset)	
      end // always @ ( posedge txlclk_p or posedge reset )
 
 
-   //First/second cycle select
-   assign tx_data_par[63:0] = etx_cycle ? tx_data_reg[127:64]:
-			                  tx_data_reg[63:0];
+   //After first sample, etx_sample-->0 use as indicator to sample in data.
+   assign tx_data_par[63:0] = ~etx_sample ? tx_data_reg[63:0] : //first cycle
+                                            tx_data_reg[127:64];//all others, 0 or upper
       
    //#############################
    //# Wait signals (async)
@@ -135,10 +137,12 @@ module etx_protocol (/*AUTOARG*/
    //# Pipeline stall
    //#############################
 
-   assign etx_wait = etx_cycle   |
-		     etx_rd_wait | 
-		     etx_wr_wait;
-   
+   assign etx_io_wait = ~etx_sample;
+
+   assign etx_wait    = etx_io_wait |
+			etx_rd_wait |
+			etx_wr_wait;
+      
    
 endmodule // etx_protocol
 // Local Variables:

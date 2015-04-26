@@ -74,6 +74,7 @@ module etx(/*AUTOARG*/
    wire			emmu_access;		// From emmu of emmu.v
    wire [PW-1:0]	emmu_packet;		// From emmu of emmu.v
    wire			etx_access;		// From etx_arbiter of etx_arbiter.v
+   wire			etx_io_wait;		// From etx_protocol of etx_protocol.v
    wire [PW-1:0]	etx_packet;		// From etx_arbiter of etx_arbiter.v
    wire			etx_rd_wait;		// From etx_protocol of etx_protocol.v
    wire			etx_remap_access;	// From etx_remap of etx_remap.v
@@ -241,7 +242,7 @@ module etx(/*AUTOARG*/
 			    .txrr_fifo_packet	(txrr_fifo_packet[PW-1:0]),
 			    .etx_rd_wait	(etx_rd_wait),
 			    .etx_wr_wait	(etx_wr_wait),
-			    .etx_wait		(etx_wait));
+			    .etx_io_wait	(etx_io_wait));
    
    /************************************************************/
    /* REMAPPING (SHIFT) DESTINATION ADDRESS                    */
@@ -318,6 +319,7 @@ module etx(/*AUTOARG*/
                                   .etx_wr_wait     (etx_wr_wait),
                                   .etx_\(.*\)      (emmu_\1[]),
                                   .etx_wait	   (etx_wait),    
+                                  .etx_io_wait	   (etx_io_wait),    
                              );
    */
    etx_protocol etx_protocol (/*AUTOINST*/
@@ -325,6 +327,7 @@ module etx(/*AUTOARG*/
 			      .etx_rd_wait	(etx_rd_wait),	 // Templated
 			      .etx_wr_wait	(etx_wr_wait),	 // Templated
 			      .etx_wait		(etx_wait),	 // Templated
+			      .etx_io_wait	(etx_io_wait),	 // Templated
 			      .tx_frame_par	(tx_frame_par[7:0]),
 			      .tx_data_par	(tx_data_par[63:0]),
 			      // Inputs
