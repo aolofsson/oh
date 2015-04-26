@@ -39,7 +39,8 @@ module ememory(/*AUTOARG*/
    reg [1:0] 	    datamode_out;
    reg [3:0] 	    ctrlmode_out;   
    reg [AW-1:0]     dstaddr_out;   
-   reg [AW-1:0]     srcaddr_out;
+
+   wire [AW-1:0]    srcaddr_out;
    wire [AW-1:0]    data_out;   
    reg 		    hilo_sel;
 
@@ -127,10 +128,12 @@ module ememory(/*AUTOARG*/
           hilo_sel            <= dstaddr_in[2];
 	  datamode_out[1:0]   <= datamode_in[1:0];
 	  ctrlmode_out[3:0]   <= ctrlmode_in[3:0];                  
-          srcaddr_out[AW-1:0] <= dout[63:32];	  
           dstaddr_out[AW-1:0] <= srcaddr_in[AW-1:0];
        end
 
+
+   assign srcaddr_out[AW-1:0] = (datamode_out[1:0]==2'b11) ? dout[63:32] :
+				                             32'b0;
    assign data_out[DW-1:0]     = hilo_sel ? dout[63:32] :
 				            dout[31:0]; 
    
