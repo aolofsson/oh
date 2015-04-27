@@ -115,7 +115,7 @@ always @ (posedge clkstim)
        ext_srcaddr[31:0]   <= transaction[103:72];
        stim_addr[MAW-1:0]  <= stim_addr[MAW-1:0] + 1'b1; 
 `else
-       ext_access          <=  1'b1;
+       ext_access          <=  |(transaction[103:0]);
        ext_data[31:0]      <=  ext_data[31:0]    + 32'b1;
        ext_dstaddr[31:0]   <=  ext_dstaddr[31:0] + 32'd8;//(32'b1<<datamode)
        ext_datamode[1:0]   <=  datamode[1:0];       
