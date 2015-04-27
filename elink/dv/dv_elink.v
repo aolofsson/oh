@@ -214,8 +214,6 @@ module dv_elink(/*AUTOARG*/
      else
        etime[31:0] <= etime[31:0]+1'b1;
 
-   
-
   /*emesh_monitor AUTO_TEMPLATE ( 
                         // Outputs
                         .emesh_\(.*\)     (@"(substring vl-cell-name  0 3)"_\1[]),
@@ -242,6 +240,17 @@ module dv_elink(/*AUTOARG*/
 					      .etime		(etime[31:0]),
 					      .emesh_access	(dut_access),	 // Templated
 					      .emesh_packet	(dut_packet[PW-1:0])); // Templated
+
+   emesh_monitor #(.NAME("emem")) emem_monitor (.emesh_wait	(1'b0),
+					      .clk		(clk[1]),
+					      /*AUTOINST*/
+					      // Inputs
+					      .reset		(reset),
+					      .itrace		(itrace),
+					      .etime		(etime[31:0]),
+					      .emesh_access	(emem_access),	 // Templated
+					      .emesh_packet	(emem_packet[PW-1:0])); // Templated
+   
 
 endmodule // dv_elink
 // Local Variables:
