@@ -65,8 +65,10 @@ module erx_remap (/*AUTOARG*/
 			     (remap_mode[1:0]==2'b01)    ? static_remap[31:0] :
 	  		                                   dynamic_remap[31:0];
       
-   always @ (posedge clk)     
-     if(~emesh_wait_in) //pipeline stall
+   always @ (posedge clk or posedge reset)
+     if(reset)
+       emesh_access_out <= 1'b0;
+     else if(~emesh_wait_in) //pipeline stall
        begin
 	  emesh_access_out         <= emesh_access_in;
 	  emesh_packet_out[PW-1:0] <= {emesh_packet_in[103:40],
