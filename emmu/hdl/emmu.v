@@ -1,13 +1,17 @@
 /*
  ###########################################################################
- # Function: A address translator for the eMesh/eLink protocol   
- #           Table writeable from mi_* configuration interface.
- #           12 bit index used for table lookup (bits 31:20 of dstaddr)
+ # **EMMU**
+ # 
+ # This block uses the upper 12 bits [31:20] of a memory address as an index
+ # to read an entry from a table.
  #
- #           Assumes that output is always ready to receive. (no pushback)
+ # The table is written from the mi_* configuration interface.
  #
- #           32bit address output = {table_data[11:0],dstaddr[19:0]}
- #           64bit address output = {table_data[43:0],dstaddr[19:0]}
+ # The table can be configured as 12 bits wide or 44 bits wide.
+ #
+ # 32bit address output = {table_data[11:0],dstaddr[19:0]}
+ # 64bit address output = {table_data[43:0],dstaddr[19:0]}
+ #
  #
  ############################################################################
  */

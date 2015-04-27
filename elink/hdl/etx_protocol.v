@@ -112,8 +112,6 @@ module etx_protocol (/*AUTOARG*/
    reg [127:0]   tx_data_reg;  //sample transaction on one clock cycle
    reg 		 rd_wait_sync;
    reg 		 wr_wait_sync;
-   reg 		 etx_rd_wait;
-   reg 		 etx_wr_wait;
 
    wire 	 etx_write;
    wire [1:0] 	 etx_datamode;
@@ -201,13 +199,21 @@ module etx_protocol (/*AUTOARG*/
    //# Wait signals (async)
    //#############################
 
-   always @ (posedge tx_lclk_div4) 
-     begin
-	rd_wait_sync <= tx_rd_wait;
-	etx_rd_wait  <= rd_wait_sync;
-	wr_wait_sync <= tx_wr_wait;
-	etx_wr_wait  <= wr_wait_sync;
-     end
+   synchronizer #(.DW(1)) rd_sync (// Outputs
+				   .out		(etx_rd_wait),
+				   // Inputs
+				   .in		(tx_rd_wait),
+				   .clk		(tx_lclk_div4),
+				   .reset	(reset)
+				   );
+   
+   synchronizer #(.DW(1)) wr_sync (// Outputs
+				   .out		(etx_wr_wait),
+				   // Inputs
+				   .in		(tx_wr_wait),
+				   .clk		(tx_lclk_div4),
+				   .reset	(reset)
+				   );
 
    //#############################
    //# Pipeline stall

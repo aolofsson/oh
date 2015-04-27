@@ -173,7 +173,9 @@ module etx(/*AUTOARG*/
     */
 
    //Write fifo (from slave)
-   wire txwr_access_gated = txwr_access & ~(txwr_packet[39:28]==ID); 
+
+   wire txwr_access_gated = txwr_access & ~((txwr_packet[39:28]==ID) & (txwr_packet[27:24]==`EGROUP_TX)); //test feature, should never happen
+
    fifo_async #(.DW(104), .AW(5)) txwr_fifo(.wr_en		(txwr_access_gated),
 					    .prog_full		(txwr_wait),
 					    .full		(txwr_fifo_full),
@@ -190,7 +192,7 @@ module etx(/*AUTOARG*/
 					    .rd_en		(txwr_fifo_read)); // Templated
    
    //Read request fifo (from slave)
-   wire txrd_access_gated = txrd_access & ~(txrd_packet[39:28]==ID); 
+   wire txrd_access_gated = txrd_access & ~((txrd_packet[39:28]==ID)); 
    fifo_async  #(.DW(104), .AW(5)) txrd_fifo(.wr_en		(txrd_access_gated),
 					     .prog_full		(txrd_wait),
 					     .full		(txrd_fifo_full),

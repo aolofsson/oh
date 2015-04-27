@@ -82,15 +82,15 @@ module etx_arbiter (/*AUTOARG*/
    //Current implementation can deadlock!! (move rd below rr)   
    
    // priority-based ready signals
-   assign     wr_ready = ~txwr_fifo_empty & ~etx_wr_wait;                        //highest
-   assign     rd_ready = ~txrd_fifo_empty & ~etx_rd_wait & ~wr_ready;
-   assign     rr_ready = ~txrr_fifo_empty & ~etx_wr_wait & ~wr_ready & ~rd_ready;//lowest
+   assign wr_ready = ~txwr_fifo_empty & ~etx_wr_wait;   //highest
+   assign rd_ready = ~txrd_fifo_empty & ~etx_rd_wait & ~wr_ready;
+   assign rr_ready = ~txrr_fifo_empty & ~etx_wr_wait & ~wr_ready & ~rd_ready;//lowest
    
    // FIFO read enables (one hot)
    // Hold until transaction has been accepted by IO
-   assign     txrr_fifo_read = rr_ready & (~etx_access | etx_io_wait);
-   assign     txrd_fifo_read = rd_ready & (~etx_access | etx_io_wait);
-   assign     txwr_fifo_read = wr_ready & (~etx_access | etx_io_wait);
+   assign txrr_fifo_read = rr_ready & (~etx_access | etx_io_wait);
+   assign txrd_fifo_read = rd_ready & (~etx_access | etx_io_wait);
+   assign txwr_fifo_read = wr_ready & (~etx_access | etx_io_wait);
    
    //Selecting control mode on slave transcations
    assign txrd_ctrlmode[3:0] =  ecfg_tx_ctrlmode_bp ? ecfg_tx_ctrlmode[3:0] : 
