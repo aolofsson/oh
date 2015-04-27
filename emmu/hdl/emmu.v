@@ -83,7 +83,7 @@ module emmu (/*AUTOARG*/
    /*****************************/
    /*MMU WRITE LOGIC            */
    /*****************************/
-   assign mi_match       = mi_en & (mi_addr[19:16]==GROUP);
+   assign mi_match       = mi_en & (mi_addr[19:16]==GROUP) & (mi_addr[15]);
 
    //write controls
    assign mi_wr_vec[5:0] = (mi_match & mi_we & ~mi_addr[2]) ? 6'b001111 :
