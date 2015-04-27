@@ -17,7 +17,7 @@
 module etx_arbiter (/*AUTOARG*/
    // Outputs
    txwr_fifo_read, txrd_fifo_read, txrr_fifo_read, etx_access,
-   etx_packet, etx_rr,
+   etx_packet, etx_rr, etx_read,
    // Inputs
    tx_lclk_div4, reset, ecfg_tx_ctrlmode_bp, ecfg_tx_ctrlmode,
    txwr_fifo_empty, txwr_fifo_packet, txrd_fifo_empty,
@@ -59,7 +59,9 @@ module etx_arbiter (/*AUTOARG*/
    input           etx_wr_wait;
    input 	   etx_io_wait;   
 
-   
+   //For ERX timeout circuit
+   output 	   etx_read;
+     
    //regs
    reg 		   etx_access;
    reg [PW-1:0]    etx_packet;
@@ -120,7 +122,11 @@ module etx_arbiter (/*AUTOARG*/
 	begin
 	   etx_access <= 1'b0;	   
 	end   
-   	                                            
+   	              
+
+   assign etx_read = txrd_fifo_read;
+   
+                              
 endmodule // etx_arbiter
 /*
   File: etx_arbiter.v

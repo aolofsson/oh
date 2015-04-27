@@ -8,7 +8,7 @@
 module ecfg_rx (/*AUTOARG*/
    // Outputs
    mi_dout, rx_enable, mmu_enable, remap_mode, remap_base,
-   remap_pattern, remap_sel,
+   remap_pattern, remap_sel, timer_cfg,
    // Inputs
    reset, mi_clk, mi_en, mi_we, mi_addr, mi_din, gpio_datain,
    debug_vector
@@ -47,6 +47,7 @@ module ecfg_rx (/*AUTOARG*/
    output [31:0] remap_base;   //base for dynamic remap 
    output [11:0] remap_pattern;//patter for static remap
    output [11:0] remap_sel;    //selects for static remap 
+   output [1:0]  timer_cfg;    //timeout config (00=off)
    
    /*------------------------CODE BODY---------------------------------------*/
    
@@ -91,7 +92,8 @@ module ecfg_rx (/*AUTOARG*/
    assign remap_mode[1:0]     = ecfg_rx_reg[3:2];
    assign remap_sel[11:0]     = ecfg_rx_reg[15:4];
    assign remap_pattern[11:0] = ecfg_rx_reg[27:16];
-   
+   assign timer_cfg[1:0]      = ecfg_rx_reg[29:28];
+      
    //###########################
    //# DATAIN (synchronized)
    //###########################

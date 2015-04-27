@@ -6,7 +6,8 @@ module erx (/*AUTOARG*/
    // Inputs
    reset, rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n,
    rxi_data_p, rxi_data_n, rxwr_clk, rxwr_wait, rxrd_clk, rxrd_wait,
-   rxrr_clk, rxrr_wait, mi_clk, mi_en, mi_we, mi_addr, mi_din
+   rxrr_clk, rxrr_wait, mi_clk, mi_en, mi_we, mi_addr, mi_din,
+   etx_read
    );
 
    parameter AW      = 32;
@@ -49,6 +50,9 @@ module erx (/*AUTOARG*/
    input [19:0]    mi_addr;
    input [31:0]    mi_din;
    output [31:0]   mi_dout;
+
+   //Starts timeout counter
+   input 	   etx_read;
   
    //Mailbox signals
    output 	   mailbox_full;
@@ -68,6 +72,7 @@ module erx (/*AUTOARG*/
    wire			erx_access;		// From erx_protocol of erx_protocol.v
    wire [PW-1:0]	erx_packet;		// From erx_protocol of erx_protocol.v
    wire			erx_rr;			// From erx_protocol of erx_protocol.v
+   wire			erx_timeout;		// From erx_timer of erx_timer.v
    wire			erx_wait;		// From erx_disty of erx_disty.v
    wire [8:0]		gpio_datain;		// From erx_io of erx_io.v
    wire [DW-1:0]	mi_rx_cfg_dout;		// From ecfg_rx of ecfg_rx.v
@@ -94,6 +99,7 @@ module erx (/*AUTOARG*/
    wire			rxwr_fifo_access;	// From erx_disty of erx_disty.v
    wire [PW-1:0]	rxwr_fifo_packet;	// From erx_disty of erx_disty.v
    wire			rxwr_fifo_wait;		// From rxwr_fifo of fifo_async.v
+   wire [1:0]		timer_cfg;		// From ecfg_rx of ecfg_rx.v
    // End of automatics
 
    //regs
@@ -126,6 +132,7 @@ module erx (/*AUTOARG*/
 		    .remap_base		(remap_base[31:0]),
 		    .remap_pattern	(remap_pattern[11:0]),
 		    .remap_sel		(remap_sel[11:0]),
+		    .timer_cfg		(timer_cfg[1:0]),
 		    // Inputs
 		    .reset		(reset),
 		    .mi_clk		(mi_clk),
@@ -152,6 +159,25 @@ module erx (/*AUTOARG*/
 		    .mi_rx_edma_dout	(mi_rx_edma_dout[DW-1:0]),
 		    .mi_rx_emmu_dout	(mi_rx_emmu_dout[DW-1:0]));
    
+   
+   /************************************************************/
+   /* READ REQUEST TIMEOUT CIRCUIT                             */
+   /************************************************************/
+   /*erx_timer AUTO_TEMPLATE (.clk         (rx_lclk_div4),
+                            .stop_count	 (rxrr_fifo_access),
+			    .start_count (etx_read),
+            
+    );
+    */
+   erx_timer erx_timer(/*AUTOINST*/
+		       // Outputs
+		       .erx_timeout	(erx_timeout),
+		       // Inputs
+		       .clk		(rx_lclk_div4),		 // Templated
+		       .reset		(reset),
+		       .timer_cfg	(timer_cfg[1:0]),
+		       .stop_count	(rxrr_fifo_access),	 // Templated
+		       .start_count	(etx_read));		 // Templated
    
    /************************************************************/
    /*FIFOs                                                     */
@@ -301,7 +327,8 @@ module erx (/*AUTOARG*/
 			.edma_packet	(edma_packet[PW-1:0]),
 			.rxwr_fifo_wait	(rxwr_fifo_wait),
 			.rxrd_fifo_wait	(rxrd_fifo_wait),
-			.rxrr_fifo_wait	(rxrr_fifo_wait));
+			.rxrr_fifo_wait	(rxrr_fifo_wait),
+			.erx_timeout	(erx_timeout));
 
 
    /************************************************************/

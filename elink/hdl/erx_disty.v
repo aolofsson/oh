@@ -5,7 +5,8 @@ module erx_disty (/*AUTOARG*/
    rxrr_fifo_access, rxrr_fifo_packet,
    // Inputs
    erx_access, erx_packet, emmu_access, emmu_packet, edma_access,
-   edma_packet, rxwr_fifo_wait, rxrd_fifo_wait, rxrr_fifo_wait
+   edma_packet, rxwr_fifo_wait, rxrd_fifo_wait, rxrr_fifo_wait,
+   erx_timeout
    );
 
    parameter [11:0]  C_READ_TAG_ADDR = 12'h810;
@@ -44,7 +45,10 @@ module erx_disty (/*AUTOARG*/
    output 	   rxrr_fifo_access;
    output [PW-1:0] rxrr_fifo_packet;   
    input           rxrr_fifo_wait;
-    
+
+   //Timeout indicator
+   input 	   erx_timeout;
+      
    //wires
    wire            emmu_write;
    wire [1:0]      emmu_datamode;
@@ -94,12 +98,16 @@ module erx_disty (/*AUTOARG*/
    //Read response path (direct)
    //####################################
 
-   assign rxrr_fifo_access         = erx_access & 
+   assign rxrr_fifo_access         = erx_timeout |
+				     (erx_access & 
 				     erx_write & 
 				     (erx_dstaddr[31:20] == ID) & 
-				     (erx_dstaddr[19:16]==`EGROUP_READTAG);
+				     (erx_dstaddr[19:16]==`EGROUP_READTAG));
    
-   assign rxrr_fifo_packet[PW-1:0] = erx_packet[PW-1:0];
+   assign rxrr_fifo_packet[PW-1:0] = erx_timeout ? {32'h0,32'hDEADBEEF,
+						    ID,`EGROUP_READTAG,16'h0000,
+                                                    8'h03} : 
+   				                  erx_packet[PW-1:0];
       
    //####################################
    //Write Path (direct)

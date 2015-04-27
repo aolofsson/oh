@@ -367,6 +367,7 @@ module elink(/*AUTOARG*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [15:0]		ecfg_clk_settings;	// From ecfg_base of ecfg_base.v
+   wire			etx_read;		// From etx of etx.v
    wire [19:0]		mi_addr;		// From ecfg_if of ecfg_if.v
    wire			mi_clk;			// From ecfg_if of ecfg_if.v
    wire [31:0]		mi_din;			// From ecfg_if of ecfg_if.v
@@ -511,7 +512,8 @@ module elink(/*AUTOARG*/
 	   .mi_en			(mi_en),
 	   .mi_we			(mi_we),
 	   .mi_addr			(mi_addr[19:0]),
-	   .mi_din			(mi_din[31:0]));
+	   .mi_din			(mi_din[31:0]),
+	   .etx_read			(etx_read));
 
    /***********************************************************/
    /*TRANSMITTER                                              */
@@ -531,6 +533,7 @@ module elink(/*AUTOARG*/
 	   .txrd_wait			(txrd_wait),
 	   .txwr_wait			(txwr_wait),
 	   .txrr_wait			(txrr_wait),
+	   .etx_read			(etx_read),
 	   .txo_lclk_p			(txo_lclk_p),
 	   .txo_lclk_n			(txo_lclk_n),
 	   .txo_frame_p			(txo_frame_p),

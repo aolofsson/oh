@@ -1,7 +1,7 @@
 module etx(/*AUTOARG*/
    // Outputs
-   mi_dout, txrd_wait, txwr_wait, txrr_wait, txo_lclk_p, txo_lclk_n,
-   txo_frame_p, txo_frame_n, txo_data_p, txo_data_n,
+   mi_dout, txrd_wait, txwr_wait, txrr_wait, etx_read, txo_lclk_p,
+   txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p, txo_data_n,
    // Inputs
    reset, tx_lclk, tx_lclk90, tx_lclk_div4, mi_clk, mi_en, mi_we,
    mi_addr, mi_din, txrd_clk, txrd_access, txrd_packet, txwr_clk,
@@ -44,6 +44,9 @@ module etx(/*AUTOARG*/
    input 	  txrr_access;
    input [PW-1:0] txrr_packet;
    output 	  txrr_wait;
+
+   //For ERX timeout circuit
+   output 	  etx_read;
    
    //Transmit signals for IO
    output        txo_lclk_p, txo_lclk_n;       //tx center aligned clock (>500MHz)
@@ -236,6 +239,7 @@ module etx(/*AUTOARG*/
 			    .etx_access		(etx_access),
 			    .etx_packet		(etx_packet[PW-1:0]),
 			    .etx_rr		(etx_rr),
+			    .etx_read		(etx_read),
 			    // Inputs
 			    .tx_lclk_div4	(tx_lclk_div4),
 			    .reset		(reset),
