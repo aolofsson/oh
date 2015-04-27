@@ -2,7 +2,7 @@
 module fifo_async 
    (/*AUTOARG*/
    // Outputs
-   full, prog_full, dout, empty,
+   full, prog_full, dout, empty, valid,
    // Inputs
    reset, wr_clk, rd_clk, wr_en, din, rd_en
    );
@@ -32,8 +32,11 @@ module fifo_async
    input 	   rd_en;
    output [DW-1:0] dout;
    output          empty;
+   output          valid;
 
-
+   
+   reg 		   valid;
+   
 `ifdef TARGET_CLEAN
    //Wires
    wire [DW/8-1:0] wr_vec;
@@ -46,6 +49,11 @@ module fifo_async
 
    
    assign wr_vec[DW/8-1:0] = {(DW/8){wr_en}};
+
+
+   //Valid data in FIFO
+   always @ (posedge rd_clk)
+     valid <= rd_en;
    
    memory_dp #(.DW(DW),.AW(AW)) memory_dp (
 					   // Outputs
