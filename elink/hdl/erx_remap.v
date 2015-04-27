@@ -48,7 +48,7 @@ module erx_remap (/*AUTOARG*/
 
    //simple static remap
    assign static_remap[31:20] = (remap_sel[11:0] & remap_pattern[11:0]) |
-			        (~remap_sel[11:0] & addr_in[31:0]);
+			        (~remap_sel[11:0] & addr_in[31:20]);
 
    assign static_remap[19:0]  = addr_in[19:0];
     
