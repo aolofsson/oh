@@ -63,7 +63,9 @@ module etx(/*AUTOARG*/
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire			ecfg_access;		// From ecfg_tx of ecfg_tx.v
    wire [8:0]		ecfg_dataout;		// From ecfg_tx of ecfg_tx.v
+   wire [PW-1:0]	ecfg_packet;		// From ecfg_tx of ecfg_tx.v
    wire [3:0]		ecfg_tx_ctrlmode;	// From ecfg_tx of ecfg_tx.v
    wire			ecfg_tx_ctrlmode_bp;	// From ecfg_tx of ecfg_tx.v
    wire			ecfg_tx_enable;		// From ecfg_tx of ecfg_tx.v
@@ -120,6 +122,8 @@ module etx(/*AUTOARG*/
 		    .ecfg_tx_ctrlmode_bp(ecfg_tx_ctrlmode_bp),
 		    .ecfg_tx_remap_enable(ecfg_tx_remap_enable),
 		    .ecfg_dataout	(ecfg_dataout[8:0]),
+		    .ecfg_access	(ecfg_access),
+		    .ecfg_packet	(ecfg_packet[PW-1:0]),
 		    // Inputs
 		    .reset		(reset),
 		    .mi_clk		(mi_clk),
@@ -337,6 +341,8 @@ module etx(/*AUTOARG*/
 			      .ecfg_dataout	(ecfg_dataout[8:0]),
 			      .ecfg_tx_enable	(ecfg_tx_enable),
 			      .ecfg_tx_gpio_enable(ecfg_tx_gpio_enable),
+			      .ecfg_access	(ecfg_access),
+			      .ecfg_packet	(ecfg_packet[PW-1:0]),
 			      .reset		(reset),
 			      .tx_lclk_div4	(tx_lclk_div4),
 			      .tx_rd_wait	(tx_rd_wait),

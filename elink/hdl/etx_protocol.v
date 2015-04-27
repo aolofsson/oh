@@ -70,8 +70,8 @@ module etx_protocol (/*AUTOARG*/
    tx_data_par,
    // Inputs
    etx_access, etx_packet, ecfg_tx_tp_enable, ecfg_dataout,
-   ecfg_tx_enable, ecfg_tx_gpio_enable, reset, tx_lclk_div4,
-   tx_rd_wait, tx_wr_wait
+   ecfg_tx_enable, ecfg_tx_gpio_enable, ecfg_access, ecfg_packet,
+   reset, tx_lclk_div4, tx_rd_wait, tx_wr_wait
    );
 
    parameter PW = 104;
@@ -91,6 +91,10 @@ module etx_protocol (/*AUTOARG*/
    input [8:0]    ecfg_dataout;
    input 	  ecfg_tx_enable;
    input 	  ecfg_tx_gpio_enable;
+
+   //Test Insertion
+   input 	  ecfg_access;
+   input [PW-1:0] ecfg_packet;
    
    // IO side (8 eLink bytes at a time)
    input 	  reset;
@@ -117,9 +121,23 @@ module etx_protocol (/*AUTOARG*/
    wire [AW-1:0] etx_dstaddr;
    wire [DW-1:0] etx_data;
    wire [AW-1:0] etx_srcaddr;
-   
+   wire 	 access_mux;
+   wire 	 ecfg_access_sync;
+   wire [PW-1:0] packet_mux;
+	 
+   //Synchronize access signal
+   synchronizer #(.DW(1)) synchronizer(.out		(ecfg_access_sync),
+				      .in		(ecfg_access),
+				      .clk		(tx_lclk_div4),
+				      .reset		(reset)
+				      );
 
- 
+   assign access_mux = ecfg_access_sync | etx_access;
+
+
+   assign packet_mux[PW-1:0] = ecfg_access_sync ? ecfg_packet[PW-1:0] :
+	                                          etx_packet[PW-1:0];
+
    //packet to emesh bundle
    packet2emesh p2m (
 		     // Outputs
@@ -131,7 +149,9 @@ module etx_protocol (/*AUTOARG*/
 		     .data_out		(etx_data[31:0]),
 		     .srcaddr_out	(etx_srcaddr[31:0]),
 		     // Inputs
-		     .packet_in		(etx_packet[PW-1:0]));
+		     .packet_in		(packet_mux[PW-1:0]));
+
+  
       
    // TODO: Bursts
    always @( posedge tx_lclk_div4 or posedge reset ) 
@@ -144,7 +164,7 @@ module etx_protocol (/*AUTOARG*/
 	  end 
 	else 
 	  begin
-             if( etx_access & etx_sample ) //first cycle
+             if( access_mux & etx_sample ) //first cycle
 	       begin
 		  etx_sample          <= 1'b0;
 		  tx_frame_par[7:0]   <= 8'h3F;
