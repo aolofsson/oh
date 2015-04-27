@@ -1,13 +1,69 @@
-/*
- ########################################################################
- EPIPHANY eLink TX Protocol block
- ########################################################################
- 
- This block takes standard eMesh protocol (104-bit transactions) and
- encodes the bytes into 8-byte parallel outputs for the output 
- serializers.
- */
-
+//########################################################################
+//# ELINK TX Protocol block
+//########################################################################
+//#
+//# The etx_protocol block implements a transmitter for communicating with
+//# the Epiphany receiver per the documentation seen below.
+//#
+//# The output transaction has an option of the bursting where data of 
+//# the new transaction is sent without the address. In such a case the
+//# address of the transaction will be determined in the receiver according 
+//# to the address of the previous transaction.
+//#
+//#        ___     ___     ___     ___     ___     ___
+//# lclk _|   |___|   |___|   |___|   |___|   |___|   |_
+//#
+//#              -------------------------------
+//# frame ______/
+//#              --- --- --- --- ---
+//# data  XXXXXXX 0 X 1 X 2 X 3 X 4 X .....
+//#              --- --- --- --- ---
+//#
+//#  Transaction structure:
+//#  -------------------------
+//#   byte0  -> 00000000
+//#   byte1  -> ctrlmode[3:0],dstaddr[31:28]
+//#   byte2  -> dstaddr[27:20]
+//#   byte3  -> dstaddr[19:12]
+//#   byte4  -> dstaddr[11:4]
+//#   byte5  -> dstaddr[3:0],datamode[1:0],write,access
+//#   byte6  -> data[31:24] (or srcaddr[31:24] if read transaction)
+//#   byte7  -> data[23:16] (or srcaddr[23:16] if read transaction)
+//#   byte8  -> data[15:8]  (or srcaddr[15:8]  if read transaction)
+//#  *byte9  -> data[7:0]   (or srcaddr[7:0]   if read transaction)
+//#   byte10 -> data[63:56]  
+//#   byte11 -> data[55:48]  
+//#   byte12 -> data[47:40]  
+//#   byte13 -> data[39:32]  
+//# **byte14 -> data[31:24]  
+//#    ...
+//#    ...
+//#    ...
+//#
+//#  * byte9 is the last byte of 32 bit write or read transaction 
+//#   
+//# ** if 64 bit write transaction, data of byte14 is the first data byte of
+//#    bursting transaction
+//# 
+//# -- The data is transmitted MSB first but in 32bits resolution. If we want
+//#    to transmit 64 bits it will be [31:0] (msb first) and then [63:32] 
+//#    (msb first)
+//#
+//# Wait indication to the transmitter (from Epiphany chip receiver):
+//#
+//# When one of the secondary fifos becomes full we send wait indication 
+//# to the transmitter.
+//# There is some uncertainty regarding how long it will take for the wait 
+//# control to stop the transmitter (we have synchronization on the way, 
+//# which may cause +/-1 cycle of uncertainty).
+//# Our main fifo on the input port of the receiver is robust enough
+//# (has enough entries) to receive all of the transactions sent during the
+//# time of "wait traveling" without loosing any information.
+//# But the uncertainty mentioned above forces us to start from empty fifo
+//# every time after wait indication is raised in order to ensure that 
+//# the number of available entries won't be reduced.
+//#              
+//#####################################################################
 module etx_protocol (/*AUTOARG*/
    // Outputs
    etx_rd_wait, etx_wr_wait, etx_wait, etx_io_wait, tx_frame_par,
