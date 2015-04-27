@@ -154,7 +154,7 @@ module etx(/*AUTOARG*/
 
    /*fifo_async  AUTO_TEMPLATE (
 			       // Outputs
-			       
+			       .valid	   (),//TODO: Use??
 			       .dout       (@"(substring vl-cell-name  0 4)"_fifo_packet[PW-1:0]),
 			       .empty	   (@"(substring vl-cell-name  0 4)"_fifo_empty),
 			       .full	   (@"(substring vl-cell-name  0 4)"_fifo_full),
@@ -178,6 +178,7 @@ module etx(/*AUTOARG*/
 					    // Outputs
 					    .dout		(txwr_fifo_packet[PW-1:0]), // Templated
 					    .empty		(txwr_fifo_empty), // Templated
+					    .valid		(),		 // Templated
 					    // Inputs
 					    .reset		(reset),	 // Templated
 					    .wr_clk		(txwr_clk),	 // Templated
@@ -194,6 +195,7 @@ module etx(/*AUTOARG*/
 					     // Outputs
 					     .dout		(txrd_fifo_packet[PW-1:0]), // Templated
 					     .empty		(txrd_fifo_empty), // Templated
+					     .valid		(),		 // Templated
 					     // Inputs
 					     .reset		(reset),	 // Templated
 					     .wr_clk		(txrd_clk),	 // Templated
@@ -211,6 +213,7 @@ module etx(/*AUTOARG*/
 					     // Outputs
 					     .dout		(txrr_fifo_packet[PW-1:0]), // Templated
 					     .empty		(txrr_fifo_empty), // Templated
+					     .valid		(),		 // Templated
 					     // Inputs
 					     .reset		(reset),	 // Templated
 					     .wr_clk		(txrr_clk),	 // Templated

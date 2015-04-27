@@ -72,9 +72,9 @@ module etx_arbiter (/*AUTOARG*/
    wire [3:0] 	   txrd_ctrlmode;
    wire [3:0] 	   txwr_ctrlmode;
    
-   //#############################################################################
+   //##########################################################################
    //# Arbitrate & forward
-   //#############################################################################
+   //##########################################################################
    //TODO: Add weighted round robin arbiter
    //Host-slave should always be able to get "1" read or write in there.
    //Current implementation can deadlock!! (move rd below rr)   
@@ -101,7 +101,7 @@ module etx_arbiter (/*AUTOARG*/
       if( reset ) 
 	begin
            etx_access         <= 1'b0;
-	   etx_rr             <= 1'b0;//only way to differentiate between 'rr' and 'wr'
+	   etx_rr             <= 1'b0;//only way to diff between 'rr' and 'wr'
 	   etx_packet[PW-1:0] <= 'd0;
 	end 
       else if (txrr_fifo_read | txrd_fifo_read | txwr_fifo_read )

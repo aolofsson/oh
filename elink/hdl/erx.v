@@ -106,10 +106,6 @@ module erx (/*AUTOARG*/
    wire 	rxrr_empty;
    wire [103:0] edma_packet;		// From edma of edma.v, ...
 
-   reg 		rxrd_access;
-   reg 		rxwr_access;
-   reg 		rxrr_access;
-   
 
    /************************************************************/
    /* ERX CONFIGURATION                                        */
@@ -169,6 +165,7 @@ module erx (/*AUTOARG*/
 			       .empty	   (@"(substring vl-cell-name  0 4)"_empty),
 			       .full	   (@"(substring vl-cell-name  0 4)"_fifo_full),
 			       .prog_full  (@"(substring vl-cell-name  0 4)"_fifo_wait),
+    			       .valid      (@"(substring vl-cell-name  0 4)"_access),
 			       // Inputs
 			       .rd_clk	   (@"(substring vl-cell-name  0 4)"_clk),
                                .wr_clk	   (rx_lclk_div4),
@@ -191,6 +188,7 @@ module erx (/*AUTOARG*/
 		// Outputs
 		.prog_full		(rxrd_fifo_wait),	 // Templated
 		.dout			(rxrd_packet[PW-1:0]),	 // Templated
+		.valid			(rxrd_access),		 // Templated
 		// Inputs
 		.reset			(reset),		 // Templated
 		.wr_clk			(rx_lclk_div4),		 // Templated
@@ -209,6 +207,7 @@ module erx (/*AUTOARG*/
 	     // Outputs
 	     .prog_full			(rxwr_fifo_wait),	 // Templated
 	     .dout			(rxwr_packet[PW-1:0]),	 // Templated
+	     .valid			(rxwr_access),		 // Templated
 	     // Inputs
 	     .reset			(reset),		 // Templated
 	     .wr_clk			(rx_lclk_div4),		 // Templated
@@ -227,6 +226,7 @@ module erx (/*AUTOARG*/
 	     // Outputs
 	     .prog_full			(rxrr_fifo_wait),	 // Templated
 	     .dout			(rxrr_packet[PW-1:0]),	 // Templated
+	     .valid			(rxrr_access),		 // Templated
 	     // Inputs
 	     .reset			(reset),		 // Templated
 	     .wr_clk			(rx_lclk_div4),		 // Templated
@@ -234,26 +234,7 @@ module erx (/*AUTOARG*/
 	     .wr_en			(rxrr_fifo_access),	 // Templated
 	     .din			(rxrr_fifo_packet[PW-1:0]), // Templated
 	     .rd_en			(~rxrr_wait & ~rxrr_empty)); // Templated
-   
-   always @ (posedge rxwr_clk or posedge reset)
-     if(reset)       
-	  rxwr_access <= 1'b0;
-     else
-       rxwr_access = ~rxwr_empty;
-   
-  always @ (posedge rxrd_clk or posedge reset)
-     if(reset)       
-	  rxrd_access <= 1'b0;
-     else
-       rxrd_access = ~rxrd_empty;
-   
-  always @ (posedge rxrr_clk or posedge reset)
-     if(reset)       
-	  rxrr_access <= 1'b0;
-     else
-       rxrr_access = ~rxrr_empty;
-   
-   
+      
    /***********************************************************/
    /*GENERAL PURPOSE MAILBOX                                  */
    /***********************************************************/
