@@ -146,6 +146,7 @@ module dv_elink(/*AUTOARG*/
 		.txwr_wait		(txwr_wait),
 		.rxrr_wait		(ext_wr_wait),
 		.rxwr_wait		(1'b0),
+		.timeout		(timeout),
 		/*AUTOINST*/
 		// Outputs
 		.rxo_wr_wait_p		(wr_wait_p),		 // Templated

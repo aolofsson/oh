@@ -256,7 +256,7 @@ module elink(/*AUTOARG*/
    colid, rowid, chip_resetb, cclk_p, cclk_n, rxo_wr_wait_p,
    rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n, txo_lclk_p,
    txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p, txo_data_n,
-   mailbox_not_empty, mailbox_full, rxwr_access, rxwr_packet,
+   mailbox_not_empty, mailbox_full, timeout, rxwr_access, rxwr_packet,
    rxrd_access, rxrd_packet, rxrr_access, rxrr_packet, txwr_wait,
    txrd_wait, txrr_wait,
    // Inputs
@@ -311,6 +311,11 @@ module elink(/*AUTOARG*/
    /*****************************/
    output       mailbox_not_empty;   
    output       mailbox_full;
+
+   /*****************************/
+   /*READBACK TIMEOUT           */
+   /*****************************/
+   output 	timeout;
 
    /*****************************/
    /*"Bus" Interface            */
@@ -494,6 +499,7 @@ module elink(/*AUTOARG*/
 	   .mi_dout			(mi_rx_dout[31:0]),	 // Templated
 	   .mailbox_full		(mailbox_full),
 	   .mailbox_not_empty		(mailbox_not_empty),
+	   .timeout			(timeout),
 	   // Inputs
 	   .reset			(reset),
 	   .rxi_lclk_p			(rxi_lclk_p),

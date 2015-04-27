@@ -2,7 +2,7 @@ module erx (/*AUTOARG*/
    // Outputs
    rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n,
    rxwr_access, rxwr_packet, rxrd_access, rxrd_packet, rxrr_access,
-   rxrr_packet, mi_dout, mailbox_full, mailbox_not_empty,
+   rxrr_packet, mi_dout, mailbox_full, mailbox_not_empty, timeout,
    // Inputs
    reset, rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n,
    rxi_data_p, rxi_data_n, rxwr_clk, rxwr_wait, rxrd_clk, rxrd_wait,
@@ -58,6 +58,10 @@ module erx (/*AUTOARG*/
    output 	   mailbox_full;
    output 	   mailbox_not_empty;
 
+   //Readback timeout
+   output 	   timeout;
+   
+   
    /*AUTOOUTPUT*/
    /*AUTOINPUT*/
 
@@ -72,7 +76,6 @@ module erx (/*AUTOARG*/
    wire			erx_access;		// From erx_protocol of erx_protocol.v
    wire [PW-1:0]	erx_packet;		// From erx_protocol of erx_protocol.v
    wire			erx_rr;			// From erx_protocol of erx_protocol.v
-   wire			erx_timeout;		// From erx_timer of erx_timer.v
    wire			erx_wait;		// From erx_disty of erx_disty.v
    wire [8:0]		gpio_datain;		// From erx_io of erx_io.v
    wire [DW-1:0]	mi_rx_cfg_dout;		// From ecfg_rx of ecfg_rx.v
@@ -164,14 +167,15 @@ module erx (/*AUTOARG*/
    /* READ REQUEST TIMEOUT CIRCUIT                             */
    /************************************************************/
    /*erx_timer AUTO_TEMPLATE (.clk         (rx_lclk_div4),
-                            .stop_count	 (rxrr_fifo_access),
-			    .start_count (etx_read),
+                              .stop_count  (rxrr_fifo_access),
+			      .start_count (etx_read),
+                              .erx_timeout (timeout),
             
     );
     */
    erx_timer erx_timer(/*AUTOINST*/
 		       // Outputs
-		       .erx_timeout	(erx_timeout),
+		       .timeout		(timeout),
 		       // Inputs
 		       .clk		(rx_lclk_div4),		 // Templated
 		       .reset		(reset),
@@ -328,7 +332,7 @@ module erx (/*AUTOARG*/
 			.rxwr_fifo_wait	(rxwr_fifo_wait),
 			.rxrd_fifo_wait	(rxrd_fifo_wait),
 			.rxrr_fifo_wait	(rxrr_fifo_wait),
-			.erx_timeout	(erx_timeout));
+			.timeout	(timeout));
 
 
    /************************************************************/
