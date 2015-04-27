@@ -131,7 +131,7 @@ module ecfg_rx (/*AUTOARG*/
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
          `ELRXCFG:   mi_dout[31:0] <= {ecfg_rx_reg[31:0]};
-         `ELRXDIN:   mi_dout[31:0] <= {23'b0, ecfg_datain_reg[8:0]};
+         `ELRXGPIO:  mi_dout[31:0] <= {23'b0, ecfg_datain_reg[8:0]};
 	 `ELRXBASE:  mi_dout[31:0] <= {ecfg_base_reg[31:0]};
          default:    mi_dout[31:0] <= 32'd0;
        endcase

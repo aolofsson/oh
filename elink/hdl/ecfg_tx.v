@@ -54,7 +54,7 @@ module ecfg_tx (/*AUTOARG*/
    
    //registers
 
-   reg [9:0] 	   ecfg_tx_config_reg;
+   reg [10:0] 	   ecfg_tx_config_reg;
    reg [8:0] 	   ecfg_tx_gpio_reg;
    reg [15:0] 	   ecfg_tx_status_reg;
    reg [8:0] 	   ecfg_tx_test_reg;
@@ -96,18 +96,17 @@ module ecfg_tx (/*AUTOARG*/
    //###########################
    always @ (posedge mi_clk)
      if(reset)
-       ecfg_tx_config_reg[9:0] <= 10'b0;
+       ecfg_tx_config_reg[10:0] <= 11'b0;
      else if (ecfg_tx_config_write)
-       ecfg_tx_config_reg[9:0] <= mi_din[9:0];
+       ecfg_tx_config_reg[10:0] <= mi_din[10:0];
 
    assign ecfg_tx_enable          = ecfg_tx_config_reg[0];
    assign ecfg_tx_mmu_enable      = ecfg_tx_config_reg[1];   
-   assign ecfg_tx_gpio_enable     = (ecfg_tx_config_reg[3:2]==2'b01);
-   assign ecfg_tx_tp_enable       = (ecfg_tx_config_reg[3:2]==2'b10);//test pattern
+   assign ecfg_tx_remap_enable    = ecfg_tx_config_reg[3:2]==2'b01;
    assign ecfg_tx_ctrlmode[3:0]   = ecfg_tx_config_reg[7:4];
    assign ecfg_tx_ctrlmode_bp     = ecfg_tx_config_reg[8];
-   assign ecfg_tx_remap_enable    = ecfg_tx_config_reg[9];
-
+   assign ecfg_tx_gpio_enable     = (ecfg_tx_config_reg[10:9]==2'b01);
+   assign ecfg_tx_tp_enable       = (ecfg_tx_config_reg[10:9]==2'b10);//test pattern
    //###########################1
    //# STATUS REGISTER
    //###########################
@@ -207,7 +206,7 @@ module ecfg_tx (/*AUTOARG*/
    always @ (posedge mi_clk)
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
-         `ELTXCFG:    mi_dout[31:0] <= {23'b0, ecfg_tx_config_reg[8:0]};
+         `ELTXCFG:    mi_dout[31:0] <= {21'b0, ecfg_tx_config_reg[10:0]};
          `ELTXGPIO:   mi_dout[31:0] <= {23'b0, ecfg_tx_gpio_reg[8:0]};
 	 `ELTXSTATUS: mi_dout[31:0] <= {16'b0, ecfg_tx_status_reg[15:0]};
          default:     mi_dout[31:0] <= 32'd0;

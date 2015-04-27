@@ -76,7 +76,7 @@ module ecfg_base (/*AUTOARG*/
    //Config write enables
    assign ecfg_reset_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ELRESET);
    assign ecfg_clk_write      = ecfg_write & (mi_addr[RFAW+1:2]==`ELCLK);
-   assign ecfg_coreid_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ELCOREID);
+   assign ecfg_coreid_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ELCHIPID);
    assign ecfg_version_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ELVERSION);
    
    //###########################
@@ -133,7 +133,7 @@ module ecfg_base (/*AUTOARG*/
        case(mi_addr[RFAW+1:2])
          `ELRESET:   mi_dout[31:0] <= {31'b0, ecfg_reset_reg};
          `ELCLK:     mi_dout[31:0] <= {24'b0, ecfg_clk_reg[7:0]};
-         `ELCOREID:  mi_dout[31:0] <= {20'b0, ecfg_coreid_reg[11:0]};
+         `ELCHIPID:  mi_dout[31:0] <= {20'b0, ecfg_coreid_reg[11:0]};
          `ELVERSION: mi_dout[31:0] <= {16'b0, ecfg_version_reg[15:0]};
          default:    mi_dout[31:0] <= 32'd0;
        endcase
