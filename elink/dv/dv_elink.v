@@ -45,7 +45,6 @@ module dv_elink(/*AUTOARG*/
    wire			lclk_p;			// From elink of elink.v
    wire			rd_wait_n;		// From elink of elink.v
    wire			rd_wait_p;		// From elink of elink.v
-   wire			rxrd_wait;		// From emem of ememory.v
    wire			wr_wait_n;		// From elink of elink.v
    wire			wr_wait_p;		// From elink of elink.v
    // End of automatics
@@ -81,7 +80,8 @@ module dv_elink(/*AUTOARG*/
    wire                 txwr_wait;
    wire                 txrr_wait; 
    wire                 rxrr_wait;
-   
+   wire                 emem_wait;
+   wire 		rxrd_wait;
    
    reg [31:0]    etime;  
    wire 	 itrace = 1'b1;
@@ -185,20 +185,22 @@ module dv_elink(/*AUTOARG*/
     
    assign  emem_packet[PW-1:0]   = rxwr_access ? rxwr_packet[PW-1:0]:
                                                  rxrd_packet[PW-1:0];
-     
+
+   assign rxrd_wait = emem_wait | rxwr_access;
+   
    /*ememory AUTO_TEMPLATE ( 
                         // Outputs
                         .\(.*\)_out       (txrr_\1[]),
                         .\(.*\)_in        (emem_\1[]),
-                        .wait_out	  (rxrd_wait),
+                        .wait_out	  (emem_wait),
                          );
    */
 
    ememory emem (.wait_in	(1'b0),       //only one read at a time, set to zero for no1
-		 .clk		(clk[1]),		 
+		 .clk		(clk[1]),
+		 .wait_out		(emem_wait),
 		 /*AUTOINST*/
 		 // Outputs
-		 .wait_out		(rxrd_wait),		 // Templated
 		 .access_out		(txrr_access),		 // Templated
 		 .packet_out		(txrr_packet[PW-1:0]),	 // Templated
 		 // Inputs
@@ -241,15 +243,15 @@ module dv_elink(/*AUTOARG*/
 					      .emesh_access	(dut_access),	 // Templated
 					      .emesh_packet	(dut_packet[PW-1:0])); // Templated
 
-   emesh_monitor #(.NAME("emem")) emem_monitor (.emesh_wait	(1'b0),
-					      .clk		(clk[1]),
-					      /*AUTOINST*/
-					      // Inputs
-					      .reset		(reset),
-					      .itrace		(itrace),
-					      .etime		(etime[31:0]),
-					      .emesh_access	(emem_access),	 // Templated
-					      .emesh_packet	(emem_packet[PW-1:0])); // Templated
+   emesh_monitor #(.NAME("emem")) mem_monitor (.emesh_wait	(1'b0),
+						.clk		(clk[1]),
+					       .emesh_access	(emem_access),
+					       .emesh_packet	(emem_packet[PW-1:0]),
+						/*AUTOINST*/
+					       // Inputs
+					       .reset		(reset),
+					       .itrace		(itrace),
+					       .etime		(etime[31:0]));
    
 
 endmodule // dv_elink
