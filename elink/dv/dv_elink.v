@@ -122,12 +122,8 @@ module dv_elink(/*AUTOARG*/
    wire 		elink1_txrd_access;
    wire [PW-1:0] 	elink1_txrd_packet;
 
-   wire                 txrd_wait;
-   wire                 txwr_wait;
-   wire                 txrr_wait; 
-   wire                 rxrr_wait;
    wire                 emem_wait;
-   wire 		rxrd_wait;
+
    
    reg [31:0]    etime;  
    wire 	 itrace = 1'b1;
@@ -225,6 +221,13 @@ module dv_elink(/*AUTOARG*/
 		 .txrd_access		(elink0_txrd_access),	 // Templated
 		 .txrd_packet		(elink0_txrd_packet[PW-1:0])); // Templated
 
+
+
+   //No read/write from elink1 (for now)
+   assign elink1_txrd_access = 1'b0;
+   assign elink1_txrd_packet = 'b0;
+   assign elink1_txwr_access = 1'b0;
+   assign elink1_txwr_packet = 'b0;
    
    defparam elink1.ID = 12'h820;   
    elink elink1 (.rxi_lclk_p		(elink0_txo_lclk_p),
@@ -288,7 +291,8 @@ module dv_elink(/*AUTOARG*/
    assign  emem_packet[PW-1:0]   = elink1_rxwr_access ? elink1_rxwr_packet[PW-1:0]:
                                                         elink1_rxrd_packet[PW-1:0];
 
-   assign rxrd_wait = emem_wait | elink1_rxwr_access;
+   assign elink1_rxrd_wait = emem_wait | elink1_rxwr_access;
+   assign elink1_rxwr_wait = 1'b0; //no wait on write
    
    /*ememory AUTO_TEMPLATE ( 
                         // Outputs
