@@ -4,7 +4,8 @@
 *.o
 *.e
 *.d
-
+*.out
+*.trace
 ######################
 # Emacs/vim/gedit backup files
 *~

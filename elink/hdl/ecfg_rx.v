@@ -10,7 +10,7 @@ module ecfg_rx (/*AUTOARG*/
    mi_dout, rx_enable, mmu_enable, remap_mode, remap_base,
    remap_pattern, remap_sel, timer_cfg,
    // Inputs
-   reset, mi_clk, mi_en, mi_we, mi_addr, mi_din, gpio_datain,
+   reset, sys_clk, mi_en, mi_we, mi_addr, mi_din, gpio_datain,
    debug_vector
    );
 
@@ -24,11 +24,10 @@ module ecfg_rx (/*AUTOARG*/
    /*HARDWARE RESET (EXTERNAL)   */
    /******************************/
    input 	reset;       // ecfg registers reset only by "hard reset"
-
+   input 	sys_clk;
    /*****************************/
    /*SIMPLE MEMORY INTERFACE    */
    /*****************************/    
-   input 	 mi_clk;
    input 	 mi_en;         
    input 	 mi_we;            // single we, must write 32 bit words
    input [19:0]  mi_addr;          // complete physical address (no shifting!)
@@ -81,7 +80,7 @@ module ecfg_rx (/*AUTOARG*/
    //###########################
    //# RXCFG
    //###########################
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(reset)
        ecfg_rx_reg[31:0] <= 'b0;
      else if (ecfg_rx_write)
@@ -97,7 +96,7 @@ module ecfg_rx (/*AUTOARG*/
    //###########################
    //# DATAIN (synchronized)
    //###########################
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      begin
 	ecfg_datain_sync[8:0] <= gpio_datain[8:0];
 	ecfg_datain_reg[8:0]  <= ecfg_datain_sync[8:0];
@@ -107,7 +106,7 @@ module ecfg_rx (/*AUTOARG*/
    //# DEBUG
    //###########################
    
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(reset)
        ecfg_rx_debug_reg[2:0] <= 'd0;
      else
@@ -116,7 +115,7 @@ module ecfg_rx (/*AUTOARG*/
    //###########################1
    //# DYNAMIC REMAP BASE
    //###########################
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(reset)
        ecfg_base_reg[31:0] <='d0;
      else if (ecfg_base_write)
@@ -129,7 +128,7 @@ module ecfg_rx (/*AUTOARG*/
    //###############################
 
    //Pipelineing readback
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
          `ELRXCFG:   mi_dout[31:0] <= {ecfg_rx_reg[31:0]};

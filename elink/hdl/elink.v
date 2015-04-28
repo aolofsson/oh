@@ -262,17 +262,15 @@ module elink(/*AUTOARG*/
    // Inputs
    hard_reset, clkin, clkbypass, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
    rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
-   txi_rd_wait_p, txi_rd_wait_n, rxwr_clk, rxwr_wait, rxrd_clk,
-   rxrd_wait, rxrr_clk, rxrr_wait, txwr_clk, txwr_access, txwr_packet,
-   txrd_clk, txrd_access, txrd_packet, txrr_clk, txrr_access,
-   txrr_packet
+   txi_rd_wait_p, txi_rd_wait_n, sys_clk, rxwr_wait, rxrd_wait,
+   rxrr_wait, txwr_access, txwr_packet, txrd_access, txrd_packet,
+   txrr_access, txrr_packet
    );
    
    parameter AW          = 32;
-   parameter DW          = 32;
+   parameter DW          = 32; 
    parameter PW          = 104;      //packet width   
-   parameter TXID        = 12'h800;  //TX path ID
-   parameter RXID        = 12'h800;  //RX path match ID 
+   parameter ID          = 12'h810;
 
    /****************************/
    /*CLK AND RESET             */
@@ -318,41 +316,38 @@ module elink(/*AUTOARG*/
    output 	timeout;
 
    /*****************************/
-   /*"Bus" Interface            */
+   /*"System" Interface         */
    /*****************************/
    
+   //One clock to rule them all..
+   input 	   sys_clk;    
+
    //Master Write (from RX)
-   input 	   rxwr_clk;
    output 	   rxwr_access;
    output [PW-1:0] rxwr_packet;
    input 	   rxwr_wait;
       
    //Master Read Request (from RX)
-   input 	   rxrd_clk;
    output 	   rxrd_access;
    output [PW-1:0] rxrd_packet;
    input 	   rxrd_wait;
    
    //Slave Read Response (from RX)
-   input 	   rxrr_clk;
    output 	   rxrr_access;
    output [PW-1:0] rxrr_packet;
    input 	   rxrr_wait;
 
    //Slave Write (to TX)
-   input 	   txwr_clk;
    input 	   txwr_access;
    input [PW-1:0]  txwr_packet;
    output 	   txwr_wait;
 
    //Slave Read Request (to TX) 
-   input 	   txrd_clk;
    input 	   txrd_access;
    input [PW-1:0]  txrd_packet;
    output 	   txrd_wait;
    
    //Master Read Response (to TX)
-   input 	   txrr_clk;
    input 	   txrr_access;
    input [PW-1:0]  txrr_packet;
    output 	   txrr_wait;
@@ -374,10 +369,10 @@ module elink(/*AUTOARG*/
    wire [15:0]		ecfg_clk_settings;	// From ecfg_base of ecfg_base.v
    wire			etx_read;		// From etx of etx.v
    wire [19:0]		mi_addr;		// From ecfg_if of ecfg_if.v
-   wire			mi_clk;			// From ecfg_if of ecfg_if.v
-   wire [31:0]		mi_din;			// From ecfg_if of ecfg_if.v
+   wire [63:0]		mi_din;			// From ecfg_if of ecfg_if.v
    wire [31:0]		mi_el_dout;		// From ecfg_base of ecfg_base.v
    wire			mi_en;			// From ecfg_if of ecfg_if.v
+   wire [31:0]		mi_mailbox_dout;	// From emailbox of emailbox.v
    wire [31:0]		mi_rx_dout;		// From erx of erx.v
    wire [31:0]		mi_tx_dout;		// From etx of etx.v
    wire			mi_we;			// From ecfg_if of ecfg_if.v
@@ -391,27 +386,30 @@ module elink(/*AUTOARG*/
    /***********************************************************/
    /*ELINK CONFIGURATION INTERFACE                            */
    /***********************************************************/
-   defparam ecfg_if.ID=TXID;
+   defparam ecfg_if.ID=ID;
 
-   ecfg_if ecfg_if(.rxrr_access		(),//TODO: readback, mux with rr
-		   .rxrr_packet		(),
+   ecfg_if ecfg_if(
 		   /*AUTOINST*/
 		   // Outputs
-		   .mi_clk		(mi_clk),
+		   .txwr_wait		(txwr_wait),
+		   .txrd_wait		(txrd_wait),
 		   .mi_en		(mi_en),
 		   .mi_we		(mi_we),
 		   .mi_addr		(mi_addr[19:0]),
-		   .mi_din		(mi_din[31:0]),
+		   .mi_din		(mi_din[63:0]),
 		   // Inputs
-		   .txwr_clk		(txwr_clk),
+		   .sys_clk		(sys_clk),
+		   .reset		(reset),
 		   .txwr_access		(txwr_access),
 		   .txwr_packet		(txwr_packet[PW-1:0]),
 		   .txrd_access		(txrd_access),
 		   .txrd_packet		(txrd_packet[PW-1:0]),
-		   .rxrr_clk		(rxrr_clk),
+		   .rxwr_access		(rxwr_access),
+		   .rxwr_packet		(rxwr_packet[PW-1:0]),
 		   .mi_el_dout		(mi_el_dout[31:0]),
 		   .mi_rx_dout		(mi_rx_dout[DW-1:0]),
-		   .mi_tx_dout		(mi_tx_dout[DW-1:0]));
+		   .mi_tx_dout		(mi_tx_dout[DW-1:0]),
+		   .mi_mailbox_dout	(mi_mailbox_dout[DW-1:0]));
 
    /***********************************************************/
    /*ELINK CONFIGURATION REGISTERES                           */
@@ -435,7 +433,7 @@ module elink(/*AUTOARG*/
 		       .rowid		(rowid[3:0]),
 		       // Inputs
 		       .hard_reset	(hard_reset),
-		       .mi_clk		(mi_clk),
+		       .sys_clk		(sys_clk),
 		       .mi_en		(mi_en),
 		       .mi_we		(mi_we),
 		       .mi_addr		(mi_addr[19:0]),
@@ -470,6 +468,29 @@ module elink(/*AUTOARG*/
 		    .clkbypass		(clkbypass[2:0]));
    
 
+   /***********************************************************/
+   /*MAILBOX                                                  */
+   /***********************************************************/
+   /*emailbox AUTO_TEMPLATE ( 
+	                .mi_dout    (mi_mailbox_dout[]),
+                      );
+   */
+   
+   emailbox emailbox (
+		    /*AUTOINST*/
+		      // Outputs
+		      .mi_dout		(mi_mailbox_dout[31:0]), // Templated
+		      .mailbox_full	(mailbox_full),
+		      .mailbox_not_empty(mailbox_not_empty),
+		      // Inputs
+		      .reset		(reset),
+		      .sys_clk		(sys_clk),
+		      .mi_en		(mi_en),
+		      .mi_we		(mi_we),
+		      .mi_addr		(mi_addr[19:0]),
+		      .mi_din		(mi_din[63:0]));
+   
+
  
    /***********************************************************/
    /*RECEIVER                                                 */
@@ -482,7 +503,7 @@ module elink(/*AUTOARG*/
                         );
    */
    
-   defparam erx.ID=RXID;
+   defparam erx.ID=ID;
    erx erx(
 	   /*AUTOINST*/
 	   // Outputs
@@ -497,24 +518,19 @@ module elink(/*AUTOARG*/
 	   .rxrr_access			(rxrr_access),
 	   .rxrr_packet			(rxrr_packet[PW-1:0]),
 	   .mi_dout			(mi_rx_dout[31:0]),	 // Templated
-	   .mailbox_full		(mailbox_full),
-	   .mailbox_not_empty		(mailbox_not_empty),
 	   .timeout			(timeout),
 	   // Inputs
 	   .reset			(reset),
+	   .sys_clk			(sys_clk),
 	   .rxi_lclk_p			(rxi_lclk_p),
 	   .rxi_lclk_n			(rxi_lclk_n),
 	   .rxi_frame_p			(rxi_frame_p),
 	   .rxi_frame_n			(rxi_frame_n),
 	   .rxi_data_p			(rxi_data_p[7:0]),
 	   .rxi_data_n			(rxi_data_n[7:0]),
-	   .rxwr_clk			(rxwr_clk),
 	   .rxwr_wait			(rxwr_wait),
-	   .rxrd_clk			(rxrd_clk),
 	   .rxrd_wait			(rxrd_wait),
-	   .rxrr_clk			(rxrr_clk),
 	   .rxrr_wait			(rxrr_wait),
-	   .mi_clk			(mi_clk),
 	   .mi_en			(mi_en),
 	   .mi_we			(mi_we),
 	   .mi_addr			(mi_addr[19:0]),
@@ -531,7 +547,7 @@ module elink(/*AUTOARG*/
                        );
    */
 
-   defparam etx.ID=TXID;
+   defparam etx.ID=ID;
    etx etx(
 	   /*AUTOINST*/
 	   // Outputs
@@ -551,18 +567,15 @@ module elink(/*AUTOARG*/
 	   .tx_lclk			(tx_lclk),
 	   .tx_lclk90			(tx_lclk90),
 	   .tx_lclk_div4		(tx_lclk_div4),
-	   .mi_clk			(mi_clk),
+	   .sys_clk			(sys_clk),
 	   .mi_en			(mi_en),
 	   .mi_we			(mi_we),
 	   .mi_addr			(mi_addr[19:0]),
 	   .mi_din			(mi_din[31:0]),
-	   .txrd_clk			(txrd_clk),
 	   .txrd_access			(txrd_access),
 	   .txrd_packet			(txrd_packet[PW-1:0]),
-	   .txwr_clk			(txwr_clk),
 	   .txwr_access			(txwr_access),
 	   .txwr_packet			(txwr_packet[PW-1:0]),
-	   .txrr_clk			(txrr_clk),
 	   .txrr_access			(txrr_access),
 	   .txrr_packet			(txrr_packet[PW-1:0]),
 	   .txi_wr_wait_p		(txi_wr_wait_p),

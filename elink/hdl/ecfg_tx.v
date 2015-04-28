@@ -10,7 +10,7 @@ module ecfg_tx (/*AUTOARG*/
    ecfg_tx_tp_enable, ecfg_tx_ctrlmode, ecfg_tx_ctrlmode_bp,
    ecfg_tx_remap_enable, ecfg_dataout, ecfg_access, ecfg_packet,
    // Inputs
-   reset, mi_clk, mi_en, mi_we, mi_addr, mi_din, ecfg_tx_debug
+   reset, sys_clk, mi_en, mi_we, mi_addr, mi_din, ecfg_tx_debug
    );
 
    /******************************/
@@ -24,10 +24,11 @@ module ecfg_tx (/*AUTOARG*/
    /*HARDWARE RESET (EXTERNAL)   */
    /******************************/
    input 	reset;             // ecfg registers reset only by "hard reset"
+   input 	sys_clk;
+
    /*****************************/
    /*SIMPLE MEMORY INTERFACE    */
    /*****************************/    
-   input 	 mi_clk;
    input 	 mi_en;         
    input 	 mi_we;            // single we, must write 32 bit words
    input [19:0]  mi_addr;          // complete physical address (no shifting!)
@@ -94,7 +95,7 @@ module ecfg_tx (/*AUTOARG*/
    //###########################
    //# TX CONFIG
    //###########################
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(reset)
        ecfg_tx_config_reg[10:0] <= 11'b0;
      else if (ecfg_tx_config_write)
@@ -111,7 +112,7 @@ module ecfg_tx (/*AUTOARG*/
    //# STATUS REGISTER
    //###########################
    
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(reset)
        ecfg_tx_status_reg[15:0] <= 'd0;
      else if(ecfg_tx_status_write)
@@ -125,7 +126,7 @@ module ecfg_tx (/*AUTOARG*/
    //###########################
    //# GPIO DATA
    //###########################
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(reset)
        ecfg_tx_gpio_reg[8:0] <= 'd0;   
      else if (ecfg_tx_gpio_write)
@@ -142,7 +143,7 @@ module ecfg_tx (/*AUTOARG*/
    //7:4 = ctrlmode
    //8   = continuous-loop mode
 
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(reset)
        ecfg_tx_test_reg[8:0] <= 'd0;   
      else if (ecfg_tx_test_write)
@@ -153,7 +154,7 @@ module ecfg_tx (/*AUTOARG*/
    //###########################
    //# DSTADDR REGISTER
    //###########################
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(reset)
        ecfg_tx_dstaddr_reg[31:0] <= 'd0;   
      else if (ecfg_tx_dstaddr_write)
@@ -162,7 +163,7 @@ module ecfg_tx (/*AUTOARG*/
    //###########################
    //# DATA REGISTER
    //###########################
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(reset)
        ecfg_tx_data_reg[31:0] <= 'd0;   
      else if (ecfg_tx_data_write)
@@ -171,7 +172,7 @@ module ecfg_tx (/*AUTOARG*/
    //###########################
    //# SRCADDR REGISTER
    //###########################
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(reset)
        ecfg_tx_srcaddr_reg[31:0] <= 'd0;   
      else if (ecfg_tx_srcaddr_write)
@@ -188,7 +189,7 @@ module ecfg_tx (/*AUTOARG*/
 			       ecfg_tx_test_reg[7:0]
 			       };
    
-   always @ (posedge mi_clk or posedge reset)
+   always @ (posedge sys_clk or posedge reset)
      if(reset)
        ecfg_access <= 0;
      else if(ecfg_tx_test_write & mi_din[0])
@@ -203,7 +204,7 @@ module ecfg_tx (/*AUTOARG*/
    //###############################
 
    //Pipelineing readback
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
          `ELTXCFG:    mi_dout[31:0] <= {21'b0, ecfg_tx_config_reg[10:0]};

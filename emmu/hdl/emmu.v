@@ -12,7 +12,6 @@
  # 32bit address output = {table_data[11:0],dstaddr[19:0]}
  # 64bit address output = {table_data[43:0],dstaddr[19:0]}
  #
- #
  ############################################################################
  */
  
@@ -20,8 +19,8 @@ module emmu (/*AUTOARG*/
    // Outputs
    mi_dout, emesh_access_out, emesh_packet_out, emesh_packet_hi_out,
    // Inputs
-   clk, reset, mmu_en, mmu_bp, mi_clk, mi_en, mi_we, mi_addr, mi_din,
-   emesh_access_in, emesh_packet_in, emesh_wait_in
+   reset, sys_clk, mmu_en, mmu_bp, mi_en, mi_we, mi_addr, mi_din,
+   emesh_clk, emesh_access_in, emesh_packet_in, emesh_wait_in
    );
    parameter DW     = 32;         //data width
    parameter AW     = 32;         //address width 
@@ -33,20 +32,20 @@ module emmu (/*AUTOARG*/
    
    /*****************************/
    /*DATAPATH CLOCk             */
-   /*****************************/
-   input             clk;
+   /*****************************/  
    input 	     reset;
-   
+   input 	     sys_clk; 
+
    /*****************************/
    /*MMU LOOKUP DATA            */
    /*****************************/
    input 	     mmu_en;              //enables mmu (static)
-   input 	     mmu_bp;              //bypass mmu dynamically
+   input 	     mmu_bp;              //bypass mmu on read response
 
    /*****************************/
    /*Register Access Interface  */
    /*****************************/
-   input 	     mi_clk;              //source synchronous clock
+  
    input 	     mi_en;               //memory access 
    input  	     mi_we;               //byte wise write enable
    input [19:0]      mi_addr;             //address
@@ -56,27 +55,25 @@ module emmu (/*AUTOARG*/
    /*****************************/
    /*EMESH INPUTS               */
    /*****************************/
-   input              emesh_access_in;
-   input [PW-1:0]     emesh_packet_in;
-   input 	      emesh_wait_in;   //downstream pushback
+   input             emesh_clk;
+   input 	     emesh_access_in;
+   input [PW-1:0]    emesh_packet_in;
+   input 	     emesh_wait_in;       //downstream pushback
  
    /*****************************/
    /*EMESH OUTPUTS              */
    /*****************************/
-   output 	      emesh_access_out;
-   output [PW-1:0]    emesh_packet_out;   
-   output [31:0]      emesh_packet_hi_out;
-
-   
+   output 	     emesh_access_out;
+   output [PW-1:0]   emesh_packet_out;   
+   output [31:0]     emesh_packet_hi_out;
   
    /*****************************/
    /*REGISTERS                  */
    /*****************************/
    reg 		      emesh_access_out;
    reg [PW-1:0]       emesh_packet_reg;
-   wire [63:0] 	      emesh_dstaddr_out;
-   
-   
+
+   wire [63:0] 	      emesh_dstaddr_out;   
    wire [MW-1:0]      emmu_lookup_data;
    wire [63:0] 	      mi_wr_data;
    wire [5:0] 	      mi_wr_vec;
@@ -108,11 +105,11 @@ module emmu (/*AUTOARG*/
 					   // Outputs
 					   .rd_data		(emmu_lookup_data[MW-1:0]),
 					   // Inputs
-					   .wr_clk		(mi_clk),
+					   .wr_clk		(sys_clk),
 					   .wr_en		(mi_wr_vec[5:0]),
 					   .wr_addr		(mi_addr[14:3]),
 					   .wr_data		(mi_wr_data[MW-1:0]),
-					   .rd_clk		(clk),
+					   .rd_clk		(emesh_clk),
 					   .rd_en		(emesh_access_in),
 					   .rd_addr		(emmu_rd_addr[MAW-1:0])
 					   );
@@ -123,13 +120,13 @@ module emmu (/*AUTOARG*/
    //pipeline to compensate for table lookup pipeline 
    //assumes one cycle memory access!     
   
-   always @ (posedge  clk or posedge reset)
+   always @ (posedge  emesh_clk or posedge reset)
      if(reset)
        emesh_access_out <= 1'b0;
      else if(~emesh_wait_in)
        emesh_access_out         <= emesh_access_in;
    
-   always @ (posedge clk)
+   always @ (posedge emesh_clk)
      if(emesh_access_in & ~emesh_wait_in)   
        emesh_packet_reg[PW-1:0]  <= emesh_packet_in[PW-1:0];	  
    

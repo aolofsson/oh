@@ -7,10 +7,11 @@
 
 module ecfg_if (/*AUTOARG*/
    // Outputs
-   rxrr_access, rxrr_packet, mi_clk, mi_en, mi_we, mi_addr, mi_din,
+   txwr_wait, txrd_wait, mi_en, mi_we, mi_addr, mi_din,
    // Inputs
-   txwr_clk, txwr_access, txwr_packet, txrd_access, txrd_packet,
-   rxrr_clk, mi_el_dout, mi_rx_dout, mi_tx_dout
+   sys_clk, reset, txwr_access, txwr_packet, txrd_access, txrd_packet,
+   rxwr_access, rxwr_packet, mi_el_dout, mi_rx_dout, mi_tx_dout,
+   mi_mailbox_dout
    );
 
    parameter ID     = 12'h800;
@@ -18,66 +19,80 @@ module ecfg_if (/*AUTOARG*/
    parameter AW     = 32;
    parameter PW     = 104;
    
-   /******************************/
-   /*Host Write Interface        */
-   /******************************/  
-   input 	   txwr_clk;        //write clock used as mi_clk
+
+   /********************************/
+   /*One clock domain              */
+   /********************************/  
+   input           sys_clk;
+   input           reset;
+
+   /********************************/
+   /*Transmit Write Interface      */
+   /********************************/  
    input 	   txwr_access;
    input [PW-1:0]  txwr_packet;
-
-   /******************************/
-   /*Host Write Interface        */
-   /******************************/
+   output 	   txwr_wait;
+   /********************************/
+   /*Transmit Side Read Interface */
+   /********************************/
    input 	   txrd_access;
    input [PW-1:0]  txrd_packet;
+   output 	   txrd_wait;
 
-   /******************************/
-   /*Host Readback Interface     */
-   /******************************/
-   input 	   rxrr_clk;   
-   output 	   rxrr_access;
-   output [PW-1:0] rxrr_packet;
-   
-   /******************************/
-   /*Register Interface          */
-   /******************************/
-   output 	   mi_clk;
+   /********************************/
+   /*Receiver Write Interface      */
+   /********************************/  
+   input 	   rxwr_access;
+   input [PW-1:0]  rxwr_packet;
+  
+   /********************************/
+   /*Register Interface            */
+   /********************************/
    output 	   mi_en;         
    output 	   mi_we; 
    output [19:0]   mi_addr;
-   output [31:0]   mi_din;
+   output [63:0]   mi_din;
 
    /******************************/
    /*Readback Data               */
    /******************************/
-   input [31:0]   mi_el_dout;
-   input [DW-1:0] mi_rx_dout;   
-   input [DW-1:0] mi_tx_dout;
+   input [31:0]    mi_el_dout;
+   input [DW-1:0]  mi_rx_dout;   
+   input [DW-1:0]  mi_tx_dout;
+   input [DW-1:0]  mi_mailbox_dout;
    
    //wires
-   wire [DW-1:0]	txwr_data;	
-   wire [AW-1:0]	txwr_dstaddr;
-   wire [AW-1:0]	txwr_srcaddr;
-   wire [AW-1:0]	txrd_dstaddr;
-   wire [AW-1:0]	txrd_srcaddr;
-
+   wire [63:0] 	   txwr_data;
+   wire [63:0] 	   rxwr_data;
    
+   wire [AW-1:0]   txwr_dstaddr;
+   wire [AW-1:0]   txwr_srcaddr;
+   
+   wire [AW-1:0]   txrd_dstaddr;
+   wire [AW-1:0]   txrd_srcaddr;
+   
+   wire [AW-1:0]   rxwr_dstaddr;
+   wire [AW-1:0]   rxwr_srcaddr;
+   
+   wire 	   mi_wr;
+   wire 	   mi_rd;
+   reg [63:0] 	   rx_mi_data_reg;
+   reg [31:0] 	   rx_mi_addr_reg;
+   reg 		   rx_mi_wait;
 
-   wire 		mi_wr;
-   wire 		mi_rd;
    
    //splicing packets
-   packet2emesh p2e_wr(.access_out	(),
+   packet2emesh p2e_txwr(.access_out	(),
 		       .write_out	(),
 		       .datamode_out	(),
 		       .ctrlmode_out	(),
 		       .dstaddr_out	(txwr_dstaddr[AW-1:0]),
-		       .data_out	(txwr_data[DW-1:0]),
-		       .srcaddr_out	(),
+		       .data_out	(txwr_data[31:0]),
+		       .srcaddr_out	(txwr_data[63:32]),
 		       .packet_in	(txwr_packet[PW-1:0])
 		    );
 
-   packet2emesh p2e_rd(.access_out	(),
+   packet2emesh p2e_txrd(.access_out	(),
 		       .write_out	(),
 		       .datamode_out	(),
 		       .ctrlmode_out	(),
@@ -86,35 +101,50 @@ module ecfg_if (/*AUTOARG*/
 		       .srcaddr_out	(txrd_srcaddr[AW-1:0]),
 		       .packet_in	(txrd_packet[PW-1:0])
 		    );
-   
-       
-   //pass through clock
-   //TODO: gate?
-   assign mi_clk = txwr_clk;
-   
-   //Register file access (from slave)
-   assign mi_wr = txwr_access & (txwr_dstaddr[31:20]==ID);   
-   assign mi_rd = txrd_access & (txrd_dstaddr[31:20]==ID);
-   
-   //Only 32 bit writes supported
+
+   packet2emesh p2e_rxwr(.access_out	(),
+		       .write_out	(),
+		       .datamode_out	(),
+		       .ctrlmode_out	(),
+		       .dstaddr_out	(rxwr_dstaddr[AW-1:0]),
+		       .data_out	(rxwr_data[31:0]),
+		       .srcaddr_out	(rxwr_data[63:32]),
+		       .packet_in	(rxwr_packet[PW-1:0])
+		    );
+            
+   assign tx_wr = txwr_access & (txwr_dstaddr[31:20]==ID); 
+   assign tx_rd = txrd_access & (txrd_dstaddr[31:20]==ID);
+   assign rx_wr = rxwr_access & (rxwr_dstaddr[31:20]==ID); 
+     
+   assign mi_wr = tx_wr | rx_wr;
+   assign mi_rd = tx_rd; //no access from receiver
+    
+   //DODO: 64 bit writes?
    assign mi_we         =  mi_wr;   
    assign mi_en         =  mi_wr | mi_rd;
 
    //Read/write address
-   assign mi_addr[19:0] =  mi_we ? txwr_dstaddr[19:0] :
-			           txrd_dstaddr[19:0];
-    
-   //Data
-   assign mi_din[31:0]  = txwr_data[31:0];
+   assign mi_addr[19:0] =  rx_wr ? rxwr_dstaddr[19:0] :
+			   tx_rd ? txrd_dstaddr[19:0] :
+			           txwr_dstaddr[19:0];
+   
+   //Data (prepare for it)
+   assign mi_din[63:0]  =  rx_wr ? {rxwr_srcaddr[31:0],rxwr_data[31:0]} :
+                                   {txwr_srcaddr[31:0],txwr_data[31:0]};
 
+   //Interface clock (gate?)
+   assign mi_clk = sys_clk;
+   
+   //Wait signals
+   assign txwr_wait = tx_wr & rx_wr;
+   assign txrd_wait = tx_rd & (tx_wr | rx_wr);
+
+   
    //TODO: Do readback later....   
-
-
-
 //   
 endmodule // ecfg_if
 // Local Variables:
-// verilog-library-directories:("." "../../common/hdl")
+// verilog-library-directories:("." "../../common/hdl" "../../memory/hdl")
 // End:
 
 

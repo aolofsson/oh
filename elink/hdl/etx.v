@@ -3,10 +3,10 @@ module etx(/*AUTOARG*/
    mi_dout, txrd_wait, txwr_wait, txrr_wait, etx_read, txo_lclk_p,
    txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p, txo_data_n,
    // Inputs
-   reset, tx_lclk, tx_lclk90, tx_lclk_div4, mi_clk, mi_en, mi_we,
-   mi_addr, mi_din, txrd_clk, txrd_access, txrd_packet, txwr_clk,
-   txwr_access, txwr_packet, txrr_clk, txrr_access, txrr_packet,
-   txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n
+   reset, tx_lclk, tx_lclk90, tx_lclk_div4, sys_clk, mi_en, mi_we,
+   mi_addr, mi_din, txrd_access, txrd_packet, txwr_access,
+   txwr_packet, txrr_access, txrr_packet, txi_wr_wait_p,
+   txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n
    );
    parameter AW      = 32;
    parameter DW      = 32;
@@ -18,9 +18,9 @@ module etx(/*AUTOARG*/
    input 	  tx_lclk;	  // high speed serdes clock
    input 	  tx_lclk90;	  // lclk for output
    input 	  tx_lclk_div4;	  // slow speed parallel clock
+   input 	  sys_clk;        // main system clock
 
    //Register Access Interface
-   input           mi_clk;
    input           mi_en;         
    input           mi_we;         // single we, must write 32 bit words
    input [19:0]    mi_addr;       // complete physical address (no shifting!)
@@ -28,19 +28,16 @@ module etx(/*AUTOARG*/
    output [31:0]   mi_dout;
    
    //Slave Read Request (to TX)
-   input 	  txrd_clk;   
    input 	  txrd_access;
    input [PW-1:0] txrd_packet;
    output 	  txrd_wait;
    
    //Slave Write (to TX)
-   input 	  txwr_clk;   
    input 	  txwr_access;
    input [PW-1:0] txwr_packet;
    output 	  txwr_wait;
    
    //Master Read Response (to TX)
-   input 	  txrr_clk;   
    input 	  txrr_access;
    input [PW-1:0] txrr_packet;
    output 	  txrr_wait;
@@ -129,7 +126,7 @@ module etx(/*AUTOARG*/
 		    .ecfg_packet	(ecfg_packet[PW-1:0]),
 		    // Inputs
 		    .reset		(reset),
-		    .mi_clk		(mi_clk),
+		    .sys_clk		(sys_clk),
 		    .mi_en		(mi_en),
 		    .mi_we		(mi_we),
 		    .mi_addr		(mi_addr[19:0]),
@@ -144,7 +141,8 @@ module etx(/*AUTOARG*/
 		    // Outputs
 		    .mi_dout		(mi_dout[DW-1:0]),
 		    // Inputs
-		    .mi_clk		(mi_clk),
+		    .sys_clk		(sys_clk),
+		    .reset		(reset),
 		    .mi_en		(mi_en),
 		    .mi_addr		(mi_addr[19:0]),
 		    .mi_tx_emmu_dout	(mi_tx_emmu_dout[DW-1:0]),
@@ -164,7 +162,7 @@ module etx(/*AUTOARG*/
 			       .prog_full  (@"(substring vl-cell-name  0 4)"_fifo_prog_full),
 			       // Inputs
 			       .rd_clk	   (tx_lclk_div4),
-                               .wr_clk	   (@"(substring vl-cell-name  0 4)"_clk),
+                               .wr_clk	   (sys_clk),
                                .wr_en      (@"(substring vl-cell-name  0 4)"_access),
                                .rd_en      (@"(substring vl-cell-name  0 4)"_fifo_read),
 			       .reset	   (reset),
@@ -174,7 +172,7 @@ module etx(/*AUTOARG*/
 
    //Write fifo (from slave)
 
-   wire txwr_access_gated = txwr_access & ~((txwr_packet[39:28]==ID) & (txwr_packet[27:24]==`EGROUP_TX)); //test feature, should never happen
+   wire txwr_access_gated = txwr_access & ~(txwr_packet[39:28]==ID); //test feature, should never happen
 
    fifo_async #(.DW(104), .AW(5)) txwr_fifo(.wr_en		(txwr_access_gated),
 					    .prog_full		(txwr_wait),
@@ -186,13 +184,13 @@ module etx(/*AUTOARG*/
 					    .valid		(),		 // Templated
 					    // Inputs
 					    .reset		(reset),	 // Templated
-					    .wr_clk		(txwr_clk),	 // Templated
+					    .wr_clk		(sys_clk),	 // Templated
 					    .rd_clk		(tx_lclk_div4),	 // Templated
 					    .din		(txwr_packet[PW-1:0]), // Templated
 					    .rd_en		(txwr_fifo_read)); // Templated
    
    //Read request fifo (from slave)
-   wire txrd_access_gated = txrd_access & ~((txrd_packet[39:28]==ID)); 
+   wire txrd_access_gated = txrd_access & ~(txrd_packet[39:28]==ID); 
    fifo_async  #(.DW(104), .AW(5)) txrd_fifo(.wr_en		(txrd_access_gated),
 					     .prog_full		(txrd_wait),
 					     .full		(txrd_fifo_full),
@@ -203,7 +201,7 @@ module etx(/*AUTOARG*/
 					     .valid		(),		 // Templated
 					     // Inputs
 					     .reset		(reset),	 // Templated
-					     .wr_clk		(txrd_clk),	 // Templated
+					     .wr_clk		(sys_clk),	 // Templated
 					     .rd_clk		(tx_lclk_div4),	 // Templated
 					     .din		(txrd_packet[PW-1:0]), // Templated
 					     .rd_en		(txrd_fifo_read)); // Templated
@@ -221,7 +219,7 @@ module etx(/*AUTOARG*/
 					     .valid		(),		 // Templated
 					     // Inputs
 					     .reset		(reset),	 // Templated
-					     .wr_clk		(txrr_clk),	 // Templated
+					     .wr_clk		(sys_clk),	 // Templated
 					     .rd_clk		(tx_lclk_div4),	 // Templated
 					     .wr_en		(txrr_access),	 // Templated
 					     .din		(txrr_packet[PW-1:0]), // Templated
@@ -292,7 +290,7 @@ module etx(/*AUTOARG*/
                           .emesh_\(.*\)_out (emmu_\1[]),
                           .mmu_en	   (ecfg_tx_mmu_enable),
                           .mmu_bp	   (etx_rr),
-                          .clk     	   (tx_lclk_div4),
+                          .emesh_clk	   (tx_lclk_div4),
                           .emmu_access_out (emmu_access),
                           .emmu_packet_out (emmu_packet[PW-1:0]),
                           .mi_dout	   (mi_tx_emmu_dout[DW-1:0]),
@@ -310,15 +308,15 @@ module etx(/*AUTOARG*/
 	      .emesh_packet_out		(emmu_packet[PW-1:0]),	 // Templated
 	      .emesh_packet_hi_out	(),			 // Templated
 	      // Inputs
-	      .clk			(tx_lclk_div4),		 // Templated
 	      .reset			(reset),
+	      .sys_clk			(sys_clk),
 	      .mmu_en			(ecfg_tx_mmu_enable),	 // Templated
 	      .mmu_bp			(etx_rr),		 // Templated
-	      .mi_clk			(mi_clk),
 	      .mi_en			(mi_en),
 	      .mi_we			(mi_we),
 	      .mi_addr			(mi_addr[19:0]),
 	      .mi_din			(mi_din[DW-1:0]),
+	      .emesh_clk		(tx_lclk_div4),		 // Templated
 	      .emesh_access_in		(etx_remap_access),	 // Templated
 	      .emesh_packet_in		(etx_remap_packet[PW-1:0]), // Templated
 	      .emesh_wait_in		(etx_wait));		 // Templated
@@ -389,7 +387,7 @@ module etx(/*AUTOARG*/
    /************************************************************/
    /*Debug signals (async sampling)                            */
    /************************************************************/
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      begin
 	ecfg_tx_debug[15:0] <= {2'b0,                     //15:14
 				etx_rd_wait,              //13

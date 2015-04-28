@@ -9,7 +9,7 @@ module ecfg_base (/*AUTOARG*/
    // Outputs
    soft_reset, mi_dout, ecfg_clk_settings, colid, rowid,
    // Inputs
-   hard_reset, mi_clk, mi_en, mi_we, mi_addr, mi_din
+   hard_reset, sys_clk, mi_en, mi_we, mi_addr, mi_din
    );
 
    /******************************/
@@ -31,7 +31,7 @@ module ecfg_base (/*AUTOARG*/
    /*****************************/
    /*SIMPLE MEMORY INTERFACE    */
    /*****************************/    
-   input 	 mi_clk;
+   input 	 sys_clk;
    input 	 mi_en;         
    input 	 mi_we;            // single we, must write 32 bit words
    input [19:0]  mi_addr;          // complete physical address (no shifting!)
@@ -82,7 +82,7 @@ module ecfg_base (/*AUTOARG*/
    //###########################
    //# RESET
    //###########################
-    always @ (posedge mi_clk)
+    always @ (posedge sys_clk)
       if(hard_reset)
 	ecfg_reset_reg <= 1'b0;   
       else if (ecfg_reset_write)
@@ -93,7 +93,7 @@ module ecfg_base (/*AUTOARG*/
    //###########################
    //# CCLK/LCLK (PLL)
    //###########################
-    always @ (posedge mi_clk)
+    always @ (posedge sys_clk)
      if(hard_reset)
        ecfg_clk_reg[15:0] <= 'd0;   
      else if (ecfg_clk_write)
@@ -104,7 +104,7 @@ module ecfg_base (/*AUTOARG*/
    //###########################
    //# COREID
    //###########################
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(hard_reset)
        ecfg_coreid_reg[11:0] <= DEFAULT_COREID;
      else if (ecfg_coreid_write)
@@ -117,7 +117,7 @@ module ecfg_base (/*AUTOARG*/
    //###########################
    //# VERSION
    //###########################
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(hard_reset)
        ecfg_version_reg[15:0] <= DEFAULT_VERSION;
      else if (ecfg_version_write)
@@ -128,7 +128,7 @@ module ecfg_base (/*AUTOARG*/
    //###############################
 
    //Pipelineing readback
-   always @ (posedge mi_clk)
+   always @ (posedge sys_clk)
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
          `ELRESET:   mi_dout[31:0] <= {31'b0, ecfg_reset_reg};
