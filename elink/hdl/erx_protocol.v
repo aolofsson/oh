@@ -10,16 +10,16 @@
 
 module erx_protocol (/*AUTOARG*/
    // Outputs
-   erx_access, erx_packet, erx_rr,
+   erx_access, erx_packet, remap_bypass,
    // Inputs
    reset, rx_enable, rx_lclk_div4, rx_frame_par, rx_data_par
    );
 
-   parameter AW = 32;
-   parameter DW = 32;
-   parameter PW = 104;
-   parameter ID = 0;   
-   parameter [11:0]  C_READ_TAG_ADDR = 12'h810;
+   parameter AW   = 32;
+   parameter DW   = 32;
+   parameter PW   = 104;
+   parameter ID   = 0;
+   parameter RFAW = 4;
    
    // System reset input
    input          reset;
@@ -33,7 +33,7 @@ module erx_protocol (/*AUTOARG*/
    // Output to MMU / filter
    output          erx_access;
    output [PW-1:0] erx_packet;
-   output 	   erx_rr;    //needed for remapping logic
+   output 	   remap_bypass;    //needed for remapping logic
    
    //######################
    //# Identify FRAME edges
@@ -350,11 +350,11 @@ module erx_protocol (/*AUTOARG*/
 		     .srcaddr_in	(srcaddr_reg[AW-1:0])
 		     );
    
-    assign erx_rr     = erx_access & 
+   //dont't remap read returns and writes to RX registers
+   assign remap_bypass= erx_access & 
 		        write_reg & 
-		        (dstaddr_reg[31:20] == ID) & 
-		        (dstaddr_reg[19:16]==`EGROUP_READTAG)
-			  ;
+		        (dstaddr_reg[31:20]==ID)
+			;
 
    
 endmodule // erx_protocol

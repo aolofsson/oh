@@ -24,7 +24,7 @@ module erx_remap (/*AUTOARG*/
    input [11:0]   remap_sel;     //number of bits to remap
    input [11:0]   remap_pattern; //static pattern to map to
    input [31:0]   remap_base;    //remap offset
-   input 	  remap_bypass;  //dynamic bypass (ie read request)
+   input 	  remap_bypass;  //dynamic bypass (read request | link match)
    
    //Output to TX IO   
    output 	   emesh_access_out;
