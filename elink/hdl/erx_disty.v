@@ -114,8 +114,7 @@ module erx_disty (/*AUTOARG*/
    //####################################
 
    assign rxwr_fifo_access        = emmu_access & 
-			            emmu_write & 
-			           ~(emmu_dstaddr[31:20] == ID);
+			            emmu_write;
 
    assign rxwr_fifo_packet[PW-1:0] = emmu_packet[PW-1:0];
          
