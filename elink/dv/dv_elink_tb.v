@@ -78,7 +78,7 @@ module dv_elink_tb();
 `ifdef AUTO
 	  go       = 1'b0;
 `endif
-	#10000	  
+	#20000	  
 	  $finish;
      end
 

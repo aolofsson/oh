@@ -155,6 +155,10 @@ module dv_elink(/*AUTOARG*/
    assign elink0_rxwr_wait = 1'b0;
    assign elink0_rxrr_wait = 1'b0;
 
+   //not connected
+   assign elink0_txrr_access         =  1'b0;
+   assign elink0_txrr_packet[PW-1:0] = 'b0;
+
  /*elink AUTO_TEMPLATE ( 
                         // Outputs                        
                         .hard_reset	    (reset),
@@ -166,8 +170,7 @@ module dv_elink(/*AUTOARG*/
   */
 
    defparam elink0.ID = 12'h810;   
-   elink elink0 (.txrr_access		(),//not used
-		 .txrr_packet		(),//not used	
+   elink elink0 (
 		 .rxi_lclk_p		(elink1_txo_lclk_p),
 		 .rxi_lclk_n		(elink1_txo_lclk_n),
 		 .rxi_frame_p		(elink1_txo_frame_p),
@@ -219,7 +222,9 @@ module dv_elink(/*AUTOARG*/
 		 .txwr_access		(elink0_txwr_access),	 // Templated
 		 .txwr_packet		(elink0_txwr_packet[PW-1:0]), // Templated
 		 .txrd_access		(elink0_txrd_access),	 // Templated
-		 .txrd_packet		(elink0_txrd_packet[PW-1:0])); // Templated
+		 .txrd_packet		(elink0_txrd_packet[PW-1:0]), // Templated
+		 .txrr_access		(elink0_txrr_access),	 // Templated
+		 .txrr_packet		(elink0_txrr_packet[PW-1:0])); // Templated
 
 
 
@@ -228,6 +233,7 @@ module dv_elink(/*AUTOARG*/
    assign elink1_txrd_packet = 'b0;
    assign elink1_txwr_access = 1'b0;
    assign elink1_txwr_packet = 'b0;
+   assign elink1_rxrr_wait   = 1'b0;
    
    defparam elink1.ID = 12'h820;   
    elink elink1 (.rxi_lclk_p		(elink0_txo_lclk_p),
@@ -286,8 +292,9 @@ module dv_elink(/*AUTOARG*/
    
    
    
-   assign  emem_access           = elink1_rxwr_access | elink1_rxrd_access;
-    
+   assign  emem_access           = (elink1_rxwr_access & ~(elink1_rxwr_packet[39:28]==elink1.ID)) |
+				   (elink1_rxrd_access & ~(elink1_rxrd_packet[39:28]==elink1.ID));
+   
    assign  emem_packet[PW-1:0]   = elink1_rxwr_access ? elink1_rxwr_packet[PW-1:0]:
                                                         elink1_rxrd_packet[PW-1:0];
 
