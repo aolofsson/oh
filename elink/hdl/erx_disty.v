@@ -9,12 +9,13 @@ module erx_disty (/*AUTOARG*/
    timeout
    );
 
-   parameter [11:0]  C_READ_TAG_ADDR = 12'h810;
    parameter AW   = 32;
    parameter DW   = 32;
    parameter PW   = 104;
    parameter ID   = 12'h800; //link id
-
+   parameter RFAW = 4;
+   
+   
    //From IO
    input           erx_access;
    input [PW-1:0]  erx_packet;
@@ -102,10 +103,12 @@ module erx_disty (/*AUTOARG*/
 				     (erx_access & 
 				     erx_write & 
 				     (erx_dstaddr[31:20] == ID) & 
-				     (erx_dstaddr[19:16]==`EGROUP_READTAG));
+				     (erx_dstaddr[19:16]==`EGROUP_RX) &
+				     (erx_dstaddr[RFAW+1:2]==`ELRXRR)
+				      );
    
    assign rxrr_fifo_packet[PW-1:0] = timeout ? {32'h0,32'hDEADBEEF,
-				  	        ID,`EGROUP_READTAG,16'h0000,
+				  	        ID,`EGROUP_RX,16'h0000,
                                                 8'h03} : 
    				                erx_packet[PW-1:0];
       
