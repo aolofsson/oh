@@ -66,13 +66,11 @@ module ecfg_if (/*AUTOARG*/
    wire [63:0] 	   rxwr_data;
    
    wire [AW-1:0]   txwr_dstaddr;
-   wire [AW-1:0]   txwr_srcaddr;
-   
+   wire [AW-1:0]   rxwr_dstaddr;   
    wire [AW-1:0]   txrd_dstaddr;
-   wire [AW-1:0]   txrd_srcaddr;
-   
-   wire [AW-1:0]   rxwr_dstaddr;
-   wire [AW-1:0]   rxwr_srcaddr;
+   wire [AW-1:0]   txrd_srcaddr;   
+
+
    
    wire 	   mi_wr;
    wire 	   mi_rd;
@@ -129,8 +127,8 @@ module ecfg_if (/*AUTOARG*/
 			           txwr_dstaddr[19:0];
    
    //Data (prepare for it)
-   assign mi_din[63:0]  =  rx_wr ? {rxwr_srcaddr[31:0],rxwr_data[31:0]} :
-                                   {txwr_srcaddr[31:0],txwr_data[31:0]};
+   assign mi_din[63:0]  =  rx_wr ? rxwr_data[63:0] :
+                                   txwr_data[63:0];
 
    //Interface clock (gate?)
    assign mi_clk = sys_clk;
