@@ -422,7 +422,7 @@ module elink(/*AUTOARG*/
                       )
    */
 
-   defparam ecfg_base.GROUP=`EGROUP_CFG;
+   defparam ecfg_base.GROUP=`EGROUP_TX;
    ecfg_base ecfg_base(
 		       /*AUTOINST*/
 		       // Outputs

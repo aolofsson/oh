@@ -67,7 +67,6 @@ module erx (/*AUTOARG*/
    wire [PW-1:0]	emmu_packet;		// From emmu of emmu.v
    wire			erx_access;		// From erx_protocol of erx_protocol.v
    wire [PW-1:0]	erx_packet;		// From erx_protocol of erx_protocol.v
-   wire			erx_rr;			// From erx_protocol of erx_protocol.v
    wire			erx_wait;		// From erx_disty of erx_disty.v
    wire [8:0]		gpio_datain;		// From erx_io of erx_io.v
    wire [DW-1:0]	mi_rx_cfg_dout;		// From ecfg_rx of ecfg_rx.v
@@ -75,6 +74,7 @@ module erx (/*AUTOARG*/
    wire [DW-1:0]	mi_rx_emmu_dout;	// From emmu of emmu.v
    wire			mmu_enable;		// From ecfg_rx of ecfg_rx.v
    wire [31:0]		remap_base;		// From ecfg_rx of ecfg_rx.v
+   wire			remap_bypass;		// From erx_protocol of erx_protocol.v
    wire [1:0]		remap_mode;		// From ecfg_rx of ecfg_rx.v
    wire [11:0]		remap_pattern;		// From ecfg_rx of ecfg_rx.v
    wire [11:0]		remap_sel;		// From ecfg_rx of ecfg_rx.v
@@ -343,7 +343,7 @@ module erx (/*AUTOARG*/
                         .emesh_clk			(rx_lclk_div4),
                         .mi_dout   	        (mi_rx_emmu_dout[DW-1:0]),
                         .emesh_packet_hi_out	(),
-                        .mmu_bp	    	        (erx_rr),
+                        .mmu_bp	    	        (remap_bypass),
                         .emesh_wait_in		(erx_wait),	 
                            );
    */
@@ -360,7 +360,7 @@ module erx (/*AUTOARG*/
 	      .reset			(reset),
 	      .sys_clk			(sys_clk),
 	      .mmu_en			(mmu_enable),		 // Templated
-	      .mmu_bp			(erx_rr),		 // Templated
+	      .mmu_bp			(remap_bypass),		 // Templated
 	      .mi_en			(mi_en),
 	      .mi_we			(mi_we),
 	      .mi_addr			(mi_addr[19:0]),
@@ -383,7 +383,6 @@ module erx (/*AUTOARG*/
                         .clk			(rx_lclk_div4),
                         .mi_dout   	        (mi_rx_emmu_dout[DW-1:0]),
                         .emesh_packet_hi_out	(),
-                        .remap_bypass  	        (erx_rr),	 
                            );
    */
 
@@ -401,7 +400,7 @@ module erx (/*AUTOARG*/
 			.remap_sel	(remap_sel[11:0]),
 			.remap_pattern	(remap_pattern[11:0]),
 			.remap_base	(remap_base[31:0]),
-			.remap_bypass	(erx_rr),		 // Templated
+			.remap_bypass	(remap_bypass),
 			.emesh_wait_in	(erx_wait));		 // Templated
    
    /**************************************************************/
@@ -413,7 +412,7 @@ module erx (/*AUTOARG*/
 			      // Outputs
 			      .erx_access	(erx_access),
 			      .erx_packet	(erx_packet[PW-1:0]),
-			      .erx_rr		(erx_rr),
+			      .remap_bypass	(remap_bypass),
 			      // Inputs
 			      .reset		(reset),
 			      .rx_enable	(rx_enable),
