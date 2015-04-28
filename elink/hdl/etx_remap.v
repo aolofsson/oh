@@ -35,8 +35,9 @@ module etx_remap (/*AUTOARG*/
    
    assign addr_in[31:0]   =  emesh_packet_in[39:8];
 
-   assign addr_remap[31:0] = {addr_in[28:17],
-                             {(4){addr_in[16]}},
+   assign addr_remap[31:0] = {addr_in[29:18],//ID
+			      addr_in[17:16],//SPECIAL GROUP
+                             {(2){(|addr_in[17:16])}},//ZERO IF NOT SPECIAL
 			     addr_in[15:0]
 			     };
    			     
