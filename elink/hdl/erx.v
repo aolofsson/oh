@@ -340,7 +340,7 @@ module erx (/*AUTOARG*/
                          //Inputs
                         .emesh_\(.*\)_in	(emesh_remap_\1[]),   
                         .mmu_en			(mmu_enable),
-                        .clk			(rx_lclk_div4),
+                        .emesh_clk			(rx_lclk_div4),
                         .mi_dout   	        (mi_rx_emmu_dout[DW-1:0]),
                         .emesh_packet_hi_out	(),
                         .mmu_bp	    	        (erx_rr),
@@ -349,7 +349,7 @@ module erx (/*AUTOARG*/
    */
 
    defparam emmu.GROUP=`EGROUP_RX;
-   emmu emmu (.emesh_clk		(emesh_clk),
+   emmu emmu (
 	      /*AUTOINST*/
 	      // Outputs
 	      .mi_dout			(mi_rx_emmu_dout[DW-1:0]), // Templated
@@ -365,6 +365,7 @@ module erx (/*AUTOARG*/
 	      .mi_we			(mi_we),
 	      .mi_addr			(mi_addr[19:0]),
 	      .mi_din			(mi_din[DW-1:0]),
+	      .emesh_clk		(rx_lclk_div4),		 // Templated
 	      .emesh_access_in		(emesh_remap_access),	 // Templated
 	      .emesh_packet_in		(emesh_remap_packet[PW-1:0]), // Templated
 	      .emesh_wait_in		(erx_wait));		 // Templated
