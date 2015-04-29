@@ -1,14 +1,15 @@
-###DESCRIPTION
+ELINK INTRODUCTION
+=====================================
 The "elink" is a low-latency/high-speed interface for communicating between 
-FPGAs and ASICs (such as Epiphany). The interface "should" achieve a peak 
-throughput of 8 Gbit/s (duplex) in modern FPGAs using 24 available LVDS signal 
-pairs.
-  
-###ELINK I/O Interface  
+FPGAs and ASICs (such as Epiphany) that uses 24 signals for full duplex 
+communication. The interface can achieve a peak throughput of 8 Gbit/s (duplex)
+in modern FPGAs using differential LVDS signaling.
+    
+###I/O INTERFACE
    
 SIGNAL            |DIR| DESCRIPTION 
 ------------------|---|--------------
-txo_frame_{p/n}   | O | TX packet framing signal.
+txo_frame_{p/n}   | O | TX packet framing signal
 txo_lclk{p/n}     | O | TX clock aligned in the center of the data eye
 txo_data{p/n}[7:0]| O | TX dual data rate (DDR) that transmits packet
 txi_rd_wait{p/n}  | I | TX push back (input) for read transactions
@@ -18,16 +19,31 @@ rxi_lclk{p/n}     | I | RX clock aligned in the center of the data eye
 rxi_data{p/n}[7:0]| I | RX dual data rate (DDR) that transmits packet
 rxo_rd_wait{p/n}  | O | RX push back (output) for read transactions
 rxo_wr_wait{p/n}  | O | RX push back (output) for write transactions
+cclk_{p/n}        | O | Epiphany differential high speed clock
+chip_resetb       | O | Epiphany reset (active low)
+colid[3:0]        | O | Epiphany column chip coordinate
+rowid[3:0]        | O | Epiphany row chip coordinate
+
+The Epiphany specific output signals can be left unconnected in systems that 
+don't include Epiphany chips. 
+
+###SYSTEM SIDE INTERFACE
+SIGNAL            |DIR| DESCRIPTION 
+------------------|---|--------------
+elinkid[11:0]     | I | Address ID of elink 
 hard_reset        | I | Reset input
 clkin             | I | Clock input for CCLK/LCLK PLL
+rx_lclk_div4      | O | rxi_lclk clock divided by 4
+tx_lclk_div4      | O | txo_lclk clock divided by 4
 clkbypass[2:0]    | I | Clocks inputs for bypassing PLL
-cclk_{p/n}        | O | Differential clock output for Epiphany  
-chip_resetb       | O | Reset for Epiphany (active low)
-colid[3:0]        | O | Column chip coordinate pins for Epiphany 
-rowid[3:0]        | O | Row chip coordinate pins for Epiphany 
 embox_not_empty   | O | Mailbox not empty (connect to interrupt line)   
 embox_full        | O | Mailbox is full indicator
 timeout           | O | Read request timeout indicator
+mi_en             | I | Congiruation access enable
+mi_we             | I | Configuration write
+mi_addr[19:0]     | I | Configuration register address
+mi_din[31:0]      | I | Configuration data input
+mi_dout[31:0]     | O | Configuration readback data
 txwr_access       | I | TX write  
 txwr_packet[103:0]| I | TX write packet
 txwr_wait         | O | TX write wait (pushback)
@@ -47,53 +63,54 @@ rxrr_access       | O | RX read-response
 rxrr_packet[103:0]| O | RX read-response packet
 rxrr_wait         | I | RX read-response wait (pushback)
 
-###ELINK I/O PROTOCOL  
+###I/O PROTOCOL 
 The default protocol for the elink is the Epiphany chip to chip interface. 
 The Epiphany protocol uses a source synchronous clocks, a packet frame signal,
 an 8-bit wide dual data rate data bus, and separate read and write packet wait
 signals to implement a gluless point to point link.
 
-        __     ___     ___     ___     ___     ___     ___     ___     ___
+```
+                __     ___     ___     ___     ___     ___     ___     ___ 
  LCLK     \___/   \___/   \___/   \___/   \___/   \___/   \___/   \___/
            _______________________________________________________________
  FRAME   _/                                                        \______ 
                
  DATA   XXXX|B00|B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14.
+
+```
            
 BYTE     | DESCRIPTION 
 ---------|--------------
 B00      | 00000000
-B01      | ctrlmode[3:0],dstaddr[31:28]
+B01      | {ctrlmode[3:0],dstaddr[31:28]}
 B02      | dstaddr[27:20]
 B03      | dstaddr[19:12]
 B04      | dstaddr[11:4]
-B05      | dstaddr[3:0],datamode[1:0],write,access
+B05      | {dstaddr[3:0],datamode[1:0],write,access}
 B06      | data[31:24] (or srcaddr[31:24] if read transaction)
 B07      | data[23:16] (or srcaddr[23:16] if read transaction)
 B08      | data[15:8]  (or srcaddr[15:8]  if read transaction)
 B09      | data[7:0]   (or srcaddr[7:0]   if read transaction)
-*B10     | data[63:56]  
++B10     | data[63:56]  
 B11      | data[55:48]  
 B12      | data[47:40]  
 B13      | data[39:32]  
-**B14    | data[31:24]  (in 64 bit write burst mode)
+++B14    | data[31:24]  (in 64 bit write burst mode)
 B15      | data[23:16]  (in 64 bit write burst mode)
 ...      | ...
 
-* byte9 is the last byte of 32 bit write or read transaction 
-   
-** if 64 bit write transaction, data of byte14 is the first data byte of
-   bursting transaction
++B09 is the last byte of 32 bit write or read transaction  
+++B14 is the first data byte of bursting transaction  
  
 The data captured  on the rising edge of the LCLK is considered to be B0 if 
 the FRAME control captured at the same cycle is high but was low at the rising
 edge of the previous LCLK cycle (ie rising edge). If the FRAME control signal
 stays high after B13, then the the eLink goes into “bursting mode”, meaning 
 that the  last byte of the previous transaction (B13) will be followed by B06
-of a new transaction.
+of a new transaction.  
 
 The data is transmitted MSB first but in 32bits resolution. If we want to 
-transmit 64 bits it will be [31:0] (msb first) and then [63:32] (msb first)
+transmit 64 bits it will be bits 31:0 (msb first) and then 63:32 (msb first)  
 
 The wait signals are used to stall transmission when a receiver is unable to 
 accept more transactions. The receiver will raise its WAIT output signal during
@@ -104,18 +121,18 @@ sampled with the two-cycle synchronizer. Once synchronized to the transmitter's
 LCLK clock domain, the WAIT control signals will prevent new transaction from 
 being transmitted. If the transaction is in the middle of the transmission when
 the synchronized WAIT control goes high, the transmission process is to 
-completed without interruption.
+completed without interruption.  
               
-###BUS PROTOCOL  
+###SYSTEM SIDE PROTOCOL  
+
 Communication between the elink and the system side (i.e. the AXI side) is done
 using the rx and tx parallel interfaces. Read, write, and read response 
 transactions have independent channels into the elink. Data from a receiver 
 read request is expected to return on the read response transmit chanel.   
 
 The "access" signals indicate a valid transaction. The wait signals indicate
-that the receiving block is not ready to receive the packet. 
-
-The elink packets haave the following bit ordering.
+that the receiving block is not ready to receive the packet. An elink packet  
+has the following bit ordering.  
 
  PACKET FIELD  | BITS    | DESCRIPTION 
  --------------|---------|----------
@@ -129,13 +146,14 @@ The elink packets haave the following bit ordering.
 
 ###INTERNAL STRUCTURE
 
-(link) 
+(link to picture) 
  
-###ELINK REGISTER MAP  
+###REGISTER MAP  
  
-The elink has a 12 bit ID that maps to address bits [31:20].
-As an example, if the ID is set to 0x810, then writing to the E_RESET 
-register would be done to address 0x810E0040
+The full 32 bit physical address of an elink register is the address seen below
+added to the 12 bit elink ID that maps to address bits 31:20.  As an example,
+if the elink ID is 0x810, then writing to the E_RESET register would be done to 
+address 0x810D0000.
  
 REGISTER       | ADDRESS | DESCRIPTION 
 ---------------|---------|------------------
@@ -146,15 +164,11 @@ E_VERSION      | 0xD000C | Version number
 ETX_CFG        | 0xD0040 | TX configuration
 ETX_STATUS     | 0xD0044 | TX status
 ETX_GPIO       | 0xD0048 | TX data in GPIO mode
-ETX_TEST       | 0xD0050 | TX test mode configuration
-ETX_DSTADDR    | 0xD0054 | TX destination address for test mode
-ETX_DATA       | 0xD0058 | TX data for test mode
-ETX_SRCADDR    | 0xD005c | TX return address for read in test mode
 ETX_MMU        | 0xD8000 | TX MMU table 
 ERX_CFG        | 0xE0000 | RX configuration
 ERX_STATUS     | 0xE0004 | RX status register
 ERX_GPIO       | 0xE0008 | RX data in GPIO mode
-ERX_RRR        | 0xE000c | RX read response address
+ERX_RR         | 0xE000c | RX read response address
 ERX_OFFSET     | 0xE0000 | RX memory offset in remap mode
 ERX_MAILBOXLO  | 0xE0040 | RX mailbox (lower 32 bit)
 ERX_MAILBOXHI  | 0xE0044 | RX mailbox (upper 32 bits)
@@ -166,75 +180,259 @@ ERX_DMADSTADDR | 0xE0090 | RX DMA destination address
 ERX_DMASTATUS  | 0xE0094 | RX DMA status
 ERX_MMU        | 0xE8000 | RX MMU table 
 
-          
-###ELINK REGISTER DESCRIPTIONS
- REGISTER   | DESCRIPTION 
- ---------- | --------------------------------------------------
- ELRESET    | (elink reset register)
- [0]        | 0:  elink is active
-            | 1:  elink in reset
- ---------- |---------------------------------------------------
- ELTX       | (elink transmit configuration register)
- [0]        | 0:  TX disable
-            | 1:  TX enable
- [1]        | 0:  static address translation
-            | 1:  enables MMU based address translation
- [3:2]      | 00: default elink packet transfer mode
-            | 01: forces values from ESYSDATAOUT on output pins
-            | 1x: reserved
- [7:4]      | Transmit control mode for eMesh
- [8]        | AXI slave read timeout enable
- -----------|----------------------------------------------------
- ELRX       | (elink receive configuration register)
- [0]        | 0:  elink RX disable
-            | 1:  elink RX enable
- [1]        | 0:  static address translation
-            | 1:  enables MMU based address translation
- [3:2]      | 00: default elink packet receive mode
-            | 01: stores input pin data in ESYSDATAIN register
-            | 1x: reserved
- -----------|---------------------------------------------------
- ELCLK      | (elink PLL configuration register)
- [0]        | 0:cclk clock disabled
-            | 1:cclk clock enabled 
- [1]        | 0:tx_lclk clock disabled
-            | 1:tx_lclk clock enabled 
- [2]        | 0: cclk driven from internal PLL
-            | 1: cclk driven from clkbypass[2:0] input 
- [3]        | 0: lclk driven from internal PLL
-            | 1: lclk driven from clkbypass[2:0] input   
- [7:4]      | 0000: cclk=pllclk/1
-            | 0001: cclk=pllclk/2
-            | 0010: cclk=pllclk/4
-            | 0011: cclk=pllclk/8
-            | 0100: cclk=pllclk/16
-            | 0101: cclk=pllclk/32
-            | 0110: cclk=pllclk/64
-            | 0111: cclk=pllclk/128
-            | 1xxx: RESERVED
- [11:8]     | 0000: lclk=pllclk/1
-            | 0001: lclk=pllclk/2
-            | 0010: lclk=pllclk/4
-            | 0011: lclk=pllclk/8
-            | 0100: lclk=pllclk/16
-            | 0101: lclk=pllclk/32
-            | 0110: lclk=pllclk/64
-            | 0111: lclk=pllclk/128
-            | 1xxx: RESERVED        
- [15:12]    | PLL frequency
- -----------|-------------------------------------------------
- ELCOREID   | (coordinate ID for Epiphany)
- [5:0]      | Column ID for connected Epiphany chip
- [11:6]     | Row ID for connected Epiphany chip  
- -----------|-------------------------------------------------
- ELVERSION  | (platform and version ID)
- [7:0]      | Platform model number
- [7:0]      | Revision number
- -----------|-------------------------------------------------
- EDATAIN    | (data on elink input pins)
- [7:0]      | rx_data[7:0]         
- [8]        | tx_frame
- [9]        | tx_wait_rd
- [10]       | tx_wait_wr
- -----------|-------------------------------------------------
+REGISTER DESCRIPTIONS
+===========================================
 
+###E_RESET
+Reset control register for the elink and Epiphany chip
+
+FIELD    | DESCRIPTION 
+-------- | --------------------------------------------------
+ [0]     | 0: elink is active
+         | 1: elink in reset
+ [1]     | 0: epiphany chip is active
+         | 1: epiphany chip in reset
+ [2]     | 1: Starts an internal reset and clock sequnce block
+              (self resetting bit)
+
+###E_CLK (LABS)
+Transmit and Epiphany clock settings.
+(NOTE: not currently implemented)  
+  
+FIELD    | DESCRIPTION 
+---------| --------------------------------------------------
+ [0]     | 0: cclk clock disabled
+         | 1: cclk clock enabled 
+ [1]     | 0: tx_lclk clock disabled
+         | 1: tx_lclk clock enabled 
+ [2]     | 0: cclk driven from internal PLL
+         | 1: cclk driven from clkbypass[0] input 
+ [3]     | 0: lclk driven from internal PLL
+         | 1: lclk driven from clkbypass[1] input
+ [7:4]   | 0000: cclk=pllclk/1
+         | 0001: cclk=pllclk/2
+         | 0010: cclk=pllclk/4
+         | 0011: cclk=pllclk/8
+         | 0100: cclk=pllclk/16
+         | 0101: cclk=pllclk/32
+         | 0110: cclk=pllclk/64
+         | 0111: cclk=pllclk/128
+         | 1xxx: RESERVED
+ [11:8]  | 0000: lclk=pllclk/1
+         | 0001: lclk=pllclk/2
+         | 0010: lclk=pllclk/4
+         | 0011: lclk=pllclk/8
+         | 0100: lclk=pllclk/16
+         | 0101: lclk=pllclk/32
+         | 0110: lclk=pllclk/64
+         | 0111: lclk=pllclk/128
+         | 1xxx: RESERVED        
+ [15:12] | PLL frequency (TBD)
+
+
+###E_CHIPID
+Column and row chip id pins to the Epiphany chip.
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [5:2]   | Column chip  ID for Epiphany chip
+ [11:8]  | Row chip ID for Epiphany chip
+
+###E_VERSION
+Platform and revision number.
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [7:0]   | Platform version
+ [15:8]  | Revision number
+
+###ETX_CFG
+TX configuration settings
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [0]     | 0:  TX disable
+         | 1:  TX enable
+ [1]     | 0:  MMU disabled
+         | 1:  MMU enabled
+ [3:2]   | 00: Address remapping disabled
+         | 01: TX addr_out = {addr[29:16],|addr[17:16]?11:00,addr[15:0]}
+         | 1x: Reserved
+ [7:4]   | Epiphany routing control mode bits
+         | 0000: Normal routing
+         | 0001: Force NORTH routing on address match (instead of "into" core)
+         | 0101: Force EAST routing on address match (instead of "into" core)
+         | 1001: Force SOUTH routing on address match (instead of "into" core)
+         | 1101: Force WEST routing on address match (instead of "into" core)
+         | 0011: Multicast routing (LABS)
+ [8]     | Control mode select for TXRD/TXWR channels
+         | 0: ctrlmode field taken from incoming transmit packet
+         | 1: ctrlmode field taken E_TXCFG
+ [11:9]  | 00: Normal transmit mode
+         | 01: GPIO direct drive mode
+         | 10: Enables test pattern generator for IO (LABS)
+
+###ETX_STATUS
+TX status register
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [15:0]  | TBD
+
+###ETX_GPIO
+Data to drive on txo_data and txo_frame pins in gpio mode
+ 
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [7:0]   | Data for txo_data pins
+ [8]     | Data for txo_frame pin
+
+###ETX_MMU
+A table of N entries for translating incoming 12 bit address
+to a new value. Entries are aligned on 8 byte boundaroies
+ 
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [11:0]  | Output address bits 31:20
+ [43:12] | Output address bits 63:32 (TBD)
+
+###ERX_CFG
+RX configuration register
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [0]     | 0: RX disabled
+         | 1: RX enabled
+ [1]     | 0: MMU disabled
+         | 1: MMU enabled
+ [3:2]   | RX address remapping mode
+         | 00: pass-through mode, remapping disabled
+         | 01: "static" remap_addr =  
+         | (remap_sel[11:0] & remap_pattern[11:0]) |
+	 | (~remap_sel[11:0] & addr_in[31:20]); 
+         | 10: "dynamic" remap_addr = 
+         | addr_in[31:0]
+	 | - (colid << 20)
+	 | + ERX_OFFSET[31:0]
+         | - (addr_in[31:26]<<clog2(colid));
+ [15:4]  | Remap selection for "01" remap method 
+         | "1" means remap bit is selected
+ [27:16] | Remap values (for addr[31:20)
+ [29:28] | Read request timeout counter configuration
+         | 00: Timeout counter turned off
+         | 01: Timeout value set to 000000FF
+         | 10: Timeout value set to 0000FFFF
+         | 11: Timeout value set to FFFFFFFF
+
+###ERX_STATUS
+RX status register
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [15:0]  | TBD
+
+###ERX_GPIO
+RX status register
+Data sampled on  rxi_data and rxi_frame pins in gpio mode
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [7:0]   | Data from rxi_data pins
+ [8]     | Data from rxi_frame pin
+
+###ERX_RR
+Last read response data that was received on rxrr_packet[103:0]
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | Read response data (lower 32 bits)
+
+###ERX_OFFSET
+Address offset used in the dynamic address remapping mode
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | Memory offset
+
+###ERX_MAILBOXLO
+Lower 32 bit word of current entry of RX 64-bit wide mailbox FIFO. This 
+register should be read before the ERX_MAILBOXHI. 
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | Lower data of RX FIFO
+
+###ERX_MAILBOXHI
+Upper 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Reading this
+register causes the RX FIFO read pointer to increment by one
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | Upper data of RX FIFO
+
+###DMACFG
+Configuration register for DMA
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [0]     | 0: DMA disabled
+         | 1: DMA enabled 
+ [1]     | 0: Slave mode
+         | 1: Master mode
+ [6:5]   | 00: byte transfers
+         | 01: half-word transfers
+         | 10: word transfers
+         | 11: double word transfers
+ [10]    | 0: Message mode disabled
+         | 1: Enables special message mode
+ [11]    | 0: Source address shift disabled
+         | 1: Left shifts stride by 16 bits
+ [12]    | 0: Destination address shift disabled
+         | 1: Left shifts stride by 16 bits
+         
+###DMACOUNT
+The number of DMA left to complete The DMA transfer is complete when the 
+DMACOUNT register reaches zero.
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | The number of transfers remaining
+
+###DMADSTADDR
+The current 32-bit address being transferred
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | Current transaction destination address to write to
+
+###DMASRCADDR
+The current 32-bit address being read from in master mode
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | Current transaction destination address to write to
+
+
+###DMASTRIDE
+Two signed 16-bit values specifying the stride, in bytes, used to update the 
+DMASRCADDR and DMADSTADDR after each completed transfer. 
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [15:0]  | Value to add to DMASRCADDR after each transaction
+ [31:16] | Value to add to DMADSTADDR after each transaction
+
+###DMASTRIDE
+Status of DMA
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | TBD
+
+###ERX_MMU
+A table of N entries for translating incoming 12 bit address to a new value. 
+Entries are aligned on 8 byte boundaries
+ 
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [11:0]  | Output address bits 31:20
+ [43:12] | Output address bits 63:32 (TBD)

@@ -21,14 +21,14 @@ module OSERDESE2 ( /*AUTOARG*/
      
    output OFB;                    // output feedback port
    output OQ;                     // data output port, D1 appears first
-   output SHIFTOUT1;              // connect to shift in of master, example?
-   output SHIFTOUT2;              // connect to shift in of master, example?
+   output SHIFTOUT1;              // connect to shift in of master
+   output SHIFTOUT2;              // connect to shift in of master
    output TBYTEOUT;               // byte group tristate output to IOB
    output TFB;                    // 3-state control output for ODELAYE2
    output TQ;                     // 3-state control output
-   input  CLK;                    // high speed clock
-   input  CLKDIV;                 // low speed clock (/8 for example)
-   input  D1;                     // 
+   input  CLK;                    // high speed shift out clock
+   input  CLKDIV;                 // low speed clock (/4 for example)
+   input  D1;                     // first bit to shift out
    input  D2;                     //
    input  D3;                     //
    input  D4;                     //

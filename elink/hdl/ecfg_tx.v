@@ -7,10 +7,10 @@
 module ecfg_tx (/*AUTOARG*/
    // Outputs
    mi_dout, ecfg_tx_enable, ecfg_tx_mmu_enable, ecfg_tx_gpio_enable,
-   ecfg_tx_tp_enable, ecfg_tx_ctrlmode, ecfg_tx_ctrlmode_bp,
-   ecfg_tx_remap_enable, ecfg_dataout, ecfg_access, ecfg_packet,
+   ecfg_tx_tp_enable, ecfg_tx_remap_enable, ecfg_dataout, ecfg_access,
+   ecfg_packet, ecfg_tx_ctrlmode, ecfg_tx_ctrlmode_bp,
    // Inputs
-   reset, sys_clk, mi_en, mi_we, mi_addr, mi_din, ecfg_tx_debug
+   reset, clk, mi_en, mi_we, mi_addr, mi_din, ecfg_tx_debug
    );
 
    /******************************/
@@ -24,7 +24,7 @@ module ecfg_tx (/*AUTOARG*/
    /*HARDWARE RESET (EXTERNAL)   */
    /******************************/
    input 	reset;             // ecfg registers reset only by "hard reset"
-   input 	sys_clk;
+   input 	clk;               // main tx logic clock
 
    /*****************************/
    /*SIMPLE MEMORY INTERFACE    */
@@ -38,18 +38,24 @@ module ecfg_tx (/*AUTOARG*/
    /*****************************/
    /*ELINK CONTROL SIGNALS      */
    /*****************************/
-   //tx
+   //tx (static configs)
    output 	   ecfg_tx_enable;       // enable signal for TX  
    output 	   ecfg_tx_mmu_enable;   // enables MMU on transmit path  
    output 	   ecfg_tx_gpio_enable;  // forces TX output pins to constants
-   output          ecfg_tx_tp_enable;    // enables 1/0 pattern on transmit  
+   output          ecfg_tx_tp_enable;    // enables 1/0 pattern on transmit     
+   output 	   ecfg_tx_remap_enable; // enable address remapping
+   input [15:0]    ecfg_tx_debug;        // etx debug signals
+   
+   //sampled by tx_lclk (test)
+   output [8:0]    ecfg_dataout;         // data for elink outputs (static)   
+
+   //sampled by tx_lclk (test)
+   output          ecfg_access;          // direct test access  
+   output [PW-1:0] ecfg_packet;          // packet for direct test access
+
+   //dynamic (control timing by use mode)
    output [3:0]    ecfg_tx_ctrlmode;     // value for emesh ctrlmode tag
    output          ecfg_tx_ctrlmode_bp;  // bypass value for emesh ctrlmode tag
-   output 	   ecfg_tx_remap_enable; // enable address remapping
-   output [8:0]    ecfg_dataout;         // data for elink outputs
-   input [15:0]    ecfg_tx_debug;        // etx debug signals
-   output          ecfg_access;          // direct test access  
-   output [PW-1:0] ecfg_packet;          //packet for direct test access
 	   
    /*------------------------CODE BODY---------------------------------------*/
    
@@ -80,22 +86,22 @@ module ecfg_tx (/*AUTOARG*/
    /*****************************/
 
    //read/write decode
-   assign ecfg_write  = mi_en &  mi_we & (mi_addr[19:16]==GROUP);
-   assign ecfg_read   = mi_en & ~mi_we & (mi_addr[19:16]==GROUP);   
+   assign ecfg_write  = mi_en &  mi_we;
+   assign ecfg_read   = mi_en & ~mi_we;   
 
    //Config write enables
-   assign ecfg_tx_config_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXCFG);
-   assign ecfg_tx_status_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXSTATUS);
-   assign ecfg_tx_gpio_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXGPIO);
-   assign ecfg_tx_test_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXTEST);
-   assign ecfg_tx_dstaddr_write = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXDSTADDR);
-   assign ecfg_tx_data_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXDATA);
-   assign ecfg_tx_srcaddr_write = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXSRCADDR);
+   assign ecfg_tx_config_write = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXCFG);
+   assign ecfg_tx_status_write = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXSTATUS);
+   assign ecfg_tx_gpio_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXGPIO);
+   assign ecfg_tx_test_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXTEST);
+   assign ecfg_tx_dstaddr_write= ecfg_write & (mi_addr[RFAW+1:2]==`ELTXDSTADDR);
+   assign ecfg_tx_data_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ELTXDATA);
+   assign ecfg_tx_srcaddr_write= ecfg_write & (mi_addr[RFAW+1:2]==`ELTXSRCADDR);
      
    //###########################
    //# TX CONFIG
    //###########################
-   always @ (posedge sys_clk)
+   always @ (posedge clk)
      if(reset)
        ecfg_tx_config_reg[10:0] <= 11'b0;
      else if (ecfg_tx_config_write)
@@ -107,26 +113,26 @@ module ecfg_tx (/*AUTOARG*/
    assign ecfg_tx_ctrlmode[3:0]   = ecfg_tx_config_reg[7:4];
    assign ecfg_tx_ctrlmode_bp     = ecfg_tx_config_reg[8];
    assign ecfg_tx_gpio_enable     = (ecfg_tx_config_reg[10:9]==2'b01);
-   assign ecfg_tx_tp_enable       = (ecfg_tx_config_reg[10:9]==2'b10);//test pattern
-   //###########################1
-   //# STATUS REGISTER
+   assign ecfg_tx_tp_enable       = (ecfg_tx_config_reg[10:9]==2'b10);
+
    //###########################
-   
-   always @ (posedge sys_clk)
+   //# STATUS REGISTER
+   //###########################   
+   always @ (posedge clk)
      if(reset)
        ecfg_tx_status_reg[15:0] <= 'd0;
      else if(ecfg_tx_status_write)
        ecfg_tx_status_reg[15:0] <= mi_din[15:0];
      else
        begin
-	  ecfg_tx_status_reg[2:0]  <= ecfg_tx_status_reg[2:0] | ecfg_tx_debug[2:0];
+	  ecfg_tx_status_reg[2:0]<= ecfg_tx_status_reg[2:0] | ecfg_tx_debug[2:0];
 	  ecfg_tx_status_reg[15:3] <= ecfg_tx_debug[15:3];
        end
 
    //###########################
    //# GPIO DATA
    //###########################
-   always @ (posedge sys_clk)
+   always @ (posedge clk)
      if(reset)
        ecfg_tx_gpio_reg[8:0] <= 'd0;   
      else if (ecfg_tx_gpio_write)
@@ -143,7 +149,7 @@ module ecfg_tx (/*AUTOARG*/
    //7:4 = ctrlmode
    //8   = continuous-loop mode
 
-   always @ (posedge sys_clk)
+   always @ (posedge clk)
      if(reset)
        ecfg_tx_test_reg[8:0] <= 'd0;   
      else if (ecfg_tx_test_write)
@@ -154,7 +160,7 @@ module ecfg_tx (/*AUTOARG*/
    //###########################
    //# DSTADDR REGISTER
    //###########################
-   always @ (posedge sys_clk)
+   always @ (posedge clk)
      if(reset)
        ecfg_tx_dstaddr_reg[31:0] <= 'd0;   
      else if (ecfg_tx_dstaddr_write)
@@ -163,7 +169,7 @@ module ecfg_tx (/*AUTOARG*/
    //###########################
    //# DATA REGISTER
    //###########################
-   always @ (posedge sys_clk)
+   always @ (posedge clk)
      if(reset)
        ecfg_tx_data_reg[31:0] <= 'd0;   
      else if (ecfg_tx_data_write)
@@ -172,7 +178,7 @@ module ecfg_tx (/*AUTOARG*/
    //###########################
    //# SRCADDR REGISTER
    //###########################
-   always @ (posedge sys_clk)
+   always @ (posedge clk)
      if(reset)
        ecfg_tx_srcaddr_reg[31:0] <= 'd0;   
      else if (ecfg_tx_srcaddr_write)
@@ -189,7 +195,7 @@ module ecfg_tx (/*AUTOARG*/
 			       ecfg_tx_test_reg[7:0]
 			       };
    
-   always @ (posedge sys_clk or posedge reset)
+   always @ (posedge clk or posedge reset)
      if(reset)
        ecfg_access <= 0;
      else if(ecfg_tx_test_write & mi_din[0])
@@ -204,7 +210,7 @@ module ecfg_tx (/*AUTOARG*/
    //###############################
 
    //Pipelineing readback
-   always @ (posedge sys_clk)
+   always @ (posedge clk)
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
          `ELTXCFG:    mi_dout[31:0] <= {21'b0, ecfg_tx_config_reg[10:0]};

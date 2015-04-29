@@ -12,7 +12,7 @@ module edma (/*AUTOARG*/
    parameter RFAW            = 5;          // 32 registers for now
    parameter AW              = 32;
    parameter DW              = 32;
-   parameter TEST_PATTERN    = 00000000; // test pattern for dummy writes
+   parameter TEST_PATTERN    = 32'h12345678; // test pattern for dummy writes
    
    /******************************/
    /*HARDWARE RESET (EXTERNAL)   */

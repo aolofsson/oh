@@ -42,11 +42,11 @@ module ecfg_base (/*AUTOARG*/
    /*ELINK CONTROL SIGNALS      */
    /*****************************/   
    //clocks
-   output [15:0] ecfg_clk_settings;    // clock settings
+   output [15:0] ecfg_clk_settings;    // clock settings (for pll)
    
-   //coreid
-   output [3:0]  colid;
-   output [3:0]  rowid;
+   //chipid
+   output [3:0]  colid;                //sampled by reset rising edge
+   output [3:0]  rowid;                
      
    /*------------------------CODE BODY---------------------------------------*/
    
@@ -70,8 +70,8 @@ module ecfg_base (/*AUTOARG*/
    /*****************************/
 
    //read/write decode
-   assign ecfg_write  = mi_en &  mi_we & (mi_addr[19:16]==GROUP);
-   assign ecfg_read   = mi_en & ~mi_we & (mi_addr[19:16]==GROUP);   
+   assign ecfg_write  = mi_en &  mi_we;
+   assign ecfg_read   = mi_en & ~mi_we;   
 
    //Config write enables
    assign ecfg_reset_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ELRESET);

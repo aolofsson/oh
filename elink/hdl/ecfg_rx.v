@@ -10,7 +10,7 @@ module ecfg_rx (/*AUTOARG*/
    mi_dout, rx_enable, mmu_enable, remap_mode, remap_base,
    remap_pattern, remap_sel, timer_cfg,
    // Inputs
-   reset, sys_clk, mi_en, mi_we, mi_addr, mi_din, gpio_datain,
+   reset, clk, mi_en, mi_we, mi_addr, mi_din, gpio_datain,
    debug_vector
    );
 
@@ -24,7 +24,7 @@ module ecfg_rx (/*AUTOARG*/
    /*HARDWARE RESET (EXTERNAL)   */
    /******************************/
    input 	reset;       // ecfg registers reset only by "hard reset"
-   input 	sys_clk;
+   input 	clk;
    /*****************************/
    /*SIMPLE MEMORY INTERFACE    */
    /*****************************/    
@@ -39,14 +39,14 @@ module ecfg_rx (/*AUTOARG*/
    /*****************************/
    //rx
    output 	 rx_enable;    // enable signal for rx  
-   output 	 mmu_enable;   // enables MMU on rx path  
-   input [8:0] 	 gpio_datain;  // frame and data inputs        
-   input [15:0]  debug_vector; // erx debug signals
-   output [1:0]  remap_mode;   //remap mode 
-   output [31:0] remap_base;   //base for dynamic remap 
-   output [11:0] remap_pattern;//patter for static remap
-   output [11:0] remap_sel;    //selects for static remap 
-   output [1:0]  timer_cfg;    //timeout config (00=off)
+   output 	 mmu_enable;   // enables MMU on rx path (static)  
+   input [8:0] 	 gpio_datain;  // frame and data inputs (static)        
+   input [15:0]  debug_vector; // erx debug signals (static)    
+   output [1:0]  remap_mode;   // remap mode (static)       
+   output [31:0] remap_base;   // base for dynamic remap (static) 
+   output [11:0] remap_pattern;// patter for static remap (static)
+   output [11:0] remap_sel;    // selects for static remap (static)
+   output [1:0]  timer_cfg;    // timeout config (00=off) (static)
    
    /*------------------------CODE BODY---------------------------------------*/
    
@@ -70,8 +70,8 @@ module ecfg_rx (/*AUTOARG*/
    /*****************************/
 
    //read/write decode
-   assign ecfg_write  = mi_en &  mi_we & (mi_addr[19:15]=={GROUP,1'b0});
-   assign ecfg_read   = mi_en & ~mi_we & (mi_addr[19:15]=={GROUP,1'b0});   
+   assign ecfg_write  = mi_en &  mi_we;
+   assign ecfg_read   = mi_en & ~mi_we;   
 
    //Config write enables
    assign ecfg_rx_write      = ecfg_write & (mi_addr[RFAW+1:2]==`ELRXCFG);
@@ -80,7 +80,7 @@ module ecfg_rx (/*AUTOARG*/
    //###########################
    //# RXCFG
    //###########################
-   always @ (posedge sys_clk)
+   always @ (posedge clk)
      if(reset)
        ecfg_rx_reg[31:0] <= 'b0;
      else if (ecfg_rx_write)
@@ -96,7 +96,7 @@ module ecfg_rx (/*AUTOARG*/
    //###########################
    //# DATAIN (synchronized)
    //###########################
-   always @ (posedge sys_clk)
+   always @ (posedge clk)
      begin
 	ecfg_datain_sync[8:0] <= gpio_datain[8:0];
 	ecfg_datain_reg[8:0]  <= ecfg_datain_sync[8:0];
@@ -106,7 +106,7 @@ module ecfg_rx (/*AUTOARG*/
    //# DEBUG
    //###########################
    
-   always @ (posedge sys_clk)
+   always @ (posedge clk)
      if(reset)
        ecfg_rx_debug_reg[2:0] <= 'd0;
      else
@@ -115,7 +115,7 @@ module ecfg_rx (/*AUTOARG*/
    //###########################1
    //# DYNAMIC REMAP BASE
    //###########################
-   always @ (posedge sys_clk)
+   always @ (posedge clk)
      if(reset)
        ecfg_base_reg[31:0] <='d0;
      else if (ecfg_base_write)
@@ -128,7 +128,7 @@ module ecfg_rx (/*AUTOARG*/
    //###############################
 
    //Pipelineing readback
-   always @ (posedge sys_clk)
+   always @ (posedge clk)
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
          `ELRXCFG:   mi_dout[31:0] <= {ecfg_rx_reg[31:0]};
@@ -137,7 +137,7 @@ module ecfg_rx (/*AUTOARG*/
          default:    mi_dout[31:0] <= 32'd0;
        endcase
 
-endmodule // ecfg
+endmodule // ecfg_rx
 
 /*
   Copyright (C) 2013 Adapteva, Inc.

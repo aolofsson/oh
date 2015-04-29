@@ -2,9 +2,8 @@
 
  ###DESCRIPTION
  The "elink" is a low-latency/high-speed interface for communicating between 
- FPGAs and ASICs (such as Epiphany) that implement the elink protocol.
- The interface "should" achieve a peak throughput of 8 Gbit/s in FPGAs with 
- 24 available LVDS signal pairs.  
+ FPGAs and ASICs (such as Epiphany). The interface "should" achieve a peak throughput of 
+ 8 Gbit/s (duplex) in modern FPGAs using 24 available LVDS signal pairs.  
  
  ###ELINK INTERFACE I/O SIGNALS
    
@@ -32,8 +31,9 @@
   embox_not_empty| O | Mailbox not empty (connect to interrupt line)   
   embox_full     | O | Mailbox is full indicator
  
- ###BUS INTERFACE
+ ###SYSTEM INTERFACE
 
+ 
  The elink has a 64 bit data AXI master and 32-bit data AXI slave interface 
  for connecting to a standard AXI network.
  
@@ -93,13 +93,9 @@
  
  ###ELINK MEMORY MAP
  
- The elink has an parameter called 'ELINKID' that can be configured by 
- the module instantiating the elink. 
+ Each elink has a 12 bit ID that that gets matched to bits [31:20] of the 
+ incoming address.
  
- REGISTER    | ADDRESS | NOTES 
- ------------| --------|------
- ESYSRESET   | 0xF0000 | Soft reset
- ESYSTX      | 0xF0004 | Elink tranmit config
  ESYSRX      | 0xF0008 | Elink receiver config
  ESYSCLK     | 0xF000C | Clock config
  ESYSCOREID  | 0xF0010 | ID to drive to Epiphany chip
@@ -113,7 +109,9 @@
  ESYSMMUTX   | 0xD0000 | Start of transmit MMU lookup table (tbd)
           
  ###ELINK CONFIGURATION REGISTERS
- REGISTER   | DESCRIPTION 
+
+ 
+ REGISTER   | ADDR | DESCRIPTION 
  ---------- | --------------
  ESYSRESET  | (elink reset register)
  [0]        | 0:  elink is active
@@ -188,39 +186,7 @@
  [9]        | rx_wait_rd
  [10]       | rx_wait_wr
  -------------------------------------------------------------
- ESYSDEBUG  | (various debug signals from elink) 
- [31]       | embox_not_empty
- [30]       | emesh_rx_rd_wait
- [29]       | emesh_rx_wr_wait
- [28]       | esaxi_emrr_rd_en
- [27]       | emrr_full
- [26]       | emrr_progfull
- [25]       | emrr_wr_en
- [24]       | emaxi_emrq_rd_en
- [23]       | emrq_progfull
- [22]       | emrq_wr_en
- [21]       | emaxi_emwr_rd_en
- [20]       | emwr_progfull
- [19]       | emwr_wr_en (rx)
- [18]       | e_tx_rd_wait 
- [17]       | e_tx_wr_wait
- [16]       | emrr_rd_en
- [15]       | emaxi_emrr_prog_full
- [14]       | emaxi_emrr_wr_en
- [13]       | emrq_rd_en
- [12]       | esaxi_emrq_prog_full
- [11]       | esaxi_emrq_wr_en
- [10]       | emwr_rd_en
- [9]        | esaxi_emwr_prog_full
- [8]        | esaxi_emwr_wr_en  
- [7]        | reserved
- [6]        | sticky emrr_full (rx)
- [5]        | sticky emrq_full (rx)
- [4]        | sticky emwr_full (rx)
- [3]        | sticky emaxi_emrr_full (tx)
- [2]        | sticky esaxi_emrq_full (tx)
- [1]        | sticky esaxi_emwr_full (tx)
- [0]        | sticky embox_full (mailbox)
+
 
 ###INTERNAL STRUCTURE
 ```
@@ -253,18 +219,21 @@ elink               -  Top level level AXI elink peripheral
 
 module elink(/*AUTOARG*/
    // Outputs
-   colid, rowid, chip_resetb, cclk_p, cclk_n, rxo_wr_wait_p,
-   rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n, txo_lclk_p,
-   txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p, txo_data_n,
-   mailbox_not_empty, mailbox_full, timeout, rxwr_access, rxwr_packet,
-   rxrd_access, rxrd_packet, rxrr_access, rxrr_packet, txwr_wait,
-   txrd_wait, txrr_wait,
+   mi_tx_we, mi_tx_mmu_en, mi_tx_din, mi_tx_cfg_en, mi_tx_addr,
+   mi_rx_we, mi_rx_mmu_en, mi_rx_dma_en, mi_rx_din, mi_rx_cfg_en,
+   mi_rx_addr, rx_lclk_div4, tx_lclk_div4, colid, rowid, chip_resetb,
+   cclk_p, cclk_n, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
+   rxo_rd_wait_n, txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n,
+   txo_data_p, txo_data_n, mailbox_not_empty, mailbox_full, timeout,
+   rxwr_access, rxwr_packet, rxrd_access, rxrd_packet, rxrr_access,
+   rxrr_packet, txwr_wait, txrd_wait, txrr_wait,
    // Inputs
+   mi_txmmu_en, mi_txcfg_en, mi_rxmmu_en, mi_rxcfg_en, mi_dma_en,
    hard_reset, clkin, clkbypass, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
    rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
-   txi_rd_wait_p, txi_rd_wait_n, sys_clk, rxwr_wait, rxrd_wait,
-   rxrr_wait, txwr_access, txwr_packet, txrd_access, txrd_packet,
-   txrr_access, txrr_packet
+   txi_rd_wait_p, txi_rd_wait_n, sys_clk, mi_en, mi_we, mi_addr,
+   mi_din, mi_dout, rxwr_wait, rxrd_wait, rxrr_wait, txwr_access,
+   txwr_packet, txrd_access, txrd_packet, txrr_access, txrr_packet
    );
    
    parameter AW          = 32;
@@ -278,8 +247,9 @@ module elink(/*AUTOARG*/
    input        hard_reset;          // active high synhcronous hardware reset
    input 	clkin;               // clock for pll
    input [2:0] 	clkbypass;           // bypass clocks for elinks w/o pll
-                                     // "advanced", tie to zero if not used
-
+   output 	rx_lclk_div4;        // rxi_lclk clock divided by 4
+   output 	tx_lclk_div4;        // txo_lclk clock divided by 4
+   
    /********************************/
    /*EPIPHANY INTERFACE (I/O PINS) */
    /********************************/          
@@ -310,18 +280,24 @@ module elink(/*AUTOARG*/
    output       mailbox_not_empty;   
    output       mailbox_full;
 
-   /*****************************/
+   /*****************************/tx
    /*READBACK TIMEOUT           */
    /*****************************/
    output 	timeout;
 
    /*****************************/
    /*"System" Interface         */
-   /*****************************/
-   
+   /*****************************/   
    //One clock to rule them all..
-   input 	   sys_clk;    
+   input 	   sys_clk;
 
+   //Primary configuration interface
+   input 	   mi_en;
+   input 	   mi_we;  //only 32 aligned accesses allowed
+   input [19:0]    mi_addr;//address is complete byte address
+   input [31:0]    mi_din;
+   input [31:0]    mi_dout;
+      
    //Master Write (from RX)
    output 	   rxwr_access;
    output [PW-1:0] rxwr_packet;
@@ -357,7 +333,27 @@ module elink(/*AUTOARG*/
    /*#############################################*/
    
    /*AUTOINPUT*/
+   // Beginning of automatic inputs (from unused autoinst inputs)
+   input		mi_dma_en;		// To erx of erx.v
+   input		mi_rxcfg_en;		// To erx of erx.v
+   input		mi_rxmmu_en;		// To erx of erx.v
+   input		mi_txcfg_en;		// To etx of etx.v
+   input		mi_txmmu_en;		// To etx of etx.v
+   // End of automatics
    /*AUTOOUTPUT*/
+   // Beginning of automatic outputs (from unused autoinst outputs)
+   output [19:0]	mi_rx_addr;		// From ecfg_if of ecfg_if.v
+   output		mi_rx_cfg_en;		// From ecfg_if of ecfg_if.v
+   output [63:0]	mi_rx_din;		// From ecfg_if of ecfg_if.v
+   output		mi_rx_dma_en;		// From ecfg_if of ecfg_if.v
+   output		mi_rx_mmu_en;		// From ecfg_if of ecfg_if.v
+   output		mi_rx_we;		// From ecfg_if of ecfg_if.v
+   output [19:0]	mi_tx_addr;		// From ecfg_if of ecfg_if.v
+   output		mi_tx_cfg_en;		// From ecfg_if of ecfg_if.v
+   output [63:0]	mi_tx_din;		// From ecfg_if of ecfg_if.v
+   output		mi_tx_mmu_en;		// From ecfg_if of ecfg_if.v
+   output		mi_tx_we;		// From ecfg_if of ecfg_if.v
+   // End of automatics
 
    //wires
    wire [31:0] 	 mi_rd_data;
@@ -368,37 +364,48 @@ module elink(/*AUTOARG*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [15:0]		ecfg_clk_settings;	// From ecfg_base of ecfg_base.v
    wire			etx_read;		// From etx of etx.v
-   wire [19:0]		mi_addr;		// From ecfg_if of ecfg_if.v
-   wire [63:0]		mi_din;			// From ecfg_if of ecfg_if.v
+   wire			mi_basecfg_en;		// From ecfg_if of ecfg_if.v
    wire [31:0]		mi_el_dout;		// From ecfg_base of ecfg_base.v
-   wire			mi_en;			// From ecfg_if of ecfg_if.v
    wire [31:0]		mi_mailbox_dout;	// From emailbox of emailbox.v
+   wire			mi_mailbox_en;		// From ecfg_if of ecfg_if.v
    wire [31:0]		mi_rx_dout;		// From erx of erx.v
    wire [31:0]		mi_tx_dout;		// From etx of etx.v
-   wire			mi_we;			// From ecfg_if of ecfg_if.v
    wire			reset;			// From ereset of ereset.v
    wire			soft_reset;		// From ecfg_base of ecfg_base.v
    wire			tx_lclk;		// From eclocks of eclocks.v
    wire			tx_lclk90;		// From eclocks of eclocks.v
-   wire			tx_lclk_div4;		// From eclocks of eclocks.v
    // End of automatics
 
    /***********************************************************/
    /*ELINK CONFIGURATION INTERFACE                            */
    /***********************************************************/
    defparam ecfg_if.ID=ID;
-
+       
    ecfg_if ecfg_if(
 		   /*AUTOINST*/
 		   // Outputs
 		   .txwr_wait		(txwr_wait),
 		   .txrd_wait		(txrd_wait),
-		   .mi_en		(mi_en),
+		   .mi_tx_cfg_en	(mi_tx_cfg_en),
+		   .mi_tx_mmu_en	(mi_tx_mmu_en),
+		   .mi_tx_we		(mi_tx_we),
+		   .mi_tx_addr		(mi_tx_addr[19:0]),
+		   .mi_tx_din		(mi_tx_din[63:0]),
+		   .mi_rx_cfg_en	(mi_rx_cfg_en),
+		   .mi_rx_dma_en	(mi_rx_dma_en),
+		   .mi_rx_mmu_en	(mi_rx_mmu_en),
+		   .mi_rx_we		(mi_rx_we),
+		   .mi_rx_addr		(mi_rx_addr[19:0]),
+		   .mi_rx_din		(mi_rx_din[63:0]),
+		   .mi_basecfg_en	(mi_basecfg_en),
+		   .mi_mailbox_en	(mi_mailbox_en),
 		   .mi_we		(mi_we),
 		   .mi_addr		(mi_addr[19:0]),
 		   .mi_din		(mi_din[63:0]),
 		   // Inputs
 		   .sys_clk		(sys_clk),
+		   .tx_lclk_div4	(tx_lclk_div4),
+		   .rx_lclk_div4	(rx_lclk_div4),
 		   .reset		(reset),
 		   .txwr_access		(txwr_access),
 		   .txwr_packet		(txwr_packet[PW-1:0]),
@@ -417,6 +424,7 @@ module elink(/*AUTOARG*/
   
    /*ecfg_base AUTO_TEMPLATE ( 
 	                .mi_dout    (mi_el_dout[]),
+                        .mi_en      (mi_basecfg_en[]),
                         .ecfg_reset (reset),
                         .clk        (mi_clk),
                       )
@@ -434,7 +442,7 @@ module elink(/*AUTOARG*/
 		       // Inputs
 		       .hard_reset	(hard_reset),
 		       .sys_clk		(sys_clk),
-		       .mi_en		(mi_en),
+		       .mi_en		(mi_basecfg_en),	 // Templated
 		       .mi_we		(mi_we),
 		       .mi_addr		(mi_addr[19:0]),
 		       .mi_din		(mi_din[31:0]));
@@ -473,6 +481,7 @@ module elink(/*AUTOARG*/
    /***********************************************************/
    /*emailbox AUTO_TEMPLATE ( 
 	                .mi_dout    (mi_mailbox_dout[]),
+                         .mi_en	    (mi_mailbox_en),
                       );
    */
    
@@ -485,7 +494,7 @@ module elink(/*AUTOARG*/
 		      // Inputs
 		      .reset		(reset),
 		      .sys_clk		(sys_clk),
-		      .mi_en		(mi_en),
+		      .mi_en		(mi_mailbox_en),	 // Templated
 		      .mi_we		(mi_we),
 		      .mi_addr		(mi_addr[19:0]),
 		      .mi_din		(mi_din[63:0]));
@@ -518,10 +527,10 @@ module elink(/*AUTOARG*/
 	   .rxrr_access			(rxrr_access),
 	   .rxrr_packet			(rxrr_packet[PW-1:0]),
 	   .mi_dout			(mi_rx_dout[31:0]),	 // Templated
+	   .rx_lclk_div4		(rx_lclk_div4),
 	   .timeout			(timeout),
 	   // Inputs
 	   .reset			(reset),
-	   .sys_clk			(sys_clk),
 	   .rxi_lclk_p			(rxi_lclk_p),
 	   .rxi_lclk_n			(rxi_lclk_n),
 	   .rxi_frame_p			(rxi_frame_p),
@@ -531,7 +540,9 @@ module elink(/*AUTOARG*/
 	   .rxwr_wait			(rxwr_wait),
 	   .rxrd_wait			(rxrd_wait),
 	   .rxrr_wait			(rxrr_wait),
-	   .mi_en			(mi_en),
+	   .mi_rxcfg_en			(mi_rxcfg_en),
+	   .mi_dma_en			(mi_dma_en),
+	   .mi_rxmmu_en			(mi_rxmmu_en),
 	   .mi_we			(mi_we),
 	   .mi_addr			(mi_addr[19:0]),
 	   .mi_din			(mi_din[31:0]),
@@ -567,8 +578,8 @@ module elink(/*AUTOARG*/
 	   .tx_lclk			(tx_lclk),
 	   .tx_lclk90			(tx_lclk90),
 	   .tx_lclk_div4		(tx_lclk_div4),
-	   .sys_clk			(sys_clk),
-	   .mi_en			(mi_en),
+	   .mi_txcfg_en			(mi_txcfg_en),
+	   .mi_txmmu_en			(mi_txmmu_en),
 	   .mi_we			(mi_we),
 	   .mi_addr			(mi_addr[19:0]),
 	   .mi_din			(mi_din[31:0]),

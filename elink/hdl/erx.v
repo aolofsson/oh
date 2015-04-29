@@ -2,11 +2,12 @@ module erx (/*AUTOARG*/
    // Outputs
    rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n,
    rxwr_access, rxwr_packet, rxrd_access, rxrd_packet, rxrr_access,
-   rxrr_packet, mi_dout, timeout,
+   rxrr_packet, mi_dout, rx_lclk_div4, timeout,
    // Inputs
-   reset, sys_clk, rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n,
-   rxi_data_p, rxi_data_n, rxwr_wait, rxrd_wait, rxrr_wait, mi_en,
-   mi_we, mi_addr, mi_din, etx_read
+   reset, rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n,
+   rxi_data_p, rxi_data_n, rxwr_wait, rxrd_wait, rxrr_wait,
+   mi_rxcfg_en, mi_dma_en, mi_rxmmu_en, mi_we, mi_addr, mi_din,
+   etx_read
    );
 
    parameter AW      = 32;
@@ -16,7 +17,6 @@ module erx (/*AUTOARG*/
    
    //reset
    input           reset;
-   input 	   sys_clk;
    
    //FROM IO Pins
    input 	  rxi_lclk_p,  rxi_lclk_n;     //link rx clock input
@@ -41,12 +41,15 @@ module erx (/*AUTOARG*/
    input 	   rxrr_wait;
   
    //Register Access Interface
-   input 	   mi_en; 
+   input 	   mi_rxcfg_en;   
+   input 	   mi_dma_en;   
+   input 	   mi_rxmmu_en;   
    input 	   mi_we;
    input [19:0]    mi_addr;
    input [31:0]    mi_din;
    output [31:0]   mi_dout;
-
+   output          rx_lclk_div4; //for synchronization with sys_clk
+   
    //Starts timeout counter
    input 	   etx_read;
   
@@ -81,7 +84,6 @@ module erx (/*AUTOARG*/
    wire [63:0]		rx_data_par;		// From erx_io of erx_io.v
    wire			rx_enable;		// From ecfg_rx of ecfg_rx.v
    wire [7:0]		rx_frame_par;		// From erx_io of erx_io.v
-   wire			rx_lclk_div4;		// From erx_io of erx_io.v
    wire			rx_rd_wait;		// From erx_disty of erx_disty.v
    wire			rx_wr_wait;		// From erx_disty of erx_disty.v
    wire			rxrd_fifo_access;	// From erx_disty of erx_disty.v
@@ -113,6 +115,8 @@ module erx (/*AUTOARG*/
    defparam ecfg_rx.GROUP=`EGROUP_RX;
 
    /*ecfg_rx AUTO_TEMPLATE (.mi_dout       (mi_rx_cfg_dout[DW-1:0]),
+                            .mi_en	   (mi_rxcfg_en),
+                            .clk	   (rx_lclk_div4),
     );
         */
    
@@ -129,8 +133,8 @@ module erx (/*AUTOARG*/
 		    .timer_cfg		(timer_cfg[1:0]),
 		    // Inputs
 		    .reset		(reset),
-		    .sys_clk		(sys_clk),
-		    .mi_en		(mi_en),
+		    .clk		(rx_lclk_div4),		 // Templated
+		    .mi_en		(mi_rxcfg_en),		 // Templated
 		    .mi_we		(mi_we),
 		    .mi_addr		(mi_addr[19:0]),
 		    .mi_din		(mi_din[31:0]),
@@ -141,12 +145,11 @@ module erx (/*AUTOARG*/
    /************************************************************/
    defparam ecfg_rx.GROUP=`EGROUP_RX;
 
-   erx_mux erx_mux (/*AUTOINST*/
+   erx_mux erx_mux (.sys_clk		(rx_lclk_div4),
+		    /*AUTOINST*/
 		    // Outputs
 		    .mi_dout		(mi_dout[DW-1:0]),
 		    // Inputs
-		    .sys_clk		(sys_clk),
-		    .mi_en		(mi_en),
 		    .mi_addr		(mi_addr[19:0]),
 		    .mi_rx_cfg_dout	(mi_rx_cfg_dout[DW-1:0]),
 		    .mi_rx_edma_dout	(mi_rx_edma_dout[DW-1:0]),
@@ -187,7 +190,7 @@ module erx (/*AUTOARG*/
 			       .prog_full  (@"(substring vl-cell-name  0 4)"_fifo_wait),
     			       .valid      (@"(substring vl-cell-name  0 4)"_access),
 			       // Inputs
-			       .rd_clk	   (sys_clk),
+			       .rd_clk	   (rx_lclk_div4),
                                .wr_clk	   (rx_lclk_div4),
                                .wr_en      (@"(substring vl-cell-name  0 4)"_fifo_access),
                                .rd_en      (~@"(substring vl-cell-name  0 4)"_wait & ~@"(substring vl-cell-name  0 4)"_empty),
@@ -212,7 +215,7 @@ module erx (/*AUTOARG*/
 		// Inputs
 		.reset			(reset),		 // Templated
 		.wr_clk			(rx_lclk_div4),		 // Templated
-		.rd_clk			(sys_clk),		 // Templated
+		.rd_clk			(rx_lclk_div4),		 // Templated
 		.wr_en			(rxrd_fifo_access),	 // Templated
 		.din			(rxrd_fifo_packet[PW-1:0]), // Templated
 		.rd_en			(~rxrd_wait & ~rxrd_empty)); // Templated
@@ -231,7 +234,7 @@ module erx (/*AUTOARG*/
 	     // Inputs
 	     .reset			(reset),		 // Templated
 	     .wr_clk			(rx_lclk_div4),		 // Templated
-	     .rd_clk			(sys_clk),		 // Templated
+	     .rd_clk			(rx_lclk_div4),		 // Templated
 	     .wr_en			(rxwr_fifo_access),	 // Templated
 	     .din			(rxwr_fifo_packet[PW-1:0]), // Templated
 	     .rd_en			(~rxwr_wait & ~rxwr_empty)); // Templated
@@ -250,7 +253,7 @@ module erx (/*AUTOARG*/
 	     // Inputs
 	     .reset			(reset),		 // Templated
 	     .wr_clk			(rx_lclk_div4),		 // Templated
-	     .rd_clk			(sys_clk),		 // Templated
+	     .rd_clk			(rx_lclk_div4),		 // Templated
 	     .wr_en			(rxrr_fifo_access),	 // Templated
 	     .din			(rxrr_fifo_packet[PW-1:0]), // Templated
 	     .rd_en			(~rxrr_wait & ~rxrr_empty)); // Templated
@@ -300,6 +303,7 @@ module erx (/*AUTOARG*/
    /************************************************************/
    
    /*edma AUTO_TEMPLATE (.clk		(rx_lclk_div4),
+                         .mi_en		(mi_dma_en),
                          .edma_access	(edma_access),   
                          .mi_dout       (mi_rx_edma_dout[DW-1:0]),
                          .edma_access	(edma_access),
@@ -325,7 +329,7 @@ module erx (/*AUTOARG*/
 	     // Inputs
 	     .reset			(reset),
 	     .clk			(rx_lclk_div4),		 // Templated
-	     .mi_en			(mi_en),
+	     .mi_en			(mi_dma_en),		 // Templated
 	     .mi_we			(mi_we),
 	     .mi_addr			(mi_addr[19:0]),
 	     .mi_din			(mi_din[31:0]),
@@ -340,11 +344,12 @@ module erx (/*AUTOARG*/
                          //Inputs
                         .emesh_\(.*\)_in	(emesh_remap_\1[]),   
                         .mmu_en			(mmu_enable),
-                        .emesh_clk			(rx_lclk_div4),
+                        .clk	        	(rx_lclk_div4),
                         .mi_dout   	        (mi_rx_emmu_dout[DW-1:0]),
                         .emesh_packet_hi_out	(),
                         .mmu_bp	    	        (remap_bypass),
-                        .emesh_wait_in		(erx_wait),	 
+                        .emesh_wait_in		(erx_wait),
+                        .mi_en	                (mi_rxmmu_en),	 
                            );
    */
 
@@ -358,14 +363,13 @@ module erx (/*AUTOARG*/
 	      .emesh_packet_hi_out	(),			 // Templated
 	      // Inputs
 	      .reset			(reset),
-	      .sys_clk			(sys_clk),
+	      .clk			(rx_lclk_div4),		 // Templated
 	      .mmu_en			(mmu_enable),		 // Templated
 	      .mmu_bp			(remap_bypass),		 // Templated
-	      .mi_en			(mi_en),
+	      .mi_en			(mi_rxmmu_en),		 // Templated
 	      .mi_we			(mi_we),
 	      .mi_addr			(mi_addr[19:0]),
 	      .mi_din			(mi_din[DW-1:0]),
-	      .emesh_clk		(rx_lclk_div4),		 // Templated
 	      .emesh_access_in		(emesh_remap_access),	 // Templated
 	      .emesh_packet_in		(emesh_remap_packet[PW-1:0]), // Templated
 	      .emesh_wait_in		(erx_wait));		 // Templated
@@ -449,7 +453,7 @@ module erx (/*AUTOARG*/
    /************************************************************/
    /*Debug signals                                             */
    /************************************************************/
-   always @ (posedge sys_clk)
+   always @ (posedge rx_lclk_div4)
      begin
 	debug_vector[15:0] <= {2'b0,                     //15:14
 				rx_rd_wait,               //13

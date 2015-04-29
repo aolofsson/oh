@@ -19,8 +19,8 @@ module emmu (/*AUTOARG*/
    // Outputs
    mi_dout, emesh_access_out, emesh_packet_out, emesh_packet_hi_out,
    // Inputs
-   reset, sys_clk, mmu_en, mmu_bp, mi_en, mi_we, mi_addr, mi_din,
-   emesh_clk, emesh_access_in, emesh_packet_in, emesh_wait_in
+   reset, clk, mmu_en, mmu_bp, mi_en, mi_we, mi_addr, mi_din,
+   emesh_access_in, emesh_packet_in, emesh_wait_in
    );
    parameter DW     = 32;         //data width
    parameter AW     = 32;         //address width 
@@ -34,7 +34,7 @@ module emmu (/*AUTOARG*/
    /*DATAPATH CLOCk             */
    /*****************************/  
    input 	     reset;
-   input 	     sys_clk; 
+   input 	     clk; 
 
    /*****************************/
    /*MMU LOOKUP DATA            */
@@ -54,8 +54,7 @@ module emmu (/*AUTOARG*/
   
    /*****************************/
    /*EMESH INPUTS               */
-   /*****************************/
-   input             emesh_clk;
+   /*****************************/  
    input 	     emesh_access_in;
    input [PW-1:0]    emesh_packet_in;
    input 	     emesh_wait_in;       //downstream pushback
@@ -84,12 +83,11 @@ module emmu (/*AUTOARG*/
    /*****************************/
    /*MMU WRITE LOGIC            */
    /*****************************/
-   assign mi_match       = mi_en & (mi_addr[19:16]==GROUP) & (mi_addr[15]);
 
    //write controls
-   assign mi_wr_vec[5:0] = (mi_match & mi_we & ~mi_addr[2]) ? 6'b001111 :
-	                   (mi_match & mi_we & mi_addr[2])  ? 6'b110000 :
-			                                      6'b000000 ;
+   assign mi_wr_vec[5:0] = (mi_en & mi_we & ~mi_addr[2]) ? 6'b001111 :
+	                   (mi_en & mi_we & mi_addr[2])  ? 6'b110000 :
+			                                   6'b000000 ;
 
    //write data
    assign mi_wr_data[63:0] = {mi_din[31:0], mi_din[31:0]};
@@ -105,11 +103,11 @@ module emmu (/*AUTOARG*/
 					   // Outputs
 					   .rd_data		(emmu_lookup_data[MW-1:0]),
 					   // Inputs
-					   .wr_clk		(sys_clk),
+					   .wr_clk		(clk),
 					   .wr_en		(mi_wr_vec[5:0]),
 					   .wr_addr		(mi_addr[14:3]),
 					   .wr_data		(mi_wr_data[MW-1:0]),
-					   .rd_clk		(emesh_clk),
+					   .rd_clk		(clk),
 					   .rd_en		(emesh_access_in),
 					   .rd_addr		(emmu_rd_addr[MAW-1:0])
 					   );
@@ -120,13 +118,13 @@ module emmu (/*AUTOARG*/
    //pipeline to compensate for table lookup pipeline 
    //assumes one cycle memory access!     
   
-   always @ (posedge  emesh_clk or posedge reset)
+   always @ (posedge  clk or posedge reset)
      if(reset)
        emesh_access_out <= 1'b0;
      else if(~emesh_wait_in)
        emesh_access_out         <= emesh_access_in;
    
-   always @ (posedge emesh_clk)
+   always @ (posedge clk)
      if(emesh_access_in & ~emesh_wait_in)   
        emesh_packet_reg[PW-1:0]  <= emesh_packet_in[PW-1:0];	  
    

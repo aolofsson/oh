@@ -74,16 +74,16 @@ module emailbox (/*AUTOARG*/
    /*****************************/
    /*WRITE PORT                */
    /*****************************/
-   assign mailbox_write        = mi_en & mi_we & 
-				 (mi_addr[31:20]==ID) & 
-			         (mi_addr[19:16]==GROUP) & 
-                                 (mi_addr[RFAW+1:2]==`EMAILBOXLO);
+   assign mailbox_write  = mi_en & mi_we & (mi_addr[RFAW+1:2]==`EMAILBOXLO);
    
    /*****************************/
    /*READ BACK DATA             */
-   /*****************************/
-   assign mailbox_read         = mi_en & ~mi_we & (mi_addr[19:16]==GROUP) & mailbox_not_empty;
-   assign mailbox_pop_fifo     = mailbox_read & (mi_addr[RFAW+1:2]==`EMAILBOXHI); //fifo read
+   /*****************************/  
+
+   assign mailbox_pop_fifo     = mi_en & 
+				 ~mi_we &
+				 mailbox_not_empty &
+				 mailbox_read & (mi_addr[RFAW+1:2]==`EMAILBOXHI); //fifo read
 
    always @ (posedge sys_clk)
      if(mailbox_read)
