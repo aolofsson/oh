@@ -1,7 +1,6 @@
 module edma (/*AUTOARG*/
    // Outputs
-   mi_dout, edma_access, edma_write, edma_datamode, edma_ctrlmode,
-   edma_dstaddr, edma_data, edma_srcaddr,
+   mi_dout, edma_access, edma_packet,
    // Inputs
    reset, clk, mi_en, mi_we, mi_addr, mi_din, edma_wait
    );
@@ -9,40 +8,36 @@ module edma (/*AUTOARG*/
    /******************************/
    /*Compile Time Parameters     */
    /******************************/
-   parameter RFAW            = 5;          // 32 registers for now
+   parameter RFAW            = 6;
    parameter AW              = 32;
    parameter DW              = 32;
-   parameter TEST_PATTERN    = 32'h12345678; // test pattern for dummy writes
-   
+   parameter PW              = 104;
+
    /******************************/
    /*HARDWARE RESET (EXTERNAL)   */
    /******************************/
-   input 	 reset;            // ecfg registers reset only by "hard reset"
-   
+   input 	     reset; 
+   input 	     clk;
+
    /*****************************/
    /*REGISTER INTERFACE         */
-   /*****************************/    
-   input 	 clk;
-   input 	 mi_en;         
-   input 	 mi_we;            // single we, must write 32 bit words
-   input [19:0]  mi_addr;          // complete physical address (no shifting!)
-   input [31:0]  mi_din;
-   output [31:0] mi_dout;   
-   
+   /*****************************/      
+   input 	     mi_en;         
+   input 	     mi_we; 
+   input [RFAW+1:0]  mi_addr;
+   input [63:0]      mi_din;
+   output [31:0]     mi_dout;   
+  
    /*****************************/
    /*DMA TRANSACTION            */
    /*****************************/
-   output 	   edma_access;
-   output          edma_write;
-   output [1:0]    edma_datamode;
-   output [3:0]    edma_ctrlmode;
-   output [AW-1:0] edma_dstaddr;
-   output [DW-1:0] edma_data;
-   output [AW-1:0] edma_srcaddr;
-   input 	   edma_wait;
-   
-          
-   //registers
+   output 	     edma_access;
+   output [PW-1:0]   edma_packet;
+   input 	     edma_wait;
+
+   /*   
+
+    //registers
    reg [AW-1:0]  edma_srcaddr_reg;
    reg [AW-1:0]  edma_dstaddr_reg;
    reg [AW-1:0]  edma_count_reg;
@@ -64,11 +59,8 @@ module edma (/*AUTOARG*/
    wire          edma_last_tran;
    wire 	 edma_error;
    wire          edma_enable;
-   
-   /*****************************/
-   /*ADDRESS DECODE LOGIC       */
-   /*****************************/
-
+    
+    
    //read/write decode
    assign edma_write  = mi_en &  mi_we;
    assign edma_read   = mi_en & ~mi_we;   
@@ -171,6 +163,23 @@ module edma (/*AUTOARG*/
    //###########################
    assign edma_data[31:0]     = TEST_PATTERN;   
      
+   
+   //###########################
+   //# PACKET CREATION
+   //###########################
+   emesh2packet e2p (
+		     // Outputs
+		     .packet_out	(edma_packet[PW-1:0]),
+		     // Inputs
+		     .access_in		(edma_access),
+		     .write_in		(edma_write),
+		     .datamode_in	(edma_datamode[1:0]),
+		     .ctrlmode_in	(edma_ctrlmode[3:0]),
+		     .dstaddr_in	(edma_dstaddr[AW-1:0]),
+		     .data_in		(edma_data[DW-1:0]),
+		     .srcaddr_in	(edma_srcaddr_in[AW-1:0]));
+   
+   
    //###############################
    //# DATA READBACK MUX
    //###############################
@@ -185,8 +194,12 @@ module edma (/*AUTOARG*/
 	 `EDMADSTADDR:mi_dout[31:0] <= {edma_dstaddr_reg[31:0]};
 	 `EDMACOUNT:  mi_dout[31:0] <= {edma_count_reg[31:0]};	         
          default:    mi_dout[31:0] <= 32'd0;
-       endcase
-
+       endcase // case (mi_addr[RFAW+1:2])
+     else
+       begin
+	  default:    mi_dout[31:0] <= 32'd0;
+       end
+*/
 endmodule // edma
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")
