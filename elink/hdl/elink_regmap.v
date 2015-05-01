@@ -3,56 +3,47 @@
 //[31:20] = LINKID
 //[19:16] = GROUP SELECT
 //[15]    = MMU SELECT (for RX/TX)
-//[14:6]  = USED BY MMU ONLY
-//[7:6]   = 16 register blocks
-//[5:2]   = REGISTER ADDRESS (0..15)
+//[14:11]  = USED BY MMU ONLY
+//[10:8]  = register group
+//[7:2]   = REGISTER ADDRESS (0..63)
 //[1:0]   = IGNORED (no byte access)
 
 //Link register groups addr[19:16]
-`define EGROUP_CHIP   4'hF //reserved for chip MMR
-`define EGROUP_TX     4'hE 
-`define EGROUP_RX     4'hD
+`define EGROUP_MMR     4'hF //reserved for registers
+`define EGROUP_MMU     4'hE // RX & TX MMU
 
-//REG BLOCK [7:6]
-`define EBLOCK0       2'h0
-`define EBLOCK1       2'h1
-`define EBLOCK2       2'h2
-`define EBLOCK3       2'h3
+//ETX-REGS
+`define E_RESET        6'd0 //F0200-reset
+`define E_CLK          6'd1 //F0204-clock configuration
+`define E_CHIPID       6'd1 //F0208-Epiphany chip id for colid/rowid pins 
+`define E_VERSION      6'd3 //F020C-version #
+`define ETX_CFG        6'd4 //F0210-config
+`define ETX_STATUS     6'd5 //F0214-tx status
+`define ETX_GPIO       6'd6 //F0218-direct data for tx pins
 
-//BLOCK0
-`define ELRESET       4'h0 //E0040-reset
-`define ELCLK         4'h1 //E0044-clock configuration
-`define ELCHIPID      4'h2 //E0048-Epiphany chip id for colid/rowid pins 
-`define ELVERSION     4'h3 //E004c-version #
+//ERX-REGS
+`define ERX_CFG        6'd0 //F0300-config
+`define ERX_STATUS     6'd1 //F0304-status register
+`define ERX_GPIO       6'd2 //F0308-sampled data
+`define ERX_RR         6'd3 //F030C-read response address
+`define ERX_OFFSET     6'd4 //F0310-memory base for remap
+`define E_MAILBOXLO    6'd5 //F0314-reserved-->move?
+`define E_MAILBOXHI    6'd6 //F0318-reserved
 
-//ELINK TX registers
-//BLOCK1
-`define ELTXCFG       4'h0 //E0000-config
-`define ELTXSTATUS    4'h1 //E0004-tx status
-`define ELTXGPIO      4'h2 //E0008-direct data for tx pins
-`define ELTXRES       4'h3 //E000C-reservec
-`define ELTXTEST      4'h4 //E0020-control for driving SERDES directly
-`define ELTXDSTADDR   4'h5 //E0024-static addr (for testing)
-`define ELTXDATA      4'h6 //E0028-static data (for testing)
-`define ELTXSRCADDR   4'h7 //E002c-static source addr (for testing)
+//DMA (same numbering as in Epiphany, limit to 4 channels)
+`define DMACFG         5'd0 //F0000/F0520
+`define DMACOUNT       5'd1 //F0004/F0524
+`define DMASTRIDE      5'd2 //F0008/F0528
+`define DMASRCADDR     5'd3 //F000C/F052c
+`define DMADSTADDR     5'd4 //F0510/F0530
+`define DMAAUTO0       5'd5 //F0514/F0534
+`define DMAAUTO1       5'd6 //F0518/F0538
+`define DMASTATUS      5'd7 //F051C/F053c
 
-//ELINK RX registers
-//BLOCK0
-`define ELRXCFG       4'h0 //D0000-config
-`define ELRXSTATUS    4'h1 //D0004-status register
-`define ELRXGPIO      4'h2 //D0008-sampled data
-`define ELRXRR        4'h3 //D000C-read response address
-`define ELRXBASE      4'h4 //D0010-memory base for remap
-`define ELRESERVED    4'h5 //D0014-reserved
-
-//BLOCK1
-`define EMAILBOXLO    4'h0 //D0018-mailbox
-`define EMAILBOXHI    4'h1 //D001c-mailbox
-
-//BLOCk2
-`define EDMACFG       4'h0 //D0020-dma
-`define EDMACOUNT     4'h1 //D0024-dma
-`define EDMASTRIDE    4'h2 //D0028-dma 
-`define EDMASRCADDR   4'h3 //D002c-dma
-`define EDMADSTADDR   4'h4 //D0028-dma
-`define EDMASTATUS    4'h5 //D0030-dma 
+//DMA descriptors (limited to 4 channels)
+`define DMADESCR0      5'd0 //F0580/F05A0
+`define DMADESCR1      5'd1 //F0584/F05A4
+`define DMADESCR2      5'd2 //F0588/F05A8
+`define DMADESCR3      5'd3 //F058c/F05Ac
+`define DMADESCR4      5'd4 //F0590/F05B0
+`define DMADESCR5      5'd5 //F0594/F05B4
