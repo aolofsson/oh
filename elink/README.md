@@ -19,31 +19,24 @@ rxi_lclk{p/n}     | I | RX clock aligned in the center of the data eye
 rxi_data{p/n}[7:0]| I | RX dual data rate (DDR) that transmits packet
 rxo_rd_wait{p/n}  | O | RX push back (output) for read transactions
 rxo_wr_wait{p/n}  | O | RX push back (output) for write transactions
-cclk_{p/n}        | O | Epiphany differential high speed clock
-chip_resetb       | O | Epiphany reset (active low)
-colid[3:0]        | O | Epiphany column chip coordinate
-rowid[3:0]        | O | Epiphany row chip coordinate
 
-The Epiphany specific output signals can be left unconnected in systems that 
-don't include Epiphany chips. 
+
 
 ###SYSTEM SIDE INTERFACE
+
 SIGNAL            |DIR| DESCRIPTION 
 ------------------|---|--------------
 elinkid[11:0]     | I | Address ID of elink 
-hard_reset        | I | Reset input
+reset             | I | Reset input
 clkin             | I | Clock input for CCLK/LCLK PLL
+sys_clk           | I | System clock for FIFOs
+clkbypass[2:0]    | I | Clocks inputs for bypassing PLL
+testmode          | I | Puts elink transmitter in test mode
 rx_lclk_div4      | O | rxi_lclk clock divided by 4
 tx_lclk_div4      | O | txo_lclk clock divided by 4
-clkbypass[2:0]    | I | Clocks inputs for bypassing PLL
 embox_not_empty   | O | Mailbox not empty (connect to interrupt line)   
 embox_full        | O | Mailbox is full indicator
 timeout           | O | Read request timeout indicator
-mi_en             | I | Congiruation access enable
-mi_we             | I | Configuration write
-mi_addr[19:0]     | I | Configuration register address
-mi_din[31:0]      | I | Configuration data input
-mi_dout[31:0]     | O | Configuration readback data
 txwr_access       | I | TX write  
 txwr_packet[103:0]| I | TX write packet
 txwr_wait         | O | TX write wait (pushback)
@@ -62,6 +55,18 @@ rxrd_wait         | I | RX read wait (pushback)
 rxrr_access       | O | RX read-response 
 rxrr_packet[103:0]| O | RX read-response packet
 rxrr_wait         | I | RX read-response wait (pushback)
+
+###EPIPHANY SIGNALS
+
+SIGNAL            |DIR| DESCRIPTION 
+------------------|---|-------------- 
+cclk_{p/n}        | O | Epiphany differential high speed clock
+chip_resetb       | O | Epiphany reset (active low)
+colid[3:0]        | O | Epiphany column chip coordinate
+rowid[3:0]        | O | Epiphany row chip coordinate
+
+The Epiphany specific output signals can be left unconnected in systems that 
+don't include Epiphany chips. 
 
 ###I/O PROTOCOL 
 The default protocol for the elink is the Epiphany chip to chip interface. 
@@ -130,8 +135,8 @@ using the rx and tx parallel interfaces. Read, write, and read response
 transactions have independent channels into the elink. Data from a receiver 
 read request is expected to return on the read response transmit chanel.   
 
-The "access" signals indicate a valid transaction. The wait signals indicate
-that the receiving block is not ready to receive the packet. An elink packet  
+The "access" signals indicate a valid transaction. The wait signals indicate 
+that the receiving block is not ready to receive the packet. An elink packet 
 has the following bit ordering.  
 
  PACKET FIELD  | BITS    | DESCRIPTION 
@@ -155,30 +160,52 @@ added to the 12 bit elink ID that maps to address bits 31:20.  As an example,
 if the elink ID is 0x810, then writing to the E_RESET register would be done to 
 address 0x810D0000.
  
-REGISTER       | ADDRESS | DESCRIPTION 
----------------|---------|------------------
-E_RESET        | 0xD0000 | Soft reset
-E_CLK          | 0xD0004 | Clock configuration
-E_CHIPID       | 0xD0008 | Chip ID to drive to Epiphany pins
-E_VERSION      | 0xD000C | Version number
-ETX_CFG        | 0xD0040 | TX configuration
-ETX_STATUS     | 0xD0044 | TX status
-ETX_GPIO       | 0xD0048 | TX data in GPIO mode
-ETX_MMU        | 0xD8000 | TX MMU table 
-ERX_CFG        | 0xE0000 | RX configuration
-ERX_STATUS     | 0xE0004 | RX status register
-ERX_GPIO       | 0xE0008 | RX data in GPIO mode
-ERX_RR         | 0xE000c | RX read response address
-ERX_OFFSET     | 0xE0000 | RX memory offset in remap mode
-ERX_MAILBOXLO  | 0xE0040 | RX mailbox (lower 32 bit)
-ERX_MAILBOXHI  | 0xE0044 | RX mailbox (upper 32 bits)
-ERX_DMACFG     | 0xE0080 | RX DMA configuration
-ERX_DMACOUNT   | 0xE0084 | RX DMA count
-ERX_DMASTRIDE  | 0xE0088 | RX DMA stride
-ERX_DMASRCADDR | 0xE008c | RX DMA source addres
-ERX_DMADSTADDR | 0xE0090 | RX DMA destination address
-ERX_DMASTATUS  | 0xE0094 | RX DMA status
-ERX_MMU        | 0xE8000 | RX MMU table 
+REGISTER       | A  | ADDRESS | DESCRIPTION 
+---------------|----|---------|------------------
+E_RESET        |  W | 0xF0200 | Soft reset
+E_CLK          |  W | 0xF0204 | Clock configuration
+E_CHIPID       |  W | 0xF0208 | Chip ID to drive to Epiphany pins
+E_VERSION      | RW | 0xF020C | Version number (static)
+ETX_CFG        |  W | 0xF0240 | TX configuration
+ETX_STATUS     | R  | 0xF0244 | TX status
+ETX_GPIO       |  W | 0xF0248 | TX data in GPIO mode
+ERX_CFG        |  W | 0xF0300 | RX configuration
+ERX_STATUS     | R  | 0xF0304 | RX status register
+ERX_GPIO       | R  | 0xF0308 | RX data in GPIO mode
+ERX_RR         | RW | 0xF030c | RX read response address
+ERX_OFFSET     |  W | 0xF0310 | RX memory offset in remap mode
+ERX_MAILBOXLO  | RW | 0xF0314 | RX mailbox (lower 32 bit)
+ERX_MAILBOXHI  | RW | 0xF031c | RX mailbox (upper 32 bits)
+ETX_DMACFG     |  W | 0xF0500 | RX DMA configuration
+ETX_DMACOUNT   |  W | 0xF0504 | RX DMA count
+ETX_DMASTRIDE  |  W | 0xF0508 | RX DMA stride0xE0000
+ETX_DMASRCADDR |  W | 0xF050c | RX DMA source addres
+ETX_DMADSTADDR |  W | 0xF0510 | RX DMA destination address
+ETX_DMAAUTO0   |  W | 0xF0514 | RX DMA slave buffer (lo)
+ETX_DMAAUTO1   |  W | 0xF0518 | RX DMA slave buffer (hi)
+ETX_DMASTATUS  |  W | 0xF051c | RX DMA status
+ERX_DMACFG     |  W | 0xF0520 | TX DMA configuration
+ERX_DMACOUNT   |  W | 0xF0524 | TX DMA count
+ERX_DMASTRIDE  |  W | 0xF0528 | TX DMA stride
+ETX_DMASRCADDR |  W | 0xF050c | TX DMA source addres
+ERX_DMADSTADDR |  W | 0xF0530 | TX DMA destination address
+ERX_DMAAUTO0   |  W | 0xF0534 | TX DMA slave buffer (lo)
+ERX_DMAAUTO1   |  W | 0xF0538 | TX DMA slERXave buffer (hi)
+ERX_DMASTATUS  |  W | 0xF053c | TX DMA status      
+ETX_DMADESCR0  |  W | 0xF0540 | RX DMA {reserved,config}
+ETX_DMADESCR1  |  W | 0xF0544 | TX DMA {dst_stride[15:0],src_stride[15:0]}      
+ETX_DMADESCR2  |  W | 0xF0548 | TX DMA {reserved,count[15:0]}
+ETX_DMADESCR3  |  W | 0xF054c | TX reserved
+ETX_DMADESCR4  |  W | 0xF0550 | TX DMA srcaddr[31:0]
+ETX_DMADESCR5  |  W | 0xF0554 | TX DMA dstaddr[31:0]
+ERX_DMADESCR0  |  W | 0xF0560 | RX DMA {reserved,config}       
+ERX_DMADESCR1  |  W | 0xF0564 | RX DMA {dst_stride[15:0],src_stride[15:0]}      
+ERX_DMADESCR2  |  W | 0xF0568 | RX DMA {reserved,count[15:0]}
+ERX_DMADESCR3  |  W | 0xF056c | RX reserved
+ERX_DMADESCR4  |  W | 0xF0570 | RX DMA srcaddr[31:0]
+ERX_DMADESCR5  |  W | 0xF0574 | RX DMA dstaddr[31:0]
+ETX_MMU        | RW | 0xE0000 | TX MMU table 
+ERX_MMU        | RW | 0xE8000 | RX MMU table 
 
 REGISTER DESCRIPTIONS
 ===========================================
@@ -193,7 +220,7 @@ FIELD    | DESCRIPTION
  [1]     | 0: epiphany chip is active
          | 1: epiphany chip in reset
  [2]     | 1: Starts an internal reset and clock sequnce block
-              (self resetting bit)
+         |    (self resetting bit)
 
 ###E_CLK (LABS)
 Transmit and Epiphany clock settings.
@@ -341,13 +368,14 @@ FIELD    | DESCRIPTION
  [8]     | Data from rxi_frame pin
 
 ###ERX_RR
-Last read response data that was received on rxrr_packet[103:0]
+Last read response data that was received on rxrr_packet[103:0].  
+
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | Read response data (lower 32 bits)
 
 ###ERX_OFFSET
-Address offset used in the dynamic address remapping mode
+Address offset used in the dynamic address remapping mode.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
@@ -363,14 +391,14 @@ FIELD    | DESCRIPTION
 
 ###ERX_MAILBOXHI
 Upper 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Reading this
-register causes the RX FIFO read pointer to increment by one
+register causes the RX FIFO read pointer to increment by one.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | Upper data of RX FIFO
 
 ###DMACFG
-Configuration register for DMA
+Configuration register for DMA.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
@@ -398,14 +426,14 @@ FIELD    | DESCRIPTION
  [31:0]  | The number of transfers remaining
 
 ###DMADSTADDR
-The current 32-bit address being transferred
+The current 32-bit address being transferred.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | Current transaction destination address to write to
 
 ###DMASRCADDR
-The current 32-bit address being read from in master mode
+The current 32-bit address being read from in master mode.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
@@ -430,7 +458,7 @@ FIELD    | DESCRIPTION
 
 ###ERX_MMU
 A table of N entries for translating incoming 12 bit address to a new value. 
-Entries are aligned on 8 byte boundaries
+Entries are aligned on 8 byte boundaries.
  
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
