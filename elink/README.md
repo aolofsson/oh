@@ -90,20 +90,21 @@ B02      | dstaddr[27:20]
 B03      | dstaddr[19:12]
 B04      | dstaddr[11:4]
 B05      | {dstaddr[3:0],datamode[1:0],write,access}
-B06      | data[31:24] (or srcaddr[31:24] if read transaction)
-B07      | data[23:16] (or srcaddr[23:16] if read transaction)
-B08      | data[15:8]  (or srcaddr[15:8]  if read transaction)
-B09      | data[7:0]   (or srcaddr[7:0]   if read transaction)
-+B10     | data[63:56]  
++B06     | data[31:24] / srcaddr[31:24]
++B07     | data[23:16] / srcaddr[23:16]
++B08     | data[15:8] / srcaddr[15:8]
++B09     | data[7:0] / srcaddr[7:0]
+++B10    | data[63:56]  
 B11      | data[55:48]  
 B12      | data[47:40]  
 B13      | data[39:32]  
-++B14    | data[31:24]  (in 64 bit write burst mode)
-B15      | data[23:16]  (in 64 bit write burst mode)
++++B14   | data[31:24] in 64 bit write burst mode only
+B15      | data[23:16] in 64 bit write burst mode only
 ...      | ...
 
-+B09 is the last byte of 32 bit write or read transaction  
-++B14 is the first data byte of bursting transaction  
++B01-B06: srcaddr used for read request, otherwise data
+++B09: is the last byte of 32 bit write or read transaction  
++++B14: is the first data byte of bursting transaction  
  
 The data captured  on the rising edge of the LCLK is considered to be B0 if 
 the FRAME control captured at the same cycle is high but was low at the rising
@@ -172,7 +173,8 @@ ETX_DMACFG     | RW | 0xF0500 | RX DMA configuration
 ETX_DMACOUNT   | RW | 0xF0504 | RX DMA count
 ETX_DMASTRIDE  | RW | 0xF0508 | RX DMA stride
 ETX_DMASRCADDR | RW | 0xF050c | RX DMA source addres
-ETX_DMADSTADDR | RW | 0xF0514 | RX DMA slave buffer (lo)
+ETX_DMADSTADDR | RW | 0xF0510 | RX DMA slave buffer (lo)
+ETX_DMAAUTO0   | RW | 0xF0514 | RX DMA slave buffer (hi)
 ETX_DMAAUTO1   | RW | 0xF0518 | RX DMA slave buffer (hi)
 ETX_DMASTATUS  | RW | 0xF051c | RX DMA status
 ETX_DMADESCR0  | RW | 0xF0580 | RX DMA {reserved,config}
