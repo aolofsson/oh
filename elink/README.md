@@ -73,7 +73,7 @@ an 8-bit wide dual data rate data bus, and separate read and write packet wait
 signals to implement a gluless point to point link.
 
 ```
-                __     ___     ___     ___     ___     ___     ___     ___ 
+               ___     ___     ___     ___     ___     ___     ___     ___ 
  LCLK     \___/   \___/   \___/   \___/   \___/   \___/   \___/   \___/
            _______________________________________________________________
  FRAME   _/                                                        \______ 
@@ -102,8 +102,8 @@ B13      | data[39:32]
 B15      | data[23:16] in 64 bit write burst mode only
 ...      | ...
 
-+B01-B06: srcaddr used for read request, otherwise data
-++B09: is the last byte of 32 bit write or read transaction  
++B01-B06: srcaddr used for read request, otherwise data  
+++B09: is the last byte of 32 bit write or read transaction    
 +++B14: is the first data byte of bursting transaction  
  
 The data captured  on the rising edge of the LCLK is considered to be B0 if 
@@ -151,11 +151,11 @@ has the following bit ordering.
 ###INTERNAL STRUCTURE
 ```
 elink
- |----ereset
- |----ecfg_clocks
- |----eclocks
- |----ecfg_cdc
- |----erx
+ |----ereset (elink and chip reset)
+ |----ecfg_clocks (controls clock and reset)
+ |----eclocks (PLL/divider instantiation)
+ |----ecfg_cdc (etx-->erx path for configuration registe access)
+ |----erx (receive path)
  |     |----erx_io (chip level I/O interface
  |     |----erx_protocol (elink protocol-->emesh packet converter)
  |     |----erx_remap (simple dstaddr remapping)
@@ -168,7 +168,7 @@ elink
  |     |----rxwr_fifo (write fifo)
  |     |----rxrd_fifo (read request fifo)
  |     |----rxrr_fifo (read response fifo)
- |----etx
+ |----etx (transmit path)
  |     |----etx_io (chip level I/O interface)
  |     |----etx_protocol (emesh-->elink protocol converter)
  |     |----etx_remap (simple dstaddr remapping)
@@ -188,7 +188,7 @@ elink
 The full 32 bit physical address of an elink register is the address seen below
 added to the 12 bit elink ID that maps to address bits 31:20.  As an example,
 if the elink ID is 0x810, then writing to the E_RESET register would be done to 
-address 0x810D0000.
+address 0x810F0200.
  
 REGISTER       | AC | ADDRESS | DESCRIPTION 
 ---------------|----|---------|------------------
