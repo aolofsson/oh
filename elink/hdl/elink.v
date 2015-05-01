@@ -268,7 +268,7 @@ module elink(/*AUTOARG*/
                              .reset             (elink_reset),          
                        );
    */
-   fifo_cdc fifo_cdc (/*AUTOINST*/
+   fifo_cdc ecfg_cdc (/*AUTOINST*/
 		      // Outputs
 		      .wait_in		(etx_cfg_wait),		 // Templated
 		      .access_out	(erx_cfg_access),	 // Templated

@@ -149,9 +149,40 @@ has the following bit ordering.
  srcaddr[31:0] | [103:72]| Return address for read-request, upper data for write
 
 ###INTERNAL STRUCTURE
+```
+elink
+ |----ereset
+ |----ecfg_clocks
+ |----eclocks
+ |----ecfg_cdc
+ |----erx
+ |     |----erx_io (chip level I/O interface
+ |     |----erx_protocol (elink protocol-->emesh packet converter)
+ |     |----erx_remap (simple dstaddr remapping)
+ |     |----erx_mmu (advanced dstaddr mapping)
+ |     |----erx_cfgif (configuration interface)
+ |     |----erx_cfg (basic rx config registers)
+ |     |----erx_mailbox (fifo mailbox)
+ |     |----erx_dma (DMA master)
+ |     |----erx_disty (sends rx transaction to WR/RD/RR fifo)
+ |     |----rxwr_fifo (write fifo)
+ |     |----rxrd_fifo (read request fifo)
+ |     |----rxrr_fifo (read response fifo)
+ |----etx
+ |     |----etx_io (chip level I/O interface)
+ |     |----etx_protocol (emesh-->elink protocol converter)
+ |     |----etx_remap (simple dstaddr remapping)
+ |     |----etx_mmu (advanced dstaddr mapping)
+ |     |----etx_cfgif (configuration interface)
+ |     |----etx_cfg (basic rx config registers)
+ |     |----etx_dma (DMA master)
+ |     |----etx_arbiter (sends rx transaction to WR/RD/RR fifo)
+ |     |----txwr_fifo (write fifo)
+ |     |----txrd_fifo (read request fifo)
+ |     |----txrr_fifo (read response fifo)
+ |--------------------------------------------------------------------
+```
 
-(link to picture) 
- 
 ###REGISTER MAP  
  
 The full 32 bit physical address of an elink register is the address seen below

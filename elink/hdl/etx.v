@@ -209,7 +209,7 @@ module etx(/*AUTOARG*/
                                );
     */
    
-   edma edma (/*AUTOINST*/
+   edma etx_dma (/*AUTOINST*/
 	      // Outputs
 	      .mi_dout			(mi_dma_dout[DW-1:0]),	 // Templated
 	      .edma_access		(edma_access),		 // Templated
@@ -268,8 +268,8 @@ module etx(/*AUTOARG*/
     );
         */
    
-   defparam ecfg_if.RX =0;   
-   ecfg_if ecfg_if (.mi_dout3		(64'b0),
+   defparam etx_cfgif.RX =0;   
+   ecfg_if etx_cfgif (.mi_dout3		(64'b0),
 		    /*AUTOINST*/
 		    // Outputs
 		    .wait_out		(etx_cfg_wait),		 // Templated
@@ -317,7 +317,7 @@ module etx(/*AUTOARG*/
 			      txwr_fifo_full	          //0
 			      };
 
-   ecfg_tx ecfg_tx (
+   ecfg_tx etx_cfg (
 		    /*AUTOINST*/
 		    // Outputs
 		    .mi_dout		(mi_cfg_dout[DW-1:0]),	 // Templated
@@ -384,7 +384,7 @@ module etx(/*AUTOARG*/
                          );
    */
 
-   emmu emmu (
+   emmu etx_mmu (
 	      /*AUTOINST*/
 	      // Outputs
 	      .mi_dout			(mi_mmu_dout[DW-1:0]),	 // Templated

@@ -205,7 +205,7 @@ module erx (/*AUTOARG*/
                            );
    */
 
-   emmu emmu (
+   emmu erx_mmu (
 	      /*AUTOINST*/
 	      // Outputs
 	      .mi_dout			(mi_mmu_dout[DW-1:0]),	 // Templated
@@ -241,8 +241,8 @@ module erx (/*AUTOARG*/
     );
     */
    
-   defparam ecfg_if.RX=1;
-   ecfg_if ecfg_if (/*AUTOINST*/
+   defparam erx_cfgif.RX=1;
+   ecfg_if erx_cfgif (/*AUTOINST*/
 		    // Outputs
 		    .wait_out		(),			 // Templated
 		    .mi_mmu_en		(mi_mmu_en),
@@ -293,7 +293,7 @@ module erx (/*AUTOARG*/
 
 
 
-   ecfg_rx ecfg_rx (.rx_status    	(rx_status[15:0]),
+   ecfg_rx erx_cfg (.rx_status    	(rx_status[15:0]),
 		    .timer_cfg		(),
 		     /*AUTOINST*/
 		    // Outputs
@@ -329,7 +329,7 @@ module erx (/*AUTOARG*/
         */
 
    //shares register space with ecfg_rx
-   emailbox emailbox(.mi_en		(mi_cfg_en),
+   emailbox erx_mailbox(.mi_en		(mi_cfg_en),
 		     /*AUTOINST*/
 		     // Outputs
 		     .mi_dout		(mi_mailbox_dout[31:0]), // Templated
@@ -355,7 +355,7 @@ module erx (/*AUTOARG*/
                              
                                );
    */   
-   edma edma(/*AUTOINST*/
+   edma erx_dma(/*AUTOINST*/
 	     // Outputs
 	     .mi_dout			(mi_dma_dout[DW-1:0]),	 // Templated
 	     .edma_access		(edma_access),		 // Templated
