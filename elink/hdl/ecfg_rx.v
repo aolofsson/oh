@@ -10,14 +10,13 @@ module ecfg_rx (/*AUTOARG*/
    mi_dout, rx_enable, mmu_enable, remap_mode, remap_base,
    remap_pattern, remap_sel, timer_cfg,
    // Inputs
-   reset, clk, mi_en, mi_we, mi_addr, mi_din, gpio_datain,
-   debug_vector
+   reset, clk, mi_en, mi_we, mi_addr, mi_din, gpio_datain, rx_status
    );
 
    /******************************/
    /*Compile Time Parameters     */
    /******************************/
-   parameter RFAW            = 5;         // 32 registers for now
+   parameter RFAW            = 6;         // 32 registers for now
    parameter GROUP           = 4'h0;
    
    /******************************/
@@ -30,7 +29,7 @@ module ecfg_rx (/*AUTOARG*/
    /*****************************/    
    input 	 mi_en;         
    input 	 mi_we;            // single we, must write 32 bit words
-   input [19:0]  mi_addr;          // complete physical address (no shifting!)
+   input [14:0]  mi_addr;          // complete physical address (no shifting!)
    input [31:0]  mi_din;
    output [31:0] mi_dout;   
    
@@ -38,24 +37,23 @@ module ecfg_rx (/*AUTOARG*/
    /*CONFIG SIGNALS             */
    /*****************************/
    //rx
-   output 	 rx_enable;    // enable signal for rx  
-   output 	 mmu_enable;   // enables MMU on rx path (static)  
-   input [8:0] 	 gpio_datain;  // frame and data inputs (static)        
-   input [15:0]  debug_vector; // erx debug signals (static)    
-   output [1:0]  remap_mode;   // remap mode (static)       
-   output [31:0] remap_base;   // base for dynamic remap (static) 
-   output [11:0] remap_pattern;// patter for static remap (static)
-   output [11:0] remap_sel;    // selects for static remap (static)
-   output [1:0]  timer_cfg;    // timeout config (00=off) (static)
+   output 	 rx_enable;      // enable signal for rx  
+   output 	 mmu_enable;     // enables MMU on rx path (static)  
+   input [8:0] 	 gpio_datain;    // frame and data inputs (static)        
+   input [15:0]  rx_status;      // etx status signals
+   output [1:0]  remap_mode;     // remap mode (static)       
+   output [31:0] remap_base;     // base for dynamic remap (static) 
+   output [11:0] remap_pattern;  // patter for static remap (static)
+   output [11:0] remap_sel;      // selects for static remap (static)
+   output [1:0]  timer_cfg;      // timeout config (00=off) (static)
    
    /*------------------------CODE BODY---------------------------------------*/
    
    //registers
    reg [31:0] 	ecfg_rx_reg;
    reg [31:0] 	ecfg_base_reg;
-   reg [8:0] 	ecfg_datain_reg;
-   reg [8:0] 	ecfg_datain_sync;
-   reg [2:0] 	ecfg_rx_debug_reg;
+   reg [8:0] 	ecfg_gpio_reg;
+   reg [2:0] 	ecfg_rx_status_reg;
    reg [31:0] 	mi_dout;
    
    //wires
@@ -74,8 +72,8 @@ module ecfg_rx (/*AUTOARG*/
    assign ecfg_read   = mi_en & ~mi_we;   
 
    //Config write enables
-   assign ecfg_rx_write      = ecfg_write & (mi_addr[RFAW+1:2]==`ELRXCFG);
-   assign ecfg_base_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ELRXBASE);
+   assign ecfg_rx_write      = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_CFG);
+   assign ecfg_base_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_OFFSET);
    
    //###########################
    //# RXCFG
@@ -94,23 +92,19 @@ module ecfg_rx (/*AUTOARG*/
    assign timer_cfg[1:0]      = ecfg_rx_reg[29:28];
       
    //###########################
-   //# DATAIN (synchronized)
+   //# DATAIN
    //###########################
    always @ (posedge clk)
-     begin
-	ecfg_datain_sync[8:0] <= gpio_datain[8:0];
-	ecfg_datain_reg[8:0]  <= ecfg_datain_sync[8:0];
-     end
- 
+     ecfg_gpio_reg[8:0] <= gpio_datain[8:0];
+   
    //###########################1
    //# DEBUG
-   //###########################
-   
+   //###########################   
    always @ (posedge clk)
      if(reset)
-       ecfg_rx_debug_reg[2:0] <= 'd0;
+       ecfg_rx_status_reg[2:0] <= 'd0;
      else
-       ecfg_rx_debug_reg[2:0]  <=ecfg_rx_debug_reg[2:0] | debug_vector[2:0];
+       ecfg_rx_status_reg[2:0]  <=ecfg_rx_status_reg[2:0] | rx_status[2:0];
 
    //###########################1
    //# DYNAMIC REMAP BASE
@@ -131,10 +125,11 @@ module ecfg_rx (/*AUTOARG*/
    always @ (posedge clk)
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
-         `ELRXCFG:   mi_dout[31:0] <= {ecfg_rx_reg[31:0]};
-         `ELRXGPIO:  mi_dout[31:0] <= {23'b0, ecfg_datain_reg[8:0]};
-	 `ELRXBASE:  mi_dout[31:0] <= {ecfg_base_reg[31:0]};
-         default:    mi_dout[31:0] <= 32'd0;
+         `ERX_CFG:     mi_dout[31:0] <= {ecfg_rx_reg[31:0]};
+         `ERX_GPIO:    mi_dout[31:0] <= {23'b0, ecfg_gpio_reg[8:0]};
+	 `ERX_STATUS:  mi_dout[31:0] <= {16'b0, rx_status[15:3],ecfg_rx_status_reg[2:0]};
+	 `ERX_OFFSET:  mi_dout[31:0] <= {ecfg_base_reg[31:0]};
+         default:      mi_dout[31:0] <= 32'd0;
        endcase
 
 endmodule // ecfg_rx

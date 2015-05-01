@@ -3,39 +3,36 @@
  EPIPHANY eMesh Arbiter
  ########################################################################
  
- This block takes three FIFO inputs (write, read request, read response),
- arbitrates between the active channels, and forwards the result on to
- the transmit channel.
+ This block takes three FIFO inputs (write, read request, read response)
+ and the DMA channel, arbitrates between the active channels, and forwards 
+ the result to the transmit output pins.
  
- The arbitration order is (fixed, highest to lowest)
- 1) host writes
+ Arbitration Priority:
+ 1) host writes (highest)
  2) read requests from host
  3) read responses
+ 4) DMA (lowest)
 
  */
 
 module etx_arbiter (/*AUTOARG*/
    // Outputs
-   txwr_fifo_read, txrd_fifo_read, txrr_fifo_read, etx_access,
-   etx_packet, etx_rr, etx_read,
+   txwr_fifo_read, txrd_fifo_read, txrr_fifo_read, edma_wait,
+   etx_access, etx_packet, etx_rr,
    // Inputs
-   tx_lclk_div4, reset, ecfg_tx_ctrlmode_bp, ecfg_tx_ctrlmode,
-   txwr_fifo_empty, txwr_fifo_packet, txrd_fifo_empty,
-   txrd_fifo_packet, txrr_fifo_empty, txrr_fifo_packet, etx_rd_wait,
-   etx_wr_wait, etx_io_wait
+   clk, reset, txwr_fifo_empty, txwr_fifo_packet, txrd_fifo_empty,
+   txrd_fifo_packet, txrr_fifo_empty, txrr_fifo_packet, edma_access,
+   edma_packet, ctrlmode_bypass, ctrlmode, etx_rd_wait, etx_wr_wait,
+   etx_io_wait, etx_cfg_wait
    );
 
    parameter PW = 104;
    parameter ID = 0;
    
-   // tx clock and reset
-   input          tx_lclk_div4;
+   //tx clock and reset
+   input          clk;
    input          reset;
 
-   //ctrlmode for slave transactions
-   input 	  ecfg_tx_ctrlmode_bp;
-   input [3:0] 	  ecfg_tx_ctrlmode;
-   
    //Write Request (from slave)
    input 	  txwr_fifo_empty;
    input [PW-1:0] txwr_fifo_packet;
@@ -51,21 +48,30 @@ module etx_arbiter (/*AUTOARG*/
    input [PW-1:0] txrr_fifo_packet;
    output         txrr_fifo_read;
 
-   //Transaction for IO
+   //DMA Master
+   input 	   edma_access;
+   input [PW-1:0]  edma_packet;
+   output 	   edma_wait;
+
+   //ctrlmode for rd/wr transactions
+   input 	   ctrlmode_bypass;
+   input [3:0] 	   ctrlmode;
+   
+   //Transaction for IO protocol
    output          etx_access;
    output [PW-1:0] etx_packet;
-   output 	   etx_rr; 
+   output 	   etx_rr;      //bypass translation on read response
+
+   //Wait signals
    input           etx_rd_wait;
    input           etx_wr_wait;
    input 	   etx_io_wait;   
-
-   //For ERX timeout circuit
-   output 	   etx_read;
-     
+   input 	   etx_cfg_wait;
+    
    //regs
    reg 		   etx_access;
    reg [PW-1:0]    etx_packet;
-   reg 		   etx_rr;     //bypass translation on read request
+   reg 		   etx_rr;     //bypass translation on read response
    
    //wires
    wire 	   rr_ready;
@@ -93,13 +99,15 @@ module etx_arbiter (/*AUTOARG*/
    assign txwr_fifo_read = wr_ready & (~etx_access | etx_io_wait);
    
    //Selecting control mode on slave transcations
-   assign txrd_ctrlmode[3:0] =  ecfg_tx_ctrlmode_bp ? ecfg_tx_ctrlmode[3:0] : 
-				                      txrd_fifo_packet[7:4];
+   assign txrd_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
+				                   txrd_fifo_packet[7:4];
 
-   assign txwr_ctrlmode[3:0] =  ecfg_tx_ctrlmode_bp ? ecfg_tx_ctrlmode[3:0] : 
-				                      txwr_fifo_packet[7:4];
-
-   always @ (posedge tx_lclk_div4)
+   assign txwr_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
+				                   txwr_fifo_packet[7:4];
+   //##########################################################################
+   //# Generate Access Signalf For IO
+   //##########################################################################
+   always @ (posedge clk)
       if( reset ) 
 	begin
            etx_access         <= 1'b0;
@@ -122,11 +130,7 @@ module etx_arbiter (/*AUTOARG*/
 	begin
 	   etx_access <= 1'b0;	   
 	end   
-   	              
-
-   assign etx_read = txrd_fifo_read;
-   
-                              
+                                
 endmodule // etx_arbiter
 /*
   File: etx_arbiter.v

@@ -14,7 +14,7 @@ module fifo_async
    //##########
    //# RESET/CLOCK
    //##########
-   input           reset;     
+   input           reset;     //asynchronous reset
    input           wr_clk;    //write clock   
    input           rd_clk;    //read clock   
 

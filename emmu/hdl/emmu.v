@@ -48,7 +48,7 @@ module emmu (/*AUTOARG*/
   
    input 	     mi_en;               //memory access 
    input  	     mi_we;               //byte wise write enable
-   input [19:0]      mi_addr;             //address
+   input [14:0]      mi_addr;             //address
    input [DW-1:0]    mi_din;              //input data  
    output [DW-1:0]   mi_dout;             //read back (TODO?? not implemented)
   
