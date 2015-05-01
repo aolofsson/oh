@@ -1,112 +1,50 @@
-//########################################################################
-//# ELINK TX Protocol block
-//########################################################################
-//#
-//# The etx_protocol block implements a transmitter for communicating with
-//# the Epiphany receiver per the documentation seen below.
-//#
-//# The output transaction has an option of the bursting where data of 
-//# the new transaction is sent without the address. In such a case the
-//# address of the transaction will be determined in the receiver according 
-//# to the address of the previous transaction.
-//#
-//#        ___     ___     ___     ___     ___     ___
-//# lclk _|   |___|   |___|   |___|   |___|   |___|   |_
-//#
-//#              -------------------------------
-//# frame ______/
-//#              --- --- --- --- ---
-//# data  XXXXXXX 0 X 1 X 2 X 3 X 4 X .....
-//#              --- --- --- --- ---
-//#
-//#  Transaction structure:
-//#  -------------------------
-//#   byte0  -> 00000000
-//#   byte1  -> ctrlmode[3:0],dstaddr[31:28]
-//#   byte2  -> dstaddr[27:20]
-//#   byte3  -> dstaddr[19:12]
-//#   byte4  -> dstaddr[11:4]
-//#   byte5  -> dstaddr[3:0],datamode[1:0],write,access
-//#   byte6  -> data[31:24] (or srcaddr[31:24] if read transaction)
-//#   byte7  -> data[23:16] (or srcaddr[23:16] if read transaction)
-//#   byte8  -> data[15:8]  (or srcaddr[15:8]  if read transaction)
-//#  *byte9  -> data[7:0]   (or srcaddr[7:0]   if read transaction)
-//#   byte10 -> data[63:56]  
-//#   byte11 -> data[55:48]  
-//#   byte12 -> data[47:40]  
-//#   byte13 -> data[39:32]  
-//# **byte14 -> data[31:24]  
-//#    ...
-//#    ...
-//#    ...
-//#
-//#  * byte9 is the last byte of 32 bit write or read transaction 
-//#   
-//# ** if 64 bit write transaction, data of byte14 is the first data byte of
-//#    bursting transaction
-//# 
-//# -- The data is transmitted MSB first but in 32bits resolution. If we want
-//#    to transmit 64 bits it will be [31:0] (msb first) and then [63:32] 
-//#    (msb first)
-//#
-//# Wait indication to the transmitter (from Epiphany chip receiver):
-//#
-//# When one of the secondary fifos becomes full we send wait indication 
-//# to the transmitter.
-//# There is some uncertainty regarding how long it will take for the wait 
-//# control to stop the transmitter (we have synchronization on the way, 
-//# which may cause +/-1 cycle of uncertainty).
-//# Our main fifo on the input port of the receiver is robust enough
-//# (has enough entries) to receive all of the transactions sent during the
-//# time of "wait traveling" without loosing any information.
-//# But the uncertainty mentioned above forces us to start from empty fifo
-//# every time after wait indication is raised in order to ensure that 
-//# the number of available entries won't be reduced.
-//#              
-//#####################################################################
 module etx_protocol (/*AUTOARG*/
    // Outputs
    etx_rd_wait, etx_wr_wait, etx_wait, etx_io_wait, tx_frame_par,
    tx_data_par,
    // Inputs
-   etx_access, etx_packet, ecfg_tx_tp_enable, ecfg_dataout,
-   ecfg_tx_enable, ecfg_tx_gpio_enable, ecfg_access, ecfg_packet,
-   reset, tx_lclk_div4, tx_rd_wait, tx_wr_wait
+   reset, clk, testmode, etx_access, etx_packet, tx_enable, tp_enable,
+   gpio_enable, gpio_data, chipid, tx_rd_wait, tx_wr_wait
    );
 
    parameter PW = 104;
    parameter AW = 32;   
    parameter DW = 32;
+   parameter ID = 12'h000;
    
-   //Bus side
+   //Clock/reset
+   input 	  reset;
+   input          clk;
+
+   //Puts transmit in testmode
+   input 	  testmode;
+
+   //System side
    input          etx_access;
    input [PW-1:0] etx_packet;  
+
+   //Pushback signals
    output         etx_rd_wait;
    output         etx_wr_wait;
    output         etx_wait;     //for pipeline
    output         etx_io_wait;  //for arbiter
 
-   //Enables transmit test pattern
-   input 	  ecfg_tx_tp_enable;
-   input [8:0]    ecfg_dataout;
-   input 	  ecfg_tx_enable;
-   input 	  ecfg_tx_gpio_enable;
-
-   //Test Insertion
-   input 	  ecfg_access;
-   input [PW-1:0] ecfg_packet;
+   //Enble transmit
+   input 	  tx_enable;  //transmit enable
+   input 	  tp_enable;  //testmode enable
+   input 	  gpio_enable;//gpio enable
+   input [8:0]    gpio_data;  //gpio mode data
+   input [11:0]   chipid;     //chip id
    
-   // IO side (8 eLink bytes at a time)
-   input 	  reset;
-   input          tx_lclk_div4;// Parallel-rate clock from eClock block
+   //Interface to IO
    output [7:0]   tx_frame_par;
    output [63:0]  tx_data_par;
    input          tx_rd_wait;  // The wait signals are passed through
    input          tx_wr_wait;  // to the emesh interfaces
 
-   //############
+   //###################################################################
    //# Local regs & wires
-   //############
+   //###################################################################
    reg           etx_sample;   //hold for second cycle
    reg [7:0]     tx_frame_par;
    reg [127:0]   tx_data_reg;  //sample transaction on one clock cycle
@@ -119,22 +57,33 @@ module etx_protocol (/*AUTOARG*/
    wire [AW-1:0] etx_dstaddr;
    wire [DW-1:0] etx_data;
    wire [AW-1:0] etx_srcaddr;
-   wire 	 access_mux;
-   wire 	 ecfg_access_sync;
-   wire [PW-1:0] packet_mux;
-	 
-   //Synchronize access signal
-   synchronizer #(.DW(1)) synchronizer(.out		(ecfg_access_sync),
-				      .in		(ecfg_access),
-				      .clk		(tx_lclk_div4),
-				      .reset		(reset)
-				      );
+   wire [PW-1:0] etx_packet_mux;
+   reg [PW-1:0]  testpacket;
+   
+   //Testmode logic
+   always @( posedge clk or posedge reset ) 
+     if(reset)
+       testpacket[PW-1:0] <= 'd0;
+     else if(testmode)
+       if(~testpacket[1])//initiate write 
+	 testpacket[PW-1:0]<={32'h55555555,//src
+                              32'h55555555,//data
+                              chipid[11:0],20'b0,//dst
+                              4'b0,2'b10,2'b11};//32bit write
+       else //initiate read
+	 testpacket[PW-1:0]<={ID,12'hF03,`ERX_RR,2'b0,//src
+                              32'haaaaaaaa,//dummy data
+                              chipid[11:0],20'b0,//read from address
+                              4'b0,2'b10,2'b01};//32bit read
 
-   assign access_mux = ecfg_access_sync | etx_access;
-
-
-   assign packet_mux[PW-1:0] = ecfg_access_sync ? ecfg_packet[PW-1:0] :
-	                                          etx_packet[PW-1:0];
+   assign etx_packet_mux[PW-1:0] = testmode ? testpacket[PW-1:0] :
+                                              etx_packet[PW-1:0];
+   
+   //Access always on in test mode (assumes no other traffic)
+   assign etx_access_mux = testmode | etx_access;
+   
+   //Transmit packet enable
+   assign etx_enable =  testmode | tx_enable;
 
    //packet to emesh bundle
    packet2emesh p2m (
@@ -147,12 +96,11 @@ module etx_protocol (/*AUTOARG*/
 		     .data_out		(etx_data[31:0]),
 		     .srcaddr_out	(etx_srcaddr[31:0]),
 		     // Inputs
-		     .packet_in		(packet_mux[PW-1:0]));
-
+		     .packet_in		(etx_packet_mux[PW-1:0])
+		     );
   
-      
    // TODO: Bursts
-   always @( posedge tx_lclk_div4 or posedge reset ) 
+   always @( posedge clk or posedge reset ) 
      begin
 	if(reset) 
 	  begin	     
@@ -162,7 +110,7 @@ module etx_protocol (/*AUTOARG*/
 	  end 
 	else 
 	  begin
-             if( access_mux & etx_sample ) //first cycle
+             if( etx_enable & etx_access & etx_sample ) //first cycle
 	       begin
 		  etx_sample          <= 1'b0;
 		  tx_frame_par[7:0]   <= 8'h3F;
@@ -176,7 +124,7 @@ module etx_protocol (/*AUTOARG*/
 					 etx_dstaddr[3:0], etx_datamode[1:0], etx_write, etx_access // B5
 				   };
                end 
-	     else if(~etx_sample ) //second cycle (1)
+	     else if(etx_enable & ~etx_sample ) //second cycle (1)
 	       begin
 		  etx_sample        <= 1'b1;
 		  tx_frame_par[7:0] <= 8'hFF;
@@ -203,7 +151,7 @@ module etx_protocol (/*AUTOARG*/
 				   .out		(etx_rd_wait),
 				   // Inputs
 				   .in		(tx_rd_wait),
-				   .clk		(tx_lclk_div4),
+				   .clk		(clk),
 				   .reset	(reset)
 				   );
    
@@ -211,7 +159,7 @@ module etx_protocol (/*AUTOARG*/
 				   .out		(etx_wr_wait),
 				   // Inputs
 				   .in		(tx_wr_wait),
-				   .clk		(tx_lclk_div4),
+				   .clk		(clk),
 				   .reset	(reset)
 				   );
 
