@@ -1,20 +1,20 @@
 module ereset (/*AUTOARG*/
    // Outputs
-   reset, chip_resetb,
+   elink_reset, chip_resetb,
    // Inputs
    hard_reset, soft_reset
    );
 
    //inputs
-   input 	hard_reset;        // hardware reset from external block
-   input 	soft_reset;        // soft reset drive by register (level)
+   input 	hard_reset;     //hard input reset
+   input 	soft_reset;     //soft reset driven by register
 
    //outputs
-   output 	reset;             //reset for elink
-   output       chip_resetb;      //reset for epiphany
+   output 	elink_reset;    // reset for all of elink logic
+   output       chip_resetb;    // reset for epiphany (active low)
  
    //Reset for link logic
-   assign reset    = hard_reset | soft_reset;
+   assign elink_reset   = hard_reset | soft_reset;
 
    //May become more sophisticated later..
    //(for example, for epiphany reset, you might want to include some
