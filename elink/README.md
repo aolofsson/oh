@@ -26,7 +26,6 @@ rxo_wr_wait{p/n}  | O | RX push back (output) for write transactions
 
 SIGNAL            |DIR| DESCRIPTION 
 ------------------|---|--------------
-elinkid[11:0]     | I | Address ID of elink 
 reset             | I | Reset input
 clkin             | I | Clock input for CCLK/LCLK PLL
 sys_clk           | I | System clock for FIFOs
@@ -62,8 +61,7 @@ SIGNAL            |DIR| DESCRIPTION
 ------------------|---|-------------- 
 cclk_{p/n}        | O | Epiphany differential high speed clock
 chip_resetb       | O | Epiphany reset (active low)
-colid[3:0]        | O | Epiphany column chip coordinate
-rowid[3:0]        | O | Epiphany row chip coordinate
+chipid[11:0]      | O | Epiphany chip-id selector
 
 The Epiphany specific output signals can be left unconnected in systems that 
 don't include Epiphany chips. 
@@ -160,52 +158,54 @@ added to the 12 bit elink ID that maps to address bits 31:20.  As an example,
 if the elink ID is 0x810, then writing to the E_RESET register would be done to 
 address 0x810D0000.
  
-REGISTER       | A  | ADDRESS | DESCRIPTION 
+REGISTER       | AC | ADDRESS | DESCRIPTION 
 ---------------|----|---------|------------------
-E_RESET        |  W | 0xF0200 | Soft reset
-E_CLK          |  W | 0xF0204 | Clock configuration
-E_CHIPID       |  W | 0xF0208 | Chip ID to drive to Epiphany pins
+E_RESET        | -W | 0xF0200 | Soft reset
+E_CLK          | -W | 0xF0204 | Clock configuration
+***************|****|*********|********************
+E_CHIPID       | RW | 0xF0208 | Chip ID to drive to Epiphany pins
 E_VERSION      | RW | 0xF020C | Version number (static)
-ETX_CFG        |  W | 0xF0240 | TX configuration
-ETX_STATUS     | R  | 0xF0244 | TX status
-ETX_GPIO       |  W | 0xF0248 | TX data in GPIO mode
-ERX_CFG        |  W | 0xF0300 | RX configuration
-ERX_STATUS     | R  | 0xF0304 | RX status register
+ETX_CFG        | RW | 0xF0210 | TX configuration
+ETX_STATUS     | R- | 0xF0214 | TX status
+ETX_GPIO       | RW | 0xF0218 | TX data in GPIO mode
+ETX_DMACFG     | RW | 0xF0500 | RX DMA configuration
+ETX_DMACOUNT   | RW | 0xF0504 | RX DMA count
+ETX_DMASTRIDE  | RW | 0xF0508 | RX DMA stride
+ETX_DMASRCADDR | RW | 0xF050c | RX DMA source addres
+ETX_DMADSTADDR | RW | 0xF0514 | RX DMA slave buffer (lo)
+ETX_DMAAUTO1   | RW | 0xF0518 | RX DMA slave buffer (hi)
+ETX_DMASTATUS  | RW | 0xF051c | RX DMA status
+ETX_DMADESCR0  | RW | 0xF0580 | RX DMA {reserved,config}
+ETX_DMADESCR1  | RW | 0xF0584 | TX DMA {dst_stride[15:0],src_stride[15:0]}      
+ETX_DMADESCR2  | RW | 0xF0588 | TX DMA {reserved,count[15:0]}
+ETX_DMADESCR3  | RW | 0xF058c | TX reserved
+ETX_DMADESCR4  | RW | 0xF0590 | TX DMA srcaddr[31:0]
+ETX_DMADESCR5  | RW | 0xF0594 | TX DMA dstaddr[31:0]
+***************|****|*********|********************
+ETX_MMU        | -W | 0xE0000 | TX MMU table 
+***************|****|*********|********************
+ERX_CFG        | RW | 0xF0300 | RX configuration
+ERX_STATUS     | R- | 0xF0304 | RX status register
 ERX_GPIO       | R  | 0xF0308 | RX data in GPIO mode
 ERX_RR         | RW | 0xF030c | RX read response address
-ERX_OFFSET     |  W | 0xF0310 | RX memory offset in remap mode
+ERX_OFFSET     | RW | 0xF0310 | RX memory offset in remap mode
 ERX_MAILBOXLO  | RW | 0xF0314 | RX mailbox (lower 32 bit)
-ERX_MAILBOXHI  | RW | 0xF031c | RX mailbox (upper 32 bits)
-ETX_DMACFG     |  W | 0xF0500 | RX DMA configuration
-ETX_DMACOUNT   |  W | 0xF0504 | RX DMA count
-ETX_DMASTRIDE  |  W | 0xF0508 | RX DMA stride0xE0000
-ETX_DMASRCADDR |  W | 0xF050c | RX DMA source addres
-ETX_DMADSTADDR |  W | 0xF0510 | RX DMA destination address
-ETX_DMAAUTO0   |  W | 0xF0514 | RX DMA slave buffer (lo)
-ETX_DMAAUTO1   |  W | 0xF0518 | RX DMA slave buffer (hi)
-ETX_DMASTATUS  |  W | 0xF051c | RX DMA status
-ERX_DMACFG     |  W | 0xF0520 | TX DMA configuration
-ERX_DMACOUNT   |  W | 0xF0524 | TX DMA count
-ERX_DMASTRIDE  |  W | 0xF0528 | TX DMA stride
-ETX_DMASRCADDR |  W | 0xF050c | TX DMA source addres
-ERX_DMADSTADDR |  W | 0xF0530 | TX DMA destination address
-ERX_DMAAUTO0   |  W | 0xF0534 | TX DMA slave buffer (lo)
-ERX_DMAAUTO1   |  W | 0xF0538 | TX DMA slERXave buffer (hi)
-ERX_DMASTATUS  |  W | 0xF053c | TX DMA status      
-ETX_DMADESCR0  |  W | 0xF0540 | RX DMA {reserved,config}
-ETX_DMADESCR1  |  W | 0xF0544 | TX DMA {dst_stride[15:0],src_stride[15:0]}      
-ETX_DMADESCR2  |  W | 0xF0548 | TX DMA {reserved,count[15:0]}
-ETX_DMADESCR3  |  W | 0xF054c | TX reserved
-ETX_DMADESCR4  |  W | 0xF0550 | TX DMA srcaddr[31:0]
-ETX_DMADESCR5  |  W | 0xF0554 | TX DMA dstaddr[31:0]
-ERX_DMADESCR0  |  W | 0xF0560 | RX DMA {reserved,config}       
-ERX_DMADESCR1  |  W | 0xF0564 | RX DMA {dst_stride[15:0],src_stride[15:0]}      
-ERX_DMADESCR2  |  W | 0xF0568 | RX DMA {reserved,count[15:0]}
-ERX_DMADESCR3  |  W | 0xF056c | RX reserved
-ERX_DMADESCR4  |  W | 0xF0570 | RX DMA srcaddr[31:0]
-ERX_DMADESCR5  |  W | 0xF0574 | RX DMA dstaddr[31:0]
-ETX_MMU        | RW | 0xE0000 | TX MMU table 
-ERX_MMU        | RW | 0xE8000 | RX MMU table 
+ERX_MAILBOXHI  | RW | 0xF0318 | RX mailbox (upper 32 bits)
+ERX_DMACFG     | RW | 0xF0520 | TX DMA configuration
+ERX_DMACOUNT   | RW | 0xF0524 | TX DMA count
+ERX_DMASTRIDE  | RW | 0xF0528 | TX DMA stride
+ETX_DMASRCADDR | RW | 0xF050c | TX DMA source addres
+ERX_DMADSTADDR | RW | 0xF0530 | TX DMA destination address
+ERX_DMAAUTO0   | RW | 0xF0534 | TX DMA slave buffer (lo)
+ERX_DMAAUTO1   | RW | 0xF0538 | TX DMA slERXave buffer (hi)
+ERX_DMASTATUS  | RW | 0xF053c | TX DMA status      
+ERX_DMADESCR0  | RW | 0xF05A0 | RX DMA {reserved,config}       
+ERX_DMADESCR1  | RW | 0xF05A4 | RX DMA {dst_stride[15:0],src_stride[15:0]}      
+ERX_DMADESCR2  | RW | 0xF05A8 | RX DMA {reserved,count[15:0]}
+ERX_DMADESCR3  | RW | 0xF05B0 | RX DMA srcaddr[31:0]
+ERX_DMADESCR5  | RW | 0xF05B4 | RX DMA dstaddr[31:0]
+***************|****|*********|********************
+ERX_MMU        | -W | 0xE8000 | RX MMU table 
 
 REGISTER DESCRIPTIONS
 ===========================================
