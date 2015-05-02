@@ -8,10 +8,10 @@ module esaxi (/*autoarg*/
    s_axi_awready, s_axi_bid, s_axi_bresp, s_axi_bvalid, s_axi_rid,
    s_axi_rdata, s_axi_rlast, s_axi_rresp, s_axi_rvalid, s_axi_wready,
    // Inputs
-   emwr_progfull, emrq_progfull, emrr_data, emrr_access, mi_ecfg_dout,
-   mi_tx_emmu_dout, mi_rx_emmu_dout, mi_embox_dout, ecfg_tx_ctrlmode,
-   ecfg_coreid, ecfg_timeout_enable, s_axi_aclk, s_axi_aresetn,
-   s_axi_arid, s_axi_araddr, s_axi_arburst, s_axi_arcache,
+   emwr_progfull, emrq_progfull, emrr_data, emrr_access, emrr_timeout,
+   mi_ecfg_dout, mi_tx_emmu_dout, mi_rx_emmu_dout, mi_embox_dout,
+   ecfg_tx_ctrlmode, ecfg_coreid, ecfg_timeout_enable, s_axi_aclk,
+   s_axi_aresetn, s_axi_arid, s_axi_araddr, s_axi_arburst, s_axi_arcache,
    s_axi_arlock, s_axi_arlen, s_axi_arprot, s_axi_arqos, s_axi_arsize,
    s_axi_arvalid, s_axi_awid, s_axi_awaddr, s_axi_awburst,
    s_axi_awcache, s_axi_awlock, s_axi_awlen, s_axi_awprot,
@@ -55,6 +55,7 @@ module esaxi (/*autoarg*/
    //Only data needed
    input [31:0]   emrr_data;
    input 	  emrr_access;         
+   input          emrr_timeout;
    output 	  emrr_rd_en; //update read fifo
    
    
@@ -511,7 +512,8 @@ module esaxi (/*autoarg*/
          if( emrr_access | mi_rd_reg ) 
 	   begin
               s_axi_rvalid <= 1'b1;
-              s_axi_rresp  <= 2'd0;
+              s_axi_rresp  <= emrr_timeout ? 2'b10  // SLVERR
+                                           : 2'b00; // OKAY
             case( axi_arsize[1:0] )
               2'b00:   s_axi_rdata[31:0] <= {4{emrr_mux_data[7:0]}};  //8-bit
               2'b01:   s_axi_rdata[31:0] <= {2{emrr_mux_data[15:0]}}; //16-bit
