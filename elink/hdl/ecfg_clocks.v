@@ -8,12 +8,13 @@ module ecfg_clocks (/*AUTOARG*/
    // Outputs
    txwr_wait, soft_reset, ecfg_clk_settings,
    // Inputs
-   txwr_access, txwr_packet, hard_reset
+   txwr_access, txwr_packet, clk, hard_reset
    );
 
    
    parameter RFAW  = 6;     // 32 registers for now
    parameter PW    = 104;   // 32 registers for now
+   parameter ID    = 12'h000;
    
    /******************************/
    /*REGISTER ACCESS             */
@@ -55,8 +56,6 @@ module ecfg_clocks (/*AUTOARG*/
    wire 	mi_en;
    wire [31:0] 	mi_addr;
    wire [31:0] 	mi_din;
-   
-   assign mi_en = txwr_access;
 
    packet2emesh pe2 (
 		     // Outputs
@@ -68,11 +67,17 @@ module ecfg_clocks (/*AUTOARG*/
 		     .data_out		(mi_din[31:0]),
 		     .srcaddr_out	(),
 		     // Inputs
-		     .packet_in		(txwr_packet[PW-1:0]));
+		     .packet_in		(txwr_packet[PW-1:0])
+		     );   
          
    /*****************************/
    /*ADDRESS DECODE LOGIC       */
    /*****************************/
+   
+   assign mi_en = txwr_access & 
+		  (mi_addr[31:20]==ID) &
+		  (mi_addr[10:8]==3'h2);
+   
 
    //read/write decode
    assign ecfg_write  = mi_en &  mi_we;
@@ -86,7 +91,7 @@ module ecfg_clocks (/*AUTOARG*/
    //###########################
    //# RESET
    //###########################
-    always @ (posedge clk)
+    always @ (posedge clk or posedge hard_reset)
       if(hard_reset)
 	ecfg_reset_reg <= 1'b0;   
       else if (ecfg_reset_write)
@@ -97,7 +102,7 @@ module ecfg_clocks (/*AUTOARG*/
    //###########################
    //# CCLK/LCLK (PLL)
    //###########################
-    always @ (posedge clk)
+    always @ (posedge clk or posedge hard_reset)
      if(hard_reset)
        ecfg_clk_reg[15:0] <= 'd0;   
      else if (ecfg_clk_write)
@@ -105,7 +110,6 @@ module ecfg_clocks (/*AUTOARG*/
 
    assign ecfg_clk_settings[15:0] = ecfg_clk_reg[15:0];
     
-
 endmodule // ecfg_base
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")

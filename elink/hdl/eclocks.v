@@ -73,12 +73,13 @@ module eclocks (/*AUTOARG*/
 			      .divcfg		(ecfg_clk_settings[11:8])
 			      );
    
+   //This clock is always on!
    clock_divider lclk_par_divider(
 				  // Outputs
 				  .clkout	(tx_lclk_div4),
 				  .clkout90	(),
 				  // Inputs
-				  .clkin	(clkin & lclk_en),
+				  .clkin	(clkin),
 				  .reset        (hard_reset),
 				  .divcfg	(ecfg_clk_settings[11:8] + 4'd2)
 				  );
