@@ -115,12 +115,12 @@ module elink(/*AUTOARG*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [15:0]		ecfg_clk_settings;	// From ecfg_clocks of ecfg_clocks.v
    wire			elink_reset;		// From ereset of ereset.v
-   wire			erx_cfg_access;		// From fifo_cdc of fifo_cdc.v
-   wire [PW-1:0]	erx_cfg_packet;		// From fifo_cdc of fifo_cdc.v
+   wire			erx_cfg_access;		// From ecfg_cdc of fifo_cdc.v
+   wire [PW-1:0]	erx_cfg_packet;		// From ecfg_cdc of fifo_cdc.v
    wire			erx_cfg_wait;		// From erx of erx.v
    wire			etx_cfg_access;		// From etx of etx.v
    wire [PW-1:0]	etx_cfg_packet;		// From etx of etx.v
-   wire			etx_cfg_wait;		// From fifo_cdc of fifo_cdc.v
+   wire			etx_cfg_wait;		// From ecfg_cdc of fifo_cdc.v
    wire			soft_reset;		// From ecfg_clocks of ecfg_clocks.v
    wire			tx_lclk;		// From eclocks of eclocks.v
    wire			tx_lclk90;		// From eclocks of eclocks.v
@@ -129,7 +129,11 @@ module elink(/*AUTOARG*/
    /***********************************************************/
    /*CLOCK AND RESET CONFIG                                   */
    /***********************************************************/
+
+   defparam ecfg_clocks.ID=ID;
+   
    ecfg_clocks ecfg_clocks (.hard_reset		(reset),
+			    .clk		(sys_clk),
 			    /*AUTOINST*/
 			    // Outputs
 			    .txwr_wait		(txwr_wait),
