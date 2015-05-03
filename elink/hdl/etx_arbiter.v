@@ -48,7 +48,7 @@ module etx_arbiter (/*AUTOARG*/
    input [PW-1:0] txrr_fifo_packet;
    output         txrr_fifo_read;
 
-   //DMA Master
+   //DMA Master (not implemented, TODO)
    input 	   edma_access;
    input [PW-1:0]  edma_packet;
    output 	   edma_wait;

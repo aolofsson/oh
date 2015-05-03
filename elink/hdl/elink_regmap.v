@@ -15,7 +15,7 @@
 //ETX-REGS
 `define E_RESET        6'd0 //F0200-reset
 `define E_CLK          6'd1 //F0204-clock configuration
-`define E_CHIPID       6'd1 //F0208-Epiphany chip id for colid/rowid pins 
+`define E_CHIPID       6'd2 //F0208-Epiphany chip id for colid/rowid pins 
 `define E_VERSION      6'd3 //F020C-version #
 `define ETX_CFG        6'd4 //F0210-config
 `define ETX_STATUS     6'd5 //F0214-tx status
@@ -31,10 +31,10 @@
 `define E_MAILBOXHI    6'd6 //F0318-reserved
 
 //DMA (same numbering as in Epiphany, limit to 4 channels)
-`define DMACFG         5'd0 //F0000/F0520
-`define DMACOUNT       5'd1 //F0004/F0524
-`define DMASTRIDE      5'd2 //F0008/F0528
-`define DMASRCADDR     5'd3 //F000C/F052c
+`define DMACFG         5'd0 //F0500/F0520
+`define DMACOUNT       5'd1 //F0504/F0524
+`define DMASTRIDE      5'd2 //F0508/F0528
+`define DMASRCADDR     5'd3 //F050C/F052c
 `define DMADSTADDR     5'd4 //F0510/F0530
 `define DMAAUTO0       5'd5 //F0514/F0534
 `define DMAAUTO1       5'd6 //F0518/F0538
