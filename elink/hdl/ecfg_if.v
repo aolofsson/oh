@@ -63,6 +63,7 @@ module ecfg_if (/*AUTOARG*/
    wire [63:0] 	 mi_dout_mux;
    wire 	 mi_rd;
    wire 	 access_forward;
+   wire 	 rx_sel;
    
    //regs;
    reg 		 access_out;   
@@ -96,23 +97,25 @@ module ecfg_if (/*AUTOARG*/
 
 		     );
 
+   assign 	 rx_sel = RX;   
+
    //config select (group 2 and 3)
    assign mi_cfg_en = mi_match & 
 		      (dstaddr[19:16]==4'hF) &
-		      (dstaddr[10:8]=={2'b01,RX});
+		      (dstaddr[10:8]=={2'b01,rx_sel});
    
 
    //dma select (group 5)
    assign mi_dma_en = mi_match &
 		      (dstaddr[19:16]==4'hF) & 
 		      (dstaddr[10:8]==3'h5)  & 
-		      (dstaddr[5]==RX);
+		      (dstaddr[5]==rx_sel);
    
 
    //mmu select
    assign mi_mmu_en = mi_match & 
 		      (dstaddr[19:16]==4'hE) &
-		      (dstaddr[15]==RX);
+		      (dstaddr[15]==rx_sel);
 
 
    //read/write indicator
@@ -134,7 +137,7 @@ module ecfg_if (/*AUTOARG*/
 
    //Access out packet
   
-   assign access_forwad = (mi_rx_en | mi_rd) & ~wait_in;
+   assign access_forward = (mi_rx_en | mi_rd) & ~wait_in;
 
    always @ (posedge  clk)
      access_out   <= access_forward;
