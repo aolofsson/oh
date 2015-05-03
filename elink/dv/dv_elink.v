@@ -151,8 +151,8 @@ module dv_elink(/*AUTOARG*/
    assign elink0_txwr_packet[PW-1:0] = ext_packet[PW-1:0];
 
    //TX Pushback
-   assign dut_rd_wait                = elink0_txrd_wait;   
-   assign dut_wr_wait                = elink0_txwr_wait;
+   assign dut_rd_wait                = elink0_txrd_wait | elink2_wait_out;   
+   assign dut_wr_wait                = elink0_txwr_wait | elink2_wait_out ;
       
    //Getting results back
    assign dut_access                 = elink0_rxrr_access;
@@ -315,7 +315,7 @@ module dv_elink(/*AUTOARG*/
 		     .c0_mesh_datamode_out(),
 		     .c0_mesh_ctrlmode_out(),
 		     .c0_emesh_wait_out	(),
-		     .c0_mesh_wait_out	(),
+		     .c0_mesh_wait_out	(elink2_wait_out),
 		     // Inputs
 		     .reset		(reset),
 		     .c0_clk_in		(clk[1]),
@@ -333,16 +333,7 @@ module dv_elink(/*AUTOARG*/
 		     .c0_mesh_srcaddr_in(ext_packet[103:72]),
 		     .c0_mesh_data_in	(ext_packet[71:40]),
 		     .c0_mesh_datamode_in(ext_packet[3:2]),
-		     .c0_mesh_ctrlmode_in(ext_packet[7:4]),
-		     .c0_mesh_wait_in	(1'b0),
-		     .c0_emesh_wait_in	(1'b0),
-		     .c0_rdmesh_wait_in	(1'b0),
-		     .c1_rdmesh_wait_in	(1'b0),
-		     .c2_rdmesh_wait_in	(1'b0),
-		     .c3_emesh_wait_in	(1'b0),
-		     .c3_mesh_wait_in	(1'b0),
-		     .c3_rdmesh_wait_in	(1'b0),
-		     .txo_cfg_reg	(6'b0)
+		     .c0_mesh_ctrlmode_in(ext_packet[7:4])		     
 		     );
    
    
