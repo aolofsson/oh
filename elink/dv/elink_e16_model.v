@@ -1,18 +1,9 @@
-/*
- Copyright (C) 2009-2015 Adapteva, Inc. 
- Contributed by Roman Trogan     <roman@adapteva.com>
- Contributed by Andreas Olofsson <andreas@adapteva.com>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.This program is distributed in the hope 
- that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. You should have received a copy 
- of the GNU General Public License along with this program (see the file 
- COPYING).  If not, see <http://www.gnu.org/licenses/>.
- */
+`define CFG_FAKECLK   1      /*stupid verilator doesn't get clock gating*/
+`define CFG_MDW       32     /*Width of mesh network*/
+`define CFG_DW        32     /*Width of datapath*/
+`define CFG_AW        32     /*Width of address space*/
+`define CFG_LW        8      /*Link port width*/
+`define CFG_NW        13     /*Number of bytes in the transmission*/
 
 
 module e16_arbiter_priority(/*AUTOARG*/
@@ -81,29 +72,10 @@ module e16_arbiter_priority(/*AUTOARG*/
        end
    // synthesis translate_on
    
-endmodule // e16_arbiter_priority
+endmodule // arbiter_priority
 
    
-     /*
- * FUNCTION: Simple round robin arbiter.
- * 
- * NOTES:    Responsibility of requester to retain request until he gets grant
- *           Request "zero" has the highest priority
- *           There is no pipelining in module
- *           There can be multiple requests arriving at the same time
- *           Grant vector is one hot
- *           Module is parametrized with ARW 
- *           Priority Pointer Gets Rotated on Grant
- * 
- * 
- * FEATURES: -the rotate enable should be lockable, set to zero
- *           -it should also be possible to set the rotate frequency, up to 16 bits
- * 
- * 
- * 
- * 
- * 
- */
+     
 module e16_arbiter_roundrobin(/*AUTOARG*/
    // Outputs
    grants,
@@ -219,7 +191,8 @@ module e16_arbiter_roundrobin(/*AUTOARG*/
    /********************************************************************/
    /*Checkers                                                          */
    /********************************************************************/
-
+/*
+   
    // synthesis translate_off
    always @*     
      begin
@@ -229,9 +202,9 @@ module e16_arbiter_roundrobin(/*AUTOARG*/
 	  $display("ERROR>>Zero granted when there was a request in cell %m at time %0d",$time);	
      end   
    // synthesis translate_on
-
+*/
    	    
-endmodule // e16_arbiter_roundrobin
+endmodule // arbiter_roundrobin
 // ###############################################################
 // # FUNCTION: Synchronous clock divider that divides by integer
 // #  NOTE:     Combinatorial output becomes new clock
@@ -294,8 +267,10 @@ module e16_clock_divider(/*AUTOARG*/
    //if(reset)
    //counter[5:0] <= 6'b000001;// Reset value
 
-   always @ (posedge clk_in)
-     if(posedge_match)
+   always @ (posedge clk_in or posedge reset)
+     if (reset)
+       counter[5:0] <= 6'b000001;   
+     else if(posedge_match)
        counter[5:0] <= 6'b000001;// Self resetting
      else
        counter[5:0] <= (counter[5:0]+6'b000001);
@@ -366,24 +341,388 @@ module e16_clock_divider(/*AUTOARG*/
 
    
    
-endmodule // e16_clock_divider
+endmodule // clock_divider
 
 
 
-`define CFG_FAKECLK   1      /*stupid verilator doesn't get clock gating*/
-`define CFG_MDW       32     /*Width of mesh network*/
-`define CFG_DW        32     /*Width of datapath*/
-`define CFG_AW        32     /*Width of address space*/
-`define CFG_LW        8      /*Link port width*/
-`define CFG_NW        13     /*Number of bytes in the transmission*/
+     
+module e16_mesh_interface(/*AUTOARG*/
+   // Outputs
+   wait_out, access_out, write_out, datamode_out, ctrlmode_out,
+   data_out, dstaddr_out, srcaddr_out, access_reg, write_reg,
+   datamode_reg, ctrlmode_reg, data_reg, dstaddr_reg, srcaddr_reg,
+   // Inputs
+   clk, clk_en, reset, wait_in, access_in, write_in, datamode_in,
+   ctrlmode_in, data_in, dstaddr_in, srcaddr_in, wait_int, access,
+   write, datamode, ctrlmode, data, dstaddr, srcaddr
+   );
+
+   parameter DW = `CFG_DW;
+   parameter AW = `CFG_AW;
+   
+   //###########
+   //# INPUTS
+   //###########
+   input            clk;
+   input            clk_en;  //2nd level manual clock gater   
+   input 	    reset;  
+
+   //# from the mesh
+   input 	    wait_in;
+   input 	    access_in;
+   input 	    write_in;
+   input [1:0]      datamode_in;
+   input [3:0]      ctrlmode_in;   		    
+   input [DW-1:0]   data_in;
+   input [AW-1:0]   dstaddr_in;
+   input [AW-1:0]   srcaddr_in;   
+
+   //# from the internal control
+   input 	    wait_int;
+   input 	    access;
+   input 	    write;
+   input [1:0]      datamode;
+   input [3:0]      ctrlmode;   		    
+   input [DW-1:0]   data;
+   input [AW-1:0]   dstaddr;
+   input [AW-1:0]   srcaddr;   
+
+   //###########
+   //# OUTPUTS
+   //###########
+
+   //# to the mesh
+   output 	    wait_out;
+   output 	    access_out;
+   output 	    write_out;
+   output [1:0]     datamode_out;
+   output [3:0]     ctrlmode_out;   		    
+   output [DW-1:0]  data_out;
+   output [AW-1:0]  dstaddr_out;
+   output [AW-1:0]  srcaddr_out;  
+
+   //# to the internal control
+   output 	    access_reg;
+   output 	    write_reg;
+   output [1:0]     datamode_reg;
+   output [3:0]     ctrlmode_reg;   		    
+   output [DW-1:0]  data_reg;
+   output [AW-1:0]  dstaddr_reg;
+   output [AW-1:0]  srcaddr_reg;  
+
+   /*AUTOINPUT*/
+   /*AUTOWIRE*/
+
+   //#########
+   //# REGS
+   //#########
+   reg          wait_out;
+   reg 		access_out;
+   reg 		write_out;
+   reg [1:0] 	datamode_out;
+   reg [3:0] 	ctrlmode_out;   		    
+   reg [DW-1:0] data_out;
+   reg [AW-1:0] dstaddr_out;
+   reg [AW-1:0] srcaddr_out;  
+
+   reg 		access_reg;
+   reg 		write_reg;
+   reg [1:0] 	datamode_reg;
+   reg [3:0] 	ctrlmode_reg;   		    
+   reg [DW-1:0] data_reg;
+   reg [AW-1:0] dstaddr_reg;
+   reg [AW-1:0] srcaddr_reg;  
+
+   //#########
+   //# WIRES
+   //#########
+
+   //##########################
+   //# mesh input busses
+   //##########################
+
+   always @ (posedge clk or posedge reset)
+     if(reset)
+       access_reg <= 1'b0;
+     else if(clk_en)
+       if(~wait_int)
+	 access_reg <= access_in;
+      
+   always @ (posedge clk)
+     if(clk_en)
+       if(~wait_int & access_in)
+	 begin
+	    write_reg           <= write_in;
+	    datamode_reg[1:0]   <= datamode_in[1:0];
+	    ctrlmode_reg[3:0]   <= ctrlmode_in[3:0];
+	    data_reg[DW-1:0]    <= data_in[DW-1:0];
+	    dstaddr_reg[AW-1:0] <= dstaddr_in[AW-1:0];
+	    srcaddr_reg[AW-1:0] <= srcaddr_in[AW-1:0];
+	 end
+
+   //##########################
+   //# mesh output busses  
+   //##########################
+
+   always @ (posedge clk or posedge reset)
+     if(reset)
+       access_out <= 1'b0;
+     else if(clk_en)
+       if(!wait_in)
+	 access_out <= access;
+
+   always @ (posedge clk)
+     if (clk_en)
+       if(!wait_in & access)
+	 begin
+	    srcaddr_out[AW-1:0] <= srcaddr[AW-1:0];
+	    data_out[DW-1:0]    <= data[DW-1:0];
+	    write_out           <= write;
+	    datamode_out[1:0]   <= datamode[1:0]; 
+	    dstaddr_out[AW-1:0] <= dstaddr[AW-1:0];
+	    ctrlmode_out[3:0]   <= ctrlmode[3:0];
+	 end
+ 
+   //#####################
+   //# Wait out control
+   //#####################
+   always @ (posedge clk or posedge reset)
+     if(reset)
+       wait_out <= 1'b0;
+     else if(clk_en)
+       wait_out <= wait_int;
+   
+endmodule // mesh_interface
 
 
-`define CFG_FAKECLK   1      /*stupid verilator doesn't get clock gating*/
-`define CFG_MDW       32     /*Width of mesh network*/
-`define CFG_DW        32     /*Width of datapath*/
-`define CFG_AW        32     /*Width of address space*/
-`define CFG_LW        8      /*Link port width*/
-`define CFG_NW        13     /*Number of bytes in the transmission*/
+
+module e16_mux7(/*AUTOARG*/
+   // Outputs
+   out,
+   // Inputs
+   in0, in1, in2, in3, in4, in5, in6, sel0, sel1, sel2, sel3, sel4,
+   sel5, sel6
+   );
+
+   parameter DW=99;
+   
+
+   //data inputs
+   input [DW-1:0]  in0;
+   input [DW-1:0]  in1;
+   input [DW-1:0]  in2;
+   input [DW-1:0]  in3;
+   input [DW-1:0]  in4;
+   input [DW-1:0]  in5;
+   input [DW-1:0]  in6;
+   
+   //select inputs
+   input 	   sel0;
+   input 	   sel1;
+   input 	   sel2;
+   input 	   sel3;
+   input 	   sel4;
+   input 	   sel5;
+   input 	   sel6;
+
+
+   output [DW-1:0] out;
+   
+  
+   assign out[DW-1:0] = ({(DW){sel0}} & in0[DW-1:0] |
+			 {(DW){sel1}} & in1[DW-1:0] |
+			 {(DW){sel2}} & in2[DW-1:0] |
+			 {(DW){sel3}} & in3[DW-1:0] |
+			 {(DW){sel4}} & in4[DW-1:0] |
+			 {(DW){sel5}} & in5[DW-1:0] |
+			 {(DW){sel6}} & in6[DW-1:0]);
+   
+
+   // synthesis translate_off
+   always @*
+     if((sel0+sel1+sel2+sel3+sel4+sel5+sel6>1) & $time>0)
+       $display("ERROR>>Arbitration failure in cell %m");
+   // synthesis translate_on
+   
+   
+endmodule // mux7
+
+module e16_pulse2pulse(/*AUTOARG*/
+   // Outputs
+   out,
+   // Inputs
+   inclk, outclk, in, reset
+   );
+
+   
+   //clocks
+   input  inclk; 
+   input  outclk;  
+
+   
+   input  in;   
+   output out;
+
+   //reset
+   input  reset;  //do we need this???
+
+
+
+   wire   intoggle;
+   wire   insync;
+   
+   
+   //pulse to toggle
+   pulse2toggle    pulse2toggle(
+				// Outputs
+				.out		(intoggle),
+				// Inputs
+				.clk		(inclk),
+				.in		(in),
+				.reset		(reset));
+   
+   //metastability synchronizer
+   synchronizer #(1) synchronizer(
+				  // Outputs
+				  .out			(insync),
+				  // Inputs
+				  .in			(intoggle),
+				  .clk			(outclk),
+				  .reset		(reset));
+   
+   
+   //toogle to pulse
+   toggle2pulse toggle2pulse(
+			     // Outputs
+			     .out		(out),
+			     // Inputs
+			     .clk		(outclk),
+			     .in		(insync),
+			     .reset		(reset));
+   
+
+   
+endmodule // pulse2pulse
+
+
+
+module e16_pulse2toggle(/*AUTOARG*/
+   // Outputs
+   out,
+   // Inputs
+   clk, in, reset
+   );
+
+   
+   //clocks
+   input  clk; 
+   
+   input  in;   
+   output out;
+
+   //reset
+   input  reset;  //do we need this???
+
+
+   reg 	  out;
+   wire   toggle;
+   
+   //if input goes high, toggle output
+   //note1: input can only be high for one clock cycle
+   //note2: be careful with clock gating
+
+   assign toggle = in ? ~out :
+		         out;
+   
+
+   always @ (posedge clk or posedge reset)
+     if(reset)
+       out <= 1'b0;
+     else
+       out <= toggle;
+   
+endmodule // pulse2toggle
+
+
+
+
+module e16_synchronizer #(parameter DW=32) (/*AUTOARG*/
+   // Outputs
+   out,
+   // Inputs
+   in, clk, reset
+   );
+
+
+   //Input Side   
+   input  [DW-1:0] in;   
+   input           clk;      
+   input           reset;//asynchronous signal
+   
+   
+   //Output Side
+   output [DW-1:0] out;
+
+   reg [DW-1:0] sync_reg0;
+   reg [DW-1:0] sync_reg1;
+   reg [DW-1:0] out;
+     
+   //Synchronization between clock domain
+   //We use two flip-flops for metastability improvement
+   always @ (posedge clk or posedge reset)
+     if(reset)
+       begin
+	  sync_reg0[DW-1:0] <= {(DW){1'b0}};
+	  sync_reg1[DW-1:0] <= {(DW){1'b0}};
+	  out[DW-1:0]       <= {(DW){1'b0}};
+       end
+     else
+       begin
+	  sync_reg0[DW-1:0] <= in[DW-1:0];
+	  sync_reg1[DW-1:0] <= sync_reg0[DW-1:0];
+	  out[DW-1:0]       <= sync_reg1[DW-1:0];
+       end
+   
+
+
+   
+   
+     
+
+endmodule // clock_synchronizer
+
+//goes high for one clock cycle on every input transition
+module e16_toggle2pulse(/*AUTOARG*/
+   // Outputs
+   out,
+   // Inputs
+   clk, in, reset
+   );
+
+   
+   //clocks
+   input  clk; 
+   
+   input  in;   
+   output out;
+
+   //reset
+   input  reset;
+   reg 	  out_reg;
+         
+   always @ (posedge clk or posedge reset)
+     if(reset)
+       out_reg <= 1'b0;
+     else
+       out_reg <= in;
+      
+   assign out = in ^ out_reg;
+
+endmodule 
+
+
+
+
 
 module elink_e16 (/*AUTOARG*/
    // Outputs
@@ -396,9 +735,7 @@ module elink_e16 (/*AUTOARG*/
    rxi_lclk, rxi_frame, txo_rd_wait, txo_wr_wait, c0_mesh_access_in,
    c0_mesh_write_in, c0_mesh_dstaddr_in, c0_mesh_srcaddr_in,
    c0_mesh_data_in, c0_mesh_datamode_in, c0_mesh_ctrlmode_in,
-   c0_mesh_wait_in, c0_emesh_wait_in, c0_rdmesh_wait_in,
-   c1_rdmesh_wait_in, c2_rdmesh_wait_in, c3_emesh_wait_in,
-   c3_mesh_wait_in, c3_rdmesh_wait_in, txo_cfg_reg
+   c0_mesh_wait_in
    );
    
    parameter DW   = `CFG_DW  ;//data width  
@@ -469,16 +806,6 @@ module elink_e16 (/*AUTOARG*/
    wire 	     cfg_extcomp_dis=1'b0;// Disable external coordinates comparison
 
    /*AUTOINPUT*/
-   // Beginning of automatic inputs (from unused autoinst inputs)
-   input		c0_emesh_wait_in;	// To link_port of link_port.v
-   input		c0_rdmesh_wait_in;	// To link_port of link_port.v
-   input		c1_rdmesh_wait_in;	// To link_port of link_port.v
-   input		c2_rdmesh_wait_in;	// To link_port of link_port.v
-   input		c3_emesh_wait_in;	// To link_port of link_port.v
-   input		c3_mesh_wait_in;	// To link_port of link_port.v
-   input		c3_rdmesh_wait_in;	// To link_port of link_port.v
-   input [5:0]		txo_cfg_reg;		// To link_port of link_port.v
-   // End of automatics
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			c0_emesh_frame_out;	// From link_port of link_port.v
@@ -517,6 +844,17 @@ module elink_e16 (/*AUTOARG*/
     );
     */
    
+
+   wire		c0_emesh_wait_in=1'b0;
+   wire		c0_rdmesh_wait_in=1'b0;
+   wire		c1_rdmesh_wait_in=1'b0;
+   wire		c2_rdmesh_wait_in=1'b0;
+   wire		c3_emesh_wait_in=1'b0;
+   wire		c3_mesh_wait_in=1'b0;
+   wire		c3_rdmesh_wait_in=1'b0;
+   wire [5:0] 	txo_cfg_reg=6'b0;
+   
+
    link_port link_port (.c3_mesh_access_in(1'b0),
 			.c3_mesh_write_in(1'b0),
 			.c3_mesh_dstaddr_in(32'b0),
@@ -617,6 +955,7 @@ module elink_e16 (/*AUTOARG*/
 			.c3_rdmesh_wait_in(c3_rdmesh_wait_in));
       
 endmodule // elink_e16
+
 module link_port(/*AUTOARG*/
    // Outputs
    rxi_rd_wait, rxi_wr_wait, txo_data, txo_lclk, txo_frame,
@@ -901,7 +1240,15 @@ module link_port(/*AUTOARG*/
 				      .c3_mesh_srcaddr_in(c3_mesh_srcaddr_in[AW-1:0]),
 				      .c3_mesh_data_in	(c3_mesh_data_in[DW-1:0]),
 				      .c3_mesh_datamode_in(c3_mesh_datamode_in[1:0]),
-				      .c3_mesh_ctrlmode_in(c3_mesh_ctrlmode_in[3:0]));
+				      .c3_mesh_ctrlmode_in(c3_mesh_ctrlmode_in[3:0]),
+				      .c0_emesh_frame_in(c0_emesh_frame_in),
+				      .c0_emesh_tran_in	(c0_emesh_tran_in[2*LW-1:0]),
+				      .c1_emesh_frame_in(c1_emesh_frame_in),
+				      .c1_emesh_tran_in	(c1_emesh_tran_in[2*LW-1:0]),
+				      .c2_emesh_frame_in(c2_emesh_frame_in),
+				      .c2_emesh_tran_in	(c2_emesh_tran_in[2*LW-1:0]),
+				      .c3_emesh_frame_in(c3_emesh_frame_in),
+				      .c3_emesh_tran_in	(c3_emesh_tran_in[2*LW-1:0]));
       
 endmodule // link_port
 
@@ -1698,17 +2045,13 @@ module link_rxi_channel (/*AUTOARG*/
    fifo_full_rlc, rdmesh_tran_out, rdmesh_frame_out,
    // Inputs
    reset, cclk, cclk_en, rxi_lclk, cfg_extcomp_dis,
-   rxi_assembled_tran_rlc, fifo_access_rlc, rdmesh_wait_in, access,
-   access_in, ctrlmode, ctrlmode_in, data, data_in, datamode,
-   datamode_in, dstaddr, dstaddr_in, srcaddr, srcaddr_in, wait_in,
-   wait_int, write, write_in
+   rxi_assembled_tran_rlc, fifo_access_rlc, rdmesh_wait_in
    );
 
    parameter LW    = `CFG_LW;//lvds tranceiver pairs per side
-   parameter DW    = 32;
-   parameter AW    = 32;
    
-   //######### 
+   //#########
+   //# INPUTS
    //#########
 
    input             reset;   //reset input
@@ -1733,155 +2076,21 @@ module link_rxi_channel (/*AUTOARG*/
    output 	     rdmesh_frame_out; // core frame
 
    /*AUTOINPUT*/
-   // Beginning of automatic inputs (from unused autoinst inputs)
-   input		access;			// To rde16_mesh_interface of e16_mesh_interface.v
-   input		access_in;		// To rde16_mesh_interface of e16_mesh_interface.v
-   input [3:0]		ctrlmode;		// To rde16_mesh_interface of e16_mesh_interface.v
-   input [3:0]		ctrlmode_in;		// To rde16_mesh_interface of e16_mesh_interface.v
-   input [DW-1:0]	data;			// To rde16_mesh_interface of e16_mesh_interface.v
-   input [DW-1:0]	data_in;		// To rde16_mesh_interface of e16_mesh_interface.v
-   input [1:0]		datamode;		// To rde16_mesh_interface of e16_mesh_interface.v
-   input [1:0]		datamode_in;		// To rde16_mesh_interface of e16_mesh_interface.v
-   input [AW-1:0]	dstaddr;		// To rde16_mesh_interface of e16_mesh_interface.v
-   input [AW-1:0]	dstaddr_in;		// To rde16_mesh_interface of e16_mesh_interface.v
-   input [AW-1:0]	srcaddr;		// To rde16_mesh_interface of e16_mesh_interface.v
-   input [AW-1:0]	srcaddr_in;		// To rde16_mesh_interface of e16_mesh_interface.v
-   input		wait_in;		// To rde16_mesh_interface of e16_mesh_interface.v
-   input		wait_int;		// To rde16_mesh_interface of e16_mesh_interface.v
-   input		write;			// To rde16_mesh_interface of e16_mesh_interface.v
-   input		write_in;		// To rde16_mesh_interface of e16_mesh_interface.v
-   // End of automatics
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			access_out;		// From rde16_mesh_interface of e16_mesh_interface.v
-   wire			access_reg;		// From rde16_mesh_interface of e16_mesh_interface.v
-   wire [3:0]		ctrlmode_out;		// From rde16_mesh_interface of e16_mesh_interface.v
-   wire [3:0]		ctrlmode_reg;		// From rde16_mesh_interface of e16_mesh_interface.v
-   wire [DW-1:0]	data_out;		// From rde16_mesh_interface of e16_mesh_interface.v
-   wire [DW-1:0]	data_reg;		// From rde16_mesh_interface of e16_mesh_interface.v
-   wire [1:0]		datamode_out;		// From rde16_mesh_interface of e16_mesh_interface.v
-   wire [1:0]		datamode_reg;		// From rde16_mesh_interface of e16_mesh_interface.v
-   wire [AW-1:0]	dstaddr_out;		// From rde16_mesh_interface of e16_mesh_interface.v
-   wire [AW-1:0]	dstaddr_reg;		// From rde16_mesh_interface of e16_mesh_interface.v
    wire			fifo_empty;		// From link_rxi_fifo of link_rxi_fifo.v
    wire			fifo_read;		// From link_rxi_launcher of link_rxi_launcher.v
    wire [14*LW-1:0]	fifo_tran_out;		// From link_rxi_fifo of link_rxi_fifo.v
    wire			rdmesh_frame;		// From link_rxi_launcher of link_rxi_launcher.v
    wire [2*LW-1:0]	rdmesh_tran;		// From link_rxi_launcher of link_rxi_launcher.v
-   wire [AW-1:0]	srcaddr_out;		// From rde16_mesh_interface of e16_mesh_interface.v
-   wire [AW-1:0]	srcaddr_reg;		// From rde16_mesh_interface of e16_mesh_interface.v
-   wire			wait_out;		// From rde16_mesh_interface of e16_mesh_interface.v
-   wire			write_out;		// From rde16_mesh_interface of e16_mesh_interface.v
-   wire			write_reg;		// From rde16_mesh_interface of e16_mesh_interface.v
    // End of automatics
 
-   // #########
-   // # WIRES
-   // #########
-
-   //#########
-   //# FIFO
-   //#########
-
-   link_rxi_fifo link_rxi_fifo (/*AUTOINST*/
-				// Outputs
-				.fifo_full_rlc	(fifo_full_rlc),
-				.fifo_tran_out	(fifo_tran_out[14*LW-1:0]),
-				.fifo_empty	(fifo_empty),
-				// Inputs
-				.reset		(reset),
-				.cclk		(cclk),
-				.cclk_en	(cclk_en),
-				.rxi_lclk	(rxi_lclk),
-				.rxi_assembled_tran_rlc(rxi_assembled_tran_rlc[14*LW-1:0]),
-				.fifo_access_rlc(fifo_access_rlc),
-				.fifo_read	(fifo_read));
-
-   //###################################
-   //# Transaction Launcher to RDmesh
-   //###################################
-
-   /*link_rxi_launcher AUTO_TEMPLATE(
-                                    .emesh_\(.*\) (rdmesh_\1[]),
-                                    );
-    */
-
-   link_rxi_launcher link_rxi_launcher(/*AUTOINST*/
-				       // Outputs
-				       .fifo_read	(fifo_read),
-				       .emesh_tran	(rdmesh_tran[2*LW-1:0]), // Templated
-				       .emesh_frame	(rdmesh_frame),	 // Templated
-				       // Inputs
-				       .reset		(reset),
-				       .cclk		(cclk),
-				       .cclk_en		(cclk_en),
-				       .fifo_tran_out	(fifo_tran_out[14*LW-1:0]),
-				       .fifo_empty	(fifo_empty),
-				       .emesh_wait_in	(rdmesh_wait_in)); // Templated
-
-   //##################################
-   //#    Interface with emesh
-   //# on output transactions only
-   //# * input from the emesh is driven
-   //# by a diferent block
-   //##################################
-
-   /* e16_mesh_interface AUTO_TEMPLATE (
-                                    .clk    (cclk),
-                                    .clk_en (cclk_en),
-                                    .emesh_wait_int  (1'b0),
-                                    .emesh_tran_in   ({(2*LW){1'b0}}),
-				    .emesh_frame_in  (1'b0),
-                                    .emesh_tran_reg  (),
-                                    .emesh_frame_reg (),
-                                    .emesh_wait_out  (),
-                                    .emesh_tran	     (rdmesh_tran[]),
-                                    .emesh_\(.*\)    (@"(substring vl-cell-name  0 6)"_\1[]),
-                                );
-    */
-
-   e16_mesh_interface rde16_mesh_interface(/*AUTOINST*/
-					   // Outputs
-					   .wait_out		(wait_out),
-					   .access_out		(access_out),
-					   .write_out		(write_out),
-					   .datamode_out	(datamode_out[1:0]),
-					   .ctrlmode_out	(ctrlmode_out[3:0]),
-					   .data_out		(data_out[DW-1:0]),
-					   .dstaddr_out		(dstaddr_out[AW-1:0]),
-					   .srcaddr_out		(srcaddr_out[AW-1:0]),
-					   .access_reg		(access_reg),
-					   .write_reg		(write_reg),
-					   .datamode_reg	(datamode_reg[1:0]),
-					   .ctrlmode_reg	(ctrlmode_reg[3:0]),
-					   .data_reg		(data_reg[DW-1:0]),
-					   .dstaddr_reg		(dstaddr_reg[AW-1:0]),
-					   .srcaddr_reg		(srcaddr_reg[AW-1:0]),
-					   // Inputs
-					   .clk			(cclk),		 // Templated
-					   .clk_en		(cclk_en),	 // Templated
-					   .reset		(reset),
-					   .wait_in		(wait_in),
-					   .access_in		(access_in),
-					   .write_in		(write_in),
-					   .datamode_in		(datamode_in[1:0]),
-					   .ctrlmode_in		(ctrlmode_in[3:0]),
-					   .data_in		(data_in[DW-1:0]),
-					   .dstaddr_in		(dstaddr_in[AW-1:0]),
-					   .srcaddr_in		(srcaddr_in[AW-1:0]),
-					   .wait_int		(wait_int),
-					   .access		(access),
-					   .write		(write),
-					   .datamode		(datamode[1:0]),
-					   .ctrlmode		(ctrlmode[3:0]),
-					   .data		(data[DW-1:0]),
-					   .dstaddr		(dstaddr[AW-1:0]),
-					   .srcaddr		(srcaddr[AW-1:0]));
+  
 
 endmodule // link_rxi_channel
 module link_rxi_ctrl(/*AUTOARG*/
    // Outputs
-   lclk,
+   lclk, 
    // Inputs
    io_lclk, rxi_cfg_reg
    );
@@ -1981,6 +2190,9 @@ module link_rxi_double_channel (/*AUTOARG*/
    wire [DW-1:0]	data;			// From link_rxi_mesh_launcher of link_rxi_mesh_launcher.v
    wire [1:0]		datamode;		// From link_rxi_mesh_launcher of link_rxi_mesh_launcher.v
    wire [AW-1:0]	dstaddr;		// From link_rxi_mesh_launcher of link_rxi_mesh_launcher.v
+   wire			emesh_fifo_read;	// From link_rxi_launcher of link_rxi_launcher.v
+   wire			emesh_frame;		// From link_rxi_launcher of link_rxi_launcher.v
+   wire [2*LW-1:0]	emesh_tran;		// From link_rxi_launcher of link_rxi_launcher.v
    wire			emesh_tran_dis;		// From link_rxi_mesh_launcher of link_rxi_mesh_launcher.v
    wire			fifo_empty;		// From link_rxi_fifo of link_rxi_fifo.v
    wire [14*LW-1:0]	fifo_tran_out;		// From link_rxi_fifo of link_rxi_fifo.v
@@ -2068,43 +2280,43 @@ module link_rxi_double_channel (/*AUTOARG*/
                                     .\(.*\)_out        (mesh_\1_out[]),
                                 );
     */
-   e16_mesh_interface e16_mesh_interface(/*AUTOINST*/
-					 // Outputs
-					 .wait_out		(),		 // Templated
-					 .access_out		(mesh_access_out), // Templated
-					 .write_out		(mesh_write_out), // Templated
-					 .datamode_out		(mesh_datamode_out[1:0]), // Templated
-					 .ctrlmode_out		(mesh_ctrlmode_out[3:0]), // Templated
-					 .data_out		(mesh_data_out[DW-1:0]), // Templated
-					 .dstaddr_out		(mesh_dstaddr_out[AW-1:0]), // Templated
-					 .srcaddr_out		(mesh_srcaddr_out[AW-1:0]), // Templated
-					 .access_reg		(),		 // Templated
-					 .write_reg		(),		 // Templated
-					 .datamode_reg		(),		 // Templated
-					 .ctrlmode_reg		(),		 // Templated
-					 .data_reg		(),		 // Templated
-					 .dstaddr_reg		(),		 // Templated
-					 .srcaddr_reg		(),		 // Templated
-					 // Inputs
-					 .clk			(cclk),		 // Templated
-					 .clk_en		(cclk_en),	 // Templated
-					 .reset			(reset),
-					 .wait_in		(mesh_wait_in),	 // Templated
-					 .access_in		(1'b0),		 // Templated
-					 .write_in		(1'b0),		 // Templated
-					 .datamode_in		(2'b00),	 // Templated
-					 .ctrlmode_in		(4'b0000),	 // Templated
-					 .data_in		({(DW){1'b0}}),	 // Templated
-					 .dstaddr_in		({(AW){1'b0}}),	 // Templated
-					 .srcaddr_in		({(AW){1'b0}}),	 // Templated
-					 .wait_int		(1'b0),		 // Templated
-					 .access		(access),
-					 .write			(write),
-					 .datamode		(datamode[1:0]),
-					 .ctrlmode		(ctrlmode[3:0]),
-					 .data			(data[DW-1:0]),
-					 .dstaddr		(dstaddr[AW-1:0]),
-					 .srcaddr		(srcaddr[AW-1:0]));
+   e16_mesh_interface mesh_interface(/*AUTOINST*/
+				 // Outputs
+				 .wait_out		(),		 // Templated
+				 .access_out		(mesh_access_out), // Templated
+				 .write_out		(mesh_write_out), // Templated
+				 .datamode_out		(mesh_datamode_out[1:0]), // Templated
+				 .ctrlmode_out		(mesh_ctrlmode_out[3:0]), // Templated
+				 .data_out		(mesh_data_out[DW-1:0]), // Templated
+				 .dstaddr_out		(mesh_dstaddr_out[AW-1:0]), // Templated
+				 .srcaddr_out		(mesh_srcaddr_out[AW-1:0]), // Templated
+				 .access_reg		(),		 // Templated
+				 .write_reg		(),		 // Templated
+				 .datamode_reg		(),		 // Templated
+				 .ctrlmode_reg		(),		 // Templated
+				 .data_reg		(),		 // Templated
+				 .dstaddr_reg		(),		 // Templated
+				 .srcaddr_reg		(),		 // Templated
+				 // Inputs
+				 .clk			(cclk),		 // Templated
+				 .clk_en		(cclk_en),	 // Templated
+				 .reset			(reset),
+				 .wait_in		(mesh_wait_in),	 // Templated
+				 .access_in		(1'b0),		 // Templated
+				 .write_in		(1'b0),		 // Templated
+				 .datamode_in		(2'b00),	 // Templated
+				 .ctrlmode_in		(4'b0000),	 // Templated
+				 .data_in		({(DW){1'b0}}),	 // Templated
+				 .dstaddr_in		({(AW){1'b0}}),	 // Templated
+				 .srcaddr_in		({(AW){1'b0}}),	 // Templated
+				 .wait_int		(1'b0),		 // Templated
+				 .access		(access),
+				 .write			(write),
+				 .datamode		(datamode[1:0]),
+				 .ctrlmode		(ctrlmode[3:0]),
+				 .data			(data[DW-1:0]),
+				 .dstaddr		(dstaddr[AW-1:0]),
+				 .srcaddr		(srcaddr[AW-1:0]));
 
 
 endmodule // link_rxi_double_channel
@@ -2396,7 +2608,7 @@ module link_rxi_launcher (/*AUTOARG*/
    
    assign emesh_frame  =  ~(fifo_empty | last_tran);
 
-   e16_mux7 #(2*LW) e16_mux7(// Outputs
+   e16_mux7 #(2*LW) mux7(// Outputs
 		     .out (emesh_tran[2*LW-1:0]),
 		     // Inputs
 		     .in0 (fifo_tran_out[2*LW-1:0]),      .sel0 (launch_sel[0]),
@@ -2593,8 +2805,7 @@ module link_rxi_rd (/*AUTOARG*/
    reset, ext_yid_k, ext_xid_k, vertical_k, who_am_i, cfg_extcomp_dis,
    rxi_data, rxi_lclk, rxi_frame, c0_clk_in, c1_clk_in, c2_clk_in,
    c3_clk_in, c0_rdmesh_wait_in, c1_rdmesh_wait_in, c2_rdmesh_wait_in,
-   c3_rdmesh_wait_in, c0_fifo_full_rlc, c1_fifo_full_rlc,
-   c2_fifo_full_rlc, c3_fifo_full_rlc
+   c3_rdmesh_wait_in
    );
 
    parameter LW   = `CFG_LW;//lvds tranceiver pairs per side
@@ -2644,18 +2855,16 @@ module link_rxi_rd (/*AUTOARG*/
    output [2*LW-1:0] c3_rdmesh_tran_out;  // serialized transaction
 
    /*AUTOINPUT*/
-   // Beginning of automatic inputs (from unused autoinst inputs)
-   input		c0_fifo_full_rlc;	// To link_rxi_buffer of link_rxi_buffer.v
-   input		c1_fifo_full_rlc;	// To link_rxi_buffer of link_rxi_buffer.v
-   input		c2_fifo_full_rlc;	// To link_rxi_buffer of link_rxi_buffer.v
-   input		c3_fifo_full_rlc;	// To link_rxi_buffer of link_rxi_buffer.v
-   // End of automatics
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			c0_fifo_access_rlc;	// From link_rxi_buffer of link_rxi_buffer.v
+   wire			c0_fifo_full_rlc;	// From c0_link_rxi_channel of link_rxi_channel.v
    wire			c1_fifo_access_rlc;	// From link_rxi_buffer of link_rxi_buffer.v
+   wire			c1_fifo_full_rlc;	// From c1_link_rxi_channel of link_rxi_channel.v
    wire			c2_fifo_access_rlc;	// From link_rxi_buffer of link_rxi_buffer.v
+   wire			c2_fifo_full_rlc;	// From c2_link_rxi_channel of link_rxi_channel.v
    wire			c3_fifo_access_rlc;	// From link_rxi_buffer of link_rxi_buffer.v
+   wire			c3_fifo_full_rlc;	// From c3_link_rxi_channel of link_rxi_channel.v
    wire [14*LW-1:0]	rxi_assembled_tran_rlc;	// From link_rxi_buffer of link_rxi_buffer.v
    // End of automatics
 
@@ -3031,23 +3240,23 @@ module link_transmitter (/*AUTOARG*/
    c0_rdmesh_wait_out, c1_rdmesh_wait_out, c2_rdmesh_wait_out,
    c3_rdmesh_wait_out, c0_mesh_wait_out, c3_mesh_wait_out,
    // Inputs
-   reset, ext_yid_k, ext_xid_k, who_am_i, txo_cfg_reg, txo_wr_wait,
-   txo_rd_wait, c0_clk_in, c1_clk_in, c2_clk_in, c3_clk_in,
-   c0_mesh_access_in, c0_mesh_write_in, c0_mesh_dstaddr_in,
-   c0_mesh_srcaddr_in, c0_mesh_data_in, c0_mesh_datamode_in,
-   c0_mesh_ctrlmode_in, c3_mesh_access_in, c3_mesh_write_in,
-   c3_mesh_dstaddr_in, c3_mesh_srcaddr_in, c3_mesh_data_in,
-   c3_mesh_datamode_in, c3_mesh_ctrlmode_in, c0_emesh_frame_in,
-   c0_emesh_tran_in, c1_emesh_frame_in, c1_emesh_tran_in,
-   c2_emesh_frame_in, c2_emesh_tran_in, c3_emesh_frame_in,
-   c3_emesh_tran_in
+   c3_emesh_tran_in, c3_emesh_frame_in, c2_emesh_tran_in,
+   c2_emesh_frame_in, c1_emesh_tran_in, c1_emesh_frame_in,
+   c0_emesh_tran_in, c0_emesh_frame_in, reset, ext_yid_k, ext_xid_k,
+   who_am_i, txo_cfg_reg, txo_wr_wait, txo_rd_wait, c0_clk_in,
+   c1_clk_in, c2_clk_in, c3_clk_in, c0_mesh_access_in,
+   c0_mesh_write_in, c0_mesh_dstaddr_in, c0_mesh_srcaddr_in,
+   c0_mesh_data_in, c0_mesh_datamode_in, c0_mesh_ctrlmode_in,
+   c3_mesh_access_in, c3_mesh_write_in, c3_mesh_dstaddr_in,
+   c3_mesh_srcaddr_in, c3_mesh_data_in, c3_mesh_datamode_in,
+   c3_mesh_ctrlmode_in
    );
 
    parameter LW   = `CFG_LW  ;//lvds tranceiver pairs per side
    parameter AW   = `CFG_AW  ;//address width
    parameter DW   = `CFG_DW  ;//data width  
    
-  // #########
+   // #########
    // # Inputs
    // #########
 
@@ -3147,7 +3356,7 @@ module link_transmitter (/*AUTOARG*/
    //# clocks even though they are inverted relative to each other.
    //# c1_clk_in is selected because of the physical implementation
    //# considerations.
-   e16_clock_divider e16_clock_divider (.clk_out	(txo_lclk),
+   e16_clock_divider clock_divider (.clk_out	(txo_lclk),
 				.clk_out90      (txo_lclk90),
 				.clk_in		(c1_clk_in),
 				.reset		(reset),
@@ -3235,7 +3444,6 @@ module link_transmitter (/*AUTOARG*/
 
 
 endmodule // link_transmitter
-
 module link_txo_arbiter(/*AUTOARG*/
    // Outputs
    txo_launch_req_tlc, txo_rotate_dis_tlc, c0_txo_launch_ack_tlc,
@@ -3308,7 +3516,7 @@ module link_txo_arbiter(/*AUTOARG*/
    //############################
    //# txo_wait synchronization
    //############################
-   e16_synchronizer #(.DW(1)) e16_synchronizer(.out	(txo_wait_tlc),
+   e16_synchronizer #(.DW(1)) synchronizer(.out	(txo_wait_tlc),
 			               .in	(txo_wait),
 				       .clk	(txo_lclk),
 				       .reset	(reset));
@@ -3366,15 +3574,15 @@ module link_txo_arbiter(/*AUTOARG*/
                                        .requests   (requests[3:0]),
                                        );
     */ 
-   e16_arbiter_roundrobin #(.ARW(4)) e16_arbiter_roundrobin(/*AUTOINST*/
-							    // Outputs
-							    .grants		(grants[3:0]),	 // Templated
-							    // Inputs
-							    .clk		(txo_lclk),	 // Templated
-							    .clk_en		(1'b1),		 // Templated
-							    .reset		(reset),
-							    .en_rotate		(en_rotate),
-							    .requests		(requests[3:0])); // Templated
+   e16_arbiter_roundrobin #(.ARW(4)) arbiter_roundrobin(/*AUTOINST*/
+						    // Outputs
+						    .grants		(grants[3:0]),	 // Templated
+						    // Inputs
+						    .clk		(txo_lclk),	 // Templated
+						    .clk_en		(1'b1),		 // Templated
+						    .reset		(reset),
+						    .en_rotate		(en_rotate),
+						    .requests		(requests[3:0])); // Templated
 
 endmodule // link_txo_arbiter
 module link_txo_buffer(/*AUTOARG*/
@@ -3440,24 +3648,19 @@ module link_txo_buffer(/*AUTOARG*/
    //# therefore here we are good with "or" only
    //###########################################
 
-   assign txo_frame = c0_tran_frame_tlc | c1_tran_frame_tlc |
-		      c2_tran_frame_tlc | c3_tran_frame_tlc;
-
-   assign txo_data_even[LW-1:0] = c0_tran_byte_even_tlc[LW-1:0] |
-				  c1_tran_byte_even_tlc[LW-1:0] |
-				  c2_tran_byte_even_tlc[LW-1:0] |
-				  c3_tran_byte_even_tlc[LW-1:0];
-
-   assign txo_data_odd[LW-1:0] = c0_tran_byte_odd_tlc[LW-1:0] |
-				 c1_tran_byte_odd_tlc[LW-1:0] |
-				 c2_tran_byte_odd_tlc[LW-1:0] |
-				 c3_tran_byte_odd_tlc[LW-1:0];
+   assign txo_frame = c0_tran_frame_tlc;
+ 
+   assign txo_data_even[LW-1:0] = c0_tran_byte_even_tlc[LW-1:0];
+   
+   assign txo_data_odd[LW-1:0] = c0_tran_byte_odd_tlc[LW-1:0];
+   
 
 endmodule // link_txo_buffer
 
 
 
-			//#########################################################
+			
+//#########################################################
 //# This block is a single channel of the link transmitter
 //# mechanism.
 //#
@@ -3538,10 +3741,7 @@ module link_txo_channel (/*AUTOARG*/
    tran_byte_even_tlc, tran_byte_odd_tlc,
    // Inputs
    cclk, cclk_en, txo_lclk, reset, txo_rd, txo_cid, cfg_burst_dis,
-   emesh_tran_in, emesh_frame_in, txo_launch_ack_tlc, access,
-   access_in, ctrlmode, ctrlmode_in, data, data_in, datamode,
-   datamode_in, dstaddr, dstaddr_in, frame_in, srcaddr, srcaddr_in,
-   tran_in, wait_in, wait_int, write, write_in
+   emesh_tran_in, emesh_frame_in, txo_launch_ack_tlc
    );
 
    parameter AW   = `CFG_AW  ;//address width
@@ -3586,177 +3786,22 @@ module link_txo_channel (/*AUTOARG*/
    output [LW-1:0]  tran_byte_odd_tlc;   // Odd byte of the transaction
 
    /*AUTOINPUT*/
-   // Beginning of automatic inputs (from unused autoinst inputs)
-   input		access;			// To e16_mesh_interface of e16_mesh_interface.v
-   input		access_in;		// To e16_mesh_interface of e16_mesh_interface.v
-   input [3:0]		ctrlmode;		// To e16_mesh_interface of e16_mesh_interface.v
-   input [3:0]		ctrlmode_in;		// To e16_mesh_interface of e16_mesh_interface.v
-   input [DW-1:0]	data;			// To e16_mesh_interface of e16_mesh_interface.v
-   input [DW-1:0]	data_in;		// To e16_mesh_interface of e16_mesh_interface.v
-   input [1:0]		datamode;		// To e16_mesh_interface of e16_mesh_interface.v
-   input [1:0]		datamode_in;		// To e16_mesh_interface of e16_mesh_interface.v
-   input [AW-1:0]	dstaddr;		// To e16_mesh_interface of e16_mesh_interface.v
-   input [AW-1:0]	dstaddr_in;		// To e16_mesh_interface of e16_mesh_interface.v
-   input		frame_in;		// To link_txo_fifo of link_txo_fifo.v
-   input [AW-1:0]	srcaddr;		// To e16_mesh_interface of e16_mesh_interface.v
-   input [AW-1:0]	srcaddr_in;		// To e16_mesh_interface of e16_mesh_interface.v
-   input [2*LW-1:0]	tran_in;		// To link_txo_fifo of link_txo_fifo.v
-   input		wait_in;		// To e16_mesh_interface of e16_mesh_interface.v
-   input		wait_int;		// To e16_mesh_interface of e16_mesh_interface.v
-   input		write;			// To e16_mesh_interface of e16_mesh_interface.v
-   input		write_in;		// To e16_mesh_interface of e16_mesh_interface.v
-   // End of automatics
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			access_out;		// From e16_mesh_interface of e16_mesh_interface.v
-   wire			access_reg;		// From e16_mesh_interface of e16_mesh_interface.v
    wire			check_next_dstaddr_tlc;	// From link_txo_launcher of link_txo_launcher.v
-   wire [3:0]		ctrlmode_out;		// From e16_mesh_interface of e16_mesh_interface.v
-   wire [3:0]		ctrlmode_reg;		// From e16_mesh_interface of e16_mesh_interface.v
-   wire [DW-1:0]	data_out;		// From e16_mesh_interface of e16_mesh_interface.v
-   wire [DW-1:0]	data_reg;		// From e16_mesh_interface of e16_mesh_interface.v
-   wire [1:0]		datamode_out;		// From e16_mesh_interface of e16_mesh_interface.v
-   wire [1:0]		datamode_reg;		// From e16_mesh_interface of e16_mesh_interface.v
-   wire [AW-1:0]	dstaddr_out;		// From e16_mesh_interface of e16_mesh_interface.v
-   wire [AW-1:0]	dstaddr_reg;		// From e16_mesh_interface of e16_mesh_interface.v
    wire [2*LW-1:0]	fifo_out_tlc;		// From link_txo_fifo of link_txo_fifo.v
+   wire			frame_in;		// From emesh_interface of emesh_interface.v
    wire			next_access_tlc;	// From link_txo_fifo of link_txo_fifo.v
    wire [3:0]		next_ctrlmode_tlc;	// From link_txo_fifo of link_txo_fifo.v
    wire [1:0]		next_datamode_tlc;	// From link_txo_fifo of link_txo_fifo.v
    wire [AW-1:0]	next_dstaddr_tlc;	// From link_txo_fifo of link_txo_fifo.v
    wire			next_write_tlc;		// From link_txo_fifo of link_txo_fifo.v
    wire [FAD:0]		rd_read_tlc;		// From link_txo_launcher of link_txo_launcher.v
-   wire [AW-1:0]	srcaddr_out;		// From e16_mesh_interface of e16_mesh_interface.v
-   wire [AW-1:0]	srcaddr_reg;		// From e16_mesh_interface of e16_mesh_interface.v
+   wire [2*LW-1:0]	tran_in;		// From emesh_interface of emesh_interface.v
    wire			tran_written_tlc;	// From link_txo_fifo of link_txo_fifo.v
-   wire			wait_out;		// From e16_mesh_interface of e16_mesh_interface.v
    wire			wr_fifo_full;		// From link_txo_fifo of link_txo_fifo.v
-   wire			write_out;		// From e16_mesh_interface of e16_mesh_interface.v
-   wire			write_reg;		// From e16_mesh_interface of e16_mesh_interface.v
    // End of automatics
 
-   //##################################
-   //#    Interface with emesh
-   //# on input transactions only
-   //# * output to the emesh is driven
-   //# by a diferent block
-   //##################################
-
-   /* e16_mesh_interface AUTO_TEMPLATE (
-                                    .clk    (cclk),
-                                    .clk_en (cclk_en),
-				    .emesh_tran_reg  (tran_in[]),
-				    .emesh_frame_reg (frame_in),
-                                    .emesh_wait_int  (wr_fifo_full),
-                                    .emesh_tran_out  (),
-                                    .emesh_frame_out (),
-                                    .emesh_wait_in   (1'b0),
-                                    .emesh_tran	     ({(2*LW){1'b0}}),
-				    .emesh_frame     (1'b0),
-                                );
-    */
-   e16_mesh_interface e16_mesh_interface(/*AUTOINST*/
-					 // Outputs
-					 .wait_out		(wait_out),
-					 .access_out		(access_out),
-					 .write_out		(write_out),
-					 .datamode_out		(datamode_out[1:0]),
-					 .ctrlmode_out		(ctrlmode_out[3:0]),
-					 .data_out		(data_out[DW-1:0]),
-					 .dstaddr_out		(dstaddr_out[AW-1:0]),
-					 .srcaddr_out		(srcaddr_out[AW-1:0]),
-					 .access_reg		(access_reg),
-					 .write_reg		(write_reg),
-					 .datamode_reg		(datamode_reg[1:0]),
-					 .ctrlmode_reg		(ctrlmode_reg[3:0]),
-					 .data_reg		(data_reg[DW-1:0]),
-					 .dstaddr_reg		(dstaddr_reg[AW-1:0]),
-					 .srcaddr_reg		(srcaddr_reg[AW-1:0]),
-					 // Inputs
-					 .clk			(cclk),		 // Templated
-					 .clk_en		(cclk_en),	 // Templated
-					 .reset			(reset),
-					 .wait_in		(wait_in),
-					 .access_in		(access_in),
-					 .write_in		(write_in),
-					 .datamode_in		(datamode_in[1:0]),
-					 .ctrlmode_in		(ctrlmode_in[3:0]),
-					 .data_in		(data_in[DW-1:0]),
-					 .dstaddr_in		(dstaddr_in[AW-1:0]),
-					 .srcaddr_in		(srcaddr_in[AW-1:0]),
-					 .wait_int		(wait_int),
-					 .access		(access),
-					 .write			(write),
-					 .datamode		(datamode[1:0]),
-					 .ctrlmode		(ctrlmode[3:0]),
-					 .data			(data[DW-1:0]),
-					 .dstaddr		(dstaddr[AW-1:0]),
-					 .srcaddr		(srcaddr[AW-1:0]));
-
-
-   //########
-   //# FIFO
-   //########
-   
-   link_txo_fifo #(.FAD(FAD)) link_txo_fifo(/*AUTOINST*/
-					    // Outputs
-					    .wr_fifo_full	(wr_fifo_full),
-					    .fifo_out_tlc	(fifo_out_tlc[2*LW-1:0]),
-					    .tran_written_tlc	(tran_written_tlc),
-					    .next_ctrlmode_tlc	(next_ctrlmode_tlc[3:0]),
-					    .next_dstaddr_tlc	(next_dstaddr_tlc[AW-1:0]),
-					    .next_datamode_tlc	(next_datamode_tlc[1:0]),
-					    .next_write_tlc	(next_write_tlc),
-					    .next_access_tlc	(next_access_tlc),
-					    // Inputs
-					    .reset		(reset),
-					    .cclk		(cclk),
-					    .cclk_en		(cclk_en),
-					    .txo_lclk		(txo_lclk),
-					    .tran_in		(tran_in[2*LW-1:0]),
-					    .frame_in		(frame_in),
-					    .rd_read_tlc	(rd_read_tlc[FAD:0]),
-					    .check_next_dstaddr_tlc(check_next_dstaddr_tlc));
-   
-
-   //#######################
-   //# Transaction Launcher
-   //#######################
-
-   /* link_txo_launcher AUTO_TEMPLATE (
-                                       .txo_rotate_dis	(txo_rotate_dis), 
-                                       .reset		(reset),
-                                       .txo_lclk	(txo_lclk),
-                                       .txo_rd		(txo_rd),
-                                       .txo_cid		(txo_cid[1:0]),
-                                       .cfg_burst_dis	(cfg_burst_dis),
-                                       .\(.*\)          (\1_tlc[]),
-                                      );
-    */
-
-   link_txo_launcher #(.FAD(FAD)) link_txo_launcher(/*AUTOINST*/
-						    // Outputs
-						    .rd_read		(rd_read_tlc[FAD:0]), // Templated
-						    .check_next_dstaddr	(check_next_dstaddr_tlc), // Templated
-						    .txo_launch_req	(txo_launch_req_tlc), // Templated
-						    .txo_rotate_dis	(txo_rotate_dis), // Templated
-						    .tran_frame		(tran_frame_tlc), // Templated
-						    .tran_byte_even	(tran_byte_even_tlc[LW-1:0]), // Templated
-						    .tran_byte_odd	(tran_byte_odd_tlc[LW-1:0]), // Templated
-						    // Inputs
-						    .reset		(reset),	 // Templated
-						    .txo_lclk		(txo_lclk),	 // Templated
-						    .txo_rd		(txo_rd),	 // Templated
-						    .txo_cid		(txo_cid[1:0]),	 // Templated
-						    .cfg_burst_dis	(cfg_burst_dis), // Templated
-						    .fifo_out		(fifo_out_tlc[2*LW-1:0]), // Templated
-						    .tran_written	(tran_written_tlc), // Templated
-						    .next_ctrlmode	(next_ctrlmode_tlc[3:0]), // Templated
-						    .next_dstaddr	(next_dstaddr_tlc[AW-1:0]), // Templated
-						    .next_datamode	(next_datamode_tlc[1:0]), // Templated
-						    .next_write		(next_write_tlc), // Templated
-						    .next_access	(next_access_tlc), // Templated
-						    .txo_launch_ack	(txo_launch_ack_tlc)); // Templated
 
 
 
@@ -3843,7 +3888,7 @@ module link_txo_fifo (/*AUTOARG*/
    reg [LW-1:0]    even_byte;
    reg [2*LW-1:0] fifo_mem[MD-1:0];
  
-   reg [FAD:0] 	 rd_gray_pointer_tlc;
+   reg [FAD:0]   rd_gray_pointer_tlc;
    reg [FAD:0]   rd_binary_pointer_tlc;
    reg [FAD:0]   rd_addr_traninfo0_tlc;
 
@@ -3978,8 +4023,7 @@ module link_txo_fifo (/*AUTOARG*/
 	  rd_gray_pointer_tlc[FAD:0]    <= {(FAD+1){1'b0}};
        end
      else if(|(rd_read_tlc[FAD:0]))
-       begin
-	  rd_binary_pointer_tlc[FAD:0]  <= rd_binary_next_tlc[FAD:0];	  
+       begin	  rd_binary_pointer_tlc[FAD:0]  <= rd_binary_next_tlc[FAD:0];	  
 	  rd_gray_pointer_tlc[FAD:0]    <= rd_gray_next_tlc[FAD:0];	  
        end
 
@@ -4002,7 +4046,7 @@ module link_txo_fifo (/*AUTOARG*/
 
    always @(posedge txo_lclk or posedge reset)
      if(reset)
-       rd_addr_traninfo0_tlc[FAD-1:0] <= {(FAD){1'b0}};
+       rd_addr_traninfo0_tlc[FAD:0]   <= {(FAD){1'b0}};
      else if(check_next_dstaddr_tlc)
        rd_addr_traninfo0_tlc[FAD-1:0] <= rd_addr_traninfo0_next_tlc[FAD-1:0];
 
@@ -4633,12 +4677,12 @@ module link_txo_mesh_channel (/*AUTOARG*/
    /*AUTOINPUT*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			access_reg;		// From e16_mesh_interface of e16_mesh_interface.v
+   wire			access_reg;		// From mesh_interface of e16_mesh_interface.v
    wire			check_next_dstaddr_tlc;	// From link_txo_launcher of link_txo_launcher.v
-   wire [3:0]		ctrlmode_reg;		// From e16_mesh_interface of e16_mesh_interface.v
-   wire [DW-1:0]	data_reg;		// From e16_mesh_interface of e16_mesh_interface.v
-   wire [1:0]		datamode_reg;		// From e16_mesh_interface of e16_mesh_interface.v
-   wire [AW-1:0]	dstaddr_reg;		// From e16_mesh_interface of e16_mesh_interface.v
+   wire [3:0]		ctrlmode_reg;		// From mesh_interface of e16_mesh_interface.v
+   wire [DW-1:0]	data_reg;		// From mesh_interface of e16_mesh_interface.v
+   wire [1:0]		datamode_reg;		// From mesh_interface of e16_mesh_interface.v
+   wire [AW-1:0]	dstaddr_reg;		// From mesh_interface of e16_mesh_interface.v
    wire [2*LW-1:0]	fifo_out_tlc;		// From link_txo_fifo of link_txo_fifo.v
    wire			mesh_frame;		// From link_txo_mesh_launcher of link_txo_mesh_launcher.v
    wire			mesh_req;		// From link_txo_mesh_launcher of link_txo_mesh_launcher.v
@@ -4651,10 +4695,10 @@ module link_txo_mesh_channel (/*AUTOARG*/
    wire [AW-1:0]	next_dstaddr_tlc;	// From link_txo_fifo of link_txo_fifo.v
    wire			next_write_tlc;		// From link_txo_fifo of link_txo_fifo.v
    wire [FAD:0]		rd_read_tlc;		// From link_txo_launcher of link_txo_launcher.v
-   wire [AW-1:0]	srcaddr_reg;		// From e16_mesh_interface of e16_mesh_interface.v
+   wire [AW-1:0]	srcaddr_reg;		// From mesh_interface of e16_mesh_interface.v
    wire			tran_written_tlc;	// From link_txo_fifo of link_txo_fifo.v
    wire			wr_fifo_full;		// From link_txo_fifo of link_txo_fifo.v
-   wire			write_reg;		// From e16_mesh_interface of e16_mesh_interface.v
+   wire			write_reg;		// From mesh_interface of e16_mesh_interface.v
    // End of automatics
 
    //#######################
@@ -4745,43 +4789,43 @@ module link_txo_mesh_channel (/*AUTOARG*/
 				    .srcaddr	       ({(AW){1'b0}}),
                                    );
     */
-   e16_mesh_interface e16_mesh_interface(/*AUTOINST*/
-					 // Outputs
-					 .wait_out		(mesh_wait_out), // Templated
-					 .access_out		(),		 // Templated
-					 .write_out		(),		 // Templated
-					 .datamode_out		(),		 // Templated
-					 .ctrlmode_out		(),		 // Templated
-					 .data_out		(),		 // Templated
-					 .dstaddr_out		(),		 // Templated
-					 .srcaddr_out		(),		 // Templated
-					 .access_reg		(access_reg),
-					 .write_reg		(write_reg),
-					 .datamode_reg		(datamode_reg[1:0]),
-					 .ctrlmode_reg		(ctrlmode_reg[3:0]),
-					 .data_reg		(data_reg[DW-1:0]),
-					 .dstaddr_reg		(dstaddr_reg[AW-1:0]),
-					 .srcaddr_reg		(srcaddr_reg[AW-1:0]),
-					 // Inputs
-					 .clk			(cclk),		 // Templated
-					 .clk_en		(cclk_en),	 // Templated
-					 .reset			(reset),
-					 .wait_in		(1'b0),		 // Templated
-					 .access_in		(mesh_access_in), // Templated
-					 .write_in		(mesh_write_in), // Templated
-					 .datamode_in		(mesh_datamode_in[1:0]), // Templated
-					 .ctrlmode_in		(mesh_ctrlmode_in[3:0]), // Templated
-					 .data_in		(mesh_data_in[DW-1:0]), // Templated
-					 .dstaddr_in		(mesh_dstaddr_in[AW-1:0]), // Templated
-					 .srcaddr_in		(mesh_srcaddr_in[AW-1:0]), // Templated
-					 .wait_int		(mesh_wait_int), // Templated
-					 .access		(1'b0),		 // Templated
-					 .write			(1'b0),		 // Templated
-					 .datamode		(2'b00),	 // Templated
-					 .ctrlmode		(4'b0000),	 // Templated
-					 .data			({(DW){1'b0}}),	 // Templated
-					 .dstaddr		({(AW){1'b0}}),	 // Templated
-					 .srcaddr		({(AW){1'b0}}));	 // Templated
+   e16_mesh_interface mesh_interface(/*AUTOINST*/
+				     // Outputs
+				     .wait_out		(mesh_wait_out), // Templated
+				     .access_out	(),		 // Templated
+				     .write_out		(),		 // Templated
+				     .datamode_out	(),		 // Templated
+				     .ctrlmode_out	(),		 // Templated
+				     .data_out		(),		 // Templated
+				     .dstaddr_out	(),		 // Templated
+				     .srcaddr_out	(),		 // Templated
+				     .access_reg	(access_reg),
+				     .write_reg		(write_reg),
+				     .datamode_reg	(datamode_reg[1:0]),
+				     .ctrlmode_reg	(ctrlmode_reg[3:0]),
+				     .data_reg		(data_reg[DW-1:0]),
+				     .dstaddr_reg	(dstaddr_reg[AW-1:0]),
+				     .srcaddr_reg	(srcaddr_reg[AW-1:0]),
+				     // Inputs
+				     .clk		(cclk),		 // Templated
+				     .clk_en		(cclk_en),	 // Templated
+				     .reset		(reset),
+				     .wait_in		(1'b0),		 // Templated
+				     .access_in		(mesh_access_in), // Templated
+				     .write_in		(mesh_write_in), // Templated
+				     .datamode_in	(mesh_datamode_in[1:0]), // Templated
+				     .ctrlmode_in	(mesh_ctrlmode_in[3:0]), // Templated
+				     .data_in		(mesh_data_in[DW-1:0]), // Templated
+				     .dstaddr_in	(mesh_dstaddr_in[AW-1:0]), // Templated
+				     .srcaddr_in	(mesh_srcaddr_in[AW-1:0]), // Templated
+				     .wait_int		(mesh_wait_int), // Templated
+				     .access		(1'b0),		 // Templated
+				     .write		(1'b0),		 // Templated
+				     .datamode		(2'b00),	 // Templated
+				     .ctrlmode		(4'b0000),	 // Templated
+				     .data		({(DW){1'b0}}),	 // Templated
+				     .dstaddr		({(AW){1'b0}}),	 // Templated
+				     .srcaddr		({(AW){1'b0}}));	 // Templated
 
 
    //#################################
@@ -4961,7 +5005,7 @@ module link_txo_mesh_launcher(/*AUTOARG*/
    assign route_south = multicast_tran ? route_south_multicast : route_south_normal;
    assign route_north = multicast_tran ? route_north_multicast : route_north_normal;
 
-   assign route_sides[3:0] = {route_north,route_east,route_south,route_west};
+   assign route_sides[3:0] = 4'b1111;//{route_north,route_east,route_south,route_west};
    assign route_out = |(who_am_i[3:0] & route_sides[3:0]);
 
    //# Request
@@ -5015,7 +5059,7 @@ module link_txo_mesh_launcher(/*AUTOARG*/
 			  ctrlmode_reg[3:0],dstaddr_reg[31:20]
                                    };
 
-   e16_mux7 #(2*LW) e16_mux7(// Outputs
+   e16_mux7 #(2*LW) mux7(// Outputs
 		     .out (mesh_tran[2*LW-1:0]),
 		     // Inputs
 		     .in0 (mesh_tran_in[2*LW-1:0]),      .sel0 (launcher_sel[0]),
@@ -5305,6 +5349,8 @@ module link_txo_wr (/*AUTOARG*/
    c1_emesh_wait_out, c2_emesh_wait_out, c3_emesh_wait_out,
    c0_mesh_wait_out, c3_mesh_wait_out,
    // Inputs
+   c2_tran_frame_tlc, c2_tran_byte_odd_tlc, c2_tran_byte_even_tlc,
+   c1_tran_frame_tlc, c1_tran_byte_odd_tlc, c1_tran_byte_even_tlc,
    txo_lclk, reset, ext_yid_k, ext_xid_k, who_am_i, cfg_burst_dis,
    cfg_multicast_dis, txo_wr_wait, txo_wr_wait_int, c0_clk_in,
    c1_clk_in, c2_clk_in, c3_clk_in, c0_emesh_tran_in,
@@ -5314,11 +5360,7 @@ module link_txo_wr (/*AUTOARG*/
    c0_mesh_dstaddr_in, c0_mesh_srcaddr_in, c0_mesh_data_in,
    c0_mesh_datamode_in, c0_mesh_ctrlmode_in, c3_mesh_access_in,
    c3_mesh_write_in, c3_mesh_dstaddr_in, c3_mesh_srcaddr_in,
-   c3_mesh_data_in, c3_mesh_datamode_in, c3_mesh_ctrlmode_in,
-   c1_tran_byte_even_tlc, c1_tran_byte_odd_tlc, c1_tran_frame_tlc,
-   c1_txo_launch_req_tlc, c1_txo_rotate_dis, c2_tran_byte_even_tlc,
-   c2_tran_byte_odd_tlc, c2_tran_frame_tlc, c2_txo_launch_req_tlc,
-   c2_txo_rotate_dis
+   c3_mesh_data_in, c3_mesh_datamode_in, c3_mesh_ctrlmode_in
    );
 
    parameter LW   = `CFG_LW  ;//lvds tranceiver pairs per side
@@ -5397,13 +5439,9 @@ module link_txo_wr (/*AUTOARG*/
    input [LW-1:0]	c1_tran_byte_even_tlc;	// To link_txo_buffer of link_txo_buffer.v
    input [LW-1:0]	c1_tran_byte_odd_tlc;	// To link_txo_buffer of link_txo_buffer.v
    input		c1_tran_frame_tlc;	// To link_txo_buffer of link_txo_buffer.v
-   input		c1_txo_launch_req_tlc;	// To link_txo_arbiter of link_txo_arbiter.v
-   input		c1_txo_rotate_dis;	// To link_txo_arbiter of link_txo_arbiter.v
    input [LW-1:0]	c2_tran_byte_even_tlc;	// To link_txo_buffer of link_txo_buffer.v
    input [LW-1:0]	c2_tran_byte_odd_tlc;	// To link_txo_buffer of link_txo_buffer.v
    input		c2_tran_frame_tlc;	// To link_txo_buffer of link_txo_buffer.v
-   input		c2_txo_launch_req_tlc;	// To link_txo_arbiter of link_txo_arbiter.v
-   input		c2_txo_rotate_dis;	// To link_txo_arbiter of link_txo_arbiter.v
    // End of automatics
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
@@ -5481,7 +5519,13 @@ module link_txo_wr (/*AUTOARG*/
                                   .txo_rotate_dis_tlc  (txo_wr_rotate_dis),
                                    );
     */
-   link_txo_arbiter link_txo_arbiter (/*AUTOINST*/
+   link_txo_arbiter link_txo_arbiter (.c1_txo_launch_req_tlc(1'b0),
+				      .c1_txo_rotate_dis(1'b0),
+				      .c2_txo_launch_req_tlc(1'b0),
+				      .c2_txo_rotate_dis(1'b0),
+				      .c3_txo_launch_req_tlc(1'b0),
+				      .c3_txo_rotate_dis(1'b0),
+				      /*AUTOINST*/
 				      // Outputs
 				      .txo_launch_req_tlc(txo_wr_launch_req_tlc), // Templated
 				      .txo_rotate_dis_tlc(txo_wr_rotate_dis), // Templated
@@ -5495,13 +5539,7 @@ module link_txo_wr (/*AUTOARG*/
 				      .txo_wait		(txo_wr_wait),	 // Templated
 				      .txo_wait_int	(txo_wr_wait_int), // Templated
 				      .c0_txo_launch_req_tlc(c0_txo_launch_req_tlc),
-				      .c0_txo_rotate_dis(c0_txo_rotate_dis),
-				      .c1_txo_launch_req_tlc(c1_txo_launch_req_tlc),
-				      .c1_txo_rotate_dis(c1_txo_rotate_dis),
-				      .c2_txo_launch_req_tlc(c2_txo_launch_req_tlc),
-				      .c2_txo_rotate_dis(c2_txo_rotate_dis),
-				      .c3_txo_launch_req_tlc(c3_txo_launch_req_tlc),
-				      .c3_txo_rotate_dis(c3_txo_rotate_dis));
+				      .c0_txo_rotate_dis(c0_txo_rotate_dis));
 
    // #########################
    // # Channels instantiation
@@ -5591,323 +5629,6 @@ module link_txo_wr (/*AUTOARG*/
 
  
 endmodule // link_txo_wr
-module e16_mesh_interface(/*AUTOARG*/
-   // Outputs
-   wait_out, access_out, write_out, datamode_out, ctrlmode_out,
-   data_out, dstaddr_out, srcaddr_out, access_reg, write_reg,
-   datamode_reg, ctrlmode_reg, data_reg, dstaddr_reg, srcaddr_reg,
-   // Inputs
-   clk, clk_en, reset, wait_in, access_in, write_in, datamode_in,
-   ctrlmode_in, data_in, dstaddr_in, srcaddr_in, wait_int, access,
-   write, datamode, ctrlmode, data, dstaddr, srcaddr
-   );
-
-   parameter DW = `CFG_DW;
-   parameter AW = `CFG_AW;
-   
-   //###########
-   //# INPUTS
-   //###########
-   input            clk;
-   input            clk_en;  //2nd level manual clock gater   
-   input 	    reset;  
-
-   //# from the mesh
-   input 	    wait_in;
-   input 	    access_in;
-   input 	    write_in;
-   input [1:0]      datamode_in;
-   input [3:0]      ctrlmode_in;   		    
-   input [DW-1:0]   data_in;
-   input [AW-1:0]   dstaddr_in;
-   input [AW-1:0]   srcaddr_in;   
-
-   //# from the internal control
-   input 	    wait_int;
-   input 	    access;
-   input 	    write;
-   input [1:0]      datamode;
-   input [3:0]      ctrlmode;   		    
-   input [DW-1:0]   data;
-   input [AW-1:0]   dstaddr;
-   input [AW-1:0]   srcaddr;   
-
-   //###########
-   //# OUTPUTS
-   //###########
-
-   //# to the mesh
-   output 	    wait_out;
-   output 	    access_out;
-   output 	    write_out;
-   output [1:0]     datamode_out;
-   output [3:0]     ctrlmode_out;   		    
-   output [DW-1:0]  data_out;
-   output [AW-1:0]  dstaddr_out;
-   output [AW-1:0]  srcaddr_out;  
-
-   //# to the internal control
-   output 	    access_reg;
-   output 	    write_reg;
-   output [1:0]     datamode_reg;
-   output [3:0]     ctrlmode_reg;   		    
-   output [DW-1:0]  data_reg;
-   output [AW-1:0]  dstaddr_reg;
-   output [AW-1:0]  srcaddr_reg;  
-
-   /*AUTOINPUT*/
-   /*AUTOWIRE*/
-
-   //#########
-   //# REGS
-   //#########
-   reg          wait_out;
-   reg 		access_out;
-   reg 		write_out;
-   reg [1:0] 	datamode_out;
-   reg [3:0] 	ctrlmode_out;   		    
-   reg [DW-1:0] data_out;
-   reg [AW-1:0] dstaddr_out;
-   reg [AW-1:0] srcaddr_out;  
-
-   reg 		access_reg;
-   reg 		write_reg;
-   reg [1:0] 	datamode_reg;
-   reg [3:0] 	ctrlmode_reg;   		    
-   reg [DW-1:0] data_reg;
-   reg [AW-1:0] dstaddr_reg;
-   reg [AW-1:0] srcaddr_reg;  
-
-   //#########
-   //# WIRES
-   //#########
-
-   //##########################
-   //# mesh input busses
-   //##########################
-
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       access_reg <= 1'b0;
-     else if(clk_en)
-       if(~wait_int)
-	 access_reg <= access_in;
-      
-   always @ (posedge clk)
-     if(clk_en)
-       if(~wait_int & access_in)
-	 begin
-	    write_reg           <= write_in;
-	    datamode_reg[1:0]   <= datamode_in[1:0];
-	    ctrlmode_reg[3:0]   <= ctrlmode_in[3:0];
-	    data_reg[DW-1:0]    <= data_in[DW-1:0];
-	    dstaddr_reg[AW-1:0] <= dstaddr_in[AW-1:0];
-	    srcaddr_reg[AW-1:0] <= srcaddr_in[AW-1:0];
-	 end
-
-   //##########################
-   //# mesh output busses  
-   //##########################
-
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       access_out <= 1'b0;
-     else if(clk_en)
-       if(!wait_in)
-	 access_out <= access;
-
-   always @ (posedge clk)
-     if (clk_en)
-       if(!wait_in & access)
-	 begin
-	    srcaddr_out[AW-1:0] <= srcaddr[AW-1:0];
-	    data_out[DW-1:0]    <= data[DW-1:0];
-	    write_out           <= write;
-	    datamode_out[1:0]   <= datamode[1:0]; 
-	    dstaddr_out[AW-1:0] <= dstaddr[AW-1:0];
-	    ctrlmode_out[3:0]   <= ctrlmode[3:0];
-	 end
- 
-   //#####################
-   //# Wait out control
-   //#####################
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       wait_out <= 1'b0;
-     else if(clk_en)
-       wait_out <= wait_int;
-   
-endmodule // e16_mesh_interface
-
-
-
-module e16_mux7(/*AUTOARG*/
-   // Outputs
-   out,
-   // Inputs
-   in0, in1, in2, in3, in4, in5, in6, sel0, sel1, sel2, sel3, sel4,
-   sel5, sel6
-   );
-
-   parameter DW=99;
-   
-
-   //data inputs
-   input [DW-1:0]  in0;
-   input [DW-1:0]  in1;
-   input [DW-1:0]  in2;
-   input [DW-1:0]  in3;
-   input [DW-1:0]  in4;
-   input [DW-1:0]  in5;
-   input [DW-1:0]  in6;
-   
-   //select inputs
-   input 	   sel0;
-   input 	   sel1;
-   input 	   sel2;
-   input 	   sel3;
-   input 	   sel4;
-   input 	   sel5;
-   input 	   sel6;
-
-
-   output [DW-1:0] out;
-   
-  
-   assign out[DW-1:0] = ({(DW){sel0}} & in0[DW-1:0] |
-			 {(DW){sel1}} & in1[DW-1:0] |
-			 {(DW){sel2}} & in2[DW-1:0] |
-			 {(DW){sel3}} & in3[DW-1:0] |
-			 {(DW){sel4}} & in4[DW-1:0] |
-			 {(DW){sel5}} & in5[DW-1:0] |
-			 {(DW){sel6}} & in6[DW-1:0]);
-   
-
-   // synthesis translate_off
-   always @*
-     if((sel0+sel1+sel2+sel3+sel4+sel5+sel6>1) & $time>0)
-       $display("ERROR>>Arbitration failure in cell %m");
-   // synthesis translate_on
-   
-   
-endmodule // e16_mux7
-
-module e16_pulse2pulse(/*AUTOARG*/
-   // Outputs
-   out,
-   // Inputs
-   inclk, outclk, in, reset
-   );
-
-   
-   //clocks
-   input  inclk; 
-   input  outclk;  
-
-   
-   input  in;   
-   output out;
-
-   //reset
-   input  reset;  //do we need this???
-
-
-
-   wire   intoggle;
-   wire   insync;
-   
-   
-   //pulse to toggle
-   e16_pulse2toggle    e16_pulse2toggle(
-				// Outputs
-				.out		(intoggle),
-				// Inputs
-				.clk		(inclk),
-				.in		(in),
-				.reset		(reset));
-   
-   //metastability e16_synchronizer
-   e16_synchronizer #(1) e16_synchronizer(
-				  // Outputs
-				  .out			(insync),
-				  // Inputs
-				  .in			(intoggle),
-				  .clk			(outclk),
-				  .reset		(reset));
-   
-   
-   //toogle to pulse
-   e16_toggle2pulse e16_toggle2pulse(
-			     // Outputs
-			     .out		(out),
-			     // Inputs
-			     .clk		(outclk),
-			     .in		(insync),
-			     .reset		(reset));
-   
-
-   
-endmodule // e16_pulse2pulse
-
-
-
-/* This e16_synchronizer is based on a Feb 20,2003 EDN article by
- * Michael Crews and Yong Yenyongsgool from Philips called:
- * "Practical design for transferring signals between clock domains"
- * 
- * There are no assumptions on clock ratios or phases, which makes the 
- * circuit very robust! 
- * 
- * Theory:
- * Converts pulse to toggle, synchronizes, then converts back to pulse
- * 
- * Naming:
- * svre-->valid on rising edge for source clock
- * dvre-->valid on rising edge for destination clock
- * Only place this e16_synchronizer on access type signals
- * 
- */
-
-module e16_pulse2toggle(/*AUTOARG*/
-   // Outputs
-   out,
-   // Inputs
-   clk, in, reset
-   );
-
-   
-   //clocks
-   input  clk; 
-   
-   input  in;   
-   output out;
-
-   //reset
-   input  reset;  //do we need this???
-
-
-   reg 	  out;
-   wire   toggle;
-   
-   //if input goes high, toggle output
-   //note1: input can only be high for one clock cycle
-   //note2: be careful with clock gating
-
-   assign toggle = in ? ~out :
-		         out;
-   
-
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       out <= 1'b0;
-     else
-       out <= toggle;
-   
-endmodule // e16_pulse2toggle
-
-
-
-
 module _MAGMA_CELL_FF_ (DATA, CLOCK, CLEAR, PRESET, SLAVE_CLOCK, OUT);
 
    input DATA;
@@ -5961,81 +5682,19 @@ endmodule
 
 
 
-module e16_synchronizer #(parameter DW=32) (/*AUTOARG*/
-   // Outputs
-   out,
-   // Inputs
-   in, clk, reset
-   );
+/*
+ Copyright (C) 2014 Adapteva, Inc.
+ 
+ Contributed by Roman Trogan <roman@adapteva.com>
+ Contributed by Andreas Olofsson <andreas@adapteva.com>
 
-
-   //Input Side   
-   input  [DW-1:0] in;   
-   input           clk;      
-   input           reset;//asynchronous signal
-   
-   
-   //Output Side
-   output [DW-1:0] out;
-
-   reg [DW-1:0] sync_reg0;
-   reg [DW-1:0] sync_reg1;
-   reg [DW-1:0] out;
-     
-   //Synchronization between clock domain
-   //We use two flip-flops for metastability improvement
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       begin
-	  sync_reg0[DW-1:0] <= {(DW){1'b0}};
-	  sync_reg1[DW-1:0] <= {(DW){1'b0}};
-	  out[DW-1:0]       <= {(DW){1'b0}};
-       end
-     else
-       begin
-	  sync_reg0[DW-1:0] <= in[DW-1:0];
-	  sync_reg1[DW-1:0] <= sync_reg0[DW-1:0];
-	  out[DW-1:0]       <= sync_reg1[DW-1:0];
-       end
-   
-
-
-   
-   
-     
-
-endmodule // clock_e16_synchronizer
-
-//goes high for one clock cycle on every input transition
-module e16_toggle2pulse(/*AUTOARG*/
-   // Outputs
-   out,
-   // Inputs
-   clk, in, reset
-   );
-
-   
-   //clocks
-   input  clk; 
-   
-   input  in;   
-   output out;
-
-   //reset
-   input  reset;
-   reg 	  out_reg;
-         
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       out_reg <= 1'b0;
-     else
-       out_reg <= in;
-      
-   assign out = in ^ out_reg;
-
-endmodule 
-
-
-
-
-
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.This program is distributed in the hope 
+ that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
+ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. You should have received a copy 
+ of the GNU General Public License along with this program (see the file 
+ COPYING).  If not, see <http://www.gnu.org/licenses/>.
+ */
