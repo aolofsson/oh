@@ -20,7 +20,8 @@ module emmu (/*AUTOARG*/
    mi_dout, emesh_access_out, emesh_packet_out, emesh_packet_hi_out,
    // Inputs
    reset, rd_clk, wr_clk, mmu_en, mmu_bp, mi_en, mi_we, mi_addr,
-   mi_din, emesh_access_in, emesh_packet_in, emesh_wait_in
+   mi_din, emesh_access_in, emesh_packet_in, emesh_rd_wait,
+   emesh_wr_wait
    );
    parameter DW     = 32;         //data width
    parameter AW     = 32;         //address width 
@@ -58,7 +59,7 @@ module emmu (/*AUTOARG*/
    /*****************************/  
    input 	     emesh_access_in;
    input [PW-1:0]    emesh_packet_in;
-   input 	     emesh_wait_in;       //downstream pushback
+   
  
    /*****************************/
    /*EMESH OUTPUTS              */
@@ -66,7 +67,9 @@ module emmu (/*AUTOARG*/
    output 	     emesh_access_out;
    output [PW-1:0]   emesh_packet_out;   
    output [31:0]     emesh_packet_hi_out;
-  
+   input 	     emesh_rd_wait;
+   input 	     emesh_wr_wait;
+
    /*****************************/
    /*REGISTERS                  */
    /*****************************/
@@ -79,7 +82,7 @@ module emmu (/*AUTOARG*/
    wire [5:0] 	      mi_wr_vec;
    wire 	      mi_match;
    wire [MW-1:0]      emmu_rd_addr;
-   
+   wire 	      write_in;
 
    /*****************************/
    /*MMU WRITE LOGIC            */
@@ -100,8 +103,9 @@ module emmu (/*AUTOARG*/
    /*MMU READ  LOGIC            */
    /*****************************/
    //TODO: could we do with less entries?
-   assign emmu_rd_addr[MAW-1:0]=emesh_packet_in[39:28];
    
+   assign write_in              = emesh_packet_in[1];
+   assign emmu_rd_addr[MAW-1:0] = emesh_packet_in[39:28];
    
    memory_dp #(.DW(MW),.AW(MAW)) memory_dp (
 					   // Outputs
@@ -122,18 +126,19 @@ module emmu (/*AUTOARG*/
    //pipeline to compensate for table lookup pipeline 
    //assumes one cycle memory access!     
   
-   always @ (posedge  rd_clk or posedge reset)
-     if(reset)
-       emesh_access_out <= 1'b0;
-     else if(~emesh_wait_in)
-       emesh_access_out         <= emesh_access_in;
-   
-   always @ (posedge rd_clk)
-     if(emesh_access_in & ~emesh_wait_in)   
-       emesh_packet_reg[PW-1:0]  <= emesh_packet_in[PW-1:0];	  
-   
+   always @ (posedge  rd_clk or posedge reset)     
+     if (reset)
+       begin
+	  emesh_access_out         <= 1'b0;	  
+       end
+     else if((write_in & ~emesh_wr_wait) | (~write_in & ~emesh_rd_wait))
+       begin
+	  emesh_access_out         <= emesh_access_in;
+	  emesh_packet_reg[PW-1:0] <= emesh_packet_in[PW-1:0];	  
+       end
+            
    assign emesh_dstaddr_out[63:0] = (mmu_en & ~mmu_bp) ? {emmu_lookup_data[43:0], emesh_packet_reg[27:8]} :
-				                        {32'b0,emesh_packet_reg[39:8]}; 
+				                         {32'b0,emesh_packet_reg[39:8]}; 
       
    //Concatenating output packet
    assign emesh_packet_out[PW-1:0] = {emesh_packet_reg[PW-1:40],
