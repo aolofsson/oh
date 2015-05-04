@@ -36,7 +36,8 @@ module edma (/*AUTOARG*/
    input 	     edma_wait;
 
    assign edma_access=1'b0;
-   
+   assign edma_packet='d0;
+   assign  mi_dout='d0;
 
    /*   
 
