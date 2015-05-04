@@ -1,19 +1,19 @@
 module erx_disty (/*AUTOARG*/
    // Outputs
-   erx_wait, rx_rd_wait, rx_wr_wait, edma_wait, erx_cfg_wait,
+   erx_wait, rx_rd_wait, rx_wr_wait, edma_wait, ecfg_wait,
    rxwr_fifo_access, rxwr_fifo_packet, rxrd_fifo_access,
    rxrd_fifo_packet, rxrr_fifo_access, rxrr_fifo_packet,
    // Inputs
    erx_access, erx_packet, emmu_access, emmu_packet, edma_access,
-   edma_packet, erx_cfg_access, erx_cfg_packet, timeout,
-   rxwr_fifo_wait, rxrd_fifo_wait, rxrr_fifo_wait
+   edma_packet, ecfg_access, ecfg_packet, timeout, rxwr_fifo_wait,
+   rxrd_fifo_wait, rxrr_fifo_wait
    );
 
    parameter AW   = 32;
    parameter DW   = 32;
    parameter PW   = 104;
    parameter ID   = 12'h800; //link id
-   parameter RFAW = 4;
+   parameter RFAW = 6;
    
    
    //From IO
@@ -33,9 +33,9 @@ module erx_disty (/*AUTOARG*/
    output 	   edma_wait;
 
    //From ETX
-   input           erx_cfg_access;
-   input [PW-1:0]  erx_cfg_packet;
-   output 	   erx_cfg_wait;
+   input           ecfg_access;
+   input [PW-1:0]  ecfg_packet;
+   output 	   ecfg_wait;
 
    //From timeout circuit
    input 	   timeout;
@@ -71,6 +71,7 @@ module erx_disty (/*AUTOARG*/
    wire [31:0]     erx_srcaddr;
    wire [31:0]     erx_data;
    wire 	   erx_read;
+   wire            erx_rr_access;
    
    //####################################
    //Splicing pakets
@@ -100,28 +101,28 @@ module erx_disty (/*AUTOARG*/
 		     .packet_in		(emmu_packet[PW-1:0])
 		     );
 
- 
-   //####################################
-   //TODO: Insert register read packet in RR
-   //####################################
-   
    //####################################
    //Read response path (direct)
    //####################################
 
-   assign rxrr_fifo_access         = timeout |
-				     (erx_access & 
-				     erx_write & 
-				     (erx_dstaddr[31:20] == ID) & 
-				     (erx_dstaddr[19:16]==4'hF) &
-				     (erx_dstaddr[RFAW+1:2]==`ERX_RR)
-				      );
+   assign erx_rr_access         = (erx_access & 
+				   erx_write & 
+				  (erx_dstaddr[31:20] == ID) & 
+				   (erx_dstaddr[19:16] == 4'hE)
+				  );
    
-   assign rxrr_fifo_packet[PW-1:0] = timeout ? {32'h0,32'hDEADBEEF,
-				  	        ID,4'hF,16'h0000,
-                                                8'h03} : 
-   				                erx_packet[PW-1:0];
-      
+   assign rxrr_fifo_access = erx_rr_access |
+		   	     timeout       |
+			     ecfg_access;
+   
+   assign rxrr_fifo_packet[PW-1:0] = timeout       ?  {32'h0,32'hDEADBEEF,
+				  	               ID,4'hF,16'h0000,
+                                                       8'h03} :
+			   	     erx_rr_access ?  erx_packet[PW-1:0] :
+			 	                      ecfg_packet[PW-1:0];
+
+   assign ecfg_wait = erx_rr_access | timeout;
+
    //####################################
    //Write Path (direct)
    //####################################
