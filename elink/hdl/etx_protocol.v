@@ -82,9 +82,6 @@ module etx_protocol (/*AUTOARG*/
    //Access always on in test mode (assumes no other traffic)
    assign etx_access_mux = testmode | etx_access;
    
-   //Transmit packet enable
-   assign etx_enable =  testmode | tx_enable;
-
    //packet to emesh bundle
    packet2emesh p2m (
 		     // Outputs
@@ -98,6 +95,9 @@ module etx_protocol (/*AUTOARG*/
 		     // Inputs
 		     .packet_in		(etx_packet_mux[PW-1:0])
 		     );
+
+   //Transmit packet enable
+   assign etx_enable =  (testmode | tx_enable) & ~(etx_dstaddr[31:20]==ID) ;
   
    // TODO: Bursts
    always @( posedge clk or posedge reset ) 
