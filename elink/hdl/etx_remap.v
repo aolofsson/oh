@@ -3,7 +3,7 @@ module etx_remap (/*AUTOARG*/
    emesh_access_out, emesh_packet_out,
    // Inputs
    clk, reset, emesh_access_in, emesh_packet_in, remap_en,
-   remap_bypass, emesh_wait_in
+   remap_bypass, etx_rd_wait, etx_wr_wait
    );
 
    parameter AW = 32;
@@ -24,17 +24,23 @@ module etx_remap (/*AUTOARG*/
    //Output to TX IO   
    output 	   emesh_access_out;
    output [PW-1:0] emesh_packet_out;
-   input 	   emesh_wait_in;
+
+   //Wait signals from protocol block
+   input 	   etx_rd_wait;
+   input 	   etx_wr_wait;
 
    wire [31:0] 	   addr_in;
    wire [31:0] 	   addr_remap;
    wire [31:0] 	   addr_out;
-
+   wire 	   write_in;
+   
    reg 		   emesh_access_out;
    reg [PW-1:0]    emesh_packet_out;
+
    
    assign addr_in[31:0]   =  emesh_packet_in[39:8];
-
+   assign write_in        =  emesh_packet_in[1];
+      
    assign addr_remap[31:0] = {addr_in[29:18],//ID
 			      addr_in[17:16],//SPECIAL GROUP
                              {(2){(|addr_in[17:16])}},//ZERO IF NOT SPECIAL
@@ -44,8 +50,10 @@ module etx_remap (/*AUTOARG*/
    assign addr_out[31:0] = (remap_en & ~remap_bypass) ? addr_remap[31:0] :
                 	                                addr_in[31:0];
         		
+
+   //stall read/write access appropriately
    always @ (posedge clk)     
-     if(~emesh_wait_in)//pipeline stall
+     if((write_in & ~etx_wr_wait) | (~write_in & ~etx_rd_wait))
        begin
 	  emesh_access_out         <= emesh_access_in;
 	  emesh_packet_out[PW-1:0] <= {emesh_packet_in[PW-1:40],
