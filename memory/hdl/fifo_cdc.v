@@ -6,14 +6,14 @@
 
 module fifo_cdc (/*AUTOARG*/
    // Outputs
-   wait_in, access_out, packet_out,
+   wait_out, access_out, packet_out,
    // Inputs
-   clk_in, clk_out, reset, access_in, packet_in, wait_out
+   clk_in, clk_out, reset, access_in, packet_in, wait_in
    );
 
    parameter FD     = 16;         //minimum depth
    parameter AW     = $clog2(FD);   
-   parameter PW     = 104;
+   parameter DW     = 104;
 
    /********************************/
    /*Clocks/reset                  */
@@ -26,40 +26,47 @@ module fifo_cdc (/*AUTOARG*/
    /*Input Packet*/
    /********************************/  
    input 	    access_in;   
-   input [PW-1:0]   packet_in;   
-   output 	    wait_in;   
+   input [DW-1:0]   packet_in;   
+   output 	    wait_out;   
 
    /********************************/
    /*Register RD/WR Packet to ERX*/
    /********************************/  
    output    	    access_out;   
-   output [PW-1:0]  packet_out;   
-   input 	    wait_out;   
+   output [DW-1:0]  packet_out;   
+   input 	    wait_in;   
 
-
-   wire 	    we_en;
+   //Local wires
+   wire 	    wr_en;
+   wire 	    rd_en;   
    wire 	    empty;
    wire 	    full;
+   reg 		    access_out;
    
    
-   assign wr_en   = access_in & ~full;
-   assign rd_en   = ~empty & ~wait_out;
-   assign wait_in =  full;
+   assign wr_en    = access_in & ~full;
+   assign rd_en    = ~empty & ~wait_in;
+   assign wait_out =  full;
+
+   //Keep access high until "acknowledge"
+   always @ (posedge clk_out)
+     if(~wait_in)
+       access_out <=rd_en;
    
    //Read response fifo (from master)
-   fifo_async  #(.DW(PW), .AW(5)) txrr_fifo(
+   fifo_async  #(.DW(DW), .AW(5)) txrr_fifo(
 					     .prog_full		(),
 					     .full		(full),
 					     // Outputs
-					     .dout		(packet_out[PW-1:0]),
+					     .dout		(packet_out[DW-1:0]),
 					     .empty		(empty),
-					     .valid		(access_out),
+					     .valid		(), 
 					     // Inputs
 					     .reset		(reset),
 					     .wr_clk		(clk_in),
 					     .rd_clk		(clk_out),
 					     .wr_en		(wr_en),
-					     .din		(packet_in[PW-1:0]),
+					     .din		(packet_in[DW-1:0]),
 					     .rd_en		(rd_en)
 					    );
       
