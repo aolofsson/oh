@@ -6,9 +6,9 @@
 
 module ecfg_clocks (/*AUTOARG*/
    // Outputs
-   txwr_wait, soft_reset, ecfg_clk_settings,
+   soft_reset, ecfg_clk_settings,
    // Inputs
-   txwr_access, txwr_packet, clk, hard_reset
+   txwr_access, txwr_packet, txwr_access_out, clk, hard_reset
    );
 
    
@@ -21,7 +21,11 @@ module ecfg_clocks (/*AUTOARG*/
    /******************************/
    input 	  txwr_access;
    input [PW-1:0] txwr_packet;
-   output 	  txwr_wait;
+
+   /******************************/
+   /*FILTERED WRITE FOR TX FIFO  */
+   /******************************/
+   output 	  txwr_access_out;
 
    /******************************/
    /*Clock/reset                 */
@@ -86,7 +90,11 @@ module ecfg_clocks (/*AUTOARG*/
    //Config write enables
    assign ecfg_reset_write    = ecfg_write & (mi_addr[RFAW+1:2]==`E_RESET);
    assign ecfg_clk_write      = ecfg_write & (mi_addr[RFAW+1:2]==`E_CLK);
-  
+
+   /*****************************/
+   /*FILTER ACCESS              */
+   /*****************************/
+   assign 	txwr_access_out =  txwr_access & ~(ecfg_reset_write | ecfg_clk_write );
    
    //###########################
    //# RESET
