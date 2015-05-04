@@ -67,7 +67,7 @@ module fifo_async
 					   .wr_addr	(wr_addr[AW-1:0]),
 					   .wr_data	(din[DW-1:0]),
 					   .rd_clk	(rd_clk),
-					   .rd_en	(1'b1),
+					   .rd_en	(rd_en),
 					   .rd_addr	(rd_addr[AW-1:0]));
 
    //Read State Machine
