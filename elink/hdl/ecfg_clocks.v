@@ -104,7 +104,7 @@ module ecfg_clocks (/*AUTOARG*/
    //###########################
     always @ (posedge clk or posedge hard_reset)
      if(hard_reset)
-       ecfg_clk_reg[15:0] <= 'd0;   
+       ecfg_clk_reg[15:0] <= 16'h573;//all clocks on at lowest speed   
      else if (ecfg_clk_write)
        ecfg_clk_reg[15:0] <= mi_din[15:0];
 
