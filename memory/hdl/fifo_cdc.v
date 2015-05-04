@@ -49,8 +49,10 @@ module fifo_cdc (/*AUTOARG*/
    assign wait_out =  full;
 
    //Keep access high until "acknowledge"
-   always @ (posedge clk_out)
-     if(~wait_in)
+   always @ (posedge clk_out or posedge reset)
+     if(reset)
+       access_out <=1'b0;   
+     else if(~wait_in)
        access_out <=rd_en;
    
    //Read response fifo (from master)
