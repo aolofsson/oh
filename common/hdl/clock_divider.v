@@ -50,7 +50,7 @@ module clock_divider(/*AUTOARG*/
    
    //Divide by two special case
    assign div2_sel = divcfg[3:0]==4'b0001;
-   assign div1_sel = divcfg[3:0]==4'b0000;
+   assign div1_sel = (divcfg[3:0]==4'b0000) | reset;
    
    
    //Edge change detector (no need for synchronizer)
