@@ -43,7 +43,7 @@ module memory_dp(/*AUTOARG*/
    always @ (posedge rd_clk)
      if(rd_en)       
        rd_data[DW-1:0] <= ram[rd_addr[AW-1:0]];
-
+   
    //write port
    generate
       genvar 	     i;

@@ -54,7 +54,7 @@ module fifo_cdc (/*AUTOARG*/
        access_out <=rd_en;
    
    //Read response fifo (from master)
-   fifo_async  #(.DW(DW), .AW(5)) txrr_fifo(
+   fifo_async  #(.DW(DW), .AW(5)) fifo(
 					     .prog_full		(),
 					     .full		(full),
 					     // Outputs
