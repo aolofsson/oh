@@ -23,15 +23,16 @@ module emailbox (/*AUTOARG*/
    // Outputs
    mi_dout, mailbox_full, mailbox_not_empty,
    // Inputs
-   reset, wr_clk, rd_clk, mi_en, mi_we, mi_addr, mi_din
+   reset, wr_clk, rd_clk, emesh_access, emesh_packet, mi_en, mi_we,
+   mi_addr, mi_din
    );
 
    parameter DW     = 32;      //data width of fifo
    parameter AW     = 32;      //data width of fifo
    parameter PW     = 104;     //packet size
-   parameter RFAW   = 5;       //address bus width
+   parameter RFAW   = 6;       //address bus width
    parameter GROUP  = 4'h0;    //address map group
-   parameter ID     = 12'h800; //link id
+   parameter ID     = 12'h000; //link id
 
    /*****************************/
    /*RESET                      */
@@ -39,15 +40,22 @@ module emailbox (/*AUTOARG*/
    input           reset;       //asynchronous reset
    input 	   wr_clk;      //write clock
    input 	   rd_clk;      //read clock
+
+
+   /*****************************/
+   /*WRITE INTERFACE            */
+   /*****************************/
+   input 	   emesh_access;
+   input [PW-1:0]  emesh_packet;
+   
    /*****************************/
    /*READ INTERFACE             */
-   /*****************************/
-   
-   input 	   mi_en;
-   input  	   mi_we;      
-   input [19:0]    mi_addr;
-   input [63:0]    mi_din;  //assumes write interface is 64 bits
-   output [31:0]   mi_dout;   
+   /*****************************/   
+   input 	    mi_en;
+   input  	    mi_we;      
+   input [RFAW+1:0] mi_addr;
+   input [63:0]     mi_din;  //assumes write interface is 64 bits
+   output [63:0]    mi_dout;   
    
    /*****************************/
    /*MAILBOX OUTPUTS            */
@@ -58,42 +66,56 @@ module emailbox (/*AUTOARG*/
    /*****************************/
    /*REGISTERS                  */
    /*****************************/
-   reg [DW-1:0]    mi_dout;
+   reg [63:0]     mi_dout;
 
    /*****************************/
    /*WIRES                      */
    /*****************************/
    wire 	   mailbox_read;
-   wire 	   mailbox_pop_fifo;
+   wire 	   mi_rd;
    wire [2*DW-1:0] mailbox_fifo_data;
-   wire 	   mailbox_empty;
-   wire 	   mailbox_write;
+   wire 	   mailbox_empty; 
+   wire 	   mailbox_pop;
+   wire [31:0] 	   emesh_addr;
+   wire [63:0] 	   emesh_din;
+   wire 	   emesh__write;
    
    /*****************************/
-   /*WRITE PORT                */
-   /*****************************/
-   assign mailbox_write  = mi_en & mi_we & (mi_addr[RFAW+1:2]==`E_MAILBOXLO);
+   /*WRITE TO FIFO              */
+   /*****************************/  
+
+   assign emesh_addr[31:0]  = emesh_packet[39:8];
+
+   assign emesh_din[63:0]   = emesh_packet[103:40];
+  
+   assign emesh_write       = emesh_access &
+			      emesh_packet[1] &
+			      (emesh_addr[31:20]==ID) & 
+			      (emesh_addr[10:8]==3'h3) & 
+                              (emesh_addr[RFAW+1:2]==`E_MAILBOXLO); 
    
    /*****************************/
    /*READ BACK DATA             */
    /*****************************/  
 
-   assign mailbox_pop_fifo     = mi_en & 
-				 ~mi_we &
-				 mailbox_not_empty &
-				 mailbox_read & (mi_addr[RFAW+1:2]==`E_MAILBOXHI); //fifo read
+   assign mi_rd =  mi_en & ~mi_we;
+   
+   assign mailbox_pop  = mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI); //fifo read
 
    always @ (posedge rd_clk)
-     if(mailbox_read)
+     if(mi_rd)
        case(mi_addr[RFAW+1:2])	 
-	 `E_MAILBOXLO:   mi_dout[DW-1:0] <= mailbox_fifo_data[DW-1:0];	 
-	 `E_MAILBOXHI:   mi_dout[DW-1:0] <= mailbox_fifo_data[2*DW-1:DW];	 
-	 default:    mi_dout[DW-1:0] <= 32'd0;
+	 `E_MAILBOXLO:   mi_dout[63:0] <= mailbox_fifo_data[63:0];	 
+	 `E_MAILBOXHI:   mi_dout[63:0] <= {mailbox_fifo_data[2*DW-1:DW],mailbox_fifo_data[2*DW-1:DW]};	 
+	 default:        mi_dout[63:0] <= 64'd0;
        endcase // case (mi_addr[RFAW-1:2])
-   
+     else
+       mi_dout[63:0] <= 64'd0;
+
    /*****************************/
-   /*FIFO (64-BIT)              */
+   /*FIFO (64bit wide)          */
    /*****************************/
+
    assign mailbox_not_empty         = ~mailbox_empty;
 
    //BUG! This fifo is currently hard coded to 32 entries
@@ -104,11 +126,11 @@ module emailbox (/*AUTOARG*/
 			     .full      (mailbox_full),
      			     .prog_full (),
 			     //Read Port
-			     .rd_en    (mailbox_pop_fifo), 
+			     .rd_en    (mailbox_pop), 
 			     .rd_clk   (rd_clk),  
 			     //Write Port 
-			     .din      (mi_din[63:0]),
-			     .wr_en    (mailbox_write),
+			     .din      (emesh_din[63:0]),
+			     .wr_en    (emesh_write),
 			     .wr_clk   (wr_clk),  			     
 			     .reset    (reset)      
 			     ); 
