@@ -9,8 +9,9 @@
 //[1:0]   = IGNORED (no byte access)
 
 //Link register groups addr[19:16]
-`define EGROUP_MMR     4'hF //reserved for registers
+`define EGROUP_MMR     4'hF // reserved for registers
 `define EGROUP_MMU     4'hE // RX & TX MMU
+`define EGROUP_RR      4'hD // read response block
 
 //ETX-REGS
 `define E_RESET        6'd0 //F0200-reset
