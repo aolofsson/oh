@@ -69,7 +69,8 @@ module erx (/*AUTOARG*/
    wire [PW-1:0]	emmu_packet;		// From erx_mmu of emmu.v
    wire			erx_access;		// From erx_protocol of erx_protocol.v
    wire [PW-1:0]	erx_packet;		// From erx_protocol of erx_protocol.v
-   wire			erx_wait;		// From erx_disty of erx_disty.v
+   wire			erx_rd_wait;		// From erx_disty of erx_disty.v
+   wire			erx_wr_wait;		// From erx_disty of erx_disty.v
    wire [8:0]		gpio_datain;		// From erx_io of erx_io.v
    wire [14:0]		mi_addr;		// From erx_cfgif of ecfg_if.v
    wire [DW-1:0]	mi_cfg_dout;		// From erx_cfg of ecfg_rx.v
@@ -90,8 +91,6 @@ module erx (/*AUTOARG*/
    wire [63:0]		rx_data_par;		// From erx_io of erx_io.v
    wire			rx_enable;		// From erx_cfg of ecfg_rx.v
    wire [7:0]		rx_frame_par;		// From erx_io of erx_io.v
-   wire			rx_rd_wait;		// From erx_disty of erx_disty.v
-   wire			rx_wr_wait;		// From erx_disty of erx_disty.v
    wire			rxrd_fifo_access;	// From erx_disty of erx_disty.v
    wire [PW-1:0]	rxrd_fifo_packet;	// From erx_disty of erx_disty.v
    wire			rxrd_fifo_wait;		// From rxrd_fifo of fifo_async.v
@@ -135,8 +134,8 @@ module erx (/*AUTOARG*/
 		  .rxi_frame_n		(rxi_frame_n),
 		  .rxi_data_p		(rxi_data_p[7:0]),
 		  .rxi_data_n		(rxi_data_n[7:0]),
-		  .rx_wr_wait		(rx_wr_wait),
-		  .rx_rd_wait		(rx_rd_wait));
+		  .erx_wr_wait		(erx_wr_wait),
+		  .erx_rd_wait		(erx_rd_wait));
 
    /**************************************************************/
    /*ELINK PROTOCOL LOGIC                                        */
@@ -190,7 +189,8 @@ module erx (/*AUTOARG*/
 			.remap_pattern	(remap_pattern[11:0]),
 			.remap_base	(remap_base[31:0]),
 			.remap_bypass	(remap_bypass),
-			.emesh_wait_in	(erx_wait));		 // Templated
+			.erx_rd_wait	(erx_rd_wait),
+			.erx_wr_wait	(erx_wr_wait));
    
  
    
@@ -207,8 +207,9 @@ module erx (/*AUTOARG*/
                         .mi_dout   	        (mi_mmu_dout[DW-1:0]),
                         .emesh_packet_hi_out	(),
                         .mmu_bp	    	        (remap_bypass),
-                        .emesh_wait_in		(erx_wait),
-                        .mi_en	                (mi_mmu_en),	 
+                        .mi_en	                (mi_mmu_en),
+                        .emesh_rd_wait		(erx_rd_wait),
+		        .emesh_wr_wait		(erx_wr_wait),	 
                            );
    */
 
@@ -231,7 +232,8 @@ module erx (/*AUTOARG*/
 		 .mi_din		(mi_din[DW-1:0]),
 		 .emesh_access_in	(emesh_remap_access),	 // Templated
 		 .emesh_packet_in	(emesh_remap_packet[PW-1:0]), // Templated
-		 .emesh_wait_in		(erx_wait));		 // Templated
+		 .emesh_rd_wait		(erx_rd_wait),		 // Templated
+		 .emesh_wr_wait		(erx_wr_wait));		 // Templated
    
 
    /************************************************************/
@@ -313,8 +315,8 @@ module erx (/*AUTOARG*/
         */   
    
    assign rx_status[15:0] = {2'b0,                     //15:14
-			      rx_rd_wait,               //13
-			      rx_wr_wait,               //12
+			      erx_rd_wait,               //13
+			      erx_wr_wait,               //12
 			      rxrr_wait,                //11
 			      rxrr_fifo_wait,           //10
 			      rxrr_fifo_access,         //9			
@@ -402,9 +404,8 @@ module erx (/*AUTOARG*/
    erx_disty erx_disty (.timeout	(1'b0),//TODO
 			/*AUTOINST*/
 			// Outputs
-			.erx_wait	(erx_wait),
-			.rx_rd_wait	(rx_rd_wait),
-			.rx_wr_wait	(rx_wr_wait),
+			.erx_rd_wait	(erx_rd_wait),
+			.erx_wr_wait	(erx_wr_wait),
 			.edma_wait	(edma_wait),
 			.ecfg_wait	(erx_cfg_wait),		 // Templated
 			.rxwr_fifo_access(rxwr_fifo_access),

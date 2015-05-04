@@ -4,7 +4,7 @@ module erx_io (/*AUTOARG*/
    rx_lclk_div4, rx_frame_par, rx_data_par, gpio_datain,
    // Inputs
    reset, rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n,
-   rxi_data_p, rxi_data_n, rx_wr_wait, rx_rd_wait
+   rxi_data_p, rxi_data_n, erx_wr_wait, erx_rd_wait
    );
 
    parameter IOSTANDARD = "LVDS_25";
@@ -29,8 +29,8 @@ module erx_io (/*AUTOARG*/
    output        rx_lclk_div4;               // Parallel clock output (slow)
    output [7:0]  rx_frame_par;
    output [63:0] rx_data_par;
-   input         rx_wr_wait;
-   input         rx_rd_wait;
+   input         erx_wr_wait;
+   input         erx_rd_wait;
    
    //#############
    //# Direct sampling mode
@@ -87,9 +87,9 @@ module erx_io (/*AUTOARG*/
    clkout_bufr
      (.O (rx_lclk_div4),
       .CE(1'b1),
-      .CLR(reset),
+      .CLR(reset),//no reset
       .I (rx_lclk));
-
+  
    //#############################
    //# Deserializer instantiations
    //#############################   
@@ -242,7 +242,7 @@ module erx_io (/*AUTOARG*/
        (
         .O(rxo_wr_wait_p),
         .OB(rxo_wr_wait_n),
-        .I(rx_wr_wait)
+        .I(erx_wr_wait)
         );
    
    OBUFDS 
@@ -253,7 +253,7 @@ module erx_io (/*AUTOARG*/
        (
         .O(rxo_rd_wait_p),
         .OB(rxo_rd_wait_n),
-        .I(rx_rd_wait)
+        .I(erx_rd_wait)
         );
 
    //#############

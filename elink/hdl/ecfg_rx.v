@@ -78,7 +78,7 @@ module ecfg_rx (/*AUTOARG*/
    //###########################
    //# RXCFG
    //###########################
-   always @ (posedge clk)
+   always @ (posedge clk or posedge reset)
      if(reset)
        ecfg_rx_reg[31:0] <= 'b0;
      else if (ecfg_rx_write)
@@ -100,20 +100,18 @@ module ecfg_rx (/*AUTOARG*/
    //###########################1
    //# DEBUG
    //###########################   
-   always @ (posedge clk)
+   always @ (posedge clk or posedge reset)
      if(reset)
-       ecfg_rx_status_reg[2:0] <= 'd0;
+       ecfg_rx_status_reg[2:0] <= 'b0;   
      else
-       ecfg_rx_status_reg[2:0]  <=ecfg_rx_status_reg[2:0] | rx_status[2:0];
+       ecfg_rx_status_reg[2:0] <= ecfg_rx_status_reg[2:0] | rx_status[2:0];
 
    //###########################1
    //# DYNAMIC REMAP BASE
    //###########################
-   always @ (posedge clk)
-     if(reset)
-       ecfg_offset_reg[31:0] <='d0;
-     else if (ecfg_base_write)
-       ecfg_offset_reg[31:0] <=mi_din[31:0];
+   always @ (posedge clk)   
+     if (ecfg_base_write)
+       ecfg_offset_reg[31:0] <= mi_din[31:0];
 
    assign remap_base[31:0] = ecfg_offset_reg[31:0];
    

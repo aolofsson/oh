@@ -93,7 +93,7 @@ module ecfg_tx (/*AUTOARG*/
    //###########################
    //# TX CONFIG
    //###########################
-   always @ (posedge clk)
+   always @ (posedge clk or posedge reset)
      if(reset)
        ecfg_tx_config_reg[10:0] <= 11'b0;
      else if (ecfg_tx_config_write)
@@ -110,13 +110,11 @@ module ecfg_tx (/*AUTOARG*/
    //###########################
    //# STATUS REGISTER
    //###########################   
-   always @ (posedge clk)
+   always @ (posedge clk or posedge reset)
      if(reset)
        ecfg_tx_status_reg[2:0] <= 'd0;
      else
-       begin
-	  ecfg_tx_status_reg[2:0]<= ecfg_tx_status_reg[2:0] | tx_status[2:0];
-       end
+       ecfg_tx_status_reg[2:0]<= ecfg_tx_status_reg[2:0] | tx_status[2:0];
 
    //###########################
    //# GPIO DATA

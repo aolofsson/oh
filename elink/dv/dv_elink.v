@@ -169,7 +169,7 @@ module dv_elink(/*AUTOARG*/
 
  /*elink AUTO_TEMPLATE (.reset		    (reset),
                         // Outputs                        
-                        .clkbypass          ({clkin,clkin,clkin}),
+                        .pll_bypass         ({clkin,clkin,clkin,clkin}),
                         .clkin		    (clkin),
                         .sys_clk            (clk[1]),
                         .\(.*\)             (@"(substring vl-cell-name  0 6)"_\1[]),
@@ -222,7 +222,7 @@ module dv_elink(/*AUTOARG*/
 		 .reset			(reset),		 // Templated
 		 .clkin			(clkin),		 // Templated
 		 .sys_clk		(clk[1]),		 // Templated
-		 .clkbypass		({clkin,clkin,clkin}),	 // Templated
+		 .pll_bypass		({clkin,clkin,clkin,clkin}), // Templated
 		 .rxwr_wait		(elink0_rxwr_wait),	 // Templated
 		 .rxrd_wait		(elink0_rxrd_wait),	 // Templated
 		 .rxrr_wait		(elink0_rxrr_wait),	 // Templated
@@ -243,7 +243,8 @@ module dv_elink(/*AUTOARG*/
    assign elink1_rxrr_wait   = 1'b0;
    
    defparam elink1.ID = 12'h820;   
-   elink elink1 (.rxi_lclk_p		(elink0_txo_lclk_p),
+   elink elink1 (.testmode		(1'b0),//tie to 1 to enable
+		 .rxi_lclk_p		(elink0_txo_lclk_p),
 		 .rxi_lclk_n		(elink0_txo_lclk_n),
 		 .rxi_frame_p		(elink0_txo_frame_p),
 		 .rxi_frame_n		(elink0_txo_frame_n),
@@ -287,8 +288,7 @@ module dv_elink(/*AUTOARG*/
 		 .reset			(reset),		 // Templated
 		 .clkin			(clkin),		 // Templated
 		 .sys_clk		(clk[1]),		 // Templated
-		 .clkbypass		({clkin,clkin,clkin}),	 // Templated
-		 .testmode		(elink1_testmode),	 // Templated
+		 .pll_bypass		({clkin,clkin,clkin,clkin}), // Templated
 		 .rxwr_wait		(elink1_rxwr_wait),	 // Templated
 		 .rxrd_wait		(elink1_rxrd_wait),	 // Templated
 		 .rxrr_wait		(elink1_rxrr_wait),	 // Templated
@@ -300,6 +300,23 @@ module dv_elink(/*AUTOARG*/
 		 .txrr_packet		(elink1_txrr_packet[PW-1:0])); // Templated
    
 
+   wire elink2_access;
+   wire [PW-1:0] elink2_packet;
+   
+   fifo_cdc #(.DW(104), .AW(7)) model_fifo(
+					   // Outputs
+					   .wait_out		(),
+					   .access_out		(elink2_access),
+					   .packet_out		(elink2_packet[PW-1:0]),
+					   // Inputs
+					   .clk_in		(clk[1]),
+					   .clk_out		(clk[1]),
+					   .reset		(reset),
+					   .access_in		(ext_access),
+					   .packet_in		(ext_packet[PW-1:0]),
+					   .wait_in		(elink2_wait_out)
+					   );
+   
    elink_e16 elink2 (
 		     // Outputs
 		     .rxi_rd_wait	(),
@@ -327,13 +344,13 @@ module dv_elink(/*AUTOARG*/
 		     .rxi_frame		(elink0_txo_frame_p),
 		     .txo_rd_wait	(1'b0),
 		     .txo_wr_wait	(1'b0),
-		     .c0_mesh_access_in	(ext_access),
-		     .c0_mesh_write_in	(ext_packet[1]),
-		     .c0_mesh_dstaddr_in(ext_packet[39:8]),
-		     .c0_mesh_srcaddr_in(ext_packet[103:72]),
-		     .c0_mesh_data_in	(ext_packet[71:40]),
-		     .c0_mesh_datamode_in(ext_packet[3:2]),
-		     .c0_mesh_ctrlmode_in(ext_packet[7:4])		     
+		     .c0_mesh_access_in	(elink2_access),
+		     .c0_mesh_write_in	(elink2_packet[1]),
+		     .c0_mesh_dstaddr_in(elink2_packet[39:8]),
+		     .c0_mesh_srcaddr_in(elink2_packet[103:72]),
+		     .c0_mesh_data_in	(elink2_packet[71:40]),
+		     .c0_mesh_datamode_in(elink2_packet[3:2]),
+		     .c0_mesh_ctrlmode_in(elink2_packet[7:4])		     
 		     );
    
    
@@ -357,8 +374,8 @@ module dv_elink(/*AUTOARG*/
                          );
    */
 
-   ememory emem (.wait_in	(1'b0),       //only one read at a time, set to zero for no1
-		 .clk		(clk[1]),
+   ememory emem (.wait_in	        (1'b0),       //only one read at a time, set to zero for no1
+		 .clk		        (clk[1]),
 		 .wait_out		(emem_wait),
 		 /*AUTOINST*/
 		 // Outputs

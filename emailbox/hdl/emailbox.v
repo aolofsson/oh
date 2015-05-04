@@ -1,21 +1,21 @@
 /*
  ###########################################################################
  # Function: A mailbox FIFO with a FIFO empty/full flags that can be used as   
- #           interrupts. Status of the FIFO can be polled.
+ #           interrupts.
  #
  #           E_MAILBOXLO    = lower 32 bits of FIFO entry
  #           E_MAILBOXHI    = upper 32 bits of FIFO entry
  #
- # Notes:    System takes care of not overflowing the FIFO
- #           Reading the E_MAILBOXHI causes rd pointer to update to next entry
- #           E_MAILBOXLO/E_MAILBOXHI must be consecutive addresses for write.
- #           The "embox_not_empty" will stay high as long as there are messages
+ # Notes:    1.) System should take care of not overflowing the FIFO
+ #           2.) Reading the E_MAILBOXHI causes a fifo rd pointer update
+ #           3.) The "embox_not_empty" is a "level" interrupt signal.
  #
  # How to use: 1.) Connect "embox_not_empty" to interrupt input line
- #             2.) Write an ISR to respond to interrupt line that:
+ #             2.) Write an ISR to respond to interrupt line::
  #                 -reads E_MAILBOXLO, then
  #                 -reads E_MAILBOXHI, then
  #                 -finishes ISR
+ #
  ###########################################################################
  */
 
@@ -125,6 +125,7 @@ module emailbox (/*AUTOARG*/
 			     .empty     (mailbox_empty),
 			     .full      (mailbox_full),
      			     .prog_full (),
+			     .valid(),
 			     //Read Port
 			     .rd_en    (mailbox_pop), 
 			     .rd_clk   (rd_clk),  

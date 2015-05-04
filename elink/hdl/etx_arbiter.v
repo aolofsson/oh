@@ -22,7 +22,7 @@ module etx_arbiter (/*AUTOARG*/
    // Inputs
    clk, reset, txwr_fifo_access, txwr_fifo_packet, txrd_fifo_access,
    txrd_fifo_packet, txrr_fifo_access, txrr_fifo_packet, edma_access,
-   edma_packet, etx_rd_wait, etx_wr_wait, etx_io_wait, etx_cfg_wait,
+   edma_packet, etx_rd_wait, etx_wr_wait, etx_cfg_wait,
    ctrlmode_bypass, ctrlmode
    );
 
@@ -56,7 +56,6 @@ module etx_arbiter (/*AUTOARG*/
    //Wait signal inputs
    input           etx_rd_wait;
    input           etx_wr_wait;
-   input 	   etx_io_wait;   
    input 	   etx_cfg_wait;
    
    //ctrlmode for rd/wr transactions
@@ -89,7 +88,8 @@ module etx_arbiter (/*AUTOARG*/
    wire [PW-1:0]   txrd_data;
    wire [PW-1:0]   txwr_data;
    wire [PW-1:0]   etx_mux;
-   
+   wire            write_in;
+
    //##########################################################################
    //# Insert special control mode
    //##########################################################################
@@ -141,43 +141,41 @@ module etx_arbiter (/*AUTOARG*/
    
    //Write waits on pin wr wait or cfg_wait
    assign txwr_fifo_wait = etx_wr_wait | 
-		           etx_io_wait | etx_cfg_wait;
+		           etx_cfg_wait;
    
    //Host read request (self throttling, one read at a time)
    assign txrd_fifo_wait = etx_rd_wait | 
-		           etx_io_wait | etx_cfg_wait | 
+		           etx_cfg_wait | 
 		           txrd_arb_wait;
    //Read response
    assign txrr_fifo_wait = etx_wr_wait | 
-		           etx_io_wait | etx_cfg_wait | 
+		           etx_cfg_wait | 
 		           txrr_arb_wait;
 
    //DMA (conservative)
    assign edma_wait = etx_wr_wait | etx_rd_wait  | 
-		      etx_io_wait | etx_cfg_wait | 
+		      etx_cfg_wait | 
 		      edma_arb_wait;
 
-   //##########################################################################
+   //#####################################################################
    //# Pipeline stage (arbiter+mux takes time..)
-   //##########################################################################
+   //#####################################################################
    assign access_in = (txwr_grant & ~txwr_fifo_wait) |
 		      (txrd_grant & ~txrd_fifo_wait) |
 		      (txrr_grant & ~txrr_fifo_wait) |
 		      (edma_grant & ~edma_wait);
 
-   //access
-   always @ (posedge clk)
-     etx_access <= access_in;
+   //Pipeline + stall
+   assign write_in = etx_mux[1];
 
-   //packet
    always @ (posedge clk)
-     etx_packet[PW-1:0] <= etx_mux[PW-1:0];
-
-   //read request signal for remap/mmu
-   //(otherwise we can't differentiate betwen wr and rr
-   always @ (posedge clk)
-     etx_rr <= txrr_grant;
-                                
+     if ((write_in & ~etx_wr_wait) | (~write_in & ~etx_rd_wait))
+       begin
+	  etx_access         <= access_in;
+	  etx_packet[PW-1:0] <= etx_mux[PW-1:0];
+	  etx_rr             <= txrr_grant;
+       end
+   
 endmodule // etx_arbiter
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")

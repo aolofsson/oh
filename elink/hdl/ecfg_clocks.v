@@ -6,9 +6,9 @@
 
 module ecfg_clocks (/*AUTOARG*/
    // Outputs
-   soft_reset, ecfg_clk_settings,
+   txwr_access_out, soft_reset, clk_config,
    // Inputs
-   txwr_access, txwr_packet, txwr_access_out, clk, hard_reset
+   txwr_access, txwr_packet, clk, hard_reset
    );
 
    
@@ -37,7 +37,7 @@ module ecfg_clocks (/*AUTOARG*/
    /*Outputs                     */
    /******************************/
    output 	 soft_reset;       // soft reset output driven by register
-   output [15:0] ecfg_clk_settings;    // clock settings (for pll)
+   output [15:0] clk_config;       // clock settings (for pll)
    
    /*------------------------CODE BODY---------------------------------------*/
    
@@ -116,7 +116,7 @@ module ecfg_clocks (/*AUTOARG*/
      else if (ecfg_clk_write)
        ecfg_clk_reg[15:0] <= mi_din[15:0];
 
-   assign ecfg_clk_settings[15:0] = ecfg_clk_reg[15:0];
+   assign clk_config[15:0] = ecfg_clk_reg[15:0];
     
 endmodule // ecfg_base
 // Local Variables:

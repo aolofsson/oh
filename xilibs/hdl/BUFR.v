@@ -34,7 +34,6 @@ module BUFR (/*AUTOARG*/
    input CLR; //async clear for divider logic
    output O;  //clock output
 
-  
    //assign O=I & CE & ~CLR;
 
    //TODO: need to paraemtrize this!!!   

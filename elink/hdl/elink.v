@@ -7,11 +7,11 @@ module elink(/*AUTOARG*/
    rxrr_access, rxrr_packet, txwr_wait, txrd_wait, txrr_wait,
    mailbox_not_empty, mailbox_full, timeout,
    // Inputs
-   reset, clkin, sys_clk, clkbypass, testmode, rxi_lclk_p, rxi_lclk_n,
-   rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p,
-   txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n, rxwr_wait, rxrd_wait,
-   rxrr_wait, txwr_access, txwr_packet, txrd_access, txrd_packet,
-   txrr_access, txrr_packet
+   reset, clkin, sys_clk, pll_bypass, testmode, rxi_lclk_p,
+   rxi_lclk_n, rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n,
+   txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n,
+   rxwr_wait, rxrd_wait, rxrr_wait, txwr_access, txwr_packet,
+   txrd_access, txrd_packet, txrr_access, txrr_packet
    );
    
    parameter AW          = 32;
@@ -25,7 +25,7 @@ module elink(/*AUTOARG*/
    input        reset;               // active high asynchronous hardware reset
    input 	clkin;               // pll input clock
    input 	sys_clk;             // system clock for FIFOs only
-   input [2:0] 	clkbypass;           // bypass clocks for elinks w/o pll   
+   input [3:0] 	pll_bypass;          // pll bypass clocks for elink   
    input 	testmode;            // places elink in testmode
    output 	rx_lclk_div4;        // rx clock for synching with logic
    output 	tx_lclk_div4;        // tx clock for synching with logic
@@ -113,7 +113,7 @@ module elink(/*AUTOARG*/
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [15:0]		ecfg_clk_settings;	// From ecfg_clocks of ecfg_clocks.v
+   wire [15:0]		clk_config;		// From ecfg_clocks of ecfg_clocks.v
    wire			elink_reset;		// From ereset of ereset.v
    wire			erx_cfg_access;		// From ecfg_cdc of fifo_cdc.v
    wire [PW-1:0]	erx_cfg_packet;		// From ecfg_cdc of fifo_cdc.v
@@ -138,7 +138,7 @@ module elink(/*AUTOARG*/
 			    /*AUTOINST*/
 			    // Outputs
 			    .soft_reset		(soft_reset),
-			    .ecfg_clk_settings	(ecfg_clk_settings[15:0]),
+			    .clk_config		(clk_config[15:0]),
 			    // Inputs
 			    .txwr_access	(txwr_access),
 			    .txwr_packet	(txwr_packet[PW-1:0]));
@@ -167,8 +167,8 @@ module elink(/*AUTOARG*/
 		    .tx_lclk_div4	(tx_lclk_div4),
 		    // Inputs
 		    .clkin		(clkin),
-		    .ecfg_clk_settings	(ecfg_clk_settings[15:0]),
-		    .clkbypass		(clkbypass[2:0]));
+		    .clk_config		(clk_config[15:0]),
+		    .pll_bypass		(pll_bypass[3:0]));
    
    /***********************************************************/
    /*RECEIVER                                                 */

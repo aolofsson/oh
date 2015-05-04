@@ -61,7 +61,7 @@ module dv_elink_tb();
 	  reset    = 1'b1;    // reset is active
           go       = 1'b0;
 	  clk[1:0] = 2'b0;
-	#400 
+	#1000 
 
 `ifdef AUTO
           //clock config (fast /2)

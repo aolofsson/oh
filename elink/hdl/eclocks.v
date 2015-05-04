@@ -17,7 +17,7 @@ module eclocks (/*AUTOARG*/
    // Outputs
    cclk_p, cclk_n, tx_lclk, tx_lclk90, tx_lclk_div4,
    // Inputs
-   clkin, hard_reset, ecfg_clk_settings, clkbypass
+   clkin, hard_reset, clk_config, pll_bypass
    );
 
    // Parameters must be set as follows:
@@ -28,8 +28,12 @@ module eclocks (/*AUTOARG*/
    //Input clock, reset, config interface
    input        clkin;              // primary input clock 
    input        hard_reset;         //
-   input [15:0] ecfg_clk_settings;  // clock settings
-   input [2:0] 	clkbypass;          // for bypassing PLL
+   input [15:0] clk_config;         // clock settings
+   input [3:0] 	pll_bypass;         //[0]=cclk
+                                    //[1]=lclk
+                                    //[2]=lclk90
+                                    //[3]=lclk_div4
+   
  	
    
    //Output Clocks
@@ -41,12 +45,20 @@ module eclocks (/*AUTOARG*/
    // Wires
    wire 	cclk_en;
    wire 	lclk_en;
+   wire 	cclk_bp;
+   wire 	lclk_bp;   
    wire 	cclk;
+
+   wire 	lclk;
+   wire 	lclk90;
+   wire 	lclk_div4;
    
    //Register decoding
-   assign cclk_en=ecfg_clk_settings[0];
-   assign lclk_en=ecfg_clk_settings[1];
-
+   assign cclk_en=clk_config[0];
+   assign lclk_en=clk_config[1];
+   assign cclk_bp=clk_config[2];
+   assign lclk_bp=clk_config[3];
+   
 `ifdef TARGET_XILINX	
 
    //instantiate MMCM
@@ -60,35 +72,53 @@ module eclocks (/*AUTOARG*/
 			      // Inputs
 			      .clkin		(clkin), 
 			      .reset            (hard_reset),
-			      .divcfg		(ecfg_clk_settings[7:4])
-			      );
+			      .divcfg		(clk_config[7:4])
+			      )
+			      ;
    
    clock_divider lclk_divider(
 			      // Outputs
-			      .clkout		(tx_lclk),
-			      .clkout90		(tx_lclk90),
+			      .clkout		(lclk),
+			      .clkout90		(lclk90),
 			      // Inputs
 			      .clkin		(clkin),
 			      .reset            (hard_reset),
-			      .divcfg		(ecfg_clk_settings[11:8])
+			      .divcfg		(clk_config[11:8])
 			      );
    
    //This clock is always on!
    clock_divider lclk_par_divider(
 				  // Outputs
-				  .clkout	(tx_lclk_div4),
+				  .clkout	(lclk_div4),
 				  .clkout90	(),
 				  // Inputs
 				  .clkin	(clkin),
 				  .reset        (hard_reset),
-				  .divcfg	(ecfg_clk_settings[11:8] + 4'd2)
+				  .divcfg	(clk_config[11:8] + 4'd2)
 				  );
 
    
-   //Output buffer
-   //Keep clocks on at all times
-   assign cclk_p = cclk & cclk_en ;
+
+
+   //cclk (hack for sim)
+   assign cclk_p = hard_reset ? clkin :
+		   cclk_bp    ? pll_bypass[0] :			      
+			        cclk;
    assign cclk_n = ~cclk_p;
+
+   //lclk (hack for sim)
+   assign tx_lclk = hard_reset ? clkin :
+		    lclk_bp    ? pll_bypass[1] : 
+		                 lclk;
+   
+   assign tx_lclk90 = hard_reset ? clkin :
+		      lclk_bp    ? pll_bypass[2] : 
+		                   lclk90;
+
+   assign tx_lclk_div4 = hard_reset ? clkin :
+		         lclk_bp    ? pll_bypass[3] : 
+		                      lclk_div4;
+    
     
 `endif
           

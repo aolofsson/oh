@@ -133,13 +133,16 @@ module ecfg_if (/*AUTOARG*/
      
 
    //Access out packet  
-   assign access_forward = (mi_rx_en | mi_rd) & ~wait_in;
+   assign access_forward = (mi_rx_en | mi_rd);
 
-   always @ (posedge  clk)
-     access_out   <= access_forward;
+   always @ (posedge  clk or posedge reset)
+     if(reset)
+       access_out   <= 1'b0;
+     else if(~wait_in)
+       access_out   <= access_forward;
    
    always @ (posedge clk)
-     if(access_forward)
+     if(~wait_in)
        begin
 	  readback_reg      <= mi_rd;
 	  write_reg         <= (mi_rx_en & write) | mi_rd;	  
