@@ -265,7 +265,6 @@ module etx(/*AUTOARG*/
    
    defparam etx_cfgif.RX =0;   
    ecfg_if etx_cfgif (.mi_dout3		(64'b0),
-		      .wait_out		(),//TODO:connect
 		      /*AUTOINST*/
 		      // Outputs
 		      .mi_mmu_en	(mi_mmu_en),
