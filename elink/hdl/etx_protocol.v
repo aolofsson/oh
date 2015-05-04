@@ -1,7 +1,6 @@
 module etx_protocol (/*AUTOARG*/
    // Outputs
-   etx_rd_wait, etx_wr_wait, etx_wait, etx_io_wait, tx_frame_par,
-   tx_data_par,
+   etx_rd_wait, etx_wr_wait, tx_frame_par, tx_data_par,
    // Inputs
    reset, clk, testmode, etx_access, etx_packet, tx_enable, tp_enable,
    gpio_enable, gpio_data, chipid, tx_rd_wait, tx_wr_wait
@@ -26,8 +25,6 @@ module etx_protocol (/*AUTOARG*/
    //Pushback signals
    output         etx_rd_wait;
    output         etx_wr_wait;
-   output         etx_wait;     //for pipeline
-   output         etx_io_wait;  //for arbiter
 
    //Enble transmit
    input 	  tx_enable;  //transmit enable
@@ -45,11 +42,10 @@ module etx_protocol (/*AUTOARG*/
    //###################################################################
    //# Local regs & wires
    //###################################################################
-   reg           etx_sample;   //hold for second cycle
    reg [7:0]     tx_frame_par;
-   reg [127:0]   tx_data_reg;  //sample transaction on one clock cycle
-   reg 		 rd_wait_sync;
-   reg 		 wr_wait_sync;
+   reg [127:0] 	 tx_data_reg; 
+   wire		 tx_rd_wait_sync;
+   wire 	 tx_wr_wait_sync;
 
    wire 	 etx_write;
    wire [1:0] 	 etx_datamode;
@@ -59,6 +55,8 @@ module etx_protocol (/*AUTOARG*/
    wire [AW-1:0] etx_srcaddr;
    wire [PW-1:0] etx_packet_mux;
    reg [PW-1:0]  testpacket;
+   wire 	 etx_valid;
+   reg           etx_io_wait;
    
    //Testmode logic
    always @( posedge clk or posedge reset ) 
@@ -97,22 +95,32 @@ module etx_protocol (/*AUTOARG*/
 		     );
 
    //Transmit packet enable
-   assign etx_enable =  (testmode | tx_enable) & ~(etx_dstaddr[31:20]==ID) ;
-  
+   //Only set valid if not wait 
+   assign etx_valid =  testmode | 
+			(tx_enable & etx_access & ~(etx_dstaddr[31:20]==ID)) &
+			((etx_write & ~tx_wr_wait_sync) | 
+			 (~etx_write & ~tx_rd_wait_sync)
+			 );
+   
+   //One cycle hold for every transaction
+   always @( posedge clk or posedge reset )
+     if(reset)
+       etx_io_wait <= 1'b0;
+     else
+       etx_io_wait <= etx_valid & ~etx_io_wait;
+   
    // TODO: Bursts
    always @( posedge clk or posedge reset ) 
      begin
 	if(reset) 
 	  begin	     
-             etx_sample         <= 1'b1;
-             tx_frame_par[7:0]  <= 8'd0;
+             tx_frame_par[7:0] <= 8'd0;
              tx_data_reg[127:0] <= 'd0;	     
 	  end 
 	else 
 	  begin
-             if( etx_enable & etx_access & etx_sample ) //first cycle
+             if( etx_valid & ~etx_io_wait ) //first cycle
 	       begin
-		  etx_sample          <= 1'b0;
 		  tx_frame_par[7:0]   <= 8'h3F;
 		  tx_data_reg[127:0]  <= {etx_data[31:0], 
 					 etx_srcaddr[31:0],
@@ -124,31 +132,28 @@ module etx_protocol (/*AUTOARG*/
 					 etx_dstaddr[3:0], etx_datamode[1:0], etx_write, etx_access // B5
 				   };
                end 
-	     else if(etx_enable & ~etx_sample ) //second cycle (1)
+	     else if(etx_io_wait ) //second cycle (1), completes transaction
 	       begin
-		  etx_sample        <= 1'b1;
 		  tx_frame_par[7:0] <= 8'hFF;
                end 
 	     else 
 	       begin
-		  etx_sample          <= 1'b1;
-		  tx_frame_par[7:0]   <= 'd0;
-		  tx_data_reg[127:0]  <= 'd0;
+		  tx_frame_par[7:0]  <= 'd0;
+		  tx_data_reg[127:0] <= 'd0;
                end
 	  end // else: !if(reset)	
      end // always @ ( posedge txlclk_p or posedge reset )
 
-
-   //After first sample, etx_sample-->0 use as indicator to sample in data.
-   assign tx_data_par[63:0] = ~etx_sample ? tx_data_reg[63:0] : //first cycle
-                                            tx_data_reg[127:64];//all others, 0 or upper
-      
+   assign tx_data_par[63:0] = (tx_frame_par[0] & etx_io_wait)  ? tx_data_reg[63:0] :
+			      (tx_frame_par[0] & ~etx_io_wait) ? tx_data_reg[127:64] :
+			                                         64'b0;
+           
    //#############################
    //# Wait signals (async)
    //#############################
 
    synchronizer #(.DW(1)) rd_sync (// Outputs
-				   .out		(etx_rd_wait),
+				   .out		(tx_rd_wait_sync),
 				   // Inputs
 				   .in		(tx_rd_wait),
 				   .clk		(clk),
@@ -156,24 +161,17 @@ module etx_protocol (/*AUTOARG*/
 				   );
    
    synchronizer #(.DW(1)) wr_sync (// Outputs
-				   .out		(etx_wr_wait),
+				   .out		(tx_wr_wait_sync),
 				   // Inputs
 				   .in		(tx_wr_wait),
 				   .clk		(clk),
 				   .reset	(reset)
 				   );
 
-   //#############################
-   //# Pipeline stall
-   //#############################
-
-   assign etx_io_wait = ~etx_sample;
-
-   assign etx_wait    = etx_io_wait |
-			etx_rd_wait |
-			etx_wr_wait;
-      
-   
+   //Stall for all etx pipeline
+   assign etx_wr_wait = tx_wr_wait_sync | etx_io_wait;
+   assign etx_rd_wait = tx_rd_wait_sync | etx_io_wait;
+        
 endmodule // etx_protocol
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")
@@ -185,7 +183,8 @@ endmodule // etx_protocol
   This file is part of the Parallella Project.
 
   Copyright (C) 2014 Adapteva, Inc.
-  Contributed by Fred Huettig <fred@adapteva.com>
+ Contributed by Fred Huettig <fred@adapteva.com>
+ Contributed by Andreas Olofsson <andreas@adapteva.com>
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
