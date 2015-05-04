@@ -17,13 +17,13 @@
 
 module etx_arbiter (/*AUTOARG*/
    // Outputs
-   txwr_fifo_read, txrd_fifo_read, txrr_fifo_read, edma_wait,
+   txwr_fifo_wait, txrd_fifo_wait, txrr_fifo_wait, edma_wait,
    etx_access, etx_packet, etx_rr,
    // Inputs
-   clk, reset, txwr_fifo_empty, txwr_fifo_packet, txrd_fifo_empty,
-   txrd_fifo_packet, txrr_fifo_empty, txrr_fifo_packet, edma_access,
-   edma_packet, ctrlmode_bypass, ctrlmode, etx_rd_wait, etx_wr_wait,
-   etx_io_wait, etx_cfg_wait
+   clk, reset, txwr_fifo_access, txwr_fifo_packet, txrd_fifo_access,
+   txrd_fifo_packet, txrr_fifo_access, txrr_fifo_packet, edma_access,
+   edma_packet, etx_rd_wait, etx_wr_wait, etx_io_wait, etx_cfg_wait,
+   ctrlmode_bypass, ctrlmode
    );
 
    parameter PW = 104;
@@ -34,25 +34,31 @@ module etx_arbiter (/*AUTOARG*/
    input          reset;
 
    //Write Request (from slave)
-   input 	  txwr_fifo_empty;
-   input [PW-1:0] txwr_fifo_packet;
-   output         txwr_fifo_read;
+   input 	   txwr_fifo_access;
+   input [PW-1:0]  txwr_fifo_packet;
+   output          txwr_fifo_wait;
    
    //Read Request (from slave)
-   input 	  txrd_fifo_empty;
-   input [PW-1:0] txrd_fifo_packet;
-   output         txrd_fifo_read;
+   input 	   txrd_fifo_access;
+   input [PW-1:0]  txrd_fifo_packet;
+   output          txrd_fifo_wait;
    
    //Read Response (from master)
-   input 	  txrr_fifo_empty;
-   input [PW-1:0] txrr_fifo_packet;
-   output         txrr_fifo_read;
+   input 	   txrr_fifo_access;
+   input [PW-1:0]  txrr_fifo_packet;
+   output          txrr_fifo_wait;
 
    //DMA Master (not implemented, TODO)
    input 	   edma_access;
    input [PW-1:0]  edma_packet;
    output 	   edma_wait;
 
+   //Wait signal inputs
+   input           etx_rd_wait;
+   input           etx_wr_wait;
+   input 	   etx_io_wait;   
+   input 	   etx_cfg_wait;
+   
    //ctrlmode for rd/wr transactions
    input 	   ctrlmode_bypass;
    input [3:0] 	   ctrlmode;
@@ -61,84 +67,127 @@ module etx_arbiter (/*AUTOARG*/
    output          etx_access;
    output [PW-1:0] etx_packet;
    output 	   etx_rr;      //bypass translation on read response
-
-   //Wait signals
-   input           etx_rd_wait;
-   input           etx_wr_wait;
-   input 	   etx_io_wait;   
-   input 	   etx_cfg_wait;
     
    //regs
    reg 		   etx_access;
    reg [PW-1:0]    etx_packet;
    reg 		   etx_rr;     //bypass translation on read response
    
-   //wires
-   wire 	   rr_ready;
-   wire 	   rd_ready;
-   wire 	   wr_ready;
+   //wires  
    wire [3:0] 	   txrd_ctrlmode;
    wire [3:0] 	   txwr_ctrlmode;
+   wire 	   access_in;   
+   wire [PW-1:0]   etx_packet_mux;
+   wire 	   edma_grant;
+   wire 	   txrr_grant;
+   wire 	   txrd_grant;
+   wire 	   txwr_grant;
+   wire 	   edma_arb_wait;
+   wire 	   txrr_arb_wait;
+   wire 	   txrd_arb_wait;
+   wire 	   txwr_arb_wait;
+   wire [PW-1:0]   txrd_data;
+   wire [PW-1:0]   txwr_data;
+   wire [PW-1:0]   etx_mux;
    
    //##########################################################################
-   //# Arbitrate & forward
+   //# Insert special control mode
    //##########################################################################
-   //TODO: Add weighted round robin arbiter
-   //Host-slave should always be able to get "1" read or write in there.
-   //Current implementation can deadlock!! (move rd below rr)   
-   
-   // priority-based ready signals
-   assign wr_ready = ~txwr_fifo_empty & ~etx_wr_wait;   //highest
-   assign rd_ready = ~txrd_fifo_empty & ~etx_rd_wait & ~wr_ready;
-   assign rr_ready = ~txrr_fifo_empty & ~etx_wr_wait & ~wr_ready & ~rd_ready;//lowest
-   
-   // FIFO read enables (one hot)
-   // Hold until transaction has been accepted by IO
-   assign txrr_fifo_read = rr_ready & (~etx_access | etx_io_wait);
-   assign txrd_fifo_read = rd_ready & (~etx_access | etx_io_wait);
-   assign txwr_fifo_read = wr_ready & (~etx_access | etx_io_wait);
-   
-   //Selecting control mode on slave transcations
    assign txrd_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
 				                   txrd_fifo_packet[7:4];
 
+   assign txrd_data[PW-1:0] = {txrd_fifo_packet[PW-1:8],   
+                               txrd_ctrlmode[3:0], 
+			       txrd_fifo_packet[3:0]};
+ 
+   
    assign txwr_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
 				                   txwr_fifo_packet[7:4];
+
+   assign txwr_data[PW-1:0] = {txwr_fifo_packet[PW-1:8],   
+                               txwr_ctrlmode[3:0], 
+			       txwr_fifo_packet[3:0]};
+ 
    //##########################################################################
-   //# Generate Access Signalf For IO
+   //# Arbiter
    //##########################################################################
+  
+   
+   arbiter_priority #(.ARW(4)) arbiter (.grant({edma_grant,//lowest priority
+						txrr_grant,	
+						txrd_grant,
+						txwr_grant //highest priority
+						}),
+				        .await({edma_arb_wait,
+						txrr_arb_wait,	
+						txrd_arb_wait,
+						txwr_arb_wait
+						}),	
+					.request({edma_access,
+						txrr_fifo_access,	
+						txrd_fifo_access,
+						txwr_fifo_access
+						})	
+				  );
+   //Priority Mux
+   assign etx_mux[PW-1:0] =({(PW){txwr_grant}} & txwr_data[PW-1:0]) |
+			   ({(PW){txrd_grant}} & txrd_data[PW-1:0]) |
+			   ({(PW){txrr_grant}} & txrr_fifo_packet[PW-1:0]) |
+			   ({(PW){edma_grant}} & edma_packet[PW-1:0]);
+ 
+   //######################################################################
+   //Pushback (stall) Signals
+   //######################################################################
+   
+   //Write waits on pin wr wait or cfg_wait
+   assign txwr_fifo_wait = etx_wr_wait | 
+		           etx_io_wait | etx_cfg_wait;
+   
+   //Host read request (self throttling, one read at a time)
+   assign txrd_fifo_wait = etx_rd_wait | 
+		           etx_io_wait | etx_cfg_wait | 
+		           txrd_arb_wait;
+   //Read response
+   assign txrr_fifo_wait = etx_wr_wait | 
+		           etx_io_wait | etx_cfg_wait | 
+		           txrr_arb_wait;
+
+   //DMA (conservative)
+   assign edma_wait = etx_wr_wait | etx_rd_wait  | 
+		      etx_io_wait | etx_cfg_wait | 
+		      edma_arb_wait;
+
+   //##########################################################################
+   //# Pipeline stage (arbiter+mux takes time..)
+   //##########################################################################
+   assign access_in = (txwr_grant & ~txwr_fifo_wait) |
+		      (txrd_grant & ~txrd_fifo_wait) |
+		      (txrr_grant & ~txrr_fifo_wait) |
+		      (edma_grant & ~edma_wait);
+
+   //access
    always @ (posedge clk)
-      if( reset ) 
-	begin
-           etx_access         <= 1'b0;
-	   etx_rr             <= 1'b0;//only way to diff between 'rr' and 'wr'
-	   etx_packet[PW-1:0] <= 'd0;
-	end 
-      else if (txrr_fifo_read | txrd_fifo_read | txwr_fifo_read )
-	begin
-	   etx_rr             <= txrr_fifo_read;	   
-	   etx_access         <= 1'b1;	   	   
- 	   etx_packet[PW-1:0] <= txrr_fifo_read ? txrr_fifo_packet[PW-1:0]   : 
- 			         txrd_fifo_read ? {txrd_fifo_packet[PW-1:8], 
-						   txrd_ctrlmode[3:0],
-						   txrd_fifo_packet[3:0]}    : 
-                                                  {txwr_fifo_packet[PW-1:8], 
-						   txwr_ctrlmode[3:0],
-						   txwr_fifo_packet[3:0]};
- 	end   
-      else if (~etx_io_wait)
-	begin
-	   etx_access <= 1'b0;	   
-	end   
+     etx_access <= access_in;
+
+   //packet
+   always @ (posedge clk)
+     etx_packet[PW-1:0] <= etx_mux[PW-1:0];
+
+   //read request signal for remap/mmu
+   //(otherwise we can't differentiate betwen wr and rr
+   always @ (posedge clk)
+     etx_rr <= txrr_grant;
                                 
 endmodule // etx_arbiter
+// Local Variables:
+// verilog-library-directories:("." "../../common/hdl")
+// End:
+
+
 /*
   File: etx_arbiter.v
- 
-  This file is part of the Parallella Project.
 
-  Copyright (C) 2014 Adapteva, Inc.
-  Contributed by Fred Huettig <fred@adapteva.com>
+  Copyright (C) 2015 Adapteva, Inc.
   Contributed by Andreas Olofsson <andreas@adapteva.com>
 
   This program is free software: you can redistribute it and/or modify
