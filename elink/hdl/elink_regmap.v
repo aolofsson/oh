@@ -26,10 +26,9 @@
 `define ERX_CFG        6'd0 //F0300-config
 `define ERX_STATUS     6'd1 //F0304-status register
 `define ERX_GPIO       6'd2 //F0308-sampled data
-`define ERX_RR         6'd3 //F030C-read response address
-`define ERX_OFFSET     6'd4 //F0310-memory base for remap
-`define E_MAILBOXLO    6'd5 //F0314-reserved-->move?
-`define E_MAILBOXHI    6'd6 //F0318-reserved
+`define ERX_OFFSET     6'd3 //F030C-memory base for remap
+`define E_MAILBOXLO    6'd4 //F0314-reserved-->move?
+`define E_MAILBOXHI    6'd5 //F0318-reserved
 
 //DMA (same numbering as in Epiphany, limit to 4 channels)
 `define DMACFG         5'd0 //F0500/F0520
@@ -40,11 +39,3 @@
 `define DMAAUTO0       5'd5 //F0514/F0534
 `define DMAAUTO1       5'd6 //F0518/F0538
 `define DMASTATUS      5'd7 //F051C/F053c
-
-//DMA descriptors (limited to 4 channels)
-`define DMADESCR0      5'd0 //F0580/F05A0
-`define DMADESCR1      5'd1 //F0584/F05A4
-`define DMADESCR2      5'd2 //F0588/F05A8
-`define DMADESCR3      5'd3 //F058c/F05Ac
-`define DMADESCR4      5'd4 //F0590/F05B0
-`define DMADESCR5      5'd5 //F0594/F05B4

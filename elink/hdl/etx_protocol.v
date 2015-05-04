@@ -71,7 +71,7 @@ module etx_protocol (/*AUTOARG*/
                               chipid[11:0],20'b0,//dst
                               4'b0,2'b10,2'b11};//32bit write
        else //initiate read
-	 testpacket[PW-1:0]<={ID,12'hF03,`ERX_RR,2'b0,//src
+	 testpacket[PW-1:0]<={ID,20'hD0000,//readback register
                               32'haaaaaaaa,//dummy data
                               chipid[11:0],20'b0,//read from address
                               4'b0,2'b10,2'b01};//32bit read

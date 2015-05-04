@@ -164,9 +164,7 @@ module ecfg_tx (/*AUTOARG*/
          default:     mi_dout[31:0] <= 32'd0;
        endcase // case (mi_addr[RFAW+1:2])
      else
-       begin
-	  mi_dout[31:0] <= 32'd0;
-       end
+       mi_dout[31:0] <= 32'd0;
 
 endmodule // ecfg_tx
 

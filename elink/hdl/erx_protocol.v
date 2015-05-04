@@ -19,7 +19,7 @@ module erx_protocol (/*AUTOARG*/
    parameter DW   = 32;
    parameter PW   = 104;
    parameter ID   = 0;
-   parameter RFAW = 4;
+
    
    // System reset input
    input          reset;

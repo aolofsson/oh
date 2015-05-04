@@ -151,8 +151,8 @@ module dv_elink(/*AUTOARG*/
    assign elink0_txwr_packet[PW-1:0] = ext_packet[PW-1:0];
 
    //TX Pushback
-   assign dut_rd_wait                = elink0_txrd_wait | elink2_wait_out;   
-   assign dut_wr_wait                = elink0_txwr_wait | elink2_wait_out ;
+   assign dut_rd_wait                = elink0_txrd_wait;// | elink2_wait_out;   
+   assign dut_wr_wait                = elink0_txwr_wait;// | elink2_wait_out ;
       
    //Getting results back
    assign dut_access                 = elink0_rxrr_access;

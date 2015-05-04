@@ -188,7 +188,7 @@ elink
 The full 32 bit physical address of an elink register is the address seen below
 added to the 12 bit elink ID that maps to address bits 31:20.  As an example,
 if the elink ID is 0x810, then writing to the E_RESET register would be done to 
-address 0x810F0200.
+address 0x810F0200. Redback is done through the txrd channel wit the source address sub field set to 810Dxxxx;
  
 REGISTER       | AC | ADDRESS | DESCRIPTION 
 ---------------|----|---------|------------------
@@ -208,22 +208,15 @@ ETX_DMADSTADDR | RW | 0xF0510 | RX DMA slave buffer (lo)
 ETX_DMAAUTO0   | RW | 0xF0514 | RX DMA slave buffer (hi)
 ETX_DMAAUTO1   | RW | 0xF0518 | RX DMA slave buffer (hi)
 ETX_DMASTATUS  | RW | 0xF051c | RX DMA status
-ETX_DMADESCR0  | RW | 0xF0580 | RX DMA {reserved,config}
-ETX_DMADESCR1  | RW | 0xF0584 | TX DMA {dst_stride[15:0],src_stride[15:0]}      
-ETX_DMADESCR2  | RW | 0xF0588 | TX DMA {reserved,count[15:0]}
-ETX_DMADESCR3  | RW | 0xF058c | TX reserved
-ETX_DMADESCR4  | RW | 0xF0590 | TX DMA srcaddr[31:0]
-ETX_DMADESCR5  | RW | 0xF0594 | TX DMA dstaddr[31:0]
 ***************|****|*********|********************
 ETX_MMU        | -W | 0xE0000 | TX MMU table 
 ***************|****|*********|********************
 ERX_CFG        | RW | 0xF0300 | RX configuration
 ERX_STATUS     | R- | 0xF0304 | RX status register
 ERX_GPIO       | R  | 0xF0308 | RX data in GPIO mode
-ERX_RR         | RW | 0xF030c | RX read response address
-ERX_OFFSET     | RW | 0xF0310 | RX memory offset in remap mode
-ERX_MAILBOXLO  | RW | 0xF0314 | RX mailbox (lower 32 bit)
-ERX_MAILBOXHI  | RW | 0xF0318 | RX mailbox (upper 32 bits)
+ERX_OFFSET     | RW | 0xF030C | RX memory offset in remap mode
+ERX_MAILBOXLO  | RW | 0xF0310 | RX mailbox (lower 32 bit)
+ERX_MAILBOXHI  | RW | 0xF0314 | RX mailbox (upper 32 bits)
 ERX_DMACFG     | RW | 0xF0520 | TX DMA configuration
 ERX_DMACOUNT   | RW | 0xF0524 | TX DMA count
 ERX_DMASTRIDE  | RW | 0xF0528 | TX DMA stride
@@ -232,11 +225,6 @@ ERX_DMADSTADDR | RW | 0xF0530 | TX DMA destination address
 ERX_DMAAUTO0   | RW | 0xF0534 | TX DMA slave buffer (lo)
 ERX_DMAAUTO1   | RW | 0xF0538 | TX DMA slERXave buffer (hi)
 ERX_DMASTATUS  | RW | 0xF053c | TX DMA status      
-ERX_DMADESCR0  | RW | 0xF05A0 | RX DMA {reserved,config}       
-ERX_DMADESCR1  | RW | 0xF05A4 | RX DMA {dst_stride[15:0],src_stride[15:0]}      
-ERX_DMADESCR2  | RW | 0xF05A8 | RX DMA {reserved,count[15:0]}
-ERX_DMADESCR3  | RW | 0xF05B0 | RX DMA srcaddr[31:0]
-ERX_DMADESCR5  | RW | 0xF05B4 | RX DMA dstaddr[31:0]
 ***************|****|*********|********************
 ERX_MMU        | -W | 0xE8000 | RX MMU table 
 
@@ -269,14 +257,14 @@ FIELD    | DESCRIPTION
          | 1: cclk driven from clkbypass[0] input 
  [3]     | 0: lclk driven from internal PLL
          | 1: lclk driven from clkbypass[1] input
- [7:4]   | 0000: cclk=pllclk/1
+ [7:4]   | 0000: cclk=pllclk/1 (MAX)
          | 0001: cclk=pllclk/2
          | 0010: cclk=pllclk/4
          | 0011: cclk=pllclk/8
          | 0100: cclk=pllclk/16
          | 0101: cclk=pllclk/32
          | 0110: cclk=pllclk/64
-         | 0111: cclk=pllclk/128
+         | 0111: cclk=pllclk/128 (MIN)
          | 1xxx: RESERVED
  [11:8]  | 0000: lclk=pllclk/1
          | 0001: lclk=pllclk/2
@@ -284,8 +272,8 @@ FIELD    | DESCRIPTION
          | 0011: lclk=pllclk/8
          | 0100: lclk=pllclk/16
          | 0101: lclk=pllclk/32
-         | 0110: lclk=pllclk/64
-         | 0111: lclk=pllclk/128
+         | 0110: lclk=pllclk/64 (not supported yet)
+         | 0111: lclk=pllclk/128 (not supported yet)
          | 1xxx: RESERVED        
  [15:12] | PLL frequency (TBD)
 

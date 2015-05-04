@@ -72,13 +72,13 @@ module dv_elink_tb();
 	  dv_elink.elink.ecfg.ecfg_rx_reg[4:0]   = 5'h01;
 `endif
 	  reset    = 1'b0;    // at time 100 release reset
-	#1000
+	#4000
 	  go       = 1'b1;	
-	#2000
+	#10000
 `ifdef AUTO
 	  go       = 1'b0;
 `endif
-	#80000	  
+	#20000	  
 	  $finish;
      end
 
@@ -102,7 +102,6 @@ always @ (posedge clkstim)
        transaction[MW-1:0] <= 'd0;
     end   
   else if (go & ~(dut_wr_wait|dut_rd_wait))
-    //else if ((go & ~ext_access) | (go & ext_access & ~dut_wr_wait))    
     begin
 `ifdef MANUAL
        transaction[MW-1:0] <= stimarray[stim_addr];

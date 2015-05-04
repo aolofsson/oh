@@ -51,7 +51,7 @@ module ecfg_rx (/*AUTOARG*/
    
    //registers
    reg [31:0] 	ecfg_rx_reg;
-   reg [31:0] 	ecfg_base_reg;
+   reg [31:0] 	ecfg_offset_reg;
    reg [8:0] 	ecfg_gpio_reg;
    reg [2:0] 	ecfg_rx_status_reg;
    reg [31:0] 	mi_dout;
@@ -111,11 +111,11 @@ module ecfg_rx (/*AUTOARG*/
    //###########################
    always @ (posedge clk)
      if(reset)
-       ecfg_base_reg[31:0] <='d0;
+       ecfg_offset_reg[31:0] <='d0;
      else if (ecfg_base_write)
-       ecfg_base_reg[31:0] <=mi_din[31:0];
+       ecfg_offset_reg[31:0] <=mi_din[31:0];
 
-   assign remap_base[31:0] = ecfg_base_reg[31:0];
+   assign remap_base[31:0] = ecfg_offset_reg[31:0];
    
    //###############################
    //# DATA READBACK MUX
@@ -128,10 +128,12 @@ module ecfg_rx (/*AUTOARG*/
          `ERX_CFG:     mi_dout[31:0] <= {ecfg_rx_reg[31:0]};
          `ERX_GPIO:    mi_dout[31:0] <= {23'b0, ecfg_gpio_reg[8:0]};
 	 `ERX_STATUS:  mi_dout[31:0] <= {16'b0, rx_status[15:3],ecfg_rx_status_reg[2:0]};
-	 `ERX_OFFSET:  mi_dout[31:0] <= {ecfg_base_reg[31:0]};
+	 `ERX_OFFSET:  mi_dout[31:0] <= {ecfg_offset_reg[31:0]};
          default:      mi_dout[31:0] <= 32'd0;
-       endcase
-
+       endcase // case (mi_addr[RFAW+1:2])
+     else
+       mi_dout[31:0] <= 32'd0;
+   
 endmodule // ecfg_rx
 
 /*
