@@ -99,7 +99,7 @@ module ecfg_tx (/*AUTOARG*/
      else if (ecfg_tx_config_write)
        ecfg_tx_config_reg[10:0] <= mi_din[10:0];
 
-   assign tx_enable       = ecfg_tx_config_reg[0];
+   assign tx_enable       = 1'b1;//TODO: fix! ecfg_tx_config_reg[0];
    assign mmu_enable      = ecfg_tx_config_reg[1];   
    assign remap_enable    = ecfg_tx_config_reg[3:2]==2'b01;
    assign ctrlmode[3:0]   = ecfg_tx_config_reg[7:4];

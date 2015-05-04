@@ -53,25 +53,28 @@ module etx(/*AUTOARG*/
    input 	   etx_cfg_wait;
       
  
-   //debug declarations
+   //for status?
    wire[15:0] 	  tx_status; 
-   wire 	  txwr_fifo_full;//todo-fix
+   wire 	  txwr_fifo_full;
    wire 	  txrr_fifo_full;
    wire 	  txrd_fifo_full;
-
+   wire 	  txrd_fifo_empty;
+   wire 	  txrr_fifo_empty;
+   wire 	  txwr_fifo_empty;
+   
    /*AUTOOUTPUT*/
    /*AUTOINPUT*/
      
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [3:0]		ctrlmode;		// From ecfg_tx of ecfg_tx.v
-   wire			ctrlmode_bypass;	// From ecfg_tx of ecfg_tx.v
-   wire			edma_access;		// From edma of edma.v
-   wire [PW-1:0]	edma_packet;		// From edma of edma.v
+   wire [3:0]		ctrlmode;		// From etx_cfg of ecfg_tx.v
+   wire			ctrlmode_bypass;	// From etx_cfg of ecfg_tx.v
+   wire			edma_access;		// From etx_dma of edma.v
+   wire [PW-1:0]	edma_packet;		// From etx_dma of edma.v
    wire			edma_wait;		// From etx_arbiter of etx_arbiter.v
-   wire			emmu_access;		// From emmu of emmu.v
-   wire [PW-1:0]	emmu_packet;		// From emmu of emmu.v
+   wire			emmu_access;		// From etx_mmu of emmu.v
+   wire [PW-1:0]	emmu_packet;		// From etx_mmu of emmu.v
    wire			etx_access;		// From etx_arbiter of etx_arbiter.v
    wire			etx_io_wait;		// From etx_protocol of etx_protocol.v
    wire [PW-1:0]	etx_packet;		// From etx_arbiter of etx_arbiter.v
@@ -81,34 +84,34 @@ module etx(/*AUTOARG*/
    wire			etx_rr;			// From etx_arbiter of etx_arbiter.v
    wire			etx_wait;		// From etx_protocol of etx_protocol.v
    wire			etx_wr_wait;		// From etx_protocol of etx_protocol.v
-   wire [8:0]		gpio_data;		// From ecfg_tx of ecfg_tx.v
-   wire			gpio_enable;		// From ecfg_tx of ecfg_tx.v
-   wire [14:0]		mi_addr;		// From ecfg_if of ecfg_if.v
-   wire [DW-1:0]	mi_cfg_dout;		// From ecfg_tx of ecfg_tx.v
-   wire			mi_cfg_en;		// From ecfg_if of ecfg_if.v
-   wire [63:0]		mi_din;			// From ecfg_if of ecfg_if.v
-   wire [DW-1:0]	mi_dma_dout;		// From edma of edma.v
-   wire			mi_dma_en;		// From ecfg_if of ecfg_if.v
-   wire [DW-1:0]	mi_mmu_dout;		// From emmu of emmu.v
-   wire			mi_mmu_en;		// From ecfg_if of ecfg_if.v
-   wire			mi_we;			// From ecfg_if of ecfg_if.v
-   wire			mmu_enable;		// From ecfg_tx of ecfg_tx.v
-   wire			remap_enable;		// From ecfg_tx of ecfg_tx.v
-   wire			tp_enable;		// From ecfg_tx of ecfg_tx.v
+   wire [8:0]		gpio_data;		// From etx_cfg of ecfg_tx.v
+   wire			gpio_enable;		// From etx_cfg of ecfg_tx.v
+   wire [14:0]		mi_addr;		// From etx_cfgif of ecfg_if.v
+   wire [DW-1:0]	mi_cfg_dout;		// From etx_cfg of ecfg_tx.v
+   wire			mi_cfg_en;		// From etx_cfgif of ecfg_if.v
+   wire [63:0]		mi_din;			// From etx_cfgif of ecfg_if.v
+   wire [DW-1:0]	mi_dma_dout;		// From etx_dma of edma.v
+   wire			mi_dma_en;		// From etx_cfgif of ecfg_if.v
+   wire [DW-1:0]	mi_mmu_dout;		// From etx_mmu of emmu.v
+   wire			mi_mmu_en;		// From etx_cfgif of ecfg_if.v
+   wire			mi_we;			// From etx_cfgif of ecfg_if.v
+   wire			mmu_enable;		// From etx_cfg of ecfg_tx.v
+   wire			remap_enable;		// From etx_cfg of ecfg_tx.v
+   wire			tp_enable;		// From etx_cfg of ecfg_tx.v
    wire [63:0]		tx_data_par;		// From etx_protocol of etx_protocol.v
-   wire			tx_enable;		// From ecfg_tx of ecfg_tx.v
+   wire			tx_enable;		// From etx_cfg of ecfg_tx.v
    wire [7:0]		tx_frame_par;		// From etx_protocol of etx_protocol.v
    wire			tx_rd_wait;		// From etx_io of etx_io.v
    wire			tx_wr_wait;		// From etx_io of etx_io.v
-   wire			txrd_fifo_empty;	// From txrd_fifo of fifo_async.v
-   wire [PW-1:0]	txrd_fifo_packet;	// From txrd_fifo of fifo_async.v
-   wire			txrd_fifo_read;		// From etx_arbiter of etx_arbiter.v
-   wire			txrr_fifo_empty;	// From txrr_fifo of fifo_async.v
-   wire [PW-1:0]	txrr_fifo_packet;	// From txrr_fifo of fifo_async.v
-   wire			txrr_fifo_read;		// From etx_arbiter of etx_arbiter.v
-   wire			txwr_fifo_empty;	// From txwr_fifo of fifo_async.v
-   wire [PW-1:0]	txwr_fifo_packet;	// From txwr_fifo of fifo_async.v
-   wire			txwr_fifo_read;		// From etx_arbiter of etx_arbiter.v
+   wire			txrd_fifo_access;	// From txrd_fifo of fifo_cdc.v
+   wire [PW-1:0]	txrd_fifo_packet;	// From txrd_fifo of fifo_cdc.v
+   wire			txrd_fifo_wait;		// From etx_arbiter of etx_arbiter.v
+   wire			txrr_fifo_access;	// From txrr_fifo of fifo_cdc.v
+   wire [PW-1:0]	txrr_fifo_packet;	// From txrr_fifo of fifo_cdc.v
+   wire			txrr_fifo_wait;		// From etx_arbiter of etx_arbiter.v
+   wire			txwr_fifo_access;	// From txwr_fifo of fifo_cdc.v
+   wire [PW-1:0]	txwr_fifo_packet;	// From txwr_fifo of fifo_cdc.v
+   wire			txwr_fifo_wait;		// From etx_arbiter of etx_arbiter.v
    // End of automatics
    wire [15:0] 		ecfg_status;		// To ecfg_tx of ecfg_tx.v
    
@@ -117,77 +120,68 @@ module etx(/*AUTOARG*/
    /************************************************************/
    //TODO: Minimize depth and width
 
-   /*fifo_async  AUTO_TEMPLATE (
+   /*fifo_cdc  AUTO_TEMPLATE (
 			       // Outputs
-			       .valid	   (),//TODO: Use??
-			       .dout       (@"(substring vl-cell-name  0 4)"_fifo_packet[PW-1:0]),
-			       .empty	   (@"(substring vl-cell-name  0 4)"_fifo_empty),
-			       .full	   (@"(substring vl-cell-name  0 4)"_wait),
-			       .prog_full  (),
-			       // Inputs
-			       .rd_clk	   (tx_lclk_div4),
-                               .wr_clk	   (sys_clk),
-                               .wr_en      (@"(substring vl-cell-name  0 4)"_access),
+                               .access_out (@"(substring vl-cell-name  0 4)"_fifo_access),
+			       .packet_out (@"(substring vl-cell-name  0 4)"_fifo_packet[PW-1:0]),
+                               .wait_out   (@"(substring vl-cell-name  0 4)"_wait),
+                               .wait_in   (@"(substring vl-cell-name  0 4)"_fifo_wait),
+    			       .clk_out	   (tx_lclk_div4),
+                               .clk_in	   (sys_clk),
+                               .access_in  (@"(substring vl-cell-name  0 4)"_access),
                                .rd_en      (@"(substring vl-cell-name  0 4)"_fifo_read),
 			       .reset	   (reset),
-                               .din	   (@"(substring vl-cell-name  0 4)"_packet[PW-1:0]),
+                               .packet_in  (@"(substring vl-cell-name  0 4)"_packet[PW-1:0]),
     );
     */
 
    //Write fifo (from slave)
-   fifo_async #(.DW(104), .AW(5)) txwr_fifo(
-			                    /*AUTOINST*/
-					    // Outputs
-					    .full		(txwr_wait),	 // Templated
-					    .prog_full		(),		 // Templated
-					    .dout		(txwr_fifo_packet[PW-1:0]), // Templated
-					    .empty		(txwr_fifo_empty), // Templated
-					    .valid		(),		 // Templated
-					    // Inputs
-					    .reset		(reset),	 // Templated
-					    .wr_clk		(sys_clk),	 // Templated
-					    .rd_clk		(tx_lclk_div4),	 // Templated
-					    .wr_en		(txwr_access),	 // Templated
-					    .din		(txwr_packet[PW-1:0]), // Templated
-					    .rd_en		(txwr_fifo_read)); // Templated
+   fifo_cdc #(.DW(104), .AW(5)) txwr_fifo(
+			                  /*AUTOINST*/
+					  // Outputs
+					  .wait_out		(txwr_wait),	 // Templated
+					  .access_out		(txwr_fifo_access), // Templated
+					  .packet_out		(txwr_fifo_packet[PW-1:0]), // Templated
+					  // Inputs
+					  .clk_in		(sys_clk),	 // Templated
+					  .clk_out		(tx_lclk_div4),	 // Templated
+					  .reset		(reset),	 // Templated
+					  .access_in		(txwr_access),	 // Templated
+					  .packet_in		(txwr_packet[PW-1:0]), // Templated
+					  .wait_in		(txwr_fifo_wait)); // Templated
    
    //Read request fifo (from slave)
-   fifo_async  #(.DW(104), .AW(5)) txrd_fifo(
-					   
+   fifo_cdc  #(.DW(104), .AW(5)) txrd_fifo(
 				             /*AUTOINST*/
-					     // Outputs
-					     .full		(txrd_wait),	 // Templated
-					     .prog_full		(),		 // Templated
-					     .dout		(txrd_fifo_packet[PW-1:0]), // Templated
-					     .empty		(txrd_fifo_empty), // Templated
-					     .valid		(),		 // Templated
-					     // Inputs
-					     .reset		(reset),	 // Templated
-					     .wr_clk		(sys_clk),	 // Templated
-					     .rd_clk		(tx_lclk_div4),	 // Templated
-					     .wr_en		(txrd_access),	 // Templated
-					     .din		(txrd_packet[PW-1:0]), // Templated
-					     .rd_en		(txrd_fifo_read)); // Templated
+					   // Outputs
+					   .wait_out		(txrd_wait),	 // Templated
+					   .access_out		(txrd_fifo_access), // Templated
+					   .packet_out		(txrd_fifo_packet[PW-1:0]), // Templated
+					   // Inputs
+					   .clk_in		(sys_clk),	 // Templated
+					   .clk_out		(tx_lclk_div4),	 // Templated
+					   .reset		(reset),	 // Templated
+					   .access_in		(txrd_access),	 // Templated
+					   .packet_in		(txrd_packet[PW-1:0]), // Templated
+					   .wait_in		(txrd_fifo_wait)); // Templated
    
 
   
    //Read response fifo (from master)
-   fifo_async  #(.DW(104), .AW(5)) txrr_fifo(
+   fifo_cdc  #(.DW(104), .AW(5)) txrr_fifo(
 					    
 					     /*AUTOINST*/
-					     // Outputs
-					     .full		(txrr_wait),	 // Templated
-					     .prog_full		(),		 // Templated
-					     .dout		(txrr_fifo_packet[PW-1:0]), // Templated
-					     .empty		(txrr_fifo_empty), // Templated
-					     .valid		(),		 // Templated
-					     // Inputs
-					     .reset		(reset),	 // Templated
-					     .wr_clk		(sys_clk),	 // Templated
-					     .rd_clk		(tx_lclk_div4),	 // Templated
-					     .wr_en		(txrr_access),	 // Templated
-					     .din		(txrr_packet[PW-1:0]), // Templated
-					     .rd_en		(txrr_fifo_read)); // Templated
+					   // Outputs
+					   .wait_out		(txrr_wait),	 // Templated
+					   .access_out		(txrr_fifo_access), // Templated
+					   .packet_out		(txrr_fifo_packet[PW-1:0]), // Templated
+					   // Inputs
+					   .clk_in		(sys_clk),	 // Templated
+					   .clk_out		(tx_lclk_div4),	 // Templated
+					   .reset		(reset),	 // Templated
+					   .access_in		(txrr_access),	 // Templated
+					   .packet_in		(txrr_packet[PW-1:0]), // Templated
+					   .wait_in		(txrr_fifo_wait)); // Templated
   
 
    /************************************************************/
@@ -210,18 +204,18 @@ module etx(/*AUTOARG*/
     */
    
    edma etx_dma (/*AUTOINST*/
-	      // Outputs
-	      .mi_dout			(mi_dma_dout[DW-1:0]),	 // Templated
-	      .edma_access		(edma_access),		 // Templated
-	      .edma_packet		(edma_packet[PW-1:0]),
-	      // Inputs
-	      .reset			(reset),
-	      .clk			(tx_lclk_div4),		 // Templated
-	      .mi_en			(mi_dma_en),		 // Templated
-	      .mi_we			(mi_we),
-	      .mi_addr			(mi_addr[RFAW+1:0]),
-	      .mi_din			(mi_din[63:0]),
-	      .edma_wait		(edma_wait));
+		 // Outputs
+		 .mi_dout		(mi_dma_dout[DW-1:0]),	 // Templated
+		 .edma_access		(edma_access),		 // Templated
+		 .edma_packet		(edma_packet[PW-1:0]),
+		 // Inputs
+		 .reset			(reset),
+		 .clk			(tx_lclk_div4),		 // Templated
+		 .mi_en			(mi_dma_en),		 // Templated
+		 .mi_we			(mi_we),
+		 .mi_addr		(mi_addr[RFAW+1:0]),
+		 .mi_din		(mi_din[63:0]),
+		 .edma_wait		(edma_wait));
    
    /************************************************************/
    /*ELINK TRANSMIT ARBITER                                    */
@@ -230,29 +224,29 @@ module etx(/*AUTOARG*/
    etx_arbiter etx_arbiter (.clk		(tx_lclk_div4),
 			      /*AUTOINST*/
 			    // Outputs
-			    .txwr_fifo_read	(txwr_fifo_read),
-			    .txrd_fifo_read	(txrd_fifo_read),
-			    .txrr_fifo_read	(txrr_fifo_read),
+			    .txwr_fifo_wait	(txwr_fifo_wait),
+			    .txrd_fifo_wait	(txrd_fifo_wait),
+			    .txrr_fifo_wait	(txrr_fifo_wait),
 			    .edma_wait		(edma_wait),
 			    .etx_access		(etx_access),
 			    .etx_packet		(etx_packet[PW-1:0]),
 			    .etx_rr		(etx_rr),
 			    // Inputs
 			    .reset		(reset),
-			    .txwr_fifo_empty	(txwr_fifo_empty),
+			    .txwr_fifo_access	(txwr_fifo_access),
 			    .txwr_fifo_packet	(txwr_fifo_packet[PW-1:0]),
-			    .txrd_fifo_empty	(txrd_fifo_empty),
+			    .txrd_fifo_access	(txrd_fifo_access),
 			    .txrd_fifo_packet	(txrd_fifo_packet[PW-1:0]),
-			    .txrr_fifo_empty	(txrr_fifo_empty),
+			    .txrr_fifo_access	(txrr_fifo_access),
 			    .txrr_fifo_packet	(txrr_fifo_packet[PW-1:0]),
 			    .edma_access	(edma_access),
 			    .edma_packet	(edma_packet[PW-1:0]),
-			    .ctrlmode_bypass	(ctrlmode_bypass),
-			    .ctrlmode		(ctrlmode[3:0]),
 			    .etx_rd_wait	(etx_rd_wait),
 			    .etx_wr_wait	(etx_wr_wait),
 			    .etx_io_wait	(etx_io_wait),
-			    .etx_cfg_wait	(etx_cfg_wait));
+			    .etx_cfg_wait	(etx_cfg_wait),
+			    .ctrlmode_bypass	(ctrlmode_bypass),
+			    .ctrlmode		(ctrlmode[3:0]));
       
 
    /************************************************************/
@@ -264,32 +258,33 @@ module etx(/*AUTOARG*/
     .mi_dout0		({32'b0,mi_cfg_dout[31:0]}),
     .mi_dout1		({32'b0,mi_dma_dout[31:0]}),
     .mi_dout2		({32'b0,mi_mmu_dout[31:0]}),
-    .clk                (tx_lclk_div4),    
+    .clk                (tx_lclk_div4),     
+    .wait_in		(etx_cfg_wait),
     );
         */
    
    defparam etx_cfgif.RX =0;   
    ecfg_if etx_cfgif (.mi_dout3		(64'b0),
-		    /*AUTOINST*/
-		    // Outputs
-		    .wait_out		(etx_cfg_wait),		 // Templated
-		    .mi_mmu_en		(mi_mmu_en),
-		    .mi_dma_en		(mi_dma_en),
-		    .mi_cfg_en		(mi_cfg_en),
-		    .mi_we		(mi_we),
-		    .mi_addr		(mi_addr[14:0]),
-		    .mi_din		(mi_din[63:0]),
-		    .access_out		(etx_cfg_access),	 // Templated
-		    .packet_out		(etx_cfg_packet[PW-1:0]), // Templated
-		    // Inputs
-		    .clk		(tx_lclk_div4),		 // Templated
-		    .reset		(reset),
-		    .access_in		(etx_access),		 // Templated
-		    .packet_in		(etx_packet[PW-1:0]),	 // Templated
-		    .mi_dout0		({32'b0,mi_cfg_dout[31:0]}), // Templated
-		    .mi_dout1		({32'b0,mi_dma_dout[31:0]}), // Templated
-		    .mi_dout2		({32'b0,mi_mmu_dout[31:0]}), // Templated
-		    .wait_in		(etx_wait));		 // Templated
+		      .wait_out		(),//TODO:connect
+		      /*AUTOINST*/
+		      // Outputs
+		      .mi_mmu_en	(mi_mmu_en),
+		      .mi_dma_en	(mi_dma_en),
+		      .mi_cfg_en	(mi_cfg_en),
+		      .mi_we		(mi_we),
+		      .mi_addr		(mi_addr[14:0]),
+		      .mi_din		(mi_din[63:0]),
+		      .access_out	(etx_cfg_access),	 // Templated
+		      .packet_out	(etx_cfg_packet[PW-1:0]), // Templated
+		      // Inputs
+		      .clk		(tx_lclk_div4),		 // Templated
+		      .reset		(reset),
+		      .access_in	(etx_access),		 // Templated
+		      .packet_in	(etx_packet[PW-1:0]),	 // Templated
+		      .mi_dout0		({32'b0,mi_cfg_dout[31:0]}), // Templated
+		      .mi_dout1		({32'b0,mi_dma_dout[31:0]}), // Templated
+		      .mi_dout2		({32'b0,mi_mmu_dout[31:0]}), // Templated
+		      .wait_in		(etx_cfg_wait));		 // Templated
    
    /************************************************************/
    /* ETX CONFIGURATION REGISTERS                              */
@@ -300,23 +295,28 @@ module etx(/*AUTOARG*/
     );
         */
 
-   assign tx_status[15:0]  = {2'b0,                     //15:14
-			      etx_rd_wait,              //13
-			      etx_wr_wait,              //12
-			      txrr_fifo_read,           //11			
-			      txrr_wait,                //10
-			      txrr_access,	          //9	 		
-			      txrd_fifo_read,           //8			
-			      txrd_wait,                //7
-			      txrd_access,	          //6
-			      txwr_fifo_read,           //5
-			      txwr_wait,                //4
-			      txwr_access,              //3
-			      txrr_fifo_full,           //2
-			      txrd_fifo_full,           //1
-			      txwr_fifo_full	          //0
-			      };
+   //todo: make more useufl
+   assign tx_status[15:0]  = 16'b0;
+/*   
 
+{2'b0,                //15:14
+			      etx_rd_wait,         //13
+			      etx_wr_wait,         //12
+			      txrr_fifo_read,      //11			
+			      txrr_wait,           //10
+			      txrr_access,         //9	 		
+			      txrd_fifo_read,      //8			
+			      txrd_wait,           //7
+			      txrd_access,         //6
+			      txwr_fifo_read,      //5
+			      txwr_wait,           //4
+			      txwr_access,         //3
+			      1'b0,                //2
+			      1'b0,                //1
+			      1'b0	           //0
+			      };
+*/
+ 
    ecfg_tx etx_cfg (
 		    /*AUTOINST*/
 		    // Outputs
@@ -374,7 +374,8 @@ module etx(/*AUTOARG*/
                           .emesh_\(.*\)_out (emmu_\1[]),
                           .mmu_en	   (mmu_enable),
                           .mmu_bp	   (etx_rr),
-                          .clk	           (tx_lclk_div4),
+                          .rd_clk          (tx_lclk_div4),
+                          .wr_clk          (tx_lclk_div4),
                           .emmu_access_out (emmu_access),
                           .emmu_packet_out (emmu_packet[PW-1:0]),
                           .mi_dout	   (mi_mmu_dout[DW-1:0]),
@@ -386,23 +387,24 @@ module etx(/*AUTOARG*/
 
    emmu etx_mmu (
 	      /*AUTOINST*/
-	      // Outputs
-	      .mi_dout			(mi_mmu_dout[DW-1:0]),	 // Templated
-	      .emesh_access_out		(emmu_access),		 // Templated
-	      .emesh_packet_out		(emmu_packet[PW-1:0]),	 // Templated
-	      .emesh_packet_hi_out	(),			 // Templated
-	      // Inputs
-	      .reset			(reset),
-	      .clk			(tx_lclk_div4),		 // Templated
-	      .mmu_en			(mmu_enable),		 // Templated
-	      .mmu_bp			(etx_rr),		 // Templated
-	      .mi_en			(mi_mmu_en),		 // Templated
-	      .mi_we			(mi_we),
-	      .mi_addr			(mi_addr[14:0]),
-	      .mi_din			(mi_din[DW-1:0]),
-	      .emesh_access_in		(etx_remap_access),	 // Templated
-	      .emesh_packet_in		(etx_remap_packet[PW-1:0]), // Templated
-	      .emesh_wait_in		(etx_wait));		 // Templated
+		 // Outputs
+		 .mi_dout		(mi_mmu_dout[DW-1:0]),	 // Templated
+		 .emesh_access_out	(emmu_access),		 // Templated
+		 .emesh_packet_out	(emmu_packet[PW-1:0]),	 // Templated
+		 .emesh_packet_hi_out	(),			 // Templated
+		 // Inputs
+		 .reset			(reset),
+		 .rd_clk		(tx_lclk_div4),		 // Templated
+		 .wr_clk		(tx_lclk_div4),		 // Templated
+		 .mmu_en		(mmu_enable),		 // Templated
+		 .mmu_bp		(etx_rr),		 // Templated
+		 .mi_en			(mi_mmu_en),		 // Templated
+		 .mi_we			(mi_we),
+		 .mi_addr		(mi_addr[14:0]),
+		 .mi_din		(mi_din[DW-1:0]),
+		 .emesh_access_in	(etx_remap_access),	 // Templated
+		 .emesh_packet_in	(etx_remap_packet[PW-1:0]), // Templated
+		 .emesh_wait_in		(etx_wait));		 // Templated
    
 
    /************************************************************/

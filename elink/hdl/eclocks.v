@@ -58,7 +58,7 @@ module eclocks (/*AUTOARG*/
 			      .clkout		(cclk),
 			      .clkout90		(),
 			      // Inputs
-			      .clkin		(clkin & cclk_en), 
+			      .clkin		(clkin), 
 			      .reset            (hard_reset),
 			      .divcfg		(ecfg_clk_settings[7:4])
 			      );
@@ -68,7 +68,7 @@ module eclocks (/*AUTOARG*/
 			      .clkout		(tx_lclk),
 			      .clkout90		(tx_lclk90),
 			      // Inputs
-			      .clkin		(clkin & lclk_en),
+			      .clkin		(clkin),
 			      .reset            (hard_reset),
 			      .divcfg		(ecfg_clk_settings[11:8])
 			      );
@@ -86,6 +86,7 @@ module eclocks (/*AUTOARG*/
 
    
    //Output buffer
+   //Keep clocks on at all times
    assign cclk_p = cclk & cclk_en ;
    assign cclk_n = ~cclk_p;
     

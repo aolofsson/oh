@@ -30,8 +30,8 @@ module ecfg_if (/*AUTOARG*/
    /********************************/  
    input 	     access_in;
    input [PW-1:0]    packet_in;
-   output 	     wait_out;     //outgoing wait
-  
+   output 	     wait_out;
+   
    /********************************/
    /* Register Interface           */
    /********************************/
