@@ -269,12 +269,14 @@ module elink(/*AUTOARG*/
 		             .clk_out		(rx_lclk_div4),
                              .\(.*\)_in	        (etx_cfg_\1[]),
                              .\(.*\)_out	(erx_cfg_\1[]),
-                             .reset             (elink_reset),          
+                             .reset             (elink_reset),
+                             .wait_in		(erx_cfg_wait),
+                             .wait_out		(etx_cfg_wait),
                        );
    */
    fifo_cdc ecfg_cdc (/*AUTOINST*/
 		      // Outputs
-		      .wait_in		(etx_cfg_wait),		 // Templated
+		      .wait_out		(etx_cfg_wait),		 // Templated
 		      .access_out	(erx_cfg_access),	 // Templated
 		      .packet_out	(erx_cfg_packet[PW-1:0]), // Templated
 		      // Inputs
@@ -283,7 +285,7 @@ module elink(/*AUTOARG*/
 		      .reset		(elink_reset),		 // Templated
 		      .access_in	(etx_cfg_access),	 // Templated
 		      .packet_in	(etx_cfg_packet[PW-1:0]), // Templated
-		      .wait_out		(erx_cfg_wait));		 // Templated
+		      .wait_in		(erx_cfg_wait));		 // Templated
    
    
 endmodule // elink
