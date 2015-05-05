@@ -327,14 +327,7 @@ module erx_protocol (/*AUTOARG*/
    end // always @ ( posedge rx_lclk_div4 )
    
 
-   //Gating the rx with enable signal
-   synchronizer #(.DW(1)) sync (.out		(rx_enable_sync),
-				.in		(rx_enable),
-				.clk		(rx_lclk_div4),
-				.reset		(reset)
-				);
-   
-   assign erx_access =  access_reg & rx_enable_sync;
+   assign erx_access =  access_reg & rx_enable;
 
    //Sending packet
    emesh2packet e2p (
