@@ -68,13 +68,13 @@ module OSERDESE2 ( /*AUTOARG*/
 
    wire      load_parallel = (clkdiv_sample[1:0]==2'b00);
 
-   always @ (negedge CLK)
+   always @ (posedge CLK)
      if(load_parallel)
        even[3:0]<={buffer[6],buffer[4],buffer[2],buffer[0]};
      else
        even[3:0]<={1'b0,even[3:1]};
 
-   always @ (negedge CLK)
+   always @ (posedge CLK)
      if(load_parallel)
        odd[3:0]<={buffer[7],buffer[5],buffer[3],buffer[1]};
      else

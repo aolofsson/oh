@@ -61,10 +61,10 @@ module ISERDESE2 (/*AUTOARG*/
    reg [3:0] odd_samples;
    
    always @ (posedge CLK)
-     even_samples[3:0] <= {even_samples[2:0],D};
+     odd_samples[3:0] <= {odd_samples[2:0],D};
 
    always @ (negedge CLK)
-     odd_samples[3:0] <= {odd_samples[2:0],D};
+     even_samples[3:0] <= {even_samples[2:0],D};
 
    assign Q1 = odd_samples[0];
    assign Q2 = even_samples[0];
