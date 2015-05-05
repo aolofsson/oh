@@ -5,7 +5,7 @@
  
  */
 
-module ecfg_rx (/*AUTOARG*/
+module erx_cfg (/*AUTOARG*/
    // Outputs
    mi_dout, rx_enable, mmu_enable, remap_mode, remap_base,
    remap_pattern, remap_sel, timer_cfg,

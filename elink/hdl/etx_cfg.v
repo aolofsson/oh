@@ -3,7 +3,7 @@
  ELINK TX CONFIGURATION REGISTER FILE
  ######################################################################## 
  */
-module ecfg_tx (/*AUTOARG*/
+module etx_cfg (/*AUTOARG*/
    // Outputs
    mi_dout, tx_enable, mmu_enable, gpio_enable, tp_enable,
    remap_enable, gpio_data, ctrlmode, ctrlmode_bypass, chipid,

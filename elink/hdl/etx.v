@@ -285,7 +285,7 @@ module etx(/*AUTOARG*/
    /************************************************************/
    /* ETX CONFIGURATION REGISTERS                              */
    /************************************************************/
-    /*ecfg_tx AUTO_TEMPLATE (.mi_dout       (mi_cfg_dout[DW-1:0]), 
+    /*etx_cfg AUTO_TEMPLATE (.mi_dout       (mi_cfg_dout[DW-1:0]), 
                              .mi_en	    (mi_cfg_en),
                              .clk	    (tx_lclk_div4),
     );
@@ -313,7 +313,7 @@ module etx(/*AUTOARG*/
 			      };
 */
  
-   ecfg_tx etx_cfg (
+   etx_cfg etx_cfg (
 		    /*AUTOINST*/
 		    // Outputs
 		    .mi_dout		(mi_cfg_dout[DW-1:0]),	 // Templated

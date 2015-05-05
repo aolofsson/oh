@@ -16,7 +16,6 @@ module erx (/*AUTOARG*/
    parameter RFAW    = 6;
    parameter ID      = 12'h800;
 
-   
    //reset
    input           reset;
    output          rx_lclk_div4;    //for synchronization outside erx
@@ -73,7 +72,7 @@ module erx (/*AUTOARG*/
    wire			erx_wr_wait;		// From erx_disty of erx_disty.v
    wire [8:0]		gpio_datain;		// From erx_io of erx_io.v
    wire [14:0]		mi_addr;		// From erx_cfgif of ecfg_if.v
-   wire [DW-1:0]	mi_cfg_dout;		// From erx_cfg of ecfg_rx.v
+   wire [DW-1:0]	mi_cfg_dout;		// From erx_cfg of erx_cfg.v
    wire			mi_cfg_en;		// From erx_cfgif of ecfg_if.v
    wire [63:0]		mi_din;			// From erx_cfgif of ecfg_if.v
    wire [DW-1:0]	mi_dma_dout;		// From erx_dma of edma.v
@@ -82,14 +81,14 @@ module erx (/*AUTOARG*/
    wire [DW-1:0]	mi_mmu_dout;		// From erx_mmu of emmu.v
    wire			mi_mmu_en;		// From erx_cfgif of ecfg_if.v
    wire			mi_we;			// From erx_cfgif of ecfg_if.v
-   wire			mmu_enable;		// From erx_cfg of ecfg_rx.v
-   wire [31:0]		remap_base;		// From erx_cfg of ecfg_rx.v
+   wire			mmu_enable;		// From erx_cfg of erx_cfg.v
+   wire [31:0]		remap_base;		// From erx_cfg of erx_cfg.v
    wire			remap_bypass;		// From erx_protocol of erx_protocol.v
-   wire [1:0]		remap_mode;		// From erx_cfg of ecfg_rx.v
-   wire [11:0]		remap_pattern;		// From erx_cfg of ecfg_rx.v
-   wire [11:0]		remap_sel;		// From erx_cfg of ecfg_rx.v
+   wire [1:0]		remap_mode;		// From erx_cfg of erx_cfg.v
+   wire [11:0]		remap_pattern;		// From erx_cfg of erx_cfg.v
+   wire [11:0]		remap_sel;		// From erx_cfg of erx_cfg.v
    wire [63:0]		rx_data_par;		// From erx_io of erx_io.v
-   wire			rx_enable;		// From erx_cfg of ecfg_rx.v
+   wire			rx_enable;		// From erx_cfg of erx_cfg.v
    wire [7:0]		rx_frame_par;		// From erx_io of erx_io.v
    wire			rxrd_fifo_access;	// From erx_disty of erx_disty.v
    wire [PW-1:0]	rxrd_fifo_packet;	// From erx_disty of erx_disty.v
@@ -308,7 +307,7 @@ module erx (/*AUTOARG*/
    /************************************************************/
    /* ERX CONFIGURATION                                        */
    /************************************************************/
-   /*ecfg_rx AUTO_TEMPLATE (.mi_dout       (mi_cfg_dout[DW-1:0]),
+   /*erx_cfg AUTO_TEMPLATE (.mi_dout       (mi_cfg_dout[DW-1:0]),
                             .mi_en	   (mi_cfg_en),
                             .clk	   (rx_lclk_div4),
     );
@@ -333,7 +332,7 @@ module erx (/*AUTOARG*/
 
 
 
-   ecfg_rx erx_cfg (.rx_status    	(rx_status[15:0]),
+   erx_cfg erx_cfg (.rx_status    	(rx_status[15:0]),
 		    .timer_cfg		(),
 		     /*AUTOINST*/
 		    // Outputs
