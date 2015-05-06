@@ -8,6 +8,7 @@ elink_e16_model.v
 -y ../../common/hdl
 -y ../../memory/hdl
 -y ../../emailbox/hdl
+-y ../../emesh/hdl
 -y ../../emmu/hdl
 -y ../../edma/hdl
 

@@ -22,13 +22,13 @@ module elink(/*AUTOARG*/
    /****************************/
    /*CLK AND RESET             */
    /****************************/
-   input        reset;               // active high asynchronous hardware reset
-   input 	clkin;               // pll input clock
-   input 	sys_clk;             // system clock for FIFOs only
-   input [3:0] 	pll_bypass;          // pll bypass clocks for elink   
-   input 	testmode;            // places elink in testmode
-   output 	rx_lclk_div4;        // rx clock for synching with logic
-   output 	tx_lclk_div4;        // tx clock for synching with logic
+   input        reset;            // active high async reset
+   input 	clkin;            // pll input clock
+   input 	sys_clk;          // system clock for FIFOs only
+   input [3:0] 	pll_bypass;       // pll bypass clocks for elink   
+   input 	testmode;         // places elink in testmode
+   output 	rx_lclk_div4;     // rx clock for synching with logic
+   output 	tx_lclk_div4;     // tx clock for synching with logic
 
    /********************************/
    /*ELINK I/O PINS                */

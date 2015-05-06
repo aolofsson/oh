@@ -336,11 +336,11 @@ module erx_protocol (/*AUTOARG*/
 		     // Inputs
 		     .access_in		(erx_access),
 		     .write_in		(write_reg),
-		     .datamode_in	(datamode_reg[1:0]),
-		     .ctrlmode_in	(ctrlmode_reg[3:0]),
-		     .dstaddr_in	(dstaddr_reg[AW-1:0]),
+		     .datamode_in       (datamode_reg[1:0]),
+		     .ctrlmode_in       (ctrlmode_reg[3:0]),
+		     .dstaddr_in        (dstaddr_reg[AW-1:0]),
 		     .data_in		(data_reg[DW-1:0]),
-		     .srcaddr_in	(srcaddr_reg[AW-1:0])
+		     .srcaddr_in        (srcaddr_reg[AW-1:0])
 		     );
    
    //dont't remap read returns and writes to RX registers
