@@ -40,9 +40,10 @@ module egen(/*AUTOARG*/
    wire 	   idle;
    
 
-`define IDLE = 2'b00
-`define DONE = 2'b10
-`define GO   = 2'b01
+`define IDLE  2'b00
+`define DONE  2'b10
+`define GO    2'b01
+   
 
    assign done = (state[1:0]==`DONE);
    assign go   = (state[1:0]==`GO);
