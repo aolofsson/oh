@@ -1,5 +1,5 @@
 /*###########################################################################
- # Function:  High speed clock generator for elink
+ # Function:  Clock generator for elink
  #      
  #  cclk_p/n     - Epiphany Output Clock (>600MHz) 
  #
@@ -17,51 +17,133 @@ module eclocks (/*AUTOARG*/
    // Outputs
    cclk_p, cclk_n, tx_lclk, tx_lclk90, tx_lclk_div4,
    // Inputs
-   clkin, hard_reset, clk_config, pll_bypass
+   hard_reset, pll_clkin
    );
 
-   // Parameters must be set as follows:
-   //   PFD input frequency = 1/CLKIN1_PERIOD / DIVCLK_DIVIDE (10-450MHz)
-   //   VCO frequency = PFD input frequency * CLKFBOUT_MULT (800-1600MHz)
-   //   Output frequency = VCO frequency / CLKOUTn_DIVIDE
+   
+   parameter  CLKIN_PERIOD     = 10.000; // (2.5-100ns, set by system)
+                                         // must match actual sytem clock
+                                         //
 
    //Input clock, reset, config interface
-   input        clkin;              // primary input clock 
-   input        hard_reset;         //
-   input [15:0] clk_config;         // clock settings
-   input [3:0] 	pll_bypass;         //[0]=cclk
-                                    //[1]=lclk
-                                    //[2]=lclk90
-                                    //[3]=lclk_div4
-   
- 	
-   
-   //Output Clocks
+   input        hard_reset;         // hardware reset
+   input        pll_clkin;          // primary input clock  
+
+   //outputs
    output       cclk_p, cclk_n;     // high speed Epiphany clock (up to 1GHz)
    output       tx_lclk;            // elink tx serdes clock
    output       tx_lclk90;          // center aligned output clock for elink tx
    output       tx_lclk_div4;       // lclk/4 slow clock for tx parallel logic 
 
    // Wires
-   wire 	cclk_en;
-   wire 	lclk_en;
-   wire 	cclk_bp;
-   wire 	lclk_bp;   
-   wire 	cclk;
-
-   wire 	lclk;
-   wire 	lclk90;
-   wire 	lclk_div4;
+   wire 	cclk_clkfb;   
+   wire 	lclk_clkfb;
    
-   //Register decoding
-   assign cclk_en=clk_config[0];
-   assign lclk_en=clk_config[1];
-   assign cclk_bp=clk_config[2];
-   assign lclk_bp=clk_config[3];
-   
+			
 `ifdef TARGET_XILINX	
 
-   //instantiate MMCM
+   //###########################
+   // MMCM/PLL FOR CCLK
+   //###########################
+   parameter CCLK_VCO_MULT =12;
+   parameter CCLK_DIVIDE   = 2;
+
+   PLLE2_BASE
+     #(
+       .BANDWIDTH("OPTIMIZED"),          
+       .CLKFBOUT_MULT(CCLK_VCO_MULT),
+       .CLKFBOUT_PHASE(0.0),
+       .CLKIN1_PERIOD(CLKIN_PERIOD),
+       .CLKOUT0_DIVIDE(CCLK_DIVIDE),    // cclk
+       .CLKOUT1_DIVIDE(CCLK_DIVIDE*2),  // cclk/2
+       .CLKOUT2_DIVIDE(CCLK_DIVIDE*4),  // cclk/4
+       .CLKOUT3_DIVIDE(CCLK_DIVIDE*8),  // cclk/8
+       .CLKOUT4_DIVIDE(CCLK_DIVIDE*16), // cclk/16
+       .CLKOUT5_DIVIDE(CCLK_DIVIDE*32), // cclk/32          
+       .CLKOUT0_DUTY_CYCLE(0.5),         
+       .CLKOUT1_DUTY_CYCLE(0.5),
+       .CLKOUT2_DUTY_CYCLE(0.5),
+       .CLKOUT3_DUTY_CYCLE(0.5),
+       .CLKOUT4_DUTY_CYCLE(0.5),
+       .CLKOUT5_DUTY_CYCLE(0.5),
+       .CLKOUT0_PHASE(0.0),
+       .CLKOUT1_PHASE(0.0),
+       .CLKOUT2_PHASE(0.0),
+       .CLKOUT3_PHASE(0.0),
+       .CLKOUT4_PHASE(0.0),
+       .CLKOUT5_PHASE(0.0),
+       .DIVCLK_DIVIDE(1.0), 
+       .REF_JITTER1(0.01), 
+       .STARTUP_WAIT("FALSE") 
+       ) pll_cclk
+       (
+        .CLKOUT0(cclk),
+        .CLKOUT1(),
+        .CLKOUT2(),
+        .CLKOUT3(),
+        .CLKOUT4(),
+        .CLKOUT5(),
+        .CLKFBOUT(cclk_clkfb),
+        .LOCKED(),
+        .CLKIN1(pll_clkin),
+        .PWRDWN(1'b0),
+        .RST(1'b0),
+        .CLKFBIN(cclk_clkfb)
+        );
+   
+   //###########################
+   // MMCM/PLL FOR LCLK
+   //###########################
+   parameter LCLK_VCO_MULT =10;
+   parameter LCLK_DIVIDE   = 2;
+
+  PLLE2_BASE
+     #(
+       .BANDWIDTH("OPTIMIZED"),          
+       .CLKFBOUT_MULT(LCLK_VCO_MULT),
+       .CLKFBOUT_PHASE(0.0),
+       .CLKIN1_PERIOD(CLKIN_PERIOD),
+       .CLKOUT0_DIVIDE(LCLK_DIVIDE),    // lclk
+       .CLKOUT1_DIVIDE(LCLK_DIVIDE),    // lclk90                              
+       .CLKOUT2_DIVIDE(LCLK_DIVIDE*4),  // lclkdiv4
+       .CLKOUT3_DIVIDE(LCLK_DIVIDE*4),  // lclk/4
+       .CLKOUT4_DIVIDE(LCLK_DIVIDE*4),  // lclk/4 with 90 deg
+       .CLKOUT5_DIVIDE(LCLK_DIVIDE*16), // lclk/4-->div4
+       .CLKOUT0_DUTY_CYCLE(0.5),
+       .CLKOUT1_DUTY_CYCLE(0.5),
+       .CLKOUT2_DUTY_CYCLE(0.5),
+       .CLKOUT3_DUTY_CYCLE(0.5),
+       .CLKOUT4_DUTY_CYCLE(0.5),
+       .CLKOUT5_DUTY_CYCLE(0.5),
+       .CLKOUT0_PHASE(0.0),
+       .CLKOUT1_PHASE(90.0),            // tx_lclk90 shifted by 90 degrees
+       .CLKOUT2_PHASE(0.0),             
+       .CLKOUT3_PHASE(0.0),
+       .CLKOUT4_PHASE(90.0),            //slow mode shifted by 90 degrees
+       .CLKOUT5_PHASE(0.0),
+       .DIVCLK_DIVIDE(1.0),
+       .REF_JITTER1(0.01),
+       .STARTUP_WAIT("FALSE")
+       ) pll_lclk
+       (
+        .CLKOUT0(tx_lclk),             //tx_lclk
+        .CLKOUT1(tx_lclk90),           //tx_lclk90
+        .CLKOUT2(tx_lclk_div4),        //tx_lclk_div4
+        .CLKOUT3(),
+        .CLKOUT4(),
+        .CLKOUT5(),
+        .CLKFBOUT(lclk_clkfb),
+        .LOCKED(),
+        .CLKIN1(pll_clkin),
+        .PWRDWN(1'b0),
+        .RST(1'b0),
+        .CLKFBIN(lclk_clkfb)
+        );
+
+`endif //  `ifdef TARGET_XILINX
+
+
+   /*
    
 `elsif TARGET_CLEAN
       
@@ -121,7 +203,19 @@ module eclocks (/*AUTOARG*/
     
     
 `endif
-          
+
+   reg 		clkint;
+   
+   initial
+     begin
+	clkint=1'b0;	
+     end
+   
+    always
+      #0.5  clkint = ~clkint;   
+
+ */
+    
 endmodule // eclocks
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")

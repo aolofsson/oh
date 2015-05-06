@@ -84,7 +84,7 @@ module erx_io (/*AUTOARG*/
    BUFR
      #(.SIM_DEVICE("7SERIES"),
      .BUFR_DIVIDE("4"))
-   clkout_bufr
+   rx_lclk_div4_buf
      (.O (rx_lclk_div4),
       .CE(1'b1),
       .CLR(reset),//no reset

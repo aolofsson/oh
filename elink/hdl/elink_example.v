@@ -93,9 +93,8 @@ module elink_example(/*AUTOARG*/
 		.chip_resetb		(chip_resetb),
 		.tx_lclk_div4		(),
 		.sys_clk		(clk),
-		.clkin			(clk),
+		.pll_clkin		(clk),
 		.testmode		(1'b0),
-		.pll_bypass             (4'b0),
 		/*AUTOINST*/
 		// Outputs
 		.rxo_wr_wait_p		(rxo_wr_wait_p),

@@ -7,11 +7,11 @@ module elink(/*AUTOARG*/
    rxrr_access, rxrr_packet, txwr_wait, txrd_wait, txrr_wait,
    mailbox_not_empty, mailbox_full, timeout,
    // Inputs
-   reset, clkin, sys_clk, pll_bypass, testmode, rxi_lclk_p,
-   rxi_lclk_n, rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n,
-   txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n,
-   rxwr_wait, rxrd_wait, rxrr_wait, txwr_access, txwr_packet,
-   txrd_access, txrd_packet, txrr_access, txrr_packet
+   reset, pll_clkin, sys_clk, testmode, rxi_lclk_p, rxi_lclk_n,
+   rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p,
+   txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n, rxwr_wait, rxrd_wait,
+   rxrr_wait, txwr_access, txwr_packet, txrd_access, txrd_packet,
+   txrr_access, txrr_packet
    );
    
    parameter AW          = 32;
@@ -23,9 +23,8 @@ module elink(/*AUTOARG*/
    /*CLK AND RESET             */
    /****************************/
    input        reset;            // active high async reset
-   input 	clkin;            // pll input clock
+   input 	pll_clkin;        // pll input clock
    input 	sys_clk;          // system clock for FIFOs only
-   input [3:0] 	pll_bypass;       // pll bypass clocks for elink   
    input 	testmode;         // places elink in testmode
    output 	rx_lclk_div4;     // rx clock for synching with logic
    output 	tx_lclk_div4;     // tx clock for synching with logic
@@ -104,7 +103,8 @@ module elink(/*AUTOARG*/
    /*#############################################*/
    
    /*AUTOINPUT*/
-   /*AUTOOUTPUT*/
+
+   // End of automatics
 
    //wires
    wire [31:0] 	 mi_rd_data;
@@ -166,9 +166,7 @@ module elink(/*AUTOARG*/
 		    .tx_lclk90		(tx_lclk90),
 		    .tx_lclk_div4	(tx_lclk_div4),
 		    // Inputs
-		    .clkin		(clkin),
-		    .clk_config		(clk_config[15:0]),
-		    .pll_bypass		(pll_bypass[3:0]));
+		    .pll_clkin		(pll_clkin));
    
    /***********************************************************/
    /*RECEIVER                                                 */
