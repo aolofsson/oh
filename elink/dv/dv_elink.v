@@ -98,6 +98,16 @@ module dv_elink(/*AUTOARG*/
    wire [PW-1:0]	elink1_txrr_packet;	// From emem of ememory.v
    wire			elink1_txrr_wait;	// From elink1 of elink.v
    wire			elink1_txwr_wait;	// From elink1 of elink.v
+   wire			rxo_rd_wait_n;		// From elink_example of elink_example.v
+   wire			rxo_rd_wait_p;		// From elink_example of elink_example.v
+   wire			rxo_wr_wait_n;		// From elink_example of elink_example.v
+   wire			rxo_wr_wait_p;		// From elink_example of elink_example.v
+   wire [7:0]		txo_data_n;		// From elink_example of elink_example.v
+   wire [7:0]		txo_data_p;		// From elink_example of elink_example.v
+   wire			txo_frame_n;		// From elink_example of elink_example.v
+   wire			txo_frame_p;		// From elink_example of elink_example.v
+   wire			txo_lclk_n;		// From elink_example of elink_example.v
+   wire			txo_lclk_p;		// From elink_example of elink_example.v
    // End of automatics
 
    wire [3:0] 		colid;
@@ -130,10 +140,15 @@ module dv_elink(/*AUTOARG*/
    wire 		elink1_txrd_access;
    wire [PW-1:0] 	elink1_txrd_packet;
 
+   wire [7:0]           elink2_txo_data_p;
+   wire 	        elink2_txo_frame_p;
+   wire                 elink2_txo_lclk_p;
+
+   
    wire                 emem_wait;
 
    
-   reg [31:0]    etime;  
+   reg [31:0] 		 etime;  
    wire 	 itrace = 1'b1;
  
    
@@ -321,9 +336,9 @@ module dv_elink(/*AUTOARG*/
 		     // Outputs
 		     .rxi_rd_wait	(),
 		     .rxi_wr_wait	(),
-		     .txo_data		(),
-		     .txo_lclk		(),
-		     .txo_frame		(),
+		     .txo_data		(elink2_txo_data_p[7:0]),
+		     .txo_lclk		(elink2_txo_lclk_p),
+		     .txo_frame		(elink2_txo_frame_p),
 		     .c0_mesh_access_out(),
 		     .c0_mesh_write_out	(),
 		     .c0_mesh_dstaddr_out(),
@@ -432,9 +447,53 @@ module dv_elink(/*AUTOARG*/
 					       .etime		(etime[31:0]));
    
 
+   /*elink AUTO_TEMPLATE (.reset		    (reset),
+                        // Outputs                        
+                        .txopll_bypass         ({clkin,clkin,clkin,clkin}),
+                        .clkin		    (clkin),
+                        .sys_clk            (clk[1]),
+                        .\(.*\)             (@"(substring vl-cell-name  0 6)"_\1[]),
+                         );
+  */
+   
+   
+
+   elink_example elink_example (
+				.chipid		(),
+				.chip_resetb	(),
+				.cclk_p		(),
+				.cclk_n		(),	
+				.start		(ext_access),
+				.clk		(clk[0]),
+      				.rxi_lclk_p	(txo_lclk_p),
+				.rxi_lclk_n	(txo_lclk_n),
+				.rxi_frame_p	(txo_frame_p),
+				.rxi_frame_n	(txo_frame_n),
+				.rxi_data_p	(txo_data_p[7:0]),
+				.rxi_data_n	(txo_data_n[7:0]),
+				.txi_wr_wait_p	(rxo_wr_wait_p),
+				.txi_wr_wait_n	(rxo_wr_wait_n),
+				.txi_rd_wait_p	(rxo_rd_wait_p),
+				.txi_rd_wait_n	(rxo_rd_wait_n),	
+				/*AUTOINST*/
+				// Outputs
+				.rxo_wr_wait_p	(rxo_wr_wait_p),
+				.rxo_wr_wait_n	(rxo_wr_wait_n),
+				.rxo_rd_wait_p	(rxo_rd_wait_p),
+				.rxo_rd_wait_n	(rxo_rd_wait_n),
+				.txo_lclk_p	(txo_lclk_p),
+				.txo_lclk_n	(txo_lclk_n),
+				.txo_frame_p	(txo_frame_p),
+				.txo_frame_n	(txo_frame_n),
+				.txo_data_p	(txo_data_p[7:0]),
+				.txo_data_n	(txo_data_n[7:0]),
+				// Inputs
+				.reset		(reset));
+   
+  
 endmodule // dv_elink
 // Local Variables:
-// verilog-library-directories:("." "../hdl" "../../memory/hdl")
+// verilog-library-directories:("." "../hdl" "../../memory/hdl" "../../emesh/hdl")
 // End:
 
 /*
