@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module dv_elink_tb();
    parameter AW=32;
    parameter DW=32;
@@ -12,7 +13,7 @@ module dv_elink_tb();
 /* verilator lint_off STMTDLY */
 /* verilator lint_off UNOPTFLAT */
    //REGS
-   reg  [1:0]    clk;   
+   reg  [1:0]    clk;
    reg 		 reset;   
    reg 		 go;
    reg [1:0] 	 datamode;
@@ -47,10 +48,9 @@ module dv_elink_tb();
 
    //Forever clock
    always
-     #1  clk[0] = ~clk[0];//clock for elink
+     #1  clk[0] = ~clk[0]; //fast clock
     always
-     #50 clk[1] = ~clk[1];//clock for axi interface
-                           //should make variable to really test all fifos
+     #50 clk[1] = ~clk[1]; //slow clock
 
    wire clkstim = clk[1];
       
@@ -140,7 +140,7 @@ always @ (posedge clkstim)
    wire [PW-1:0]	packet_out;		// From e2p of emesh2packet.v
    // End of automatics
    
-   emesh2packet e2p (/*AUTOINST*/
+   emesh2packet e2p (
 		     // Outputs
 		     .packet_out	(ext_packet[PW-1:0]),
 		     // Inputs
@@ -172,7 +172,7 @@ always @ (posedge clkstim)
   
 endmodule // dv_elink_tb
 // Local Variables:
-// verilog-library-directories:("." "../../common/hdl")
+// verilog-library-directories:("." "../../emesh/hdl")
 // End:
 
 

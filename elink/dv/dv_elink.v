@@ -20,7 +20,7 @@ module dv_elink(/*AUTOARG*/
    
    
    //Basic
-   input  [CW-1:0] clk;        // Core clock
+   input  [CW-1:0] clk;        // clocks
    input           reset;      // Reset
    output          dut_passed; // Indicates passing test
    output          dut_failed; // Indicates failing test
@@ -185,8 +185,8 @@ module dv_elink(/*AUTOARG*/
  /*elink AUTO_TEMPLATE (.reset		    (reset),
                         // Outputs                        
                         .pll_bypass         ({clkin,clkin,clkin,clkin}),
-                        .clkin		    (clkin),
-                        .sys_clk            (clk[1]),
+                        .pll_clkin	    (clkin),
+                        .sys_clk            (clk[0]),
                         .\(.*\)             (@"(substring vl-cell-name  0 6)"_\1[]),
                          );
   */
@@ -235,9 +235,8 @@ module dv_elink(/*AUTOARG*/
 		 .timeout		(elink0_timeout),	 // Templated
 		 // Inputs
 		 .reset			(reset),		 // Templated
-		 .clkin			(clkin),		 // Templated
-		 .sys_clk		(clk[1]),		 // Templated
-		 .pll_bypass		({clkin,clkin,clkin,clkin}), // Templated
+		 .pll_clkin		(clkin),		 // Templated
+		 .sys_clk		(clk[0]),		 // Templated
 		 .rxwr_wait		(elink0_rxwr_wait),	 // Templated
 		 .rxrd_wait		(elink0_rxrd_wait),	 // Templated
 		 .rxrr_wait		(elink0_rxrr_wait),	 // Templated
@@ -301,9 +300,8 @@ module dv_elink(/*AUTOARG*/
 		 .timeout		(elink1_timeout),	 // Templated
 		 // Inputs
 		 .reset			(reset),		 // Templated
-		 .clkin			(clkin),		 // Templated
-		 .sys_clk		(clk[1]),		 // Templated
-		 .pll_bypass		({clkin,clkin,clkin,clkin}), // Templated
+		 .pll_clkin		(clkin),		 // Templated
+		 .sys_clk		(clk[0]),		 // Templated
 		 .rxwr_wait		(elink1_rxwr_wait),	 // Templated
 		 .rxrd_wait		(elink1_rxrd_wait),	 // Templated
 		 .rxrr_wait		(elink1_rxrr_wait),	 // Templated
@@ -324,8 +322,8 @@ module dv_elink(/*AUTOARG*/
 					   .access_out		(elink2_access),
 					   .packet_out		(elink2_packet[PW-1:0]),
 					   // Inputs
-					   .clk_in		(clk[1]),
-					   .clk_out		(clk[1]),
+					   .clk_in		(clk[0]),
+					   .clk_out		(clk[0]),
 					   .reset		(reset),
 					   .access_in		(ext_access),
 					   .packet_in		(ext_packet[PW-1:0]),
@@ -350,10 +348,10 @@ module dv_elink(/*AUTOARG*/
 		     .c0_mesh_wait_out	(elink2_wait_out),
 		     // Inputs
 		     .reset		(reset),
-		     .c0_clk_in		(clk[1]),
-		     .c1_clk_in		(clk[1]),
-		     .c2_clk_in		(clk[1]),
-		     .c3_clk_in		(clk[1]),
+		     .c0_clk_in		(clk[0]),
+		     .c1_clk_in		(clk[0]),
+		     .c2_clk_in		(clk[0]),
+		     .c3_clk_in		(clk[0]),
 		     .rxi_data		(elink0_txo_data_p[7:0]),
 		     .rxi_lclk		(elink0_txo_lclk_p),
 		     .rxi_frame		(elink0_txo_frame_p),
@@ -390,7 +388,7 @@ module dv_elink(/*AUTOARG*/
    */
 
    ememory emem (.wait_in	        (1'b0),       //only one read at a time, set to zero for no1
-		 .clk		        (clk[1]),
+		 .clk		        (clk[0]),
 		 .wait_out		(emem_wait),
 		 /*AUTOINST*/
 		 // Outputs
@@ -417,7 +415,7 @@ module dv_elink(/*AUTOARG*/
 
 
    emesh_monitor #(.NAME("stimulus")) ext_monitor (.emesh_wait		((dut_rd_wait | dut_wr_wait)),//TODO:fix collisions
-						   .clk			(clk[1]),
+						   .clk			(clk[0]),
 						   /*AUTOINST*/
 						   // Inputs
 						   .reset		(reset),
@@ -427,7 +425,7 @@ module dv_elink(/*AUTOARG*/
 						   .emesh_packet	(ext_packet[PW-1:0])); // Templated
    
    emesh_monitor #(.NAME("dut")) dut_monitor (.emesh_wait	(1'b0),
-					      .clk		(clk[1]),
+					      .clk		(clk[0]),
 					      /*AUTOINST*/
 					      // Inputs
 					      .reset		(reset),
@@ -437,7 +435,7 @@ module dv_elink(/*AUTOARG*/
 					      .emesh_packet	(dut_packet[PW-1:0])); // Templated
 
    emesh_monitor #(.NAME("emem")) mem_monitor (.emesh_wait	(1'b0),
-						.clk		(clk[1]),
+						.clk		(clk[0]),
 					       .emesh_access	(emem_access),
 					       .emesh_packet	(emem_packet[PW-1:0]),
 						/*AUTOINST*/
@@ -451,7 +449,7 @@ module dv_elink(/*AUTOARG*/
                         // Outputs                        
                         .txopll_bypass         ({clkin,clkin,clkin,clkin}),
                         .clkin		    (clkin),
-                        .sys_clk            (clk[1]),
+                        .sys_clk            (clk[0]),
                         .\(.*\)             (@"(substring vl-cell-name  0 6)"_\1[]),
                          );
   */
