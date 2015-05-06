@@ -4,33 +4,24 @@
 
 module clock_divider(/*AUTOARG*/
    // Outputs
-   clkout, clkout90,
+   clkout,
    // Inputs
    clkin, divcfg, reset
    );
 
    input       clkin;    // Input clock
-   input [3:0] divcfg;   // Divide factor
+   input [3:0] divcfg;   // Divide factor (1-128)
    input       reset;    // Counter init
-
    output      clkout;   // Divided clock phase aligned with clkin 
-   output      clkout90; // Divided clock with 90deg phase shift with clkout
-
 
    reg        clkout_reg;
    reg [7:0]  counter;   
    reg [7:0]  divcfg_dec;
    reg [3:0]  divcfg_reg;
-   reg 	      divcfg_change;
    
-   wire       div2_sel;
-   wire       div1_sel;   
+   wire       div_bp;   
    wire       posedge_match;
    wire       negedge_match;  
-   wire       posedge90_match;
-   wire       negedge90_match; 
-   reg 	      clkout90_div4;
-   reg 	      clkout90_div2;
    
    // ###################
    // # Decode divcfg
@@ -48,34 +39,17 @@ module clock_divider(/*AUTOARG*/
 	  default : divcfg_dec[7:0] = 8'b00000000;   // others
 	endcase
    
-   //Divide by two special case
-   assign div2_sel = divcfg[3:0]==4'b0001;
-   assign div1_sel = (divcfg[3:0]==4'b0000) | reset;
-   
-   
-   //Edge change detector (no need for synchronizer)
-   always @ (posedge clkin or posedge reset)
-     if(reset)              
-       divcfg_change <=1'b0;
-     else
-       begin
-	  divcfg_change <= (divcfg_reg[3:0]^divcfg[3:0]);	  
-	  divcfg_reg[3:0] <=divcfg[3:0];	  
-       end
    always @ (posedge clkin or posedge reset)
      if(reset)
-       counter[7:0] <= 8'b000001;
-     else if(posedge_match | divcfg_change)
-	 counter[7:0] <= 8'b000001;// Self resetting
-       else
-	 counter[7:0] <= (counter[7:0] + 8'b00000001);
+       counter[7:0] <= 8'b00000001;
+     else if(posedge_match)
+       counter[7:0] <= 8'b00000001;// Self resetting
+     else
+       counter[7:0] <= (counter[7:0] + 8'b00000001);
    
    assign posedge_match    = (counter[7:0]==divcfg_dec[7:0]);
    assign negedge_match    = (counter[7:0]=={1'b0,divcfg_dec[7:1]}); 
-   assign posedge90_match  = (counter[7:0]==({2'b00,divcfg_dec[7:2]}));
-   assign negedge90_match  = (counter[7:0]==({2'b00,divcfg_dec[7:2]} + 
-					     {1'b0,divcfg_dec[7:1]})); 
-			      
+   
    always @ (posedge clkin or posedge reset)
      if(reset)
        clkout_reg <= 1'b0;   
@@ -83,27 +57,11 @@ module clock_divider(/*AUTOARG*/
        clkout_reg <= 1'b1;
      else if(negedge_match)
        clkout_reg <= 1'b0;
-  
-   assign clkout    = div1_sel ? clkin : clkout_reg;
- 
-   always @ (posedge clkin or posedge reset)
-     if(reset)
-       clkout90_div4 <= 1'b0;   
-     else
-       clkout90_div4 <= posedge90_match ? 1'b1 :
-			negedge90_match ? 1'b0 :
-		                          clkout90_div4;
 
-   always @ (negedge clkin or posedge reset)
-     if(reset)
-       clkout90_div2 <= 1'b0;   
-       else	 
-	 clkout90_div2 <= negedge_match ? 1'b1 :
-			  posedge_match ? 1'b0 :
-		                     clkout90_div2;
-     
-   assign clkout90  = div2_sel ? clkout90_div2 : clkout90_div4;
-      
+   //Divide by one bypass
+   assign div_bp  = (divcfg[3:0]==4'b0000);
+   assign clkout  = div_bp ? clkin : clkout_reg;
+ 
 endmodule // clock_divider
     
 /*
