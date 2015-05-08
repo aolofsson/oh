@@ -11,39 +11,37 @@ module fifo_cdc (/*AUTOARG*/
    clk_in, clk_out, reset, access_in, packet_in, wait_in
    );
 
-   parameter FD     = 16;         //minimum depth
-   parameter AW     = $clog2(FD);   
-   parameter DW     = 104;
+   parameter WIDTH    = 104;
+   parameter DEPTH     = 16;
 
    /********************************/
    /*Clocks/reset                  */
    /********************************/  
-   input            clk_in;   
-   input            clk_out;   
-   input            reset;
+   input              clk_in;   
+   input              clk_out;   
+   input              reset;
 
    /********************************/
    /*Input Packet*/
    /********************************/  
-   input 	    access_in;   
-   input [DW-1:0]   packet_in;   
-   output 	    wait_out;   
+   input 	      access_in;   
+   input [WIDTH-1:0]  packet_in;   
+   output 	      wait_out;   
 
    /********************************/
    /*Register RD/WR Packet to ERX*/
    /********************************/  
-   output    	    access_out;   
-   output [DW-1:0]  packet_out;   
-   input 	    wait_in;   
-
+   output 	      access_out;   
+   output [WIDTH-1:0] packet_out;   
+   input 	      wait_in;   
+   
    //Local wires
-   wire 	    wr_en;
-   wire 	    rd_en;   
-   wire 	    empty;
-   wire 	    full;
-   reg 		    access_out;
-   
-   
+   wire 	      wr_en;
+   wire 	      rd_en;   
+   wire 	      empty;
+   wire 	      full;
+   reg 		      access_out;
+      
    assign wr_en    = access_in & ~full;
    assign rd_en    = ~empty & ~wait_in;
    assign wait_out =  full;
@@ -56,21 +54,25 @@ module fifo_cdc (/*AUTOARG*/
        access_out <=rd_en;
    
    //Read response fifo (from master)
-   fifo_async  #(.DW(DW), .AW(5)) fifo(
-					     .prog_full		(),
-					     .full		(full),
-					     // Outputs
-					     .dout		(packet_out[DW-1:0]),
-					     .empty		(empty),
-					     .valid		(), 
-					     // Inputs
-					     .reset		(reset),
-					     .wr_clk		(clk_in),
-					     .rd_clk		(clk_out),
-					     .wr_en		(wr_en),
-					     .din		(packet_in[DW-1:0]),
-					     .rd_en		(rd_en)
-					    );
+
+   defparam fifo.WIDTH=104;
+   defparam fifo.DEPTH=16;
+   fifo_async  fifo(
+		    .prog_full		(),
+		    .full		(full),
+		    // Outputs
+		    .dout		(packet_out[WIDTH-1:0]),
+		    .empty		(empty),
+		    .valid		(), 
+		    // Inputs
+		    .wr_rst		(reset),
+		    .rd_rst		(reset),
+		    .wr_clk		(clk_in),
+		    .rd_clk		(clk_out),
+		    .wr_en		(wr_en),
+		    .din		(packet_in[WIDTH-1:0]),
+		    .rd_en		(rd_en)
+		    );
       
 endmodule // fifo_cdc
 

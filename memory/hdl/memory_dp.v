@@ -34,8 +34,6 @@ module memory_dp(/*AUTOARG*/
    //SIMPLE MEMORY MODEL 
    //////////////////////   
 
-`ifdef TARGET_CLEAN     
-
    reg [DW-1:0]        ram    [MD-1:0];  
    reg [DW-1:0]        rd_data;
    
@@ -55,12 +53,6 @@ module memory_dp(/*AUTOARG*/
            end
       end
    endgenerate
-`elsif TARGET_XILINX
-   //instantiate XILINX BRAM (based on parameter size)
-      
-`elsif TARGET_ALTERA
-   
-`endif
    
 endmodule // memory_dp
 

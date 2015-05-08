@@ -26,8 +26,6 @@ module memory_sp(/*AUTOARG*/
    input [DW-1:0]      din; //data input
    output [DW-1:0]     dout;//data output
       
-`ifdef TARGET_CLEAN     
-
    reg [DW-1:0]        ram    [MD-1:0];  
    reg [DW-1:0]        rd_data;
    reg [DW-1:0]        dout;
@@ -48,12 +46,6 @@ module memory_sp(/*AUTOARG*/
            end
       end
    endgenerate
-`elsif TARGET_XILINX
-   //instantiate XILINX BRAM (based on parameter size)
-      
-`elsif TARGET_ALTERA
-   //instantiate ALTERA BRAM (based on paremeter size)
-`endif
    
 endmodule // memory_dp
 

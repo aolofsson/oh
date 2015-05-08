@@ -27,13 +27,15 @@ module emailbox (/*AUTOARG*/
    mi_addr, mi_din
    );
 
-   parameter DW     = 32;      //data width of fifo
-   parameter AW     = 32;      //data width of fifo
-   parameter PW     = 104;     //packet size
-   parameter RFAW   = 6;       //address bus width
-   parameter GROUP  = 4'h0;    //address map group
-   parameter ID     = 12'h000; //link id
+   parameter DW     = 32;        //data width of fifo
+   parameter AW     = 32;        //data width of fifo
+   parameter PW     = 104;       //packet size
+   parameter RFAW   = 6;         //address bus width
+   parameter ID     = 12'h000;   //link id
 
+   parameter WIDTH  = 104;
+   parameter DEPTH  = 16;
+   
    /*****************************/
    /*RESET                      */
    /*****************************/
@@ -71,14 +73,14 @@ module emailbox (/*AUTOARG*/
    /*****************************/
    /*WIRES                      */
    /*****************************/
-   wire 	   mailbox_read;
-   wire 	   mi_rd;
-   wire [2*DW-1:0] mailbox_fifo_data;
-   wire 	   mailbox_empty; 
-   wire 	   mailbox_pop;
-   wire [31:0] 	   emesh_addr;
-   wire [63:0] 	   emesh_din;
-   wire 	   emesh__write;
+   wire 	    mailbox_read;
+   wire 	    mi_rd;
+   wire [WIDTH-1:0] mailbox_fifo_data;
+   wire 	    mailbox_empty; 
+   wire 	    mailbox_pop;
+   wire [31:0] 	    emesh_addr;
+   wire [63:0] 	    emesh_din;
+   wire 	    emesh__write;
    
    /*****************************/
    /*WRITE TO FIFO              */
@@ -106,7 +108,8 @@ module emailbox (/*AUTOARG*/
      if(mi_rd)
        case(mi_addr[RFAW+1:2])	 
 	 `E_MAILBOXLO:   mi_dout[63:0] <= mailbox_fifo_data[63:0];	 
-	 `E_MAILBOXHI:   mi_dout[63:0] <= {mailbox_fifo_data[2*DW-1:DW],mailbox_fifo_data[2*DW-1:DW]};	 
+	 `E_MAILBOXHI:   mi_dout[63:0] <= {mailbox_fifo_data[2*DW-1:DW],
+					   mailbox_fifo_data[2*DW-1:DW]};	 
 	 default:        mi_dout[63:0] <= 64'd0;
        endcase // case (mi_addr[RFAW-1:2])
      else
@@ -120,21 +123,26 @@ module emailbox (/*AUTOARG*/
 
    //BUG! This fifo is currently hard coded to 32 entries
    //Should be parametrized to up to 4096 entries
-   fifo_async #(.DW(64), .AW(5)) fifo(// Outputs
-			     .dout      (mailbox_fifo_data[2*DW-1:0]),
-			     .empty     (mailbox_empty),
-			     .full      (mailbox_full),
-     			     .prog_full (),
-			     .valid(),
-			     //Read Port
-			     .rd_en    (mailbox_pop), 
-			     .rd_clk   (rd_clk),  
-			     //Write Port 
-			     .din      (emesh_din[63:0]),
-			     .wr_en    (emesh_write),
-			     .wr_clk   (wr_clk),  			     
-			     .reset    (reset)      
-			     ); 
+
+   defparam fifo.WIDTH = WIDTH;
+   defparam fifo.DEPTH = DEPTH;
+   
+   fifo_async fifo(// Outputs
+		   .dout      (mailbox_fifo_data[WIDTH-1:0]),
+		   .empty     (mailbox_empty),
+		   .full      (mailbox_full),
+     		   .prog_full (),
+		   .valid(),
+		   //Read Port
+		   .rd_en    (mailbox_pop), 
+		   .rd_clk   (rd_clk),  
+		   //Write Port 
+		   .din      ({40'b0,emesh_din[63:0]}),
+		   .wr_en    (emesh_write),
+		   .wr_clk   (wr_clk),  			     
+		   .wr_rst   (reset),
+  		   .rd_rst   (reset)      
+		   ); 
    
 endmodule // emailbox
 
