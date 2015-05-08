@@ -90,14 +90,14 @@ B02      | dstaddr[27:20]
 B03      | dstaddr[19:12]
 B04      | dstaddr[11:4]
 B05      | {dstaddr[3:0],datamode[1:0],write,access}
-+B06     | data[31:24] / srcaddr[31:24]
-+B07     | data[23:16] / srcaddr[23:16]
-+B08     | data[15:8] / srcaddr[15:8]
-++B09    | data[7:0] / srcaddr[7:0]
-B10      | data[63:56]  
-B11      | data[55:48]  
-B12      | data[47:40]  
-B13      | data[39:32]  
++B06     | data[31:24]
++B07     | data[23:16]
++B08     | data[15:8]
+++B09    | data[7:0]
+B10      | data[63:56] or srcaddr[31:24]
+B11      | data[55:48] or srcaddr[23:16]
+B12      | data[47:40] or srcaddr[15:8]
+B13      | data[39:32] or srcaddr[7:0]
 +++B14   | data[31:24] in 64 bit write burst mode only
 B15      | data[23:16] in 64 bit write burst mode only
 ...      | ...
