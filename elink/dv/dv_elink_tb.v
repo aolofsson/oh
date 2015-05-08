@@ -13,7 +13,7 @@ module dv_elink_tb();
 /* verilator lint_off STMTDLY */
 /* verilator lint_off UNOPTFLAT */
    //REGS
-   reg  [1:0]    clk;
+   reg           clk;
    reg 		 reset;   
    reg 		 go;
    reg [1:0] 	 datamode;
@@ -32,7 +32,10 @@ module dv_elink_tb();
    reg [MW-1:0]  stimarray[MD-1:0];
    reg [MW-1:0]  transaction;
    reg [MAW-1:0] stim_addr;
-
+   reg [1:0] 	 state;
+   reg [31:0] 	 count;
+   reg 	 start;
+   
    integer 	 i;
    
 `ifdef MANUAL   
@@ -48,19 +51,17 @@ module dv_elink_tb();
 
    //Forever clock
    always
-     #1  clk[0] = ~clk[0]; //fast clock
-    always
-     #50 clk[1] = ~clk[1]; //slow clock
-
-   wire clkstim = clk[1];
+     #1  clk = ~clk; //fast clock
+   
+   wire clkstim = clk;
       
    //Reset
    initial
      begin
 	#0
 	  reset    = 1'b1;    // reset is active
-          go       = 1'b0;
-	  clk[1:0] = 2'b0;
+          start    = 1'b0;
+	  clk      = 1'b0;
 	#1000 
 
 `ifdef AUTO
@@ -73,21 +74,31 @@ module dv_elink_tb();
 `endif
 	  reset    = 1'b0;    // at time 100 release reset
 	#4000
-	  go       = 1'b1;	
-	#10000
-`ifdef AUTO
-	  go       = 1'b0;
-`endif
+	  start       = 1'b1;	
 	#20000	  
 	  $finish;
      end
 
-   //Notes:The testbench connects a 64 bit master to a 32 bit slave
+
+`define IDLE  2'b00
+`define DONE  2'b10
+`define GO    2'b01
+   
+   always @ (posedge clk or posedge reset)
+     if(reset)
+       state[1:0] <= `IDLE;//not started
+     else if(start & (state[1:0]==`IDLE))
+       state[1:0] <= `GO;//going
+     else if( ~(|count) & (state[1:0]==`GO))
+       state[1:0] <= `DONE;//gone
+   
+   //Notes:The testbench
+   //  connects a 64 bit master to a 32 bit slave
    //To make this work, we limit the addresses to 64 bit aligned
    
-   
+//Stimulus Driver   
 always @ (posedge clkstim)
-  if(reset | ~go)
+  if(reset)
     begin
        ext_access          <= 1'b0; //empty
        ext_write           <= 1'b0;
@@ -100,10 +111,10 @@ always @ (posedge clkstim)
        ext_wr_wait         <= 1'b0;
        stim_addr[MAW-1:0]  <= 'd0;
        transaction[MW-1:0] <= 'd0;
+       count               <= `TRANS;
     end   
-  else if (go & ~(dut_wr_wait|dut_rd_wait))
+  else if ((state[1:0]==`GO) & ~(dut_wr_wait|dut_rd_wait))
     begin
-`ifdef MANUAL
        transaction[MW-1:0] <= stimarray[stim_addr];
        ext_access          <= transaction[0];
        ext_write           <= transaction[1];
@@ -113,13 +124,11 @@ always @ (posedge clkstim)
        ext_data[31:0]      <= transaction[71:40];
        ext_srcaddr[31:0]   <= transaction[103:72];
        stim_addr[MAW-1:0]  <= stim_addr[MAW-1:0] + 1'b1; 
-`else
-       ext_access          <=  |(transaction[103:0]);
-       ext_data[31:0]      <=  ext_data[31:0]    + 32'b1;
-       ext_dstaddr[31:0]   <=  ext_dstaddr[31:0] + 32'd8;//(32'b1<<datamode)
-       ext_datamode[1:0]   <=  datamode[1:0];       
-`endif 
-    end     
+       count               <= count - 1'b1;
+    end
+  else
+    ext_access <= 1'b0;
+   
    //Waveform dump
 `ifndef TARGET_VERILATOR
    initial
@@ -137,7 +146,6 @@ always @ (posedge clkstim)
    wire			dut_passed;		// From dv_elink of dv_elink.v
    wire			dut_rd_wait;		// From dv_elink of dv_elink.v
    wire			dut_wr_wait;		// From dv_elink of dv_elink.v
-   wire [PW-1:0]	packet_out;		// From e2p of emesh2packet.v
    // End of automatics
    
    emesh2packet e2p (
@@ -163,7 +171,7 @@ always @ (posedge clkstim)
 		     .dut_access	(dut_access),
 		     .dut_packet	(dut_packet[PW-1:0]),
 		     // Inputs
-		     .clk		(clk[CW-1:0]),
+		     .clk		(clk),
 		     .reset		(reset),
 		     .ext_access	(ext_access),
 		     .ext_packet	(ext_packet[PW-1:0]),
