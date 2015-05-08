@@ -2,9 +2,9 @@ module elink_example(/*AUTOARG*/
    // Outputs
    rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n,
    txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
-   txo_data_n, chipid, chip_resetb, cclk_p, cclk_n,
+   txo_data_n, chipid, resetb, cclk_p, cclk_n,
    // Inputs
-   reset, clk, start, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
+   reset, sys_clk, start, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
    rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
    txi_rd_wait_p, txi_rd_wait_n
    );
@@ -18,8 +18,8 @@ module elink_example(/*AUTOARG*/
    /****************************/
    /*CLK AND RESET             */
    /****************************/
-   input        reset;            // active high async reset
-   input 	clk;              // pll input clock
+   input        reset;           // active high async reset
+   input 	sys_clk;          // pll input clock
    input 	start;            // start generator
    
    /********************************/
@@ -42,8 +42,8 @@ module elink_example(/*AUTOARG*/
    /********************************/
    /*EPIPHANY INTERFACE (I/O PINS) */
    /********************************/          
-   output [11:0] chipid;			// From etx of etx.v
-   output 	 chip_resetb;          //chip reset for Epiphany (active low)
+   output [11:0] chipid;	       // From etx of etx.v
+   output 	 resetb;               //chip reset for Epiphany (active low)
    output 	 cclk_p, cclk_n;       //high speed clock (up to 1GHz) to Epiphany
    
 
@@ -90,10 +90,10 @@ module elink_example(/*AUTOARG*/
 		.cclk_p			(),
 		.cclk_n			(),	
 		.rx_lclk_div4		(),
-		.chip_resetb		(chip_resetb),
+		.chip_resetb		(resetb),
 		.tx_lclk_div4		(),
-		.sys_clk		(clk),
-		.pll_clkin		(clk),
+		.sys_clk		(sys_clk),
+		.pll_clkin		(pll_clkin),
 		.testmode		(1'b0),
 		/*AUTOINST*/
 		// Outputs
@@ -149,13 +149,13 @@ module elink_example(/*AUTOARG*/
    defparam egen_txwr.SRC_ID=12'h810;
    defparam egen_txwr.DST_ID=12'h808;
    
-   egen egen_txwr (/*AUTOINST*/
+   egen egen_txwr (.clk		  (sys_clk),
+		   /*AUTOINST*/
 		   // Outputs
 		   .done		(done),
 		   .access_out		(txwr_access),		 // Templated
 		   .packet_out		(txwr_packet[PW-1:0]),	 // Templated
 		   // Inputs
-		   .clk			(clk),
 		   .reset		(reset),
 		   .start		(start),
 		   .wait_in		(txwr_wait));		 // Templated
@@ -167,12 +167,12 @@ module elink_example(/*AUTOARG*/
    defparam egen_txrd.DST_ID=12'h808;
    egen egen_txrd ( .start		(done),
 		    .done		(),
+		    .clk		  (sys_clk),
 		    /*AUTOINST*/
 		   // Outputs
 		   .access_out		(txrd_access),		 // Templated
 		   .packet_out		(txrd_packet[PW-1:0]),	 // Templated
 		   // Inputs
-		   .clk			(clk),
 		   .reset		(reset),
 		   .wait_in		(txrd_wait));		 // Templated
    
@@ -197,6 +197,7 @@ module elink_example(/*AUTOARG*/
                         .\(.*\)_in        (emem_\1[]),
                         .wait_out	  (emem_wait),
                         .wait_in          (txrr_wait),
+                        .clk		  (sys_clk),
                          );
    */
 
@@ -206,7 +207,7 @@ module elink_example(/*AUTOARG*/
 		 .access_out		(txrr_access),		 // Templated
 		 .packet_out		(txrr_packet[PW-1:0]),	 // Templated
 		 // Inputs
-		 .clk			(clk),
+		 .clk			(sys_clk),		 // Templated
 		 .reset			(reset),
 		 .access_in		(emem_access),		 // Templated
 		 .packet_in		(emem_packet[PW-1:0]),	 // Templated

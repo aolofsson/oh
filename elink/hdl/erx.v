@@ -92,13 +92,13 @@ module erx (/*AUTOARG*/
    wire [7:0]		rx_frame_par;		// From erx_io of erx_io.v
    wire			rxrd_fifo_access;	// From erx_disty of erx_disty.v
    wire [PW-1:0]	rxrd_fifo_packet;	// From erx_disty of erx_disty.v
-   wire			rxrd_fifo_wait;		// From rxrd_fifo of fifo_async.v
+   wire			rxrd_fifo_wait;		// From rxrd_fifo of fifo_cdc.v
    wire			rxrr_fifo_access;	// From erx_disty of erx_disty.v
    wire [PW-1:0]	rxrr_fifo_packet;	// From erx_disty of erx_disty.v
-   wire			rxrr_fifo_wait;		// From rxrr_fifo of fifo_async.v
+   wire			rxrr_fifo_wait;		// From rxrr_fifo of fifo_cdc.v
    wire			rxwr_fifo_access;	// From erx_disty of erx_disty.v
    wire [PW-1:0]	rxwr_fifo_packet;	// From erx_disty of erx_disty.v
-   wire			rxwr_fifo_wait;		// From rxwr_fifo of fifo_async.v
+   wire			rxwr_fifo_wait;		// From rxwr_fifo of fifo_cdc.v
    // End of automatics
 
    //regs
@@ -313,7 +313,8 @@ module erx (/*AUTOARG*/
     );
         */   
    
-   assign rx_status[15:0] = {2'b0,                     //15:14
+   assign rx_status[15:0] = {16'b0};
+   /*
 			      erx_rd_wait,               //13
 			      erx_wr_wait,               //12
 			      rxrr_wait,                //11
@@ -330,7 +331,7 @@ module erx (/*AUTOARG*/
 			      rxwr_fifo_full	          //0	
 			      };
 
-
+    */
 
    erx_cfg erx_cfg (.rx_status    	(rx_status[15:0]),
 		    .timer_cfg		(),
@@ -431,79 +432,73 @@ module erx (/*AUTOARG*/
    /*(for AXI 1. read request, 2. write, and 3. read response) */
    /************************************************************/
 
-   /*fifo_async   AUTO_TEMPLATE ( 
+   /*fifo_cdc   AUTO_TEMPLATE ( 
  			       // Outputs
-			       
-			       .dout       (@"(substring vl-cell-name  0 4)"_packet[PW-1:0]),
-			       .empty	   (@"(substring vl-cell-name  0 4)"_empty),
-			       .full	   (@"(substring vl-cell-name  0 4)"_fifo_full),
-			       .prog_full  (@"(substring vl-cell-name  0 4)"_fifo_wait),
-    			       .valid      (@"(substring vl-cell-name  0 4)"_access),
-			       // Inputs
-			       .rd_clk	   (sys_clk),
-                               .wr_clk	   (rx_lclk_div4),
-                               .wr_en      (@"(substring vl-cell-name  0 4)"_fifo_access),
-                               .rd_en      (~@"(substring vl-cell-name  0 4)"_wait & ~@"(substring vl-cell-name  0 4)"_empty),
+			       .packet_out (@"(substring vl-cell-name  0 4)"_packet[PW-1:0]),
+    			       .access_out (@"(substring vl-cell-name  0 4)"_access),
+                               .wait_out   (@"(substring vl-cell-name  0 4)"_fifo_wait),
+    			       // Inputs
+			       .clk_out	   (sys_clk),
+                               .clk_in	   (rx_lclk_div4),
+                               .access_in  (@"(substring vl-cell-name  0 4)"_fifo_access),
+                               .wait_in    (@"(substring vl-cell-name  0 4)"_wait),
 			       .reset	   (reset),
-                               .din	   (@"(substring vl-cell-name  0 4)"_fifo_packet[PW-1:0]),
+                               .packet_in  (@"(substring vl-cell-name  0 4)"_fifo_packet[PW-1:0]),
     );
    */
 
       
    //Read request fifo (from Epiphany)
-   fifo_async #(.DW(104), .AW(5)) 
-   rxrd_fifo   (.full			(rxrd_fifo_full),
-		.empty			(rxrd_empty),
+   fifo_cdc #(.WIDTH(104), .DEPTH(16)) 
+   rxrd_fifo   (
 		/*AUTOINST*/
 		// Outputs
-		.prog_full		(rxrd_fifo_wait),	 // Templated
-		.dout			(rxrd_packet[PW-1:0]),	 // Templated
-		.valid			(rxrd_access),		 // Templated
+		.wait_out		(rxrd_fifo_wait),	 // Templated
+		.access_out		(rxrd_access),		 // Templated
+		.packet_out		(rxrd_packet[PW-1:0]),	 // Templated
 		// Inputs
+		.clk_in			(rx_lclk_div4),		 // Templated
+		.clk_out		(sys_clk),		 // Templated
 		.reset			(reset),		 // Templated
-		.wr_clk			(rx_lclk_div4),		 // Templated
-		.rd_clk			(sys_clk),		 // Templated
-		.wr_en			(rxrd_fifo_access),	 // Templated
-		.din			(rxrd_fifo_packet[PW-1:0]), // Templated
-		.rd_en			(~rxrd_wait & ~rxrd_empty)); // Templated
+		.access_in		(rxrd_fifo_access),	 // Templated
+		.packet_in		(rxrd_fifo_packet[PW-1:0]), // Templated
+		.wait_in		(rxrd_wait));		 // Templated
 
  
 
    //Write fifo (from Epiphany)
-   fifo_async #(.DW(104), .AW(5)) 
-   rxwr_fifo(.full			(rxwr_fifo_full),
-	     .empty			(rxwr_empty),
+   fifo_cdc #(.WIDTH(104), .DEPTH(16)) 
+   rxwr_fifo(
 	     /*AUTOINST*/
 	     // Outputs
-	     .prog_full			(rxwr_fifo_wait),	 // Templated
-	     .dout			(rxwr_packet[PW-1:0]),	 // Templated
-	     .valid			(rxwr_access),		 // Templated
+	     .wait_out			(rxwr_fifo_wait),	 // Templated
+	     .access_out		(rxwr_access),		 // Templated
+	     .packet_out		(rxwr_packet[PW-1:0]),	 // Templated
 	     // Inputs
+	     .clk_in			(rx_lclk_div4),		 // Templated
+	     .clk_out			(sys_clk),		 // Templated
 	     .reset			(reset),		 // Templated
-	     .wr_clk			(rx_lclk_div4),		 // Templated
-	     .rd_clk			(sys_clk),		 // Templated
-	     .wr_en			(rxwr_fifo_access),	 // Templated
-	     .din			(rxwr_fifo_packet[PW-1:0]), // Templated
-	     .rd_en			(~rxwr_wait & ~rxwr_empty)); // Templated
+	     .access_in			(rxwr_fifo_access),	 // Templated
+	     .packet_in			(rxwr_fifo_packet[PW-1:0]), // Templated
+	     .wait_in			(rxwr_wait));		 // Templated
    
  
 
    //Read response fifo (for host)
-   fifo_async #(.DW(104), .AW(5))  
-   rxrr_fifo(.full			(rxrr_fifo_full),
-	     .empty			(rxrr_empty),
+   fifo_cdc #(.WIDTH(104), .DEPTH(16))  
+   rxrr_fifo(
 	     /*AUTOINST*/
 	     // Outputs
-	     .prog_full			(rxrr_fifo_wait),	 // Templated
-	     .dout			(rxrr_packet[PW-1:0]),	 // Templated
-	     .valid			(rxrr_access),		 // Templated
+	     .wait_out			(rxrr_fifo_wait),	 // Templated
+	     .access_out		(rxrr_access),		 // Templated
+	     .packet_out		(rxrr_packet[PW-1:0]),	 // Templated
 	     // Inputs
+	     .clk_in			(rx_lclk_div4),		 // Templated
+	     .clk_out			(sys_clk),		 // Templated
 	     .reset			(reset),		 // Templated
-	     .wr_clk			(rx_lclk_div4),		 // Templated
-	     .rd_clk			(sys_clk),		 // Templated
-	     .wr_en			(rxrr_fifo_access),	 // Templated
-	     .din			(rxrr_fifo_packet[PW-1:0]), // Templated
-	     .rd_en			(~rxrr_wait & ~rxrr_empty)); // Templated
+	     .access_in			(rxrr_fifo_access),	 // Templated
+	     .packet_in			(rxrr_fifo_packet[PW-1:0]), // Templated
+	     .wait_in			(rxrr_wait));		 // Templated
       
   
    /************************************************************/

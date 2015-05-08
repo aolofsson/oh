@@ -263,29 +263,33 @@ module elink(/*AUTOARG*/
    /***********************************************************/
    /*TX-->RX REGISTER INTERFACE CONNECTION                    */
    /***********************************************************/
-   /*fifo_cdc AUTO_TEMPLATE (.clk_in		(tx_lclk_div4),
-		             .clk_out		(rx_lclk_div4),
-                             .packet_in	        (etx_cfg_packet[PW-1:0]),
-                             .packet_out	(erx_cfg_packet[PW-1:0]),
-                             .access_in	        (etx_cfg_access),
-                             .access_out	(erx_cfg_access),
-                             .reset             (elink_reset),
-                             .wait_in		(erx_cfg_wait),
-                             .wait_out		(etx_cfg_wait),
+   /*fifo_cdc AUTO_TEMPLATE (.clk_in	 (tx_lclk_div4),
+		             .clk_out	 (rx_lclk_div4),
+                             .packet_in	 (etx_cfg_packet[PW-1:0]),
+                             .packet_out (erx_cfg_packet[PW-1:0]),
+                             .access_in	 (etx_cfg_access),
+                             .access_out (erx_cfg_access),
+                             .reset      (elink_reset),
+                             .wait_in	 (erx_cfg_wait),
+                             .wait_out	 (etx_cfg_wait),
                        );
    */
-   fifo_cdc #(.DW(104)) ecfg_cdc (/*AUTOINST*/
-				  // Outputs
-				  .wait_out		(etx_cfg_wait),	 // Templated
-				  .access_out		(erx_cfg_access), // Templated
-				  .packet_out		(erx_cfg_packet[PW-1:0]), // Templated
-				  // Inputs
-				  .clk_in		(tx_lclk_div4),	 // Templated
-				  .clk_out		(rx_lclk_div4),	 // Templated
-				  .reset		(elink_reset),	 // Templated
-				  .access_in		(etx_cfg_access), // Templated
-				  .packet_in		(etx_cfg_packet[PW-1:0]), // Templated
-				  .wait_in		(erx_cfg_wait));	 // Templated
+
+   defparam ecfg_cdc.WIDTH=104;
+   defparam ecfg_cdc.DEPTH=16;
+   
+   fifo_cdc ecfg_cdc (/*AUTOINST*/
+		      // Outputs
+		      .wait_out		(etx_cfg_wait),		 // Templated
+		      .access_out	(erx_cfg_access),	 // Templated
+		      .packet_out	(erx_cfg_packet[PW-1:0]), // Templated
+		      // Inputs
+		      .clk_in		(tx_lclk_div4),		 // Templated
+		      .clk_out		(rx_lclk_div4),		 // Templated
+		      .reset		(elink_reset),		 // Templated
+		      .access_in	(etx_cfg_access),	 // Templated
+		      .packet_in	(etx_cfg_packet[PW-1:0]), // Templated
+		      .wait_in		(erx_cfg_wait));		 // Templated
    
    
 endmodule // elink
