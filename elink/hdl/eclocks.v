@@ -140,6 +140,11 @@ module eclocks (/*AUTOARG*/
         .CLKFBIN(lclk_clkfb)
         );
 
+   OBUFDS  cclk_obuf (.O   (cclk_p),
+		      .OB  (cclk_n),
+		      .I   (cclk)
+		      );
+ 
 `endif //  `ifdef TARGET_XILINX
 
 
@@ -183,10 +188,7 @@ module eclocks (/*AUTOARG*/
 
 
    //cclk (hack for sim)
-   assign cclk_p = hard_reset ? clkin :
-		   cclk_bp    ? pll_bypass[0] :			      
-			        cclk;
-   assign cclk_n = ~cclk_p;
+  
 
    //lclk (hack for sim)
    assign tx_lclk = hard_reset ? clkin :
