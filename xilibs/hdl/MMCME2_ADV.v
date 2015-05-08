@@ -48,41 +48,45 @@ module MMCME2_ADV # (
   parameter integer SS_MOD_PERIOD = 10000,
   parameter STARTUP_WAIT = "FALSE"
 )(
-  output CLKFBOUT,
-  output CLKFBOUTB,
-  output CLKFBSTOPPED,
-  output CLKINSTOPPED,
-  output CLKOUT0,
-  output CLKOUT0B,
-  output CLKOUT1,
-  output CLKOUT1B,
-  output CLKOUT2,
-  output CLKOUT2B,
-  output CLKOUT3,
-  output CLKOUT3B,
-  output CLKOUT4,
-  output CLKOUT5,
-  output CLKOUT6,
+  output 	CLKFBOUT,     //feedback clock to connect to CLKFBIN
+  output 	CLKFBOUTB,    //inverted feedback clock output
+  output 	CLKFBSTOPPED, //indicates that FB clock as stoppped
+  output 	CLKINSTOPPED, //indicates that input clock has stopped
+  output 	CLKOUT0,      //clock output
+  output 	CLKOUT0B,     //inverted clock output
+  output 	CLKOUT1,
+  output 	CLKOUT1B,
+  output 	CLKOUT2,
+  output 	CLKOUT2B,
+  output 	CLKOUT3,
+  output 	CLKOUT3B,
+  output 	CLKOUT4,
+  output 	CLKOUT5,
+  output 	CLKOUT6,
   output [15:0] DO,
-  output DRDY,
-  output LOCKED,
-  output PSDONE,
-                                                                                  
-  input CLKFBIN,
-  input CLKIN1,
-  input CLKIN2,
-  input CLKINSEL,
-  input [6:0] DADDR,
-  input DCLK,
-  input DEN,
-  input [15:0] DI,
-  input DWE,
-  input PSCLK,
-  input PSEN,
-  input PSINCDEC,
-  input PWRDWN,
-  input RST
+  output 	DRDY,
+  output 	LOCKED,
+  output 	PSDONE,       //phase shift done
+  input 	CLKFBIN,
+  input 	CLKIN1,
+  input 	CLKIN2,
+  input 	CLKINSEL,
+  input [6:0] 	DADDR,
+  input 	DCLK,
+  input 	DEN,
+  input [15:0] 	DI,
+  input 	DWE,
+  input 	PSCLK,      //phase shift clock
+  input 	PSEN,       //phase shift enable
+  input 	PSINCDEC,   //phase shift decrement/increment  
+  input 	PWRDWN,     //global power down pin
+  input 	RST         //async global reset   
 );
 
+
+   //No mult function, but insert divider
+
+   
+   
 endmodule // MMCME2_ADV
 

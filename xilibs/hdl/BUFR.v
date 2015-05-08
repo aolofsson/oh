@@ -40,7 +40,6 @@ module BUFR (/*AUTOARG*/
    clock_divider clock_divider (
 				// Outputs
 				.clkout		(O),
-				.clkout90	(),
 				// Inputs
 				.clkin		(I),
 				.divcfg		(4'b0010),//div4
