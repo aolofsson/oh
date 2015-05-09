@@ -48,13 +48,13 @@ module eclocks (/*AUTOARG*/
    parameter CCLK_VCO_MULT =12;
    parameter CCLK_DIVIDE   = 2;
 
-   PLLE2_BASE
+   MMCME2_ADV
      #(
        .BANDWIDTH("OPTIMIZED"),          
-       .CLKFBOUT_MULT(CCLK_VCO_MULT),
+       .CLKFBOUT_MULT_F(CCLK_VCO_MULT),
        .CLKFBOUT_PHASE(0.0),
        .CLKIN1_PERIOD(CLKIN_PERIOD),
-       .CLKOUT0_DIVIDE(CCLK_DIVIDE),    // cclk
+       .CLKOUT0_DIVIDE_F(CCLK_DIVIDE),    // cclk
        .CLKOUT1_DIVIDE(CCLK_DIVIDE*2),  // cclk/2
        .CLKOUT2_DIVIDE(CCLK_DIVIDE*4),  // cclk/4
        .CLKOUT3_DIVIDE(CCLK_DIVIDE*8),  // cclk/8
@@ -78,26 +78,51 @@ module eclocks (/*AUTOARG*/
        ) pll_cclk
        (
         .CLKOUT0(cclk),
+	.CLKOUT0B(),
         .CLKOUT1(),
+	.CLKOUT1B(),
         .CLKOUT2(),
+	.CLKOUT2B(),
         .CLKOUT3(),
+	.CLKOUT3B(),
         .CLKOUT4(),
         .CLKOUT5(),
-        .CLKFBOUT(cclk_clkfb),
-        .LOCKED(),
-        .CLKIN1(pll_clkin),
-        .PWRDWN(1'b0),
+	.CLKOUT6(),
+	.PWRDWN(1'b0),
         .RST(1'b0),
-        .CLKFBIN(cclk_clkfb)
+        .CLKFBIN(cclk_clkfb),
+        .CLKFBOUT(cclk_clkfb),       
+        .CLKIN1(pll_clkin),
+	.CLKIN2(1'b0),
+	.CLKINSEL(1'b1),      
+	.DADDR(7'b0),
+        .DCLK(1'b0),
+	.DEN(1'b0),
+	.DI(16'b0),
+	.DWE(1'b0),
+	.DRDY(),
+	.DO(), 
+	.LOCKED(),
+	.PSCLK(1'b0),
+	.PSEN(1'b0),
+	.PSDONE(),
+	.PSINCDEC(1'b0),
+	.CLKFBSTOPPED(),
+	.CLKINSTOPPED()
         );
-   
+
+   OBUFDS  cclk_obuf (.O   (cclk_p),
+		      .OB  (cclk_n),
+		      .I   (cclk)
+		      );
+ 
    //###########################
    // MMCM/PLL FOR LCLK
    //###########################
    parameter LCLK_VCO_MULT =10;
    parameter LCLK_DIVIDE   = 2;
 
-  PLLE2_BASE
+  PLLE2_ADV
      #(
        .BANDWIDTH("OPTIMIZED"),          
        .CLKFBOUT_MULT(LCLK_VCO_MULT),
@@ -126,25 +151,29 @@ module eclocks (/*AUTOARG*/
        .STARTUP_WAIT("FALSE")
        ) pll_lclk
        (
-        .CLKOUT0(tx_lclk),             //tx_lclk
-        .CLKOUT1(tx_lclk90),           //tx_lclk90
-        .CLKOUT2(tx_lclk_div4),        //tx_lclk_div4
+	.CLKOUT0(tx_lclk),              //tx_lclk
+        .CLKOUT1(tx_lclk90),            //tx_lclk90
+        .CLKOUT2(tx_lclk_div4),         //tx_lclk_div4
         .CLKOUT3(),
         .CLKOUT4(),
         .CLKOUT5(),
-        .CLKFBOUT(lclk_clkfb),
-        .LOCKED(),
-        .CLKIN1(pll_clkin),
-        .PWRDWN(1'b0),
+	.PWRDWN(1'b0),
         .RST(1'b0),
-        .CLKFBIN(lclk_clkfb)
+        .CLKFBIN(lclk_clkfb),
+        .CLKFBOUT(lclk_clkfb),       
+        .CLKIN1(pll_clkin),
+	.CLKIN2(1'b0),
+	.CLKINSEL(1'b1),      
+	.DADDR(7'b0),
+	.DCLK(1'b0),
+	.DEN(1'b0),
+	.DI(16'b0),
+	.DWE(1'b0),
+	.DRDY(),
+	.DO(), 
+	.LOCKED()
         );
-
-   OBUFDS  cclk_obuf (.O   (cclk_p),
-		      .OB  (cclk_n),
-		      .I   (cclk)
-		      );
- 
+   
 `endif //  `ifdef TARGET_XILINX
 
 

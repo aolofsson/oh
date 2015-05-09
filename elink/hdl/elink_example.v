@@ -4,9 +4,9 @@ module elink_example(/*AUTOARG*/
    txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
    txo_data_n, chipid, resetb, cclk_p, cclk_n,
    // Inputs
-   reset, sys_clk, start, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
-   rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
-   txi_rd_wait_p, txi_rd_wait_n
+   reset, sys_clk_p, sys_clk_n, clkin_p, clkin_n, start, rxi_lclk_p,
+   rxi_lclk_n, rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n,
+   txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n
    );
 
    parameter AW          = 32;
@@ -16,10 +16,13 @@ module elink_example(/*AUTOARG*/
    parameter CHIP_ID     = 12'h808;
 
    /****************************/
-   /*CLK AND RESET             */
+   /*CLOCKS AND RESET          */
    /****************************/
-   input        reset;           // active high async reset
-   input 	sys_clk;          // pll input clock
+   input        reset;            // active high async reset
+   input 	sys_clk_p;        // system input clock
+   input 	sys_clk_n;        // system input clock
+   input 	clkin_p;          // directly from pin
+   input 	clkin_n;          // directly from pin
    input 	start;            // start generator
    
    /********************************/
@@ -46,7 +49,6 @@ module elink_example(/*AUTOARG*/
    output 	 resetb;               //chip reset for Epiphany (active low)
    output 	 cclk_p, cclk_n;       //high speed clock (up to 1GHz) to Epiphany
    
-
    /*AUTOINPUT*/
 
    /*AUTOWIRE*/
@@ -75,6 +77,36 @@ module elink_example(/*AUTOARG*/
    wire		        rxrr_access;		// From elink of elink.v
    wire [PW-1:0]	rxrr_packet;		// From elink of elink.v
 
+
+   wire 		clkin;
+   wire 		sys_clk_io;
+   wire 		sys_clk;
+   
+   //######
+   //CLOCK INPUT
+   //######
+   IBUFGDS clk_buf1 (
+		         .I      (clkin_p),
+		         .IB     (clkin_n),
+		         .O      (clkin)
+			 );
+
+   BUFG clk_buf2 (.I (clkin),
+		  .O (pll_clkin)
+		  );
+   
+		  
+
+
+   IBUFGDS clk_buf3 (
+		         .I      (sys_clk_p),
+		         .IB     (sys_clk_n),
+		         .O      (sys_clk_io)
+			 );
+
+   BUFG clk_buf4 (.I (sys_clk_io),
+		  .O (sys_clk)
+		  );
    
    //######
    //ELINK
@@ -87,8 +119,8 @@ module elink_example(/*AUTOARG*/
 		.mailbox_full		(),
 		.timeout		(),
 		.chipid			(),
-		.cclk_p			(),
-		.cclk_n			(),	
+		.cclk_p			(cclk_p),
+		.cclk_n			(cclk_n),	
 		.rx_lclk_div4		(),
 		.chip_resetb		(resetb),
 		.tx_lclk_div4		(),
