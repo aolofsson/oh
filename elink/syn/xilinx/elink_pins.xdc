@@ -1,16 +1,21 @@
+#BANK SELECT
+set_property CFGBVS VCCO [current_design]
+set_property CONFIG_VOLTAGE 3.3 [current_design]
 
 #SETTING SIGNAL STANDARDS
-set_property IOSTANDARD LVDS_25 [get_ports {rxi*}]
-set_property IOSTANDARD LVDS_25 [get_ports {rxo*}]
-set_property IOSTANDARD LVDS_25 [get_ports {txi*}]
-set_property IOSTANDARD LVDS_25 [get_ports {txo*}]
-set_property IOSTANDARD LVDS_25 [get_ports {cclk*}]
+set_property IOSTANDARD LVDS_25  [get_ports {rxi*}]
+set_property IOSTANDARD LVDS_25  [get_ports {rxo*}]
+set_property IOSTANDARD LVDS_25  [get_ports {txi_wr_wait_*}]
+set_property IOSTANDARD LVCMOS25 [get_ports {txi_rd_wait_*}]
+set_property IOSTANDARD LVDS_25  [get_ports {txo*}]
+set_property IOSTANDARD LVDS_25  [get_ports {cclk*}]
 
 set_property IOSTANDARD LVCMOS25 [get_ports {start}]
 set_property IOSTANDARD LVCMOS25 [get_ports {chipid}]
 set_property IOSTANDARD LVCMOS25 [get_ports {resetb}]
 set_property IOSTANDARD LVCMOS25 [get_ports {reset}]
-set_property IOSTANDARD LVCMOS25 [get_ports {sys_clk}]
+set_property IOSTANDARD LVDS_25  [get_ports {sys_clk*}]
+set_property IOSTANDARD LVDS_25  [get_ports {clkin_*}]
 
 #####################
 # Epiphany Interface
@@ -67,3 +72,15 @@ set_property PACKAGE_PIN K14 [get_ports {rxo_rd_wait_p}]
 set_property PACKAGE_PIN J14 [get_ports {rxo_rd_wait_n}]
 set_property PACKAGE_PIN K16 [get_ports {rxo_wr_wait_p}]
 set_property PACKAGE_PIN J16 [get_ports {rxo_wr_wait_n}]
+
+#####################
+# Dummy (only for example)
+#####################
+#MRCC
+set_property PACKAGE_PIN U18 [get_ports {clkin_p}]
+set_property PACKAGE_PIN U19 [get_ports {clkin_n}]
+set_property PACKAGE_PIN U14 [get_ports {sys_clk_p}]
+set_property PACKAGE_PIN U15 [get_ports {sys_clk_p}]
+
+set_property PACKAGE_PIN U12 [get_ports {start}]
+set_property PACKAGE_PIN U13 [get_ports {reset}]
