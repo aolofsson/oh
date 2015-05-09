@@ -17,7 +17,7 @@ module eclocks (/*AUTOARG*/
    // Outputs
    cclk_p, cclk_n, tx_lclk, tx_lclk90, tx_lclk_div4,
    // Inputs
-   hard_reset, pll_clkin
+   hard_reset, pll_clk
    );
 
    
@@ -27,7 +27,7 @@ module eclocks (/*AUTOARG*/
 
    //Input clock, reset, config interface
    input        hard_reset;         // hardware reset
-   input        pll_clkin;          // primary input clock  
+   input        pll_clk;            // primary input clock  
 
    //outputs
    output       cclk_p, cclk_n;     // high speed Epiphany clock (up to 1GHz)
@@ -92,7 +92,7 @@ module eclocks (/*AUTOARG*/
         .RST(1'b0),
         .CLKFBIN(cclk_clkfb),
         .CLKFBOUT(cclk_clkfb),       
-        .CLKIN1(pll_clkin),
+        .CLKIN1(pll_clk),
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
 	.DADDR(7'b0),
@@ -161,7 +161,7 @@ module eclocks (/*AUTOARG*/
         .RST(1'b0),
         .CLKFBIN(lclk_clkfb),
         .CLKFBOUT(lclk_clkfb),       
-        .CLKIN1(pll_clkin),
+        .CLKIN1(pll_clk),
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
 	.DADDR(7'b0),

@@ -7,7 +7,7 @@ module elink(/*AUTOARG*/
    rxrr_access, rxrr_packet, txwr_wait, txrd_wait, txrr_wait,
    mailbox_not_empty, mailbox_full, timeout,
    // Inputs
-   reset, pll_clkin, sys_clk, testmode, rxi_lclk_p, rxi_lclk_n,
+   reset, pll_clk, sys_clk, testmode, rxi_lclk_p, rxi_lclk_n,
    rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p,
    txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n, rxwr_wait, rxrd_wait,
    rxrr_wait, txwr_access, txwr_packet, txrd_access, txrd_packet,
@@ -23,7 +23,7 @@ module elink(/*AUTOARG*/
    /*CLK AND RESET             */
    /****************************/
    input        reset;            // active high async reset
-   input 	pll_clkin;        // pll input clock
+   input 	pll_clk;          // pll input clock
    input 	sys_clk;          // system clock for FIFOs only
    input 	testmode;         // places elink in testmode
    output 	rx_lclk_div4;     // rx clock for synching with logic
@@ -49,9 +49,9 @@ module elink(/*AUTOARG*/
    /********************************/
    /*EPIPHANY INTERFACE (I/O PINS) */
    /********************************/          
-   output [11:0] chipid;			// From etx of etx.v
-   output 	 chip_resetb;          //chip reset for Epiphany (active low)
-   output 	 cclk_p, cclk_n;       //high speed clock (up to 1GHz) to Epiphany
+   output [11:0] chipid;	    //chip id strap pins for Epiphany
+   output 	 chip_resetb;       //chip reset for Epiphany (active low)
+   output 	 cclk_p, cclk_n;    //high speed clock (up to 1GHz) to Epiphany
    
    /*****************************/
    /*"System" Interface         */
@@ -157,6 +157,7 @@ module elink(/*AUTOARG*/
    /***********************************************************/
    /*CLOCKS                                                   */
    /***********************************************************/
+
    eclocks eclocks (.hard_reset		(reset),//reset by input pin only
 		    /*AUTOINST*/
 		    // Outputs
@@ -166,7 +167,7 @@ module elink(/*AUTOARG*/
 		    .tx_lclk90		(tx_lclk90),
 		    .tx_lclk_div4	(tx_lclk_div4),
 		    // Inputs
-		    .pll_clkin		(pll_clkin));
+		    .pll_clk		(pll_clk));
    
    /***********************************************************/
    /*RECEIVER                                                 */

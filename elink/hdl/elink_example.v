@@ -92,7 +92,7 @@ module elink_example(/*AUTOARG*/
 			 );
 
    BUFG clk_buf2 (.I (clkin),
-		  .O (pll_clkin)
+		  .O (pll_clk)
 		  );
    
 		  
@@ -125,7 +125,7 @@ module elink_example(/*AUTOARG*/
 		.chip_resetb		(resetb),
 		.tx_lclk_div4		(),
 		.sys_clk		(sys_clk),
-		.pll_clkin		(pll_clkin),
+		.pll_clk		(pll_clk),
 		.testmode		(1'b0),
 		/*AUTOINST*/
 		// Outputs
