@@ -6,15 +6,16 @@
 
 module ecfg_clocks (/*AUTOARG*/
    // Outputs
-   txwr_access_out, soft_reset, clk_config,
+   txwr_access_out, soft_reset, clk_config, chipid,
    // Inputs
    txwr_access, txwr_packet, clk, hard_reset
    );
 
    
-   parameter RFAW  = 6;     // 32 registers for now
-   parameter PW    = 104;   // 32 registers for now
-   parameter ID    = 12'h000;
+   parameter RFAW             = 6;     // 32 registers for now
+   parameter PW               = 104;   // 32 registers for now
+   parameter ID               = 12'h000;
+   parameter DEFAULT_CHIPID   = 12'h808;
    
    /******************************/
    /*REGISTER ACCESS             */
@@ -38,25 +39,23 @@ module ecfg_clocks (/*AUTOARG*/
    /******************************/
    output 	 soft_reset;       // soft reset output driven by register
    output [15:0] clk_config;       // clock settings (for pll)
+   output [11:0] chipid;           // chip-id to write out to pins
+   
    
    /*------------------------CODE BODY---------------------------------------*/
    
    //registers
    reg          ecfg_reset_reg;
    reg [15:0] 	ecfg_clk_reg;
-   reg [11:0] 	ecfg_coreid_reg;
-   reg [15:0] 	ecfg_version_reg;
+   reg [11:0] 	ecfg_chipid_reg;
    reg [31:0] 	mi_dout;
    
    //wires
    wire 	ecfg_read;
    wire 	ecfg_write;
    wire 	ecfg_clk_write;
-   wire 	ecfg_coreid_write;
-   wire 	ecfg_version_write;
+   wire 	ecfg_chipid_write;
    wire 	ecfg_reset_write;
-
-
    wire 	mi_en;
    wire [31:0] 	mi_addr;
    wire [31:0] 	mi_din;
@@ -90,11 +89,14 @@ module ecfg_clocks (/*AUTOARG*/
    //Config write enables
    assign ecfg_reset_write    = ecfg_write & (mi_addr[RFAW+1:2]==`E_RESET);
    assign ecfg_clk_write      = ecfg_write & (mi_addr[RFAW+1:2]==`E_CLK);
-
+   assign ecfg_chipid_write   = ecfg_write & (mi_addr[RFAW+1:2]==`E_CHIPID);
+   
    /*****************************/
    /*FILTER ACCESS              */
    /*****************************/
-   assign 	txwr_access_out =  txwr_access & ~(ecfg_reset_write | ecfg_clk_write );
+   assign 	txwr_access_out =  txwr_access & ~(ecfg_reset_write | 
+						   ecfg_clk_write   |
+                                                   ecfg_chipid_write);
    
    //###########################
    //# RESET
@@ -117,6 +119,17 @@ module ecfg_clocks (/*AUTOARG*/
        ecfg_clk_reg[15:0] <= mi_din[15:0];
 
    assign clk_config[15:0] = ecfg_clk_reg[15:0];
+
+   //###########################
+   //# CHIPID
+   //###########################
+   always @ (posedge clk or posedge hard_reset)
+     if(hard_reset)
+       ecfg_chipid_reg[11:0] <= DEFAULT_CHIPID;
+     else if (ecfg_chipid_write)
+       ecfg_chipid_reg[11:0] <= mi_din[11:0];   
+   
+   assign chipid[11:0]=ecfg_chipid_reg[5:2];   
     
 endmodule // ecfg_base
 // Local Variables:
