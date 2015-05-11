@@ -2,8 +2,8 @@ module etx_protocol (/*AUTOARG*/
    // Outputs
    etx_rd_wait, etx_wr_wait, tx_frame_par, tx_data_par,
    // Inputs
-   reset, clk, testmode, etx_access, etx_packet, tx_enable, tp_enable,
-   gpio_enable, gpio_data, chipid, tx_rd_wait, tx_wr_wait
+   reset, clk, etx_access, etx_packet, tx_enable, gpio_data,
+   gpio_enable, tx_rd_wait, tx_wr_wait
    );
 
    parameter PW = 104;
@@ -15,9 +15,6 @@ module etx_protocol (/*AUTOARG*/
    input 	  reset;
    input          clk;
 
-   //Puts transmit in testmode
-   input 	  testmode;
-
    //System side
    input          etx_access;
    input [PW-1:0] etx_packet;  
@@ -27,11 +24,9 @@ module etx_protocol (/*AUTOARG*/
    output         etx_wr_wait;
 
    //Enble transmit
-   input 	  tx_enable;  //transmit enable
-   input 	  tp_enable;  //testmode enable
-   input 	  gpio_enable;//gpio enable
-   input [8:0]    gpio_data;  //gpio mode data
-   input [11:0]   chipid;     //chip id
+   input 	  tx_enable;   //transmit enable
+   input [8:0]    gpio_data;   //TODO
+   input    	  gpio_enable; //TODO
    
    //Interface to IO
    output [7:0]   tx_frame_par;
@@ -53,32 +48,11 @@ module etx_protocol (/*AUTOARG*/
    wire [AW-1:0] etx_dstaddr;
    wire [DW-1:0] etx_data;
    wire [AW-1:0] etx_srcaddr;
-   wire [PW-1:0] etx_packet_mux;
    reg [PW-1:0]  testpacket;
    wire 	 etx_valid;
    reg           etx_io_wait;
    
-   //Testmode logic
-   always @( posedge clk or posedge reset ) 
-     if(reset)
-       testpacket[PW-1:0] <= 'd0;
-     else if(testmode)
-       if(~testpacket[1])//initiate write 
-	 testpacket[PW-1:0]<={32'h55555555,//src
-                              32'h55555555,//data
-                              chipid[11:0],20'b0,//dst
-                              4'b0,2'b10,2'b11};//32bit write
-       else //initiate read
-	 testpacket[PW-1:0]<={ID,20'hD0000,//readback register
-                              32'haaaaaaaa,//dummy data
-                              chipid[11:0],20'b0,//read from address
-                              4'b0,2'b10,2'b01};//32bit read
-
-   assign etx_packet_mux[PW-1:0] = testmode ? testpacket[PW-1:0] :
-                                              etx_packet[PW-1:0];
    
-   //Access always on in test mode (assumes no other traffic)
-   assign etx_access_mux = testmode | etx_access;
    
    //packet to emesh bundle
    packet2emesh p2m (
@@ -91,14 +65,13 @@ module etx_protocol (/*AUTOARG*/
 		     .data_out		(etx_data[31:0]),
 		     .srcaddr_out	(etx_srcaddr[31:0]),
 		     // Inputs
-		     .packet_in		(etx_packet_mux[PW-1:0])
+		     .packet_in		(etx_packet[PW-1:0])
 		     );
 
    //Transmit packet enable
    //Only set valid if not wait 
-   assign etx_valid =  testmode | 
-			(tx_enable & etx_access & ~(etx_dstaddr[31:20]==ID)) &
-			((etx_write & ~tx_wr_wait_sync) | 
+   assign etx_valid = (tx_enable & etx_access & ~(etx_dstaddr[31:20]==ID)) &
+		       ((etx_write & ~tx_wr_wait_sync) | 
 			 (~etx_write & ~tx_rd_wait_sync)
 			 );
    
