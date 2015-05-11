@@ -17,13 +17,12 @@
 
 module etx_arbiter (/*AUTOARG*/
    // Outputs
-   txwr_fifo_wait, txrd_fifo_wait, txrr_fifo_wait, edma_wait,
-   etx_access, etx_packet, etx_rr,
+   txwr_wait, txrd_wait, txrr_wait, edma_wait, etx_access, etx_packet,
+   etx_rr,
    // Inputs
-   clk, reset, txwr_fifo_access, txwr_fifo_packet, txrd_fifo_access,
-   txrd_fifo_packet, txrr_fifo_access, txrr_fifo_packet, edma_access,
-   edma_packet, etx_rd_wait, etx_wr_wait, etx_cfg_wait,
-   ctrlmode_bypass, ctrlmode
+   clk, reset, txwr_access, txwr_packet, txrd_access, txrd_packet,
+   txrr_access, txrr_packet, edma_access, edma_packet, etx_rd_wait,
+   etx_wr_wait, etx_cfg_wait, ctrlmode_bypass, ctrlmode
    );
 
    parameter PW = 104;
@@ -34,19 +33,19 @@ module etx_arbiter (/*AUTOARG*/
    input          reset;
 
    //Write Request (from slave)
-   input 	   txwr_fifo_access;
-   input [PW-1:0]  txwr_fifo_packet;
-   output          txwr_fifo_wait;
+   input 	   txwr_access;
+   input [PW-1:0]  txwr_packet;
+   output          txwr_wait;
    
    //Read Request (from slave)
-   input 	   txrd_fifo_access;
-   input [PW-1:0]  txrd_fifo_packet;
-   output          txrd_fifo_wait;
+   input 	   txrd_access;
+   input [PW-1:0]  txrd_packet;
+   output          txrd_wait;
    
    //Read Response (from master)
-   input 	   txrr_fifo_access;
-   input [PW-1:0]  txrr_fifo_packet;
-   output          txrr_fifo_wait;
+   input 	   txrr_access;
+   input [PW-1:0]  txrr_packet;
+   output          txrr_wait;
 
    //DMA Master (not implemented, TODO)
    input 	   edma_access;
@@ -94,19 +93,19 @@ module etx_arbiter (/*AUTOARG*/
    //# Insert special control mode
    //##########################################################################
    assign txrd_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
-				                   txrd_fifo_packet[7:4];
+				                   txrd_packet[7:4];
 
-   assign txrd_data[PW-1:0] = {txrd_fifo_packet[PW-1:8],   
+   assign txrd_data[PW-1:0] = {txrd_packet[PW-1:8],   
                                txrd_ctrlmode[3:0], 
-			       txrd_fifo_packet[3:0]};
+			       txrd_packet[3:0]};
  
    
    assign txwr_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
-				                   txwr_fifo_packet[7:4];
+				                   txwr_packet[7:4];
 
-   assign txwr_data[PW-1:0] = {txwr_fifo_packet[PW-1:8],   
+   assign txwr_data[PW-1:0] = {txwr_packet[PW-1:8],   
                                txwr_ctrlmode[3:0], 
-			       txwr_fifo_packet[3:0]};
+			       txwr_packet[3:0]};
  
    //##########################################################################
    //# Arbiter
@@ -124,15 +123,15 @@ module etx_arbiter (/*AUTOARG*/
 						txwr_arb_wait
 						}),	
 					.request({edma_access,
-						txrr_fifo_access,	
-						txrd_fifo_access,
-						txwr_fifo_access
+						txrr_access,	
+						txrd_access,
+						txwr_access
 						})	
 				  );
    //Priority Mux
    assign etx_mux[PW-1:0] =({(PW){txwr_grant}} & txwr_data[PW-1:0]) |
 			   ({(PW){txrd_grant}} & txrd_data[PW-1:0]) |
-			   ({(PW){txrr_grant}} & txrr_fifo_packet[PW-1:0]) |
+			   ({(PW){txrr_grant}} & txrr_packet[PW-1:0]) |
 			   ({(PW){edma_grant}} & edma_packet[PW-1:0]);
  
    //######################################################################
@@ -140,15 +139,15 @@ module etx_arbiter (/*AUTOARG*/
    //######################################################################
    
    //Write waits on pin wr wait or cfg_wait
-   assign txwr_fifo_wait = etx_wr_wait | 
+   assign txwr_wait = etx_wr_wait | 
 		           etx_cfg_wait;
    
    //Host read request (self throttling, one read at a time)
-   assign txrd_fifo_wait = etx_rd_wait | 
+   assign txrd_wait = etx_rd_wait | 
 		           etx_cfg_wait | 
 		           txrd_arb_wait;
    //Read response
-   assign txrr_fifo_wait = etx_wr_wait | 
+   assign txrr_wait = etx_wr_wait | 
 		           etx_cfg_wait | 
 		           txrr_arb_wait;
 
@@ -160,9 +159,9 @@ module etx_arbiter (/*AUTOARG*/
    //#####################################################################
    //# Pipeline stage (arbiter+mux takes time..)
    //#####################################################################
-   assign access_in = (txwr_grant & ~txwr_fifo_wait) |
-		      (txrd_grant & ~txrd_fifo_wait) |
-		      (txrr_grant & ~txrr_fifo_wait) |
+   assign access_in = (txwr_grant & ~txwr_wait) |
+		      (txrd_grant & ~txrd_wait) |
+		      (txrr_grant & ~txrr_wait) |
 		      (edma_grant & ~edma_wait);
 
    //Pipeline + stall

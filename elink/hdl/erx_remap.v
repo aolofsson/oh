@@ -3,8 +3,8 @@ module erx_remap (/*AUTOARG*/
    emesh_access_out, emesh_packet_out,
    // Inputs
    clk, reset, emesh_access_in, emesh_packet_in, remap_mode,
-   remap_sel, remap_pattern, remap_base, remap_bypass, erx_rd_wait,
-   erx_wr_wait
+   remap_sel, remap_pattern, remap_base, remap_bypass, rx_rd_wait,
+   rx_wr_wait
    );
 
    parameter AW = 32;
@@ -32,8 +32,8 @@ module erx_remap (/*AUTOARG*/
    output [PW-1:0] emesh_packet_out;
 
    //Wait
-   input 	   erx_rd_wait;
-   input 	   erx_wr_wait;
+   input 	   rx_rd_wait;
+   input 	   rx_wr_wait;
 
    wire [31:0] 	   static_remap;
    wire [31:0] 	   dynamic_remap;
@@ -75,7 +75,7 @@ module erx_remap (/*AUTOARG*/
        begin
 	  emesh_access_out         <= 'b0;
        end
-     else if((write_in & ~erx_wr_wait) | (~write_in & ~erx_rd_wait))    
+     else if((write_in & ~rx_wr_wait) | (~write_in & ~rx_rd_wait))    
        begin
 	  emesh_access_out         <= emesh_access_in;
 	  emesh_packet_out[PW-1:0] <= {emesh_packet_in[103:40],

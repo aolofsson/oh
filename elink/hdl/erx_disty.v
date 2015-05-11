@@ -1,12 +1,12 @@
 module erx_disty (/*AUTOARG*/
    // Outputs
-   erx_rd_wait, erx_wr_wait, edma_wait, ecfg_wait, rxwr_fifo_access,
-   rxwr_fifo_packet, rxrd_fifo_access, rxrd_fifo_packet,
-   rxrr_fifo_access, rxrr_fifo_packet,
+   rx_rd_wait, rx_wr_wait, edma_wait, ecfg_wait, rxwr_access,
+   rxwr_packet, rxrd_access, rxrd_packet,
+   rxrr_access, rxrr_packet,
    // Inputs
    erx_access, erx_packet, emmu_access, emmu_packet, edma_access,
-   edma_packet, ecfg_access, ecfg_packet, timeout, rxwr_fifo_wait,
-   rxrd_fifo_wait, rxrr_fifo_wait
+   edma_packet, ecfg_access, ecfg_packet, timeout, rxwr_wait,
+   rxrd_wait, rxrr_wait
    );
 
    parameter AW   = 32;
@@ -19,8 +19,8 @@ module erx_disty (/*AUTOARG*/
    //From IO (for rr)
    input           erx_access;
    input [PW-1:0]  erx_packet;
-   output          erx_rd_wait; //for IO
-   output          erx_wr_wait; //for IO
+   output          rx_rd_wait; //for IO
+   output          rx_wr_wait; //for IO
 
    //From EMMU
    input           emmu_access;
@@ -40,19 +40,19 @@ module erx_disty (/*AUTOARG*/
    input 	   timeout;
    
    //To Master Write FIFO
-   output 	   rxwr_fifo_access;
-   output [PW-1:0] rxwr_fifo_packet;   
-   input           rxwr_fifo_wait;
+   output 	   rxwr_access;
+   output [PW-1:0] rxwr_packet;   
+   input           rxwr_wait;
    
    //To Master Read FIFO
-   output 	   rxrd_fifo_access;
-   output [PW-1:0] rxrd_fifo_packet;   
-   input           rxrd_fifo_wait;
+   output 	   rxrd_access;
+   output [PW-1:0] rxrd_packet;   
+   input           rxrd_wait;
    
    //To Slave Read Response FIFO
-   output 	   rxrr_fifo_access;
-   output [PW-1:0] rxrr_fifo_packet;   
-   input           rxrr_fifo_wait;
+   output 	   rxrr_access;
+   output [PW-1:0] rxrr_packet;   
+   input           rxrr_wait;
 
    //wires
    wire            emmu_write;
@@ -111,11 +111,11 @@ module erx_disty (/*AUTOARG*/
 				  (erx_dstaddr[19:16] == 4'hD)
 				  );
    
-   assign rxrr_fifo_access = erx_rr_access |
+   assign rxrr_access = erx_rr_access |
 		   	     timeout       |
 			     ecfg_access;
    
-   assign rxrr_fifo_packet[PW-1:0] = timeout    ?  {32'h0,32'hDEADBEEF,
+   assign rxrr_packet[PW-1:0] = timeout    ?  {32'h0,32'hDEADBEEF,
 				  	           myid[11:0],4'hF,16'h0000,
                                                    8'h03} :
 			   	     erx_rr_access ?  erx_packet[PW-1:0] :
@@ -127,10 +127,10 @@ module erx_disty (/*AUTOARG*/
    //Write Path (direct)
    //####################################
 
-   assign rxwr_fifo_access        = emmu_access & 
+   assign rxwr_access        = emmu_access & 
 			            emmu_write;
 
-   assign rxwr_fifo_packet[PW-1:0] = emmu_packet[PW-1:0];
+   assign rxwr_packet[PW-1:0] = emmu_packet[PW-1:0];
          
    //####################################
    //Read Path 
@@ -138,19 +138,19 @@ module erx_disty (/*AUTOARG*/
 
    assign emmu_read               = (emmu_access & ~emmu_write);
    
-   assign rxrd_fifo_access         = emmu_read | edma_access;
+   assign rxrd_access         = emmu_read | edma_access;
    
-   assign rxrd_fifo_packet[PW-1:0] = emmu_read ? emmu_packet[PW-1:0] : 
+   assign rxrd_packet[PW-1:0] = emmu_read ? emmu_packet[PW-1:0] : 
 				                 edma_packet[PW-1:0];
    
    //####################################
    //Wait Signals
    //####################################   
    
-   assign erx_rd_wait  = rxrd_fifo_wait;
-   assign erx_wr_wait  = rxwr_fifo_wait | rxrr_fifo_wait;
-   assign edma_wait    = rxrd_fifo_wait | emmu_read;
-   assign erx_cfg_wait = rxwr_fifo_wait | rxrr_fifo_wait;   
+   assign rx_rd_wait    = rxrd_wait;
+   assign rx_wr_wait    = rxwr_wait | rxrr_wait;
+   assign edma_wait     = rxrd_wait | emmu_read;
+   assign erx_cfg_wait  = rxwr_wait | rxrr_wait;   
    
 endmodule // erx_disty
 // Local Variables:

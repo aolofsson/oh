@@ -1,11 +1,11 @@
 module erx_core (/*AUTOARG*/
    // Outputs
-   rx_rd_wait, rx_wr_wait, rxrd_fifo_access, rxrd_fifo_packet,
-   rxrr_fifo_access, rxrr_fifo_packet, rxwr_fifo_access,
-   rxwr_fifo_packet, erx_cfg_wait, mailbox_full, mailbox_not_empty,
+   rx_rd_wait, rx_wr_wait, rxrd_access, rxrd_packet, rxrr_access,
+   rxrr_packet, rxwr_access, rxwr_packet, erx_cfg_wait, mailbox_full,
+   mailbox_not_empty,
    // Inputs
-   reset, clk, rx_data_par, rx_frame_par, rxrd_fifo_wait,
-   rxrr_fifo_wait, rxwr_fifo_wait, erx_cfg_access, erx_cfg_packet
+   reset, clk, rx_data_par, rx_frame_par, rxrd_wait, rxrr_wait,
+   rxwr_wait, erx_cfg_access, erx_cfg_packet
    );
 
    parameter AW      = 32;
@@ -26,17 +26,17 @@ module erx_core (/*AUTOARG*/
    output 		rx_wr_wait;
    
    //FIFO Access
-   output		rxrd_fifo_access;
-   output [PW-1:0]	rxrd_fifo_packet;
-   input		rxrd_fifo_wait;
+   output		rxrd_access;
+   output [PW-1:0]	rxrd_packet;
+   input		rxrd_wait;
    
-   output		rxrr_fifo_access;
-   output [PW-1:0]	rxrr_fifo_packet;
-   input		rxrr_fifo_wait;
+   output		rxrr_access;
+   output [PW-1:0]	rxrr_packet;
+   input		rxrr_wait;
    
-   output		rxwr_fifo_access;
-   output [PW-1:0]	rxwr_fifo_packet;
-   input		rxwr_fifo_wait;
+   output		rxwr_access;
+   output [PW-1:0]	rxwr_packet;
+   input		rxwr_wait;
 
    //register interface
    input		erx_cfg_access;
@@ -50,13 +50,44 @@ module erx_core (/*AUTOARG*/
    
    /*AUTOINPUT*/
    /*AUTOOUTPUT*/
+   /*AUTOWIRE*/
+   // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire			ecfg_access;		// From erx_cfgif of ecfg_if.v
+   wire [PW-1:0]	ecfg_packet;		// From erx_cfgif of ecfg_if.v
+   wire			edma_access;		// From erx_dma of edma.v
+   wire			edma_wait;		// From erx_disty of erx_disty.v
+   wire			emesh_remap_access;	// From erx_remap of erx_remap.v
+   wire [PW-1:0]	emesh_remap_packet;	// From erx_remap of erx_remap.v
+   wire			emmu_access;		// From erx_mmu of emmu.v
+   wire [PW-1:0]	emmu_packet;		// From erx_mmu of emmu.v
+   wire			erx_access;		// From erx_protocol of erx_protocol.v
+   wire [PW-1:0]	erx_packet;		// From erx_protocol of erx_protocol.v
+   wire [14:0]		mi_addr;		// From erx_cfgif of ecfg_if.v
+   wire [DW-1:0]	mi_cfg_dout;		// From erx_cfg of erx_cfg.v
+   wire			mi_cfg_en;		// From erx_cfgif of ecfg_if.v
+   wire [63:0]		mi_din;			// From erx_cfgif of ecfg_if.v
+   wire [DW-1:0]	mi_dma_dout;		// From erx_dma of edma.v
+   wire			mi_dma_en;		// From erx_cfgif of ecfg_if.v
+   wire [63:0]		mi_mailbox_dout;	// From erx_mailbox of emailbox.v
+   wire [DW-1:0]	mi_mmu_dout;		// From erx_mmu of emmu.v
+   wire			mi_mmu_en;		// From erx_cfgif of ecfg_if.v
+   wire			mi_we;			// From erx_cfgif of ecfg_if.v
+   wire			mmu_enable;		// From erx_cfg of erx_cfg.v
+   wire [31:0]		remap_base;		// From erx_cfg of erx_cfg.v
+   wire			remap_bypass;		// From erx_protocol of erx_protocol.v
+   wire [1:0]		remap_mode;		// From erx_cfg of erx_cfg.v
+   wire [11:0]		remap_pattern;		// From erx_cfg of erx_cfg.v
+   wire [11:0]		remap_sel;		// From erx_cfg of erx_cfg.v
+   wire			rx_enable;		// From erx_cfg of erx_cfg.v
+   // End of automatics
+
      
    //regs
     wire [8:0] 	gpio_datain;		// To erx_cfg of erx_cfg.v
    wire [15:0] 	rx_status;
-   wire 	rxwr_fifo_full;
-   wire 	rxrr_fifo_full;
-   wire 	rxrd_fifo_full;
+   wire 	rxwr_full;
+   wire 	rxrr_full;
+   wire 	rxrd_full;
    wire 	rxrd_empty;
    wire 	rxwr_empty;
    wire 	rxrr_empty;
@@ -322,12 +353,12 @@ module erx_core (/*AUTOARG*/
 			.rx_wr_wait	(rx_wr_wait),
 			.edma_wait	(edma_wait),
 			.ecfg_wait	(erx_cfg_wait),		 // Templated
-			.rxwr_fifo_access(rxwr_fifo_access),
-			.rxwr_fifo_packet(rxwr_fifo_packet[PW-1:0]),
-			.rxrd_fifo_access(rxrd_fifo_access),
-			.rxrd_fifo_packet(rxrd_fifo_packet[PW-1:0]),
-			.rxrr_fifo_access(rxrr_fifo_access),
-			.rxrr_fifo_packet(rxrr_fifo_packet[PW-1:0]),
+			.rxwr_access	(rxwr_access),
+			.rxwr_packet	(rxwr_packet[PW-1:0]),
+			.rxrd_access	(rxrd_access),
+			.rxrd_packet	(rxrd_packet[PW-1:0]),
+			.rxrr_access	(rxrr_access),
+			.rxrr_packet	(rxrr_packet[PW-1:0]),
 			// Inputs
 			.erx_access	(erx_access),
 			.erx_packet	(erx_packet[PW-1:0]),
@@ -337,9 +368,9 @@ module erx_core (/*AUTOARG*/
 			.edma_packet	(edma_packet[PW-1:0]),
 			.ecfg_access	(ecfg_access),
 			.ecfg_packet	(ecfg_packet[PW-1:0]),
-			.rxwr_fifo_wait	(rxwr_fifo_wait),
-			.rxrd_fifo_wait	(rxrd_fifo_wait),
-			.rxrr_fifo_wait	(rxrr_fifo_wait));
+			.rxwr_wait	(rxwr_wait),
+			.rxrd_wait	(rxrd_wait),
+			.rxrr_wait	(rxrr_wait));
 
    
 endmodule // erx

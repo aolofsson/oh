@@ -12,7 +12,7 @@ module erx_protocol (/*AUTOARG*/
    // Outputs
    erx_access, erx_packet, remap_bypass,
    // Inputs
-   reset, rx_enable, rx_lclk_div4, rx_frame_par, rx_data_par
+   reset, rx_enable, clk, rx_frame_par, rx_data_par
    );
 
    parameter AW   = 32;
@@ -26,7 +26,7 @@ module erx_protocol (/*AUTOARG*/
    input 	  rx_enable;//Enables receiver
 
    // Parallel interface, 8 eLink bytes at a time
-   input          rx_lclk_div4; // Parallel clock input from IO block
+   input          clk;
    input [7:0]    rx_frame_par;
    input [63:0]   rx_data_par;
    
@@ -81,7 +81,7 @@ module erx_protocol (/*AUTOARG*/
    // Here we handle any alignment of the frame within an 8-cycle group,
    // though in theory frames should only start on rising edges??
 
-   always @( posedge rx_lclk_div4 or posedge reset) 
+   always @( posedge clk or posedge reset) 
      if(reset)
        begin
 	  rxalign_in  <= 3'd0;
@@ -119,10 +119,10 @@ module erx_protocol (/*AUTOARG*/
 	  end else begin
              rxactive_in <= 1'd0;  // No edge
 	  end	        
-   end // always @ ( posedge rx_lclk_div4 )
+   end // always @ ( posedge clk )
 
    // 1st cycle
-   always @( posedge rx_lclk_div4 or posedge reset) 
+   always @( posedge clk or posedge reset) 
      if(reset)
        begin
 	  rxactive_0 <= 1'b0;      
@@ -188,10 +188,10 @@ module erx_protocol (/*AUTOARG*/
       endcase // case (rxalign_in[2:0])
       
       
-   end // always @ ( posedge rx_lclk_div4 )
+   end // always @ ( posedge clk )
 
    // 2nd cycle
-   always @( posedge rx_lclk_div4 or posedge reset)
+   always @( posedge clk or posedge reset)
      if(reset)
        begin
 	  rxactive_1 <= 1'b0;	  
@@ -277,10 +277,10 @@ module erx_protocol (/*AUTOARG*/
            stream_1         <= rx_frame_par[2] & (rxactive_0 | stream_1);
         end
       endcase
-   end // always @ ( posedge rx_lclk_div4 )
+   end // always @ ( posedge clk )
    
    // 3rd cycle
-   always @( posedge rx_lclk_div4 or posedge reset) 
+   always @( posedge clk or posedge reset) 
      if (reset)
        begin
 	  access_reg <= 1'b0;
@@ -324,7 +324,7 @@ module erx_protocol (/*AUTOARG*/
 	default:;//TODO: include error message
       endcase // case ( rxalign_1 )
 
-   end // always @ ( posedge rx_lclk_div4 )
+   end // always @ ( posedge clk )
    
 
    assign erx_access =  access_reg & rx_enable;

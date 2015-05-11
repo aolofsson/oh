@@ -5,8 +5,8 @@
  */
 module etx_cfg (/*AUTOARG*/
    // Outputs
-   mi_dout, tx_enable, mmu_enable, gpio_enable, tp_enable,
-   remap_enable, gpio_data, ctrlmode, ctrlmode_bypass, chipid,
+   mi_dout, tx_enable, mmu_enable, gpio_enable, remap_enable,
+   gpio_data, ctrlmode, ctrlmode_bypass,
    // Inputs
    reset, clk, mi_en, mi_we, mi_addr, mi_din, tx_status
    );
@@ -16,7 +16,6 @@ module etx_cfg (/*AUTOARG*/
    /******************************/
    parameter PW               = 104;   
    parameter RFAW             = 6;
-   parameter DEFAULT_CHIPID   = 12'h808;
    parameter DEFAULT_VERSION  = 16'h0000;
 
    /******************************/
@@ -41,7 +40,6 @@ module etx_cfg (/*AUTOARG*/
    output 	   tx_enable;      // enable signal for TX  
    output 	   mmu_enable;     // enables MMU on transmit path  
    output 	   gpio_enable;    // forces TX output pins to constants
-   output          tp_enable;      // enables 1/0 pattern on transmit     
    output 	   remap_enable;   // enable address remapping
    input [15:0]    tx_status;      // etx status signals
    
@@ -52,12 +50,7 @@ module etx_cfg (/*AUTOARG*/
    output [3:0]    ctrlmode;        // value for emesh ctrlmode tag
    output          ctrlmode_bypass; // selects ctrlmode
 
-   //to drive epiphany id pins
-   output [11:0]   chipid;
-   
-   
    //registers
-   reg [11:0] 	   ecfg_chipid_reg;
    reg [15:0] 	   ecfg_version_reg;
    reg [10:0] 	   ecfg_tx_config_reg;
    reg [8:0] 	   ecfg_tx_gpio_reg;
@@ -84,7 +77,6 @@ module etx_cfg (/*AUTOARG*/
    assign ecfg_read   = mi_en & ~mi_we;   
 
    //Config write enables 
-   assign ecfg_chipid_write    = ecfg_write & (mi_addr[RFAW+1:2]==`E_CHIPID);
    assign ecfg_version_write   = ecfg_write & (mi_addr[RFAW+1:2]==`E_VERSION);
    assign ecfg_tx_config_write = ecfg_write & (mi_addr[RFAW+1:2]==`ETX_CFG);
    assign ecfg_tx_status_write = ecfg_write & (mi_addr[RFAW+1:2]==`ETX_STATUS);
@@ -105,7 +97,6 @@ module etx_cfg (/*AUTOARG*/
    assign ctrlmode[3:0]   = ecfg_tx_config_reg[7:4];
    assign ctrlmode_bypass = ecfg_tx_config_reg[8];
    assign gpio_enable     = (ecfg_tx_config_reg[10:9]==2'b01);
-   assign tp_enable       = (ecfg_tx_config_reg[10:9]==2'b10);
 
    //###########################
    //# STATUS REGISTER
@@ -127,16 +118,7 @@ module etx_cfg (/*AUTOARG*/
 
    assign gpio_data[8:0] = ecfg_tx_gpio_reg[8:0];
 
-   //###########################
-   //# CHIPID
-   //###########################
-   always @ (posedge clk)
-     if(reset)
-       ecfg_chipid_reg[11:0] <= DEFAULT_CHIPID;
-     else if (ecfg_chipid_write)
-       ecfg_chipid_reg[11:0] <= mi_din[11:0];   
    
-   assign chipid[11:0]=ecfg_chipid_reg[5:2];   
    
    //###########################
    //# VERSION
@@ -157,7 +139,6 @@ module etx_cfg (/*AUTOARG*/
          `ETX_CFG:    mi_dout[31:0] <= {21'b0, ecfg_tx_config_reg[10:0]};
          `ETX_GPIO:   mi_dout[31:0] <= {23'b0, ecfg_tx_gpio_reg[8:0]};
 	 `ETX_STATUS: mi_dout[31:0] <= {16'b0, tx_status[15:3],ecfg_tx_status_reg[2:0]};
-	 `E_CHIPID:   mi_dout[31:0] <= {20'b0, ecfg_chipid_reg[11:0]};
          `E_VERSION:  mi_dout[31:0] <= {16'b0, ecfg_version_reg[15:0]};
          default:     mi_dout[31:0] <= 32'd0;
        endcase // case (mi_addr[RFAW+1:2])

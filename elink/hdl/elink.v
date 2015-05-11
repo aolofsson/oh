@@ -139,6 +139,7 @@ module elink(/*AUTOARG*/
 			    // Outputs
 			    .soft_reset		(soft_reset),
 			    .clk_config		(clk_config[15:0]),
+			    .chipid		(chipid[11:0]),
 			    // Inputs
 			    .txwr_access	(txwr_access),
 			    .txwr_packet	(txwr_packet[PW-1:0]));
@@ -231,7 +232,6 @@ module elink(/*AUTOARG*/
    etx etx(.txwr_access  (txwr_gated_access),
 	   /*AUTOINST*/
 	   // Outputs
-	   .chipid			(chipid[11:0]),
 	   .txo_lclk_p			(txo_lclk_p),
 	   .txo_lclk_n			(txo_lclk_n),
 	   .txo_frame_p			(txo_frame_p),
@@ -249,7 +249,6 @@ module elink(/*AUTOARG*/
 	   .tx_lclk			(tx_lclk),
 	   .tx_lclk90			(tx_lclk90),
 	   .tx_lclk_div4		(tx_lclk_div4),
-	   .testmode			(testmode),
 	   .txi_wr_wait_p		(txi_wr_wait_p),
 	   .txi_wr_wait_n		(txi_wr_wait_n),
 	   .txi_rd_wait_p		(txi_rd_wait_p),
