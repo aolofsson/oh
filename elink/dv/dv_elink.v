@@ -186,7 +186,7 @@ module dv_elink(/*AUTOARG*/
  /*elink AUTO_TEMPLATE (.reset		    (reset),
                         // Outputs                        
                         .pll_bypass         ({clkin,clkin,clkin,clkin}),
-                        .pll_clkin	    (clkin),
+                        .pll_clk	    (clkin),
                         .sys_clk            (clk),
                         .\(.*\)             (@"(substring vl-cell-name  0 6)"_\1[]),
                          );
@@ -236,7 +236,7 @@ module dv_elink(/*AUTOARG*/
 		 .timeout		(elink0_timeout),	 // Templated
 		 // Inputs
 		 .reset			(reset),		 // Templated
-		 .pll_clkin		(clkin),		 // Templated
+		 .pll_clk		(clkin),		 // Templated
 		 .sys_clk		(clk),			 // Templated
 		 .rxwr_wait		(elink0_rxwr_wait),	 // Templated
 		 .rxrd_wait		(elink0_rxrd_wait),	 // Templated
@@ -301,7 +301,7 @@ module dv_elink(/*AUTOARG*/
 		 .timeout		(elink1_timeout),	 // Templated
 		 // Inputs
 		 .reset			(reset),		 // Templated
-		 .pll_clkin		(clkin),		 // Templated
+		 .pll_clk		(clkin),		 // Templated
 		 .sys_clk		(clk),			 // Templated
 		 .rxwr_wait		(elink1_rxwr_wait),	 // Templated
 		 .rxrd_wait		(elink1_rxrd_wait),	 // Templated
@@ -485,7 +485,10 @@ module dv_elink(/*AUTOARG*/
 				.resetb		(resetb),
 				// Inputs
 				.reset		(reset),
-				.sys_clk	(sys_clk));
+				.sys_clk_p	(sys_clk_p),
+				.sys_clk_n	(sys_clk_n),
+				.clkin_p	(clkin_p),
+				.clkin_n	(clkin_n));
    
   
 endmodule // dv_elink

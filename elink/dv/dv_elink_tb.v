@@ -75,7 +75,7 @@ module dv_elink_tb();
 	  reset    = 1'b0;    // at time 100 release reset
 	#4000
 	  start       = 1'b1;	
-	#20000	  
+	#10000	  
 	  $finish;
      end
 
