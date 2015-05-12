@@ -2,7 +2,7 @@
 
 ELINK INTRODUCTION
 =====================================
-The "elink" is a low-latency/high-speed interface for communicating between FPGAs and ASICs (such as Epiphany). The interface can achieve a peak througput of 8 Gbit/s (duplex) in modern FPGAs using 24 LVDS signal pairs.  
+The "elink" is a low-latency/high-speed interface for communicating between FPGAs and ASICs (such as Epiphany). The interface can achieve a peak throughput of 8 Gbit/s (duplex) in modern FPGAs using 24 LVDS signal pairs.  
 
 ###STRUCTURE
 
@@ -24,11 +24,11 @@ elink
  |     |     |----erx_mmu (advanced dstaddr mapping)
  |     |     |----erx_cfgif (configuration interface)
  |     |     |----erx_cfg (basic rx config registers)
- |     |     |----erx_mailbox (fifo style mailbox with interupt output)
+ |     |     |----erx_mailbox (fifo style mailbox with interrupt output)
  |     |     |----erx_dma (RX DMA)
  |     |     |----erx_arbiter (sends RX transaction to WR/RD/RR fifo)
  |     |----erx_fifo
- |           |----rxwr_fifao (write fifo)
+ |           |----rxwr_fifo (write fifo)
  |           |----rxrd_fifo (read request fifo)
  |           |----rxrr_fifo (read response fifo)
  |----etx (transmit path)
@@ -49,7 +49,7 @@ elink
 ```
 
 ###I/O PROTOCOL 
-The default elink communication protocol uses source synchronous clocks, a packet frame signal, 8-bit wide dual data rate data bus, and separate read and write packet wait signals to implement a gluless point to point link. The elink has a modular structure allowing the default communication protocol to be easily changed by modifying  the "etx_protocol" and "erx_protcol" blocks.    
+The default elink communication protocol uses source synchronous clocks, a packet frame signal, 8-bit wide dual data rate data bus, and separate read and write packet wait signals to implement a glueless point to point link. The elink has a modular structure allowing the default communication protocol to be easily changed by modifying  the "etx_protocol" and "erx_protocol" blocks.    
 
 ```
                ___     ___     ___     ___     ___     ___     ___     ___ 
@@ -85,13 +85,13 @@ B15      | data[23:16] in 64 bit write burst mode only
 ++B09: is the last byte of 32 bit write or read transaction    
 +++B14: is the first data byte of bursting transaction  
  
-The rising edge FRAME signal (sampled on the positive edge of LCLK) indicates the start of a new transmission. The byte captured on the first positve clock edge of the new packet is B00.  If the FRAME control signal stays high after B13, then the the elink automatically enters “bursting mode”, meaning that the  last byte of the previous transaction (B13) will be followed by B06 of a new transaction.  
+The rising edge FRAME signal (sampled on the positive edge of LCLK) indicates the start of a new transmission. The byte captured on the first positive clock edge of the new packet is B00.  If the FRAME control signal stays high after B13, then the the elink automatically enters “bursting mode”, meaning that the  last byte of the previous transaction (B13) will be followed by B06 of a new transaction.  
 
 Read and write wait signals are used to stall transmission when a receiver is unable to accept more transactions. The receiver will raise its WAIT output signal during an active transmission indicating that it can receive only one more transaction. The wait signal seen by the transmitter is of unspecified phase delay (while still of the LCLK clock period) and therefore has to be sampled with the two-cycle synchronizer.  If the transaction is in the middle of the transmission when the synchronized WAIT control goes high, the transmission process is to be completed without interruption.    
               
 ###SYSTEM SIDE PROTOCOL  
 
-Communication between the elink and the system side (i.e. the AXI side) is done using 104 bit parallel packet interfaces. Read, write, and read response transactions have independent channels into the elink. Data from a receiver read request is expected to return on the read response transmit chanel.   
+Communication between the elink and the system side (i.e. the AXI side) is done using 104 bit parallel packet interfaces. Read, write, and read response transactions have independent channels into the elink. Data from a receiver read request is expected to return on the read response transmit channel.   
 
 The "access" signals indicate a valid transaction. The wait signals indicate that the receiving block is not ready to receive the packet. An elink packet has the following bit ordering.  
 
@@ -138,9 +138,45 @@ embox_full        | O | Mailbox is full indicator
 m_*               |IO | AXI master interface
 s_*               |IO | AXI slave interface 
 
+###FPGA RESOURCE USAGE
+The following table shows the rough resource usage of the elink structure.
+(as of May 12, 2015)  
+
+Instance             |Module                   |Cells 
+---------------------|-------------------------|------
+  elink              |elink                    |  9809
+    ecfg_cdc         |fifo_cdc                 |   994
+    eclocks          |eclocks                  |     3
+    erx              |erx                      |  5200
+      erx_core       |erx_core                 |  2450
+        erx_cfg      |erx_cfg                  |   174
+        erx_cfgif    |ecfg_if                  |   106
+        erx_mailbox  |emailbox                 |   952
+        erx_mmu      |emmu_1                   |   233
+        erx_protocol |erx_protocol             |   880
+        erx_remap    |erx_remap                |   105
+      erx_fifo       |erx_fifo                 |  2711
+        rxrd_fifo    |fifo_cdc                 |   865
+        rxrr_fifo    |fifo_cdc                 |   857
+        rxwr_fifo    |fifo_cdc                 |   989
+      erx_io         |erx_io                   |    34
+    etx              |etx                      |  3596
+      etx_core       |etx_core                 |   890
+        etx_arbiter  |etx_arbiter              |   197
+        etx_cfg      |etx_cfg                  |    61
+        etx_cfgif    |ecfg_if                  |   122
+        etx_mmu      |emmu                     |   219
+        etx_protocol |etx_protocol             |   187
+        etx_remap    |etx_remap                |   104
+      etx_fifo       |etx_fifo                 |  2685
+        txrd_fifo    |fifo_cdc                 |   867
+        txrr_fifo    |fifo_cdc                 |   859
+        txwr_fifo    |fifo_cdc                 |   959
+      etx_io         |etx_io                   |    21
+
 ###REGISTER MAP  
  
-The full 32 bit physical address of an elink register is the address seen below added to the 12 bit elink ID that maps to address bits 31:20.  As an example, if the elink ID is 0x810, then writing to the E_RESET register would be done to address 0x810F0200. Redback is done through the txrd channel wit the source address sub field set to 810Dxxxx;
+The full 32 bit physical address of an elink register is the address seen below added to the 12 bit elink ID that maps to address bits 31:20.  As an example, if the elink ID is 0x810, then writing to the E_RESET register would be done to address 0x810F0200. Readback is done through the txrd channel with the source address sub field set to 810Dxxxx;
  
 REGISTER       | AC | ADDRESS | DESCRIPTION 
 ---------------|----|---------|------------------
