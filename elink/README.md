@@ -2,9 +2,7 @@
 
 ELINK INTRODUCTION
 =====================================
-The "elink" is a low-latency/high-speed interface for communicating between 
-FPGAs and ASICs (such as Epiphany). The interface can achieve a peak  
-throughputof 8 Gbit/s (duplex) in modern FPGAs using 24 LVDS signal pairs.  
+The "elink" is a low-latency/high-speed interface for communicating between FPGAs and ASICs (such as Epiphany). The interface can achieve a peak througput of 8 Gbit/s (duplex) in modern FPGAs using 24 LVDS signal pairs.  
 
 ###STRUCTURE
 
@@ -51,11 +49,7 @@ elink
 ```
 
 ###I/O PROTOCOL 
-The default elink communication protocol uses source synchronous clocks, a 
-packet frame signal, 8-bit wide dual data rate data bus, and separate read   
-and write packet wait signals to implement a gluless point to point link. The  
-elink has a modular structure allowing the default communication protocol to   
-be easily changed by modifying  the "etx_protocol" and "erx_protcol" blocks.    
+The default elink communication protocol uses source synchronous clocks, a packet frame signal, 8-bit wide dual data rate data bus, and separate read and write packet wait signals to implement a gluless point to point link. The elink has a modular structure allowing the default communication protocol to be easily changed by modifying  the "etx_protocol" and "erx_protcol" blocks.    
 
 ```
                ___     ___     ___     ___     ___     ___     ___     ___ 
@@ -91,32 +85,15 @@ B15      | data[23:16] in 64 bit write burst mode only
 ++B09: is the last byte of 32 bit write or read transaction    
 +++B14: is the first data byte of bursting transaction  
  
-The rising edge FRAME signal (sampled on the positive edge of LCLK) indicates  
-the start of a new transmission. The byte captured on the first positve  
-clock edge of the new packet is B00.  If the FRAME control signal
-stays high after B13, then the the elink automatically enters  
-“bursting mode”, meaning that the  last byte of the previous transaction 
-(B13) will be followed by B06 of a new transaction.  
+The rising edge FRAME signal (sampled on the positive edge of LCLK) indicates the start of a new transmission. The byte captured on the first positve clock edge of the new packet is B00.  If the FRAME control signal stays high after B13, then the the elink automatically enters “bursting mode”, meaning that the  last byte of the previous transaction (B13) will be followed by B06 of a new transaction.  
 
-Read and write wait signals are used to stall transmission when a receiver is   
-unable to accept more transactions. The receiver will raise its WAIT output  
-signal during an active transmission indicating that it can receive only one  
-more transaction. The wait signal seen by the transmitter is of unspecified  
-phase delay (while still of the LCLK clock period) and therefore has to be 
-sampled with the two-cycle synchronizer.  If the transaction is in the middle  
-of the transmission when the synchronized WAIT control goes high, the 
-transmission process is to be completed without interruption.    
+Read and write wait signals are used to stall transmission when a receiver is unable to accept more transactions. The receiver will raise its WAIT output signal during an active transmission indicating that it can receive only one more transaction. The wait signal seen by the transmitter is of unspecified phase delay (while still of the LCLK clock period) and therefore has to be sampled with the two-cycle synchronizer.  If the transaction is in the middle of the transmission when the synchronized WAIT control goes high, the transmission process is to be completed without interruption.    
               
 ###SYSTEM SIDE PROTOCOL  
 
-Communication between the elink and the system side (i.e. the AXI side) is done
-using 104 bit parallel packet interfaces. Read, write, and read response 
-transactions have independent channels into the elink. Data from a receiver 
-read request is expected to return on the read response transmit chanel.   
+Communication between the elink and the system side (i.e. the AXI side) is done using 104 bit parallel packet interfaces. Read, write, and read response transactions have independent channels into the elink. Data from a receiver read request is expected to return on the read response transmit chanel.   
 
-The "access" signals indicate a valid transaction. The wait signals indicate 
-that the receiving block is not ready to receive the packet. An elink packet 
-has the following bit ordering.  
+The "access" signals indicate a valid transaction. The wait signals indicate that the receiving block is not ready to receive the packet. An elink packet has the following bit ordering.  
 
  PACKET FIELD  | BITS    | DESCRIPTION 
  --------------|---------|----------
@@ -136,11 +113,10 @@ The elink has the following clock domains:
 *txo_lclk_div: Used for the etx_core logic  
 *rxi_lclk: Used by the erx_io for clocking in dual data rate data at pins  
 *txo_lclk: Used by the etx_io for transmitting dual rate data at pins  
-*txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample 
-the dual data rate data.  
+*txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample the dual data rate data.  
 
     
-###I/O INTERFACE
+###INTERFACE SIGNALS
    
 SIGNAL            |DIR| DESCRIPTION 
 ------------------|---|--------------
@@ -154,27 +130,17 @@ rxi_lclk{p/n}     | I | RX clock aligned in the center of the data eye
 rxi_data{p/n}[7:0]| I | RX dual data rate (DDR) that transmits packet
 rxo_rd_wait{p/n}  | O | RX push back (output) for read transactions
 rxo_wr_wait{p/n}  | O | RX push back (output) for write transactions
-
-###AXI INTERFACE
-The AXI master and slave interfaces are use standard signals, but not all  
-AXI interconnect features are supported.  
-
-###SYSTEM SIDE INTERFACE
-
-SIGNAL            |DIR| DESCRIPTION 
-------------------|---|--------------
 reset             | I | Reset input
 pll_clk           | I | Clock input for CCLK/LCLK PLL
 sys_clk           | I | System clock for FIFOs
 embox_not_empty   | O | Mailbox not empty (connect to interrupt line)   
 embox_full        | O | Mailbox is full indicator
+m_*               |IO | AXI master interface
+s_*               |IO | AXI slave interface 
 
 ###REGISTER MAP  
  
-The full 32 bit physical address of an elink register is the address seen below
-added to the 12 bit elink ID that maps to address bits 31:20.  As an example,
-if the elink ID is 0x810, then writing to the E_RESET register would be done to 
-address 0x810F0200. Redback is done through the txrd channel wit the source address sub field set to 810Dxxxx;
+The full 32 bit physical address of an elink register is the address seen below added to the 12 bit elink ID that maps to address bits 31:20.  As an example, if the elink ID is 0x810, then writing to the E_RESET register would be done to address 0x810F0200. Redback is done through the txrd channel wit the source address sub field set to 810Dxxxx;
  
 REGISTER       | AC | ADDRESS | DESCRIPTION 
 ---------------|----|---------|------------------
@@ -356,8 +322,7 @@ FIELD    | DESCRIPTION
  [15:0]  | TBD
 
 ###ERX_GPIO (0xF0308)
-RX status register
-Data sampled on  rxi_data and rxi_frame pins in gpio mode
+RX status register. Data sampled on  rxi_data and rxi_frame pins in gpio mode
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
@@ -372,16 +337,14 @@ FIELD    | DESCRIPTION
  [31:0]  | Memory offset
 
 ###E_MAILBOXLO (0xF0310)
-Lower 32 bit word of current entry of RX 64-bit wide mailbox FIFO. This 
-register should be read before the E_MAILBOXHI. 
+Lower 32 bit word of current entry of RX 64-bit wide mailbox FIFO. This register should be read before the E_MAILBOXHI. 
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | Lower data of RX FIFO
 
 ###E_MAILBOXHI (0xF0314)
-Upper 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Reading this
-register causes the RX FIFO read pointer to increment by one.
+Upper 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Reading this register causes the RX FIFO read pointer to increment by one.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
@@ -408,16 +371,14 @@ FIELD    | DESCRIPTION
          | 1: Left shifts stride by 16 bits
          
 ###DMACOUNT (0xF0504/0xF0524)
-The number of DMA left to complete The DMA transfer is complete when the 
-DMACOUNT register reaches zero.
+The number of DMA left to complete The DMA transfer is complete when the DMACOUNT register reaches zero.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | The number of transfers remaining
 
 ###DMASTRIDE (0xF0508/0xF0528)
-Two signed 16-bit values specifying the stride, in bytes, used to update the 
-DMASRCADDR and DMADSTADDR after each completed transfer. 
+Two signed 16-bit values specifying the stride, in bytes, used to update the DMASRCADDR and DMADSTADDR after each completed transfer. 
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
@@ -464,8 +425,7 @@ FIELD    | DESCRIPTION
 
 
 ###ETX_MMU (0xE0000)
-A table of N entries for translating incoming 12 bit address
-to a new value. Entries are aligned on 8 byte boundaroies
+A table of N entries for translating incoming 12 bit address to a new value. Entries are aligned on 8 byte boundaries
  
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
@@ -473,8 +433,7 @@ FIELD    | DESCRIPTION
  [43:12] | Output address bits 63:32 (TBD)
 
 ###ERX_MMU (0xE8000)
-A table of N entries for translating incoming 12 bit address to a new value. 
-Entries are aligned on 8 byte boundaries.
+A table of N entries for translating incoming 12 bit address to a new value. Entries are aligned on 8 byte boundaries.
  
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
