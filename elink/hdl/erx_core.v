@@ -55,7 +55,7 @@ module erx_core (/*AUTOARG*/
    wire			ecfg_access;		// From erx_cfgif of ecfg_if.v
    wire [PW-1:0]	ecfg_packet;		// From erx_cfgif of ecfg_if.v
    wire			edma_access;		// From erx_dma of edma.v
-   wire			edma_wait;		// From erx_disty of erx_disty.v
+   wire			edma_wait;		// From erx_arbiter of erx_arbiter.v
    wire			emesh_remap_access;	// From erx_remap of erx_remap.v
    wire [PW-1:0]	emesh_remap_packet;	// From erx_remap of erx_remap.v
    wire			emmu_access;		// From erx_mmu of emmu.v
@@ -338,39 +338,39 @@ module erx_core (/*AUTOARG*/
    /*ELINK RECEIVE DISTRIBUTOR ("DEMUX")                       */
    /*(figures out who RX transaction belongs to)               */
    /********************1***************************************/
-   /*erx_disty AUTO_TEMPLATE ( 
+   /*erx_arbiter AUTO_TEMPLATE ( 
                         //Inputs
                         .mmu_en		(ecfg_rx_mmu_enable),
                         .ecfg_wait	(erx_cfg_wait),
     )
     */
 
-   defparam erx_disty.ID    = ID;
-   erx_disty erx_disty (.timeout	(1'b0),//TODO
+   defparam erx_arbiter.ID    = ID;
+   erx_arbiter erx_arbiter (.timeout	(1'b0),//TODO
 			/*AUTOINST*/
-			// Outputs
-			.rx_rd_wait	(rx_rd_wait),
-			.rx_wr_wait	(rx_wr_wait),
-			.edma_wait	(edma_wait),
-			.ecfg_wait	(erx_cfg_wait),		 // Templated
-			.rxwr_access	(rxwr_access),
-			.rxwr_packet	(rxwr_packet[PW-1:0]),
-			.rxrd_access	(rxrd_access),
-			.rxrd_packet	(rxrd_packet[PW-1:0]),
-			.rxrr_access	(rxrr_access),
-			.rxrr_packet	(rxrr_packet[PW-1:0]),
-			// Inputs
-			.erx_access	(erx_access),
-			.erx_packet	(erx_packet[PW-1:0]),
-			.emmu_access	(emmu_access),
-			.emmu_packet	(emmu_packet[PW-1:0]),
-			.edma_access	(edma_access),
-			.edma_packet	(edma_packet[PW-1:0]),
-			.ecfg_access	(ecfg_access),
-			.ecfg_packet	(ecfg_packet[PW-1:0]),
-			.rxwr_wait	(rxwr_wait),
-			.rxrd_wait	(rxrd_wait),
-			.rxrr_wait	(rxrr_wait));
+			    // Outputs
+			    .rx_rd_wait		(rx_rd_wait),
+			    .rx_wr_wait		(rx_wr_wait),
+			    .edma_wait		(edma_wait),
+			    .ecfg_wait		(erx_cfg_wait),	 // Templated
+			    .rxwr_access	(rxwr_access),
+			    .rxwr_packet	(rxwr_packet[PW-1:0]),
+			    .rxrd_access	(rxrd_access),
+			    .rxrd_packet	(rxrd_packet[PW-1:0]),
+			    .rxrr_access	(rxrr_access),
+			    .rxrr_packet	(rxrr_packet[PW-1:0]),
+			    // Inputs
+			    .erx_access		(erx_access),
+			    .erx_packet		(erx_packet[PW-1:0]),
+			    .emmu_access	(emmu_access),
+			    .emmu_packet	(emmu_packet[PW-1:0]),
+			    .edma_access	(edma_access),
+			    .edma_packet	(edma_packet[PW-1:0]),
+			    .ecfg_access	(ecfg_access),
+			    .ecfg_packet	(ecfg_packet[PW-1:0]),
+			    .rxwr_wait		(rxwr_wait),
+			    .rxrd_wait		(rxrd_wait),
+			    .rxrr_wait		(rxrr_wait));
 
    
 endmodule // erx

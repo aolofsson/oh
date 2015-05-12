@@ -122,6 +122,7 @@ module erx (/*AUTOARG*/
     );
     */
    
+   defparam erx_core.ID=ID;   
    erx_core erx_core ( .clk		(rx_lclk_div4),
 		       /*AUTOINST*/
 		      // Outputs

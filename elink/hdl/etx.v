@@ -128,6 +128,7 @@ module etx(/*AUTOARG*/
     );
     */
    
+   defparam etx_core.ID=ID;   
    etx_core etx_core (.clk		(tx_lclk_div4),
 		      /*AUTOINST*/
 		      // Outputs
