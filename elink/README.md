@@ -131,12 +131,13 @@ has the following bit ordering.
 ###Clocking and Reset
 The elink has the following clock domains:
 
-*sys_clk : used by the axi interfaces
-*rxi_lclk_div4: Used for the erx_core logic
-*txo_lclk_div: Used for the etx_core logic
-*rxi_lclk: Used by the erx_io for clocking in dual data rate data at pins
-*txo_lclk: Used by the etx_io for transmitting dual rate data at pins
-*txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample the dual data rate data.
+*sys_clk : used by the axi interfaces  
+*rxi_lclk_div4: Used for the erx_core logic  
+*txo_lclk_div: Used for the etx_core logic  
+*rxi_lclk: Used by the erx_io for clocking in dual data rate data at pins  
+*txo_lclk: Used by the etx_io for transmitting dual rate data at pins  
+*txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample 
+the dual data rate data.  
 
     
 ###I/O INTERFACE
@@ -157,7 +158,6 @@ rxo_wr_wait{p/n}  | O | RX push back (output) for write transactions
 ###AXI INTERFACE
 The AXI master and slave interfaces are use standard signals, but not all  
 AXI interconnect features are supported.  
-
 
 ###SYSTEM SIDE INTERFACE
 
@@ -206,7 +206,7 @@ E_MAILBOXHI    | RW | 0xF0314 | RX mailbox (upper 32 bits)
 ERX_DMACFG     | RW | 0xF0520 | TX DMA configuration
 ERX_DMACOUNT   | RW | 0xF0524 | TX DMA count
 ERX_DMASTRIDE  | RW | 0xF0528 | TX DMA stride
-ETX_DMASRCADDR | RW | 0xF050c | TX DMA source addres
+ETX_DMASRCADDR | RW | 0xF052c | TX DMA source addres
 ERX_DMADSTADDR | RW | 0xF0530 | TX DMA destination address
 ERX_DMAAUTO0   | RW | 0xF0534 | TX DMA slave buffer (lo)
 ERX_DMAAUTO1   | RW | 0xF0538 | TX DMA slERXave buffer (hi)
@@ -217,7 +217,7 @@ ERX_MMU        | -W | 0xE8000 | RX MMU table
 REGISTER DESCRIPTIONS
 ===========================================
 
-###E_RESET
+###E_RESET (0xF0200)
 Reset control register for the elink and Epiphany chip
 
 FIELD    | DESCRIPTION 
@@ -229,7 +229,7 @@ FIELD    | DESCRIPTION
  [2]     | 1: Starts an internal reset and clock sequnce block
          |    (self resetting bit)
 
-###E_CLK (LABS)
+###E_CLK (0xF0204)  
 Transmit and Epiphany clock settings.
 (NOTE: Current PLL only supports fixed frequency)  
   
@@ -263,7 +263,7 @@ FIELD    | DESCRIPTION
          | 1xxx: RESERVED        
  [15:12] | PLL frequency (TBD)
 
-###E_CHIPID
+###E_CHIPID (0xF0208)
 Column and row chip id pins to the Epiphany chip.
 
 FIELD    | DESCRIPTION 
@@ -279,7 +279,7 @@ FIELD    | DESCRIPTION
  [7:0]   | Platform version
  [15:8]  | Revision number
 
-###ETX_CFG
+###ETX_CFG (0xF020C)
 TX configuration settings
 
 FIELD    | DESCRIPTION 
@@ -304,14 +304,14 @@ FIELD    | DESCRIPTION
  [11:9]  | 00: Normal transmit mode
          | 01: GPIO direct drive mode
 
-###ETX_STATUS
+###ETX_STATUS (0xF0214)
 TX status register
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [15:0]  | TBD
 
-###ETX_GPIO
+###ETX_GPIO (0xF0218)
 Data to drive on txo_data and txo_frame pins in gpio mode
  
 FIELD    | DESCRIPTION 
@@ -319,16 +319,8 @@ FIELD    | DESCRIPTION
  [7:0]   | Data for txo_data pins
  [8]     | Data for txo_frame pin
 
-###ETX_MMU
-A table of N entries for translating incoming 12 bit address
-to a new value. Entries are aligned on 8 byte boundaroies
- 
-FIELD    | DESCRIPTION 
--------- |---------------------------------------------------
- [11:0]  | Output address bits 31:20
- [43:12] | Output address bits 63:32 (TBD)
 
-###ERX_CFG
+###ERX_CFG (0xF0300)
 RX configuration register
 
 FIELD    | DESCRIPTION 
@@ -356,14 +348,14 @@ FIELD    | DESCRIPTION
          | 10: Timeout value set to 0000FFFF
          | 11: Timeout value set to FFFFFFFF
 
-###ERX_STATUS
+###ERX_STATUS (0xF0304)
 RX status register
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [15:0]  | TBD
 
-###ERX_GPIO
+###ERX_GPIO (0xF0308)
 RX status register
 Data sampled on  rxi_data and rxi_frame pins in gpio mode
 
@@ -372,14 +364,14 @@ FIELD    | DESCRIPTION
  [7:0]   | Data from rxi_data pins
  [8]     | Data from rxi_frame pin
 
-###ERX_OFFSET
+###ERX_OFFSET (0xF030C)
 Address offset used in the dynamic address remapping mode.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | Memory offset
 
-###E_MAILBOXLO
+###E_MAILBOXLO (0xF0310)
 Lower 32 bit word of current entry of RX 64-bit wide mailbox FIFO. This 
 register should be read before the E_MAILBOXHI. 
 
@@ -387,7 +379,7 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [31:0]  | Lower data of RX FIFO
 
-###E_MAILBOXHI
+###E_MAILBOXHI (0xF0314)
 Upper 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Reading this
 register causes the RX FIFO read pointer to increment by one.
 
@@ -395,7 +387,7 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [31:0]  | Upper data of RX FIFO
 
-###DMACFG
+###DMACFG (0xF0500/0xF0520)
 Configuration register for DMA.
 
 FIELD    | DESCRIPTION 
@@ -415,7 +407,7 @@ FIELD    | DESCRIPTION
  [12]    | 0: Destination address shift disabled
          | 1: Left shifts stride by 16 bits
          
-###DMACOUNT
+###DMACOUNT (0xF0504/0xF0524)
 The number of DMA left to complete The DMA transfer is complete when the 
 DMACOUNT register reaches zero.
 
@@ -423,21 +415,7 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [31:0]  | The number of transfers remaining
 
-###DMADSTADDR
-The current 32-bit address being transferred.
-
-FIELD    | DESCRIPTION 
--------- |---------------------------------------------------
- [31:0]  | Current transaction destination address to write to
-
-###DMASRCADDR
-The current 32-bit address being read from in master mode.
-
-FIELD    | DESCRIPTION 
--------- |---------------------------------------------------
- [31:0]  | Current transaction destination address to write to
-
-###DMASTRIDE
+###DMASTRIDE (0xF0508/0xF0528)
 Two signed 16-bit values specifying the stride, in bytes, used to update the 
 DMASRCADDR and DMADSTADDR after each completed transfer. 
 
@@ -446,14 +424,55 @@ FIELD    | DESCRIPTION
  [15:0]  | Value to add to DMASRCADDR after each transaction
  [31:16] | Value to add to DMADSTADDR after each transaction
 
-###DMASTRIDE
-Status of DMA
+###DMASRCADDR (0xF050C/0xF052C)
+The current 32-bit address being read from in master mode.
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | Current transaction destination address to write to
+
+###DMADSTADDR (0xF0510/0xF0530)
+The current 32-bit address being transferred.
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | Current transaction destination address to write to
+
+
+
+###DMAAUTO0 (0xF0514/0xF0534)
+Auto DMA register
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | TBD
 
-###ERX_MMU
+
+###DMAAUTO1 (0xF0518/0xF0538)
+Auto DMA register
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | TBD
+
+###DMASTATUS (0xF051c/0xF053c)
+DMA status register
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | TBD
+
+
+###ETX_MMU (0xE0000)
+A table of N entries for translating incoming 12 bit address
+to a new value. Entries are aligned on 8 byte boundaroies
+ 
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [11:0]  | Output address bits 31:20
+ [43:12] | Output address bits 63:32 (TBD)
+
+###ERX_MMU (0xE8000)
 A table of N entries for translating incoming 12 bit address to a new value. 
 Entries are aligned on 8 byte boundaries.
  
@@ -462,3 +481,6 @@ FIELD    | DESCRIPTION
  [11:0]  | Output address bits 31:20
  [43:12] | Output address bits 63:32 (TBD)
 
+###ERX_READBACK (0xDxxxx)
+Source address to specify for slave (host) read requests
+ 
