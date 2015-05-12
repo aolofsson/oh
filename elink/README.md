@@ -139,40 +139,41 @@ m_*               |IO | AXI master interface
 s_*               |IO | AXI slave interface 
 
 ###FPGA RESOURCE USAGE
-The following table shows the rough resource usage of the elink structure.
+The following table shows the rough resource usage of the elink synthesized with the xc7z010clg400-1 as a target.
 (as of May 12, 2015)  
 
 Instance             |Module                   |Cells 
 ---------------------|-------------------------|------
   elink              |elink                    |  9809
-    ecfg_cdc         |fifo_cdc                 |   994
-    eclocks          |eclocks                  |     3
-    erx              |erx                      |  5200
-      erx_core       |erx_core                 |  2450
-        erx_cfg      |erx_cfg                  |   174
-        erx_cfgif    |ecfg_if                  |   106
-        erx_mailbox  |emailbox                 |   952
-        erx_mmu      |emmu_1                   |   233
-        erx_protocol |erx_protocol             |   880
-        erx_remap    |erx_remap                |   105
-      erx_fifo       |erx_fifo                 |  2711
-        rxrd_fifo    |fifo_cdc                 |   865
-        rxrr_fifo    |fifo_cdc                 |   857
-        rxwr_fifo    |fifo_cdc                 |   989
-      erx_io         |erx_io                   |    34
-    etx              |etx                      |  3596
-      etx_core       |etx_core                 |   890
-        etx_arbiter  |etx_arbiter              |   197
-        etx_cfg      |etx_cfg                  |    61
-        etx_cfgif    |ecfg_if                  |   122
-        etx_mmu      |emmu                     |   219
-        etx_protocol |etx_protocol             |   187
-        etx_remap    |etx_remap                |   104
-      etx_fifo       |etx_fifo                 |  2685
-        txrd_fifo    |fifo_cdc                 |   867
-        txrr_fifo    |fifo_cdc                 |   859
-        txwr_fifo    |fifo_cdc                 |   959
-      etx_io         |etx_io                   |    21
+  --ecfg_cdc         |fifo_cdc                 |   994
+  --eclocks          |eclocks                  |     3
+  --erx              |erx                      |  5200
+  ----erx_core       |erx_core                 |  2450
+  ------erx_cfg      |erx_cfg                  |   174
+  ------erx_cfgif    |ecfg_if                  |   106
+  ------erx_mailbox  |emailbox                 |   952
+  ------erx_mmu      |emmu                     |   233
+  ------erx_protocol |erx_protocol             |   880
+  ------erx_remap    |erx_remap                |   105
+  ----erx_fifo       |erx_fifo                 |  2711
+  ------rxrd_fifo    |fifo_cdc                 |   865
+  ------rxrr_fifo    |fifo_cdc                 |   857
+  ------rxwr_fifo    |fifo_cdc                 |   989
+  ----erx_io         |erx_io                   |    34
+  --etx              |etx                      |  3596
+  ----etx_core       |etx_core                 |   890
+  ------etx_arbiter  |etx_arbiter              |   197
+  ------etx_cfg      |etx_cfg                  |    61
+  ------etx_cfgif    |ecfg_if                  |   122
+  ------etx_mmu      |emmu                     |   219
+  ------etx_protocol |etx_protocol             |   187
+  ------etx_remap    |etx_remap                |   104
+  ----etx_fifo       |etx_fifo                 |  2685
+  ------txrd_fifo    |fifo_cdc                 |   867
+  ------txrr_fifo    |fifo_cdc                 |   859
+  ------txwr_fifo    |fifo_cdc                 |   959
+  ----etx_io         |etx_io                   |    21
+  
 
 ###REGISTER MAP  
  
