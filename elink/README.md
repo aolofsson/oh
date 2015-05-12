@@ -1,76 +1,57 @@
+![alt tag](docs/elink_header.png)
+
 ELINK INTRODUCTION
 =====================================
 The "elink" is a low-latency/high-speed interface for communicating between 
 FPGAs and ASICs (such as Epiphany) that uses 24 signals for full duplex 
 communication. The interface can achieve a peak throughput of 8 Gbit/s (duplex)
 in modern FPGAs using differential LVDS signaling.
-    
-###I/O INTERFACE
-   
-SIGNAL            |DIR| DESCRIPTION 
-------------------|---|--------------
-txo_frame_{p/n}   | O | TX packet framing signal
-txo_lclk{p/n}     | O | TX clock aligned in the center of the data eye
-txo_data{p/n}[7:0]| O | TX dual data rate (DDR) that transmits packet
-txi_rd_wait{p/n}  | I | TX push back (input) for read transactions
-txi_wd_wait{p/n}  | I | TX push back (input) for write transactions
-rxi_frame{p/n}    | I | RX packet framing signal.
-rxi_lclk{p/n}     | I | RX clock aligned in the center of the data eye
-rxi_data{p/n}[7:0]| I | RX dual data rate (DDR) that transmits packet
-rxo_rd_wait{p/n}  | O | RX push back (output) for read transactions
-rxo_wr_wait{p/n}  | O | RX push back (output) for write transactions
 
+###STRUCTURE
 
+![alt tag](docs/elink.png)
 
-###SYSTEM SIDE INTERFACE
-
-SIGNAL            |DIR| DESCRIPTION 
-------------------|---|--------------
-reset             | I | Reset input
-clkin             | I | Clock input for CCLK/LCLK PLL
-sys_clk           | I | System clock for FIFOs
-clkbypass[2:0]    | I | Clocks inputs for bypassing PLL
-testmode          | I | Puts elink transmitter in test mode
-rx_lclk_div4      | O | rxi_lclk clock divided by 4
-tx_lclk_div4      | O | txo_lclk clock divided by 4
-embox_not_empty   | O | Mailbox not empty (connect to interrupt line)   
-embox_full        | O | Mailbox is full indicator
-timeout           | O | Read request timeout indicator
-txwr_access       | I | TX write  
-txwr_packet[103:0]| I | TX write packet
-txwr_wait         | O | TX write wait (pushback)
-txrd_access       | I | TX read  
-txrd_packet[103:0]| I | TX read packet
-txrd_wait         | O | TX read wait (pushback)
-txrr_access       | I | TX read-response 
-txrr_packet[103:0]| I | TX read-response packet
-txrr_wait         | O | TX read-response wait (pushback)
-rxwr_access       | O | RX write  
-rxwr_packet[103:0]| O | RX write packet
-txwr_wait         | I | RX write write (pushback)
-rxrd_access       | O | RX read  
-rxrd_packet[103:0]| O | RX read packet
-rxrd_wait         | I | RX read wait (pushback)
-rxrr_access       | O | RX read-response 
-rxrr_packet[103:0]| O | RX read-response packet
-rxrr_wait         | I | RX read-response wait (pushback)
-
-###EPIPHANY SIGNALS
-
-SIGNAL            |DIR| DESCRIPTION 
-------------------|---|-------------- 
-cclk_{p/n}        | O | Epiphany differential high speed clock
-chip_resetb       | O | Epiphany reset (active low)
-chipid[11:0]      | O | Epiphany chip-id selector
-
-The Epiphany specific output signals can be left unconnected in systems that 
-don't include Epiphany chips. 
+```
+elink
+ |----ereset (elink and chip reset)
+ |----ecfg_clocks (controls clock and reset)
+ |----eclocks (PLL/divider instantiation)
+ |----ecfg_cdc (etx-->erx path for configuration registe access)
+ |----erx (receive path)
+ |     |----erx_io (chip level I/O interface
+ |     |----erx_protocol (elink protocol-->emesh packet converter)
+ |     |----erx_remap (simple dstaddr remapping)
+ |     |----erx_mmu (advanced dstaddr mapping)
+ |     |----erx_cfgif (configuration interface)
+ |     |----erx_cfg (basic rx config registers)
+ |     |----emailbox (fifo mailbox)
+ |     |----erx_dma (DMA master)
+ |     |----erx_arbiter (sends rx transaction to WR/RD/RR fifo)
+ |     |----rxwr_fifo (write fifo)
+ |     |----rxrd_fifo (read request fifo)
+ |     |----rxrr_fifo (read response fifo)
+ |----etx (transmit path)
+ |     |----etx_io (chip level I/O interface)
+ |     |----etx_protocol (emesh-->elink protocol converter)
+ |     |----etx_remap (simple dstaddr remapping)
+ |     |----etx_mmu (advanced dstaddr mapping)
+ |     |----etx_cfgif (configuration interface)
+ |     |----etx_cfg (basic rx config registers)
+ |     |----etx_dma (DMA master)
+ |     |----etx_arbiter (sends rx transaction to WR/RD/RR fifo)
+ |     |----txwr_fifo (write fifo)
+ |     |----txrd_fifo (read request fifo)
+ |     |----txrr_fifo (read response fifo)
+ |--------------------------------------------------------------------
+```
 
 ###I/O PROTOCOL 
-The default protocol for the elink is the Epiphany chip to chip interface. 
+The default protocol used is is the eLink Epiphany chip-to-chip interface. 
 The Epiphany protocol uses a source synchronous clocks, a packet frame signal,
 an 8-bit wide dual data rate data bus, and separate read and write packet wait
-signals to implement a gluless point to point link.
+signals to implement a gluless point to point link. The protocol can "easily"  
+be changed by modifying or replacing the etx_protocol and erx_protcol blocks.  
+
 
 ```
                ___     ___     ___     ___     ___     ___     ___     ___ 
@@ -130,7 +111,7 @@ completed without interruption.
 ###SYSTEM SIDE PROTOCOL  
 
 Communication between the elink and the system side (i.e. the AXI side) is done
-using the rx and tx parallel interfaces. Read, write, and read response 
+using 104 bit parallel interfaces. Read, write, and read response 
 transactions have independent channels into the elink. Data from a receiver 
 read request is expected to return on the read response transmit chanel.   
 
@@ -148,40 +129,70 @@ has the following bit ordering.
  data[31:0]    | [71:40] | Data for write transaction, data for read response
  srcaddr[31:0] | [103:72]| Return address for read-request, upper data for write
 
-###INTERNAL STRUCTURE
-```
-elink
- |----ereset (elink and chip reset)
- |----ecfg_clocks (controls clock and reset)
- |----eclocks (PLL/divider instantiation)
- |----ecfg_cdc (etx-->erx path for configuration registe access)
- |----erx (receive path)
- |     |----erx_io (chip level I/O interface
- |     |----erx_protocol (elink protocol-->emesh packet converter)
- |     |----erx_remap (simple dstaddr remapping)
- |     |----erx_mmu (advanced dstaddr mapping)
- |     |----erx_cfgif (configuration interface)
- |     |----erx_cfg (basic rx config registers)
- |     |----erx_mailbox (fifo mailbox)
- |     |----erx_dma (DMA master)
- |     |----erx_disty (sends rx transaction to WR/RD/RR fifo)
- |     |----rxwr_fifo (write fifo)
- |     |----rxrd_fifo (read request fifo)
- |     |----rxrr_fifo (read response fifo)
- |----etx (transmit path)
- |     |----etx_io (chip level I/O interface)
- |     |----etx_protocol (emesh-->elink protocol converter)
- |     |----etx_remap (simple dstaddr remapping)
- |     |----etx_mmu (advanced dstaddr mapping)
- |     |----etx_cfgif (configuration interface)
- |     |----etx_cfg (basic rx config registers)
- |     |----etx_dma (DMA master)
- |     |----etx_arbiter (sends rx transaction to WR/RD/RR fifo)
- |     |----txwr_fifo (write fifo)
- |     |----txrd_fifo (read request fifo)
- |     |----txrr_fifo (read response fifo)
- |--------------------------------------------------------------------
-```
+
+
+###Clocking and Reset
+The elink has the following clock domains:
+
+*sys_clk : used by the axi interfaces
+*rxi_lclk_div4: Used for the erx_core logic
+*txo_lclk_div: Used for the etx_core logic
+*rxi_lclk: Used by the erx_io for clocking in dual data rate data at pins
+*txo_lclk: Used by the etx_io for transmitting dual rate data at pins
+*txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample the dual data rate data.
+
+    
+###I/O INTERFACE
+   
+SIGNAL            |DIR| DESCRIPTION 
+------------------|---|--------------
+txo_frame_{p/n}   | O | TX packet framing signal
+txo_lclk{p/n}     | O | TX clock aligned in the center of the data eye
+txo_data{p/n}[7:0]| O | TX dual data rate (DDR) that transmits packet
+txi_rd_wait{p/n}  | I | TX push back (input) for read transactions
+txi_wd_wait{p/n}  | I | TX push back (input) for write transactions
+rxi_frame{p/n}    | I | RX packet framing signal.
+rxi_lclk{p/n}     | I | RX clock aligned in the center of the data eye
+rxi_data{p/n}[7:0]| I | RX dual data rate (DDR) that transmits packet
+rxo_rd_wait{p/n}  | O | RX push back (output) for read transactions
+rxo_wr_wait{p/n}  | O | RX push back (output) for write transactions
+
+###AXI INTERFACE
+When used win the "emax" and "esaxi" interface, standard AXI interfaces
+
+###SYSTEM SIDE INTERFACE
+
+SIGNAL            |DIR| DESCRIPTION 
+------------------|---|--------------
+reset             | I | Reset input
+pll_clk           | I | Clock input for CCLK/LCLK PLL
+sys_clk           | I | System clock for FIFOs
+embox_not_empty   | O | Mailbox not empty (connect to interrupt line)   
+embox_full        | O | Mailbox is full indicator
+
+###CORE INTERFACE 
+Interface presented to the AXI interfaces "emaxi" and "esaxi".
+
+SIGNAL            |DIR| DESCRIPTION 
+------------------|---|--------------
+txwr_access       | I | TX write  
+txwr_packet[103:0]| I | TX write packet
+txwr_wait         | O | TX write wait (pushback)
+txrd_access       | I | TX read  
+txrd_packet[103:0]| I | TX read packet
+txrd_wait         | O | TX read wait (pushback)
+txrr_access       | I | TX read-response 
+txrr_packet[103:0]| I | TX read-response packet
+txrr_wait         | O | TX read-response wait (pushback)
+rxwr_access       | O | RX write  
+rxwr_packet[103:0]| O | RX write packet
+txwr_wait         | I | RX write write (pushback)
+rxrd_access       | O | RX read  
+rxrd_packet[103:0]| O | RX read packet
+rxrd_wait         | I | RX read wait (pushback)
+rxrr_access       | O | RX read-response 
+rxrr_packet[103:0]| O | RX read-response packet
+rxrr_wait         | I | RX read-response wait (pushback)
 
 ###REGISTER MAP  
  
@@ -194,8 +205,8 @@ REGISTER       | AC | ADDRESS | DESCRIPTION
 ---------------|----|---------|------------------
 E_RESET        | -W | 0xF0200 | Soft reset
 E_CLK          | -W | 0xF0204 | Clock configuration
-***************|****|*********|********************
 E_CHIPID       | RW | 0xF0208 | Chip ID to drive to Epiphany pins
+***************|****|*********|********************
 E_VERSION      | RW | 0xF020C | Version number (static)
 ETX_CFG        | RW | 0xF0210 | TX configuration
 ETX_STATUS     | R- | 0xF0214 | TX status
