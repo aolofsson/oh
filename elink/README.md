@@ -3,9 +3,8 @@
 ELINK INTRODUCTION
 =====================================
 The "elink" is a low-latency/high-speed interface for communicating between 
-FPGAs and ASICs (such as Epiphany) that uses 24 signals for full duplex 
-communication. The interface can achieve a peak throughput of 8 Gbit/s (duplex)
-in modern FPGAs using differential LVDS signaling.
+FPGAs and ASICs (such as Epiphany). The interface can achieve a peak  
+throughputof 8 Gbit/s (duplex) in modern FPGAs using 24 LVDS signal pairs.  
 
 ###STRUCTURE
 
@@ -13,45 +12,50 @@ in modern FPGAs using differential LVDS signaling.
 
 ```
 elink
- |----ereset (elink and chip reset)
- |----ecfg_clocks (controls clock and reset)
- |----eclocks (PLL/divider instantiation)
- |----ecfg_cdc (etx-->erx path for configuration registe access)
+ |----emaxi (AXI master interface)
+ |----esaxi (AXI slave interface)
+ |----ereset (elink and chip reset generator)
+ |----ecfg_clocks (elink clock and reset configuration)
+ |----eclocks (PLL instantiation)
+ |----ecfg_cdc (etx-->erx path for configuration register access)
  |----erx (receive path)
  |     |----erx_io (chip level I/O interface
- |     |----erx_protocol (elink protocol-->emesh packet converter)
- |     |----erx_remap (simple dstaddr remapping)
- |     |----erx_mmu (advanced dstaddr mapping)
- |     |----erx_cfgif (configuration interface)
- |     |----erx_cfg (basic rx config registers)
- |     |----emailbox (fifo mailbox)
- |     |----erx_dma (DMA master)
- |     |----erx_arbiter (sends rx transaction to WR/RD/RR fifo)
- |     |----rxwr_fifo (write fifo)
- |     |----rxrd_fifo (read request fifo)
- |     |----rxrr_fifo (read response fifo)
+ |     |----erx_core
+ |     |     |----erx_protocol (elink protocol-->emesh packet converter)
+ |     |     |----erx_remap (simple dstaddr remapping)
+ |     |     |----erx_mmu (advanced dstaddr mapping)
+ |     |     |----erx_cfgif (configuration interface)
+ |     |     |----erx_cfg (basic rx config registers)
+ |     |     |----erx_mailbox (fifo style mailbox with interupt output)
+ |     |     |----erx_dma (RX DMA)
+ |     |     |----erx_arbiter (sends RX transaction to WR/RD/RR fifo)
+ |     |----erx_fifo
+ |           |----rxwr_fifao (write fifo)
+ |           |----rxrd_fifo (read request fifo)
+ |           |----rxrr_fifo (read response fifo)
  |----etx (transmit path)
- |     |----etx_io (chip level I/O interface)
- |     |----etx_protocol (emesh-->elink protocol converter)
- |     |----etx_remap (simple dstaddr remapping)
- |     |----etx_mmu (advanced dstaddr mapping)
- |     |----etx_cfgif (configuration interface)
- |     |----etx_cfg (basic rx config registers)
- |     |----etx_dma (DMA master)
- |     |----etx_arbiter (sends rx transaction to WR/RD/RR fifo)
- |     |----txwr_fifo (write fifo)
- |     |----txrd_fifo (read request fifo)
- |     |----txrr_fifo (read response fifo)
- |--------------------------------------------------------------------
+       |----etx_io (chip level I/O interface)
+       |----etx_core
+       |     |----etx_protocol (emesh-->elink protocol converter)
+       |     |----etx_remap (simple dstaddr remapping)
+       |     |----etx_mmu (advanced dstaddr mapping)
+       |     |----etx_cfgif (configuration interface)
+       |     |----etx_cfg (basic rx config registers)
+       |     |----etx_dma (DMA master)
+       |     |----etx_arbiter (sends rx transaction to WR/RD/RR fifo)
+       |----etx_fifo
+             |----txwr_fifo (write fifo)     
+             |----txrd_fifo (read request fifo)
+             |----txrr_fifo (read response fifo)
+ --------------------------------------------------------------------
 ```
 
 ###I/O PROTOCOL 
-The default protocol used is is the eLink Epiphany chip-to-chip interface. 
-The Epiphany protocol uses a source synchronous clocks, a packet frame signal,
-an 8-bit wide dual data rate data bus, and separate read and write packet wait
-signals to implement a gluless point to point link. The protocol can "easily"  
-be changed by modifying or replacing the etx_protocol and erx_protcol blocks.  
-
+The default elink communication protocol uses source synchronous clocks, a 
+packet frame signal, 8-bit wide dual data rate data bus, and separate read   
+and write packet wait signals to implement a gluless point to point link. The  
+elink has a modular structure allowing the default communication protocol to   
+be easily changed by modifying  the "etx_protocol" and "erx_protcol" blocks.    
 
 ```
                ___     ___     ___     ___     ___     ___     ___     ___ 
@@ -65,7 +69,7 @@ be changed by modifying or replacing the etx_protocol and erx_protcol blocks.
            
 BYTE     | DESCRIPTION 
 ---------|--------------
-B00      | 00000000
+B00      | R0000000 (R bit set to 1 for read transaction)
 B01      | {ctrlmode[3:0],dstaddr[31:28]}
 B02      | dstaddr[27:20]
 B03      | dstaddr[19:12]
@@ -87,31 +91,26 @@ B15      | data[23:16] in 64 bit write burst mode only
 ++B09: is the last byte of 32 bit write or read transaction    
 +++B14: is the first data byte of bursting transaction  
  
-The data captured  on the rising edge of the LCLK is considered to be B0 if 
-the FRAME control captured at the same cycle is high but was low at the rising
-edge of the previous LCLK cycle (ie rising edge). If the FRAME control signal
-stays high after B13, then the the eLink goes into “bursting mode”, meaning 
-that the  last byte of the previous transaction (B13) will be followed by B06
-of a new transaction.  
+The rising edge FRAME signal (sampled on the positive edge of LCLK) indicates  
+the start of a new transmission. The byte captured on the first positve  
+clock edge of the new packet is B00.  If the FRAME control signal
+stays high after B13, then the the elink automatically enters  
+“bursting mode”, meaning that the  last byte of the previous transaction 
+(B13) will be followed by B06 of a new transaction.  
 
-The data is transmitted MSB first but in 32bits resolution. If we want to 
-transmit 64 bits it will be bits 31:0 (msb first) and then 63:32 (msb first)  
-
-The wait signals are used to stall transmission when a receiver is unable to 
-accept more transactions. The receiver will raise its WAIT output signal during
-an active transmission indicating that it can receive only one more transaction.
-The wait signal seen by the transmitter is assumed to be of the unspecified 
+Read and write wait signals are used to stall transmission when a receiver is   
+unable to accept more transactions. The receiver will raise its WAIT output  
+signal during an active transmission indicating that it can receive only one  
+more transaction. The wait signal seen by the transmitter is of unspecified  
 phase delay (while still of the LCLK clock period) and therefore has to be 
-sampled with the two-cycle synchronizer. Once synchronized to the transmitter's
-LCLK clock domain, the WAIT control signals will prevent new transaction from 
-being transmitted. If the transaction is in the middle of the transmission when
-the synchronized WAIT control goes high, the transmission process is to 
-completed without interruption.  
+sampled with the two-cycle synchronizer.  If the transaction is in the middle  
+of the transmission when the synchronized WAIT control goes high, the 
+transmission process is to be completed without interruption.    
               
 ###SYSTEM SIDE PROTOCOL  
 
 Communication between the elink and the system side (i.e. the AXI side) is done
-using 104 bit parallel interfaces. Read, write, and read response 
+using 104 bit parallel packet interfaces. Read, write, and read response 
 transactions have independent channels into the elink. Data from a receiver 
 read request is expected to return on the read response transmit chanel.   
 
@@ -128,8 +127,6 @@ has the following bit ordering.
  dstraddr[31:0]| [39:8]  | Address for write, read-request, or read-responses
  data[31:0]    | [71:40] | Data for write transaction, data for read response
  srcaddr[31:0] | [103:72]| Return address for read-request, upper data for write
-
-
 
 ###Clocking and Reset
 The elink has the following clock domains:
@@ -158,7 +155,9 @@ rxo_rd_wait{p/n}  | O | RX push back (output) for read transactions
 rxo_wr_wait{p/n}  | O | RX push back (output) for write transactions
 
 ###AXI INTERFACE
-When used win the "emax" and "esaxi" interface, standard AXI interfaces
+The AXI master and slave interfaces are use standard signals, but not all  
+AXI interconnect features are supported.  
+
 
 ###SYSTEM SIDE INTERFACE
 
@@ -169,30 +168,6 @@ pll_clk           | I | Clock input for CCLK/LCLK PLL
 sys_clk           | I | System clock for FIFOs
 embox_not_empty   | O | Mailbox not empty (connect to interrupt line)   
 embox_full        | O | Mailbox is full indicator
-
-###CORE INTERFACE 
-Interface presented to the AXI interfaces "emaxi" and "esaxi".
-
-SIGNAL            |DIR| DESCRIPTION 
-------------------|---|--------------
-txwr_access       | I | TX write  
-txwr_packet[103:0]| I | TX write packet
-txwr_wait         | O | TX write wait (pushback)
-txrd_access       | I | TX read  
-txrd_packet[103:0]| I | TX read packet
-txrd_wait         | O | TX read wait (pushback)
-txrr_access       | I | TX read-response 
-txrr_packet[103:0]| I | TX read-response packet
-txrr_wait         | O | TX read-response wait (pushback)
-rxwr_access       | O | RX write  
-rxwr_packet[103:0]| O | RX write packet
-txwr_wait         | I | RX write write (pushback)
-rxrd_access       | O | RX read  
-rxrd_packet[103:0]| O | RX read packet
-rxrd_wait         | I | RX read wait (pushback)
-rxrr_access       | O | RX read-response 
-rxrr_packet[103:0]| O | RX read-response packet
-rxrr_wait         | I | RX read-response wait (pushback)
 
 ###REGISTER MAP  
  
@@ -226,8 +201,8 @@ ERX_CFG        | RW | 0xF0300 | RX configuration
 ERX_STATUS     | R- | 0xF0304 | RX status register
 ERX_GPIO       | R  | 0xF0308 | RX data in GPIO mode
 ERX_OFFSET     | RW | 0xF030C | RX memory offset in remap mode
-ERX_MAILBOXLO  | RW | 0xF0310 | RX mailbox (lower 32 bit)
-ERX_MAILBOXHI  | RW | 0xF0314 | RX mailbox (upper 32 bits)
+E_MAILBOXLO    | RW | 0xF0310 | RX mailbox (lower 32 bit)
+E_MAILBOXHI    | RW | 0xF0314 | RX mailbox (upper 32 bits)
 ERX_DMACFG     | RW | 0xF0520 | TX DMA configuration
 ERX_DMACOUNT   | RW | 0xF0524 | TX DMA count
 ERX_DMASTRIDE  | RW | 0xF0528 | TX DMA stride
@@ -256,7 +231,7 @@ FIELD    | DESCRIPTION
 
 ###E_CLK (LABS)
 Transmit and Epiphany clock settings.
-(NOTE: not currently implemented)  
+(NOTE: Current PLL only supports fixed frequency)  
   
 FIELD    | DESCRIPTION 
 ---------| --------------------------------------------------
@@ -287,7 +262,6 @@ FIELD    | DESCRIPTION
          | 0111: lclk=pllclk/128 (not supported yet)
          | 1xxx: RESERVED        
  [15:12] | PLL frequency (TBD)
-
 
 ###E_CHIPID
 Column and row chip id pins to the Epiphany chip.
@@ -329,7 +303,6 @@ FIELD    | DESCRIPTION
          | 1: ctrlmode field taken E_TXCFG
  [11:9]  | 00: Normal transmit mode
          | 01: GPIO direct drive mode
-         | 10: Enables test pattern generator for IO (LABS)
 
 ###ETX_STATUS
 TX status register
@@ -360,7 +333,7 @@ RX configuration register
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
- [0]     | 0: RX disabled
+ [0]     | 0: RX frame signal disabled
          | 1: RX enabled
  [1]     | 0: MMU disabled
          | 1: MMU enabled
@@ -399,13 +372,6 @@ FIELD    | DESCRIPTION
  [7:0]   | Data from rxi_data pins
  [8]     | Data from rxi_frame pin
 
-###ERX_RR
-Last read response data that was received on rxrr_packet[103:0].  
-
-FIELD    | DESCRIPTION 
--------- |---------------------------------------------------
- [31:0]  | Read response data (lower 32 bits)
-
 ###ERX_OFFSET
 Address offset used in the dynamic address remapping mode.
 
@@ -413,15 +379,15 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [31:0]  | Memory offset
 
-###ERX_MAILBOXLO
+###E_MAILBOXLO
 Lower 32 bit word of current entry of RX 64-bit wide mailbox FIFO. This 
-register should be read before the ERX_MAILBOXHI. 
+register should be read before the E_MAILBOXHI. 
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | Lower data of RX FIFO
 
-###ERX_MAILBOXHI
+###E_MAILBOXHI
 Upper 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Reading this
 register causes the RX FIFO read pointer to increment by one.
 
@@ -471,7 +437,6 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [31:0]  | Current transaction destination address to write to
 
-
 ###DMASTRIDE
 Two signed 16-bit values specifying the stride, in bytes, used to update the 
 DMASRCADDR and DMADSTADDR after each completed transfer. 
@@ -496,3 +461,4 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [11:0]  | Output address bits 31:20
  [43:12] | Output address bits 63:32 (TBD)
+
