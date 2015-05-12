@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="New document 1">
+   sodipodi:docname="elink_header.svg">
   <defs
      id="defs4">
     <marker
@@ -95,7 +95,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="208.6186"
+     inkscape:cx="210.29128"
      inkscape:cy="802.84271"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -131,7 +131,7 @@
            height="354.28571"
            x="-54.285713"
            y="60.933613" /></flowRegion><flowPara
-         id="flowPara3771"></flowPara></flowRoot>    <text
+         id="flowPara3771" /></flowRoot>    <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
        x="428.57144"
@@ -152,7 +152,7 @@
            height="282.84271"
            x="-111.11678"
            y="94.737572" /></flowRegion><flowPara
-         id="flowPara3783"></flowPara></flowRoot>    <flowRoot
+         id="flowPara3783" /></flowRoot>    <flowRoot
        xml:space="preserve"
        id="flowRoot4815"
        style="fill:black;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;font-family:Sans;font-style:normal;font-weight:normal;font-size:40px;line-height:125%;letter-spacing:0px;word-spacing:0px"><flowRegion
@@ -162,11 +162,12 @@
            height="271.73105"
            x="11.111678"
            y="139.18428" /></flowRegion><flowPara
-         id="flowPara4821"></flowPara></flowRoot>    <g
-       id="g4874">
+         id="flowPara4821" /></flowRoot>    <g
+       id="g4874"
+       transform="translate(14.162441,-1.0101525)">
       <path
          transform="matrix(1.281779,0,0,1.2786226,-14.376839,-32.527398)"
-         d="m 219.99999,213.79076 a 74.285713,70 0 1 1 -148.571424,0 74.285713,70 0 1 1 148.571424,0 z"
+         d="m 219.99999,213.79076 c 0,38.65993 -33.25884,70 -74.28571,70 -41.02687,0 -74.285714,-31.34007 -74.285714,-70 0,-38.65994 33.258844,-70 74.285714,-70 41.02687,0 74.28571,31.34006 74.28571,70 z"
          sodipodi:ry="70"
          sodipodi:rx="74.285713"
          sodipodi:cy="213.79076"
@@ -193,7 +194,7 @@
            sodipodi:role="line">#1</tspan></text>
       <path
          transform="matrix(1.281779,0,0,1.2786226,360.72917,-32.527398)"
-         d="m 219.99999,213.79076 a 74.285713,70 0 1 1 -148.571424,0 74.285713,70 0 1 1 148.571424,0 z"
+         d="m 219.99999,213.79076 c 0,38.65993 -33.25884,70 -74.28571,70 -41.02687,0 -74.285714,-31.34007 -74.285714,-70 0,-38.65994 33.258844,-70 74.285714,-70 41.02687,0 74.28571,31.34006 74.28571,70 z"
          sodipodi:ry="70"
          sodipodi:rx="74.285713"
          sodipodi:cy="213.79076"
@@ -215,7 +216,7 @@
            sodipodi:role="line">THING</tspan><tspan
            id="tspan2995-3"
            style="font-size:56px;font-style:oblique;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;font-family:Purisa;-inkscape-font-specification:Purisa Bold Oblique"
-           y="288.00732"
+           y="288.00735"
            x="539.28571"
            sodipodi:role="line">#2</tspan></text>
       <path
