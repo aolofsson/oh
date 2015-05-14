@@ -1,9 +1,9 @@
 module etx_protocol (/*AUTOARG*/
    // Outputs
-   etx_rd_wait, etx_wr_wait, tx_frame_par, tx_data_par,
+   etx_rd_wait, etx_wr_wait, tx_packet, tx_access, tx_burst,
    // Inputs
    reset, clk, etx_access, etx_packet, tx_enable, gpio_data,
-   gpio_enable, tx_rd_wait, tx_wr_wait
+   gpio_enable, tx_io_wait, tx_rd_wait, tx_wr_wait
    );
 
    parameter PW = 104;
@@ -29,16 +29,20 @@ module etx_protocol (/*AUTOARG*/
    input    	  gpio_enable; //TODO
    
    //Interface to IO
-   output [7:0]   tx_frame_par;
-   output [63:0]  tx_data_par;
-   input          tx_rd_wait;  // The wait signals are passed through
-   input          tx_wr_wait;  // to the emesh interfaces
+   output [PW-1:0] tx_packet;
+   output          tx_access;
+   output          tx_burst;
+   input           tx_io_wait;  
+   input           tx_rd_wait;  // The wait signals are passed through
+   input           tx_wr_wait;  // to the emesh interfaces
 
    //###################################################################
    //# Local regs & wires
    //###################################################################
-   reg [7:0]     tx_frame_par;
-   reg [127:0] 	 tx_data_reg; 
+   reg           tx_access;
+   reg [PW-1:0]  tx_packet; 
+   reg 		 tx_burst;
+
    wire		 tx_rd_wait_sync;
    wire 	 tx_wr_wait_sync;
 
@@ -48,7 +52,6 @@ module etx_protocol (/*AUTOARG*/
    wire [AW-1:0] etx_dstaddr;
    wire [DW-1:0] etx_data;
    wire [AW-1:0] etx_srcaddr;
-   reg [PW-1:0]  testpacket;
    wire 	 etx_valid;
    reg           etx_io_wait;
    
@@ -68,59 +71,29 @@ module etx_protocol (/*AUTOARG*/
 		     .packet_in		(etx_packet[PW-1:0])
 		     );
 
-   //Transmit packet enable
    //Only set valid if not wait 
    assign etx_valid = (tx_enable & etx_access & ~(etx_dstaddr[31:20]==ID)) &
 		       ((etx_write & ~tx_wr_wait_sync) | 
 			 (~etx_write & ~tx_rd_wait_sync)
 			 );
    
-   //One cycle hold for every transaction
-   always @( posedge clk or posedge reset )
-     if(reset)
-       etx_io_wait <= 1'b0;
-     else
-       etx_io_wait <= etx_valid & ~etx_io_wait;
-   
-   // TODO: Bursts
-   always @( posedge clk or posedge reset ) 
-     begin
-	if(reset) 
-	  begin	     
-             tx_frame_par[7:0] <= 8'd0;
-             tx_data_reg[127:0] <= 'd0;	     
-	  end 
-	else 
-	  begin
-             if( etx_valid & ~etx_io_wait ) //first cycle
-	       begin
-		  tx_frame_par[7:0]   <= 8'h3F;
-		  tx_data_reg[127:0]  <= {etx_data[31:0], 
-					 etx_srcaddr[31:0],
-					 8'd0,  // Not used
-					 8'd0,  //not used
-					 ~etx_write, 7'd0, // B0-TODO: For bursts, add the inc bit
-					 etx_ctrlmode[3:0], etx_dstaddr[31:28], // B1
-					 etx_dstaddr[27:4],  // B2, B3, B4
-					 etx_dstaddr[3:0], etx_datamode[1:0], etx_write, etx_access // B5
-				   };
-               end 
-	     else if(etx_io_wait ) //second cycle (1), completes transaction
-	       begin
-		  tx_frame_par[7:0] <= 8'hFF;
-               end 
-	     else 
-	       begin
-		  tx_frame_par[7:0]  <= 'd0;
-		  tx_data_reg[127:0] <= 'd0;
-               end
-	  end // else: !if(reset)	
-     end // always @ ( posedge txlclk_p or posedge reset )
 
-   assign tx_data_par[63:0] = (tx_frame_par[0] & etx_io_wait)  ? tx_data_reg[63:0] :
-			      (tx_frame_par[0] & ~etx_io_wait) ? tx_data_reg[127:64] :
-			                                         64'b0;
-           
+   //Prepare transaction / with burst
+   always @ (posedge clk or posedge reset)
+     if(reset)
+       begin
+	  tx_packet[PW-1:0] <= 'b0;
+	  tx_access         <= 1'b0;	  
+	  tx_burst          <= 1'b0;//TODO
+       end
+   else if(~tx_io_wait)
+       begin
+	  tx_packet[PW-1:0] <= etx_packet[PW-1:0];
+	  tx_access         <= etx_valid;
+	  tx_burst          <= 1'b0;//TODO
+       end
+   
+  
    //#############################
    //# Wait signals (async)
    //#############################
@@ -142,8 +115,8 @@ module etx_protocol (/*AUTOARG*/
 				   );
 
    //Stall for all etx pipeline
-   assign etx_wr_wait = tx_wr_wait_sync | etx_io_wait;
-   assign etx_rd_wait = tx_rd_wait_sync | etx_io_wait;
+   assign etx_wr_wait = tx_wr_wait_sync | tx_io_wait;
+   assign etx_rd_wait = tx_rd_wait_sync | tx_io_wait;
         
 endmodule // etx_protocol
 // Local Variables:
