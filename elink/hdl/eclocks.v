@@ -130,7 +130,7 @@ module eclocks (/*AUTOARG*/
    // PLL FOR ELIN
    //###########################  
    parameter LCLK_VCO_MULT = 5; //1500MHz
-   parameter TXCLK_DIVIDE  = 3; //500MHz
+   parameter TXCLK_DIVIDE  = 5; //500MHz
    parameter RXCLK_DIVIDE  = 5; //300MHz
    
    PLLE2_ADV
@@ -155,8 +155,8 @@ module eclocks (/*AUTOARG*/
        .CLKOUT1_PHASE(0.0),
        .CLKOUT2_PHASE(90.0),
        .CLKOUT3_PHASE(0.0),
-       .CLKOUT4_PHASE(0.0),
-       .CLKOUT5_PHASE(0.0),
+       .CLKOUT4_PHASE(90.0),
+       .CLKOUT5_PHASE(90.0),
        .DIVCLK_DIVIDE(1.0), 
        .REF_JITTER1(0.01), 
        .STARTUP_WAIT("FALSE") 
