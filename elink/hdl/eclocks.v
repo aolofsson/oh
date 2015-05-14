@@ -1,51 +1,61 @@
 /*###########################################################################
  # Function:  Clock generator for elink
  #      
- #  cclk_p/n     - Epiphany Output Clock (>600MHz) 
- #
  #  tx_lclk_div4 - Parallel data clock (125Mhz)
  #
- #  tx_lclk      - Serial DDR data clock (500MHz)
+ #  tx_lclk      - DDR data clock (500MHz)
  #
- #  tx_lclk90    - DDR "Clock" clock, to generate tx_lclk_p/n output
- #                 Same as lclk, shifted by 90 degrees
+ #  tx_lclk90    - DDR "Clock" for IO (500MHz)
  #
+ #  rx_lclk      - High speed RX clock for IO (clkin freq)
+ #
+ #  rx_lclk_div4 - Low speed RX clock for logic (75MHz)
  ############################################################################
  */
 
 module eclocks (/*AUTOARG*/
    // Outputs
-   cclk_p, cclk_n, tx_lclk, tx_lclk90, tx_lclk_div4,
+   tx_lclk, tx_lclk90, tx_lclk_div4, rx_lclk, rx_lclk_div4, cclk_p,
+   cclk_n,
    // Inputs
-   hard_reset, pll_clk
+   reset, clkin_elink, clkin_cclk
    );
 
-   
-   parameter  CLKIN_PERIOD     = 10.000; // (2.5-100ns, set by system)
-                                         // must match actual sytem clock
-                                         //
+   /****************************************************************/
+   /*WARNING!! THIS CLOCK MUST MATCH THE ACTUAL INPUT CLOCK PERIOD!*/
+   /****************************************************************/
+
+   parameter  ELINK_CLKIN_PERIOD  = 3.3333333;  // (2.5-100ns, set by system)
+   parameter  CCLK_CLKIN_PERIOD   = 10;         // (2.5-100ns, set by system)
 
    //Input clock, reset, config interface
-   input        hard_reset;         // hardware reset
-   input        pll_clk;            // primary input clock  
-
-   //outputs
-   output       cclk_p, cclk_n;     // high speed Epiphany clock (up to 1GHz)
-   output       tx_lclk;            // elink tx serdes clock
-   output       tx_lclk90;          // center aligned output clock for elink tx
-   output       tx_lclk_div4;       // lclk/4 slow clock for tx parallel logic 
-
-   // Wires
-   wire 	cclk_clkfb;   
-   wire 	lclk_clkfb;
+   input      reset;             // hardware reset
+   input      clkin_elink;       // clock input for elink PLL
+   input      clkin_cclk;        // clock input for cclk PLL 
    
-			
+   //TX Clocks
+   output     tx_lclk;             // tx clock for DDR IO
+   output     tx_lclk90;           // tx output clock shifted by 90 degrees
+   output     tx_lclk_div4;        // tx slow clock for logic
+   
+   //RX Clocks
+   output     rx_lclk;            // rx high speed clock for DDR IO
+   output     rx_lclk_div4;       // rx slow clock for logic
+
+   //Epiphany "free running" clock
+   output     cclk_p, cclk_n;
+                 			
 `ifdef TARGET_XILINX	
 
+   wire       cclk_fb;
+   wire       lclk_fb;
+   wire       cclk;
+   wire       cclk_alt;
+   
    //###########################
    // MMCM/PLL FOR CCLK
    //###########################
-   parameter CCLK_VCO_MULT =12;
+   parameter CCLK_VCO_MULT = 12;
    parameter CCLK_DIVIDE   = 2;
 
    MMCME2_ADV
@@ -53,7 +63,7 @@ module eclocks (/*AUTOARG*/
        .BANDWIDTH("OPTIMIZED"),          
        .CLKFBOUT_MULT_F(CCLK_VCO_MULT),
        .CLKFBOUT_PHASE(0.0),
-       .CLKIN1_PERIOD(CLKIN_PERIOD),
+       .CLKIN1_PERIOD(CCLK_CLKIN_PERIOD),
        .CLKOUT0_DIVIDE_F(CCLK_DIVIDE),    // cclk
        .CLKOUT1_DIVIDE(CCLK_DIVIDE*2),  // cclk/2
        .CLKOUT2_DIVIDE(CCLK_DIVIDE*4),  // cclk/4
@@ -90,9 +100,9 @@ module eclocks (/*AUTOARG*/
 	.CLKOUT6(),
 	.PWRDWN(1'b0),
         .RST(1'b0),
-        .CLKFBIN(cclk_clkfb),
-        .CLKFBOUT(cclk_clkfb),       
-        .CLKIN1(pll_clk),
+        .CLKFBIN(cclk_fb),
+        .CLKFBOUT(cclk_fb),       
+        .CLKIN1(clkin_cclk),
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
 	.DADDR(7'b0),
@@ -115,57 +125,58 @@ module eclocks (/*AUTOARG*/
 		      .OB  (cclk_n),
 		      .I   (cclk)
 		      );
- 
-   //###########################
-   // MMCM/PLL FOR LCLK
-   //###########################
-   parameter LCLK_VCO_MULT =10;
-   parameter LCLK_DIVIDE   = 2;
 
-  PLLE2_ADV
+   //###########################
+   // PLL FOR ELIN
+   //###########################  
+   parameter LCLK_VCO_MULT = 5; //1500MHz
+   parameter TXCLK_DIVIDE  = 3; //500MHz
+   parameter RXCLK_DIVIDE  = 5; //300MHz
+   
+   PLLE2_ADV
      #(
        .BANDWIDTH("OPTIMIZED"),          
        .CLKFBOUT_MULT(LCLK_VCO_MULT),
        .CLKFBOUT_PHASE(0.0),
-       .CLKIN1_PERIOD(CLKIN_PERIOD),
-       .CLKOUT0_DIVIDE(LCLK_DIVIDE),    // lclk
-       .CLKOUT1_DIVIDE(LCLK_DIVIDE),    // lclk90                              
-       .CLKOUT2_DIVIDE(LCLK_DIVIDE*4),  // lclkdiv4
-       .CLKOUT3_DIVIDE(LCLK_DIVIDE*4),  // lclk/4
-       .CLKOUT4_DIVIDE(LCLK_DIVIDE*4),  // lclk/4 with 90 deg
-       .CLKOUT5_DIVIDE(LCLK_DIVIDE*16), // lclk/4-->div4
-       .CLKOUT0_DUTY_CYCLE(0.5),
+       .CLKIN1_PERIOD(ELINK_CLKIN_PERIOD),
+       .CLKOUT0_DIVIDE(CCLK_DIVIDE),    // cclk
+       .CLKOUT1_DIVIDE(TXCLK_DIVIDE),   // tx_lclk
+       .CLKOUT2_DIVIDE(TXCLK_DIVIDE),   // tx_lclk90
+       .CLKOUT3_DIVIDE(TXCLK_DIVIDE*4), // tx_lclk_div4
+       .CLKOUT4_DIVIDE(RXCLK_DIVIDE),   // rx_lclk
+       .CLKOUT5_DIVIDE(RXCLK_DIVIDE*4), // rx_lclk_div4          
+       .CLKOUT0_DUTY_CYCLE(0.5),         
        .CLKOUT1_DUTY_CYCLE(0.5),
        .CLKOUT2_DUTY_CYCLE(0.5),
        .CLKOUT3_DUTY_CYCLE(0.5),
        .CLKOUT4_DUTY_CYCLE(0.5),
        .CLKOUT5_DUTY_CYCLE(0.5),
        .CLKOUT0_PHASE(0.0),
-       .CLKOUT1_PHASE(90.0),            // tx_lclk90 shifted by 90 degrees
-       .CLKOUT2_PHASE(0.0),             
+       .CLKOUT1_PHASE(0.0),
+       .CLKOUT2_PHASE(90.0),
        .CLKOUT3_PHASE(0.0),
-       .CLKOUT4_PHASE(90.0),            //slow mode shifted by 90 degrees
+       .CLKOUT4_PHASE(0.0),
        .CLKOUT5_PHASE(0.0),
-       .DIVCLK_DIVIDE(1.0),
-       .REF_JITTER1(0.01),
-       .STARTUP_WAIT("FALSE")
-       ) pll_lclk
+       .DIVCLK_DIVIDE(1.0), 
+       .REF_JITTER1(0.01), 
+       .STARTUP_WAIT("FALSE") 
+       ) pll_elink
        (
-	.CLKOUT0(tx_lclk),              //tx_lclk
-        .CLKOUT1(tx_lclk90),            //tx_lclk90
-        .CLKOUT2(tx_lclk_div4),         //tx_lclk_div4
-        .CLKOUT3(),
-        .CLKOUT4(),
-        .CLKOUT5(),
+        .CLKOUT0(cclk_alt),
+        .CLKOUT1(tx_lclk),
+        .CLKOUT2(tx_lclk90),
+        .CLKOUT3(tx_lclk_div4),
+        .CLKOUT4(rx_lclk),
+        .CLKOUT5(rx_lclk_div4),
 	.PWRDWN(1'b0),
         .RST(1'b0),
-        .CLKFBIN(lclk_clkfb),
-        .CLKFBOUT(lclk_clkfb),       
-        .CLKIN1(pll_clk),
+        .CLKFBIN(lclk_fb),
+        .CLKFBOUT(lclk_fb),       
+        .CLKIN1(clkin_elink),
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
 	.DADDR(7'b0),
-	.DCLK(1'b0),
+        .DCLK(1'b0),
 	.DEN(1'b0),
 	.DI(16'b0),
 	.DWE(1'b0),
@@ -173,6 +184,9 @@ module eclocks (/*AUTOARG*/
 	.DO(), 
 	.LOCKED()
         );
+
+ 
+  
    
 `endif //  `ifdef TARGET_XILINX
 
