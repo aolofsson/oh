@@ -37,16 +37,14 @@ module dv_elink(/*AUTOARG*/
    input 	   ext_rd_wait;
    input 	   ext_wr_wait;
 
+   /*AUTOINPUT*/
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			elink0_cclk_n;		// From elink0 of elink.v
-   wire			elink0_cclk_p;		// From elink0 of elink.v
-   wire			elink0_chip_resetb;	// From elink0 of elink.v
    wire [11:0]		elink0_chipid;		// From elink0 of elink.v
    wire			elink0_mailbox_full;	// From elink0 of elink.v
    wire			elink0_mailbox_not_empty;// From elink0 of elink.v
-   wire			elink0_rx_lclk_div4;	// From elink0 of elink.v
+   wire			elink0_rx_clk_pll;	// From elink0 of elink.v
    wire			elink0_rxo_rd_wait_n;	// From elink0 of elink.v
    wire			elink0_rxo_rd_wait_p;	// From elink0 of elink.v
    wire			elink0_rxo_wr_wait_n;	// From elink0 of elink.v
@@ -57,8 +55,8 @@ module dv_elink(/*AUTOARG*/
    wire [PW-1:0]	elink0_rxrr_packet;	// From elink0 of elink.v
    wire			elink0_rxwr_access;	// From elink0 of elink.v
    wire [PW-1:0]	elink0_rxwr_packet;	// From elink0 of elink.v
+   wire			elink0_soft_reset;	// From elink0 of elink.v
    wire			elink0_timeout;		// From elink0 of elink.v
-   wire			elink0_tx_lclk_div4;	// From elink0 of elink.v
    wire [7:0]		elink0_txo_data_n;	// From elink0 of elink.v
    wire [7:0]		elink0_txo_data_p;	// From elink0 of elink.v
    wire			elink0_txo_frame_n;	// From elink0 of elink.v
@@ -68,13 +66,10 @@ module dv_elink(/*AUTOARG*/
    wire			elink0_txrd_wait;	// From elink0 of elink.v
    wire			elink0_txrr_wait;	// From elink0 of elink.v
    wire			elink0_txwr_wait;	// From elink0 of elink.v
-   wire			elink1_cclk_n;		// From elink1 of elink.v
-   wire			elink1_cclk_p;		// From elink1 of elink.v
-   wire			elink1_chip_resetb;	// From elink1 of elink.v
    wire [11:0]		elink1_chipid;		// From elink1 of elink.v
    wire			elink1_mailbox_full;	// From elink1 of elink.v
    wire			elink1_mailbox_not_empty;// From elink1 of elink.v
-   wire			elink1_rx_lclk_div4;	// From elink1 of elink.v
+   wire			elink1_rx_clk_pll;	// From elink1 of elink.v
    wire			elink1_rxo_rd_wait_n;	// From elink1 of elink.v
    wire			elink1_rxo_rd_wait_p;	// From elink1 of elink.v
    wire			elink1_rxo_wr_wait_n;	// From elink1 of elink.v
@@ -85,8 +80,8 @@ module dv_elink(/*AUTOARG*/
    wire [PW-1:0]	elink1_rxrr_packet;	// From elink1 of elink.v
    wire			elink1_rxwr_access;	// From elink1 of elink.v
    wire [PW-1:0]	elink1_rxwr_packet;	// From elink1 of elink.v
+   wire			elink1_soft_reset;	// From elink1 of elink.v
    wire			elink1_timeout;		// From elink1 of elink.v
-   wire			elink1_tx_lclk_div4;	// From elink1 of elink.v
    wire [7:0]		elink1_txo_data_n;	// From elink1 of elink.v
    wire [7:0]		elink1_txo_data_p;	// From elink1 of elink.v
    wire			elink1_txo_frame_n;	// From elink1 of elink.v
@@ -99,10 +94,15 @@ module dv_elink(/*AUTOARG*/
    wire			elink1_txrr_wait;	// From elink1 of elink.v
    wire			elink1_txwr_wait;	// From elink1 of elink.v
    wire			resetb;			// From elink_example of elink_example.v
+   wire			rx_lclk;		// From eclocks of eclocks.v
+   wire			rx_lclk_div4;		// From eclocks of eclocks.v
    wire			rxo_rd_wait_n;		// From elink_example of elink_example.v
    wire			rxo_rd_wait_p;		// From elink_example of elink_example.v
    wire			rxo_wr_wait_n;		// From elink_example of elink_example.v
    wire			rxo_wr_wait_p;		// From elink_example of elink_example.v
+   wire			tx_lclk;		// From eclocks of eclocks.v
+   wire			tx_lclk90;		// From eclocks of eclocks.v
+   wire			tx_lclk_div4;		// From eclocks of eclocks.v
    wire [7:0]		txo_data_n;		// From elink_example of elink_example.v
    wire [7:0]		txo_data_p;		// From elink_example of elink_example.v
    wire			txo_frame_n;		// From elink_example of elink_example.v
@@ -110,7 +110,12 @@ module dv_elink(/*AUTOARG*/
    wire			txo_lclk_n;		// From elink_example of elink_example.v
    wire			txo_lclk_p;		// From elink_example of elink_example.v
    // End of automatics
-
+   wire		elink0_rxrd_wait;	// To elink0 of elink.v
+   wire		elink0_rxrr_wait;	// To elink0 of elink.v
+   wire		elink0_rxwr_wait;	// To elink0 of elink.v
+   wire		elink1_rxrd_wait;	// To elink1 of elink.v
+   wire		elink1_rxrr_wait;	// To elink1 of elink.v
+   wire		elink1_rxwr_wait;	// To elink1 of elink.v
    wire [3:0] 		colid;
    wire [3:0] 		rowid;
    wire 		mailbox_full;
@@ -156,7 +161,23 @@ module dv_elink(/*AUTOARG*/
    //Clocks
    wire clkin         = clk; //for pll-->cclk, rxclk, txclk
 
-  
+   //######
+   //CLOCKS for all
+   //######
+   eclocks eclocks (
+		    .clkin_elink	(clkin),
+		    .clkin_cclk		(clkin),
+		     /*AUTOINST*/
+		    // Outputs
+		    .tx_lclk		(tx_lclk),
+		    .tx_lclk90		(tx_lclk90),
+		    .tx_lclk_div4	(tx_lclk_div4),
+		    .rx_lclk		(rx_lclk),
+		    .rx_lclk_div4	(rx_lclk_div4),
+		    .cclk_p		(cclk_p),
+		    .cclk_n		(cclk_n),
+		    // Inputs
+		    .reset		(reset));
 
    //Read path
    assign elink0_txrd_access         = ext_access & ~ext_packet[1];
@@ -183,17 +204,21 @@ module dv_elink(/*AUTOARG*/
    assign elink0_txrr_access         =  1'b0;
    assign elink0_txrr_packet[PW-1:0] = 'b0;
 
- /*elink AUTO_TEMPLATE (.reset		    (reset),
+   /*elink AUTO_TEMPLATE (.reset	     (reset),
                         // Outputs                        
-                        .pll_bypass         ({clkin,clkin,clkin,clkin}),
-                        .pll_clk	    (clkin),
-                        .sys_clk            (clk),
-                        .\(.*\)             (@"(substring vl-cell-name  0 6)"_\1[]),
+                         .ioreset	     (reset),
+                         .tx_lclk	     (tx_lclk),
+                         .tx_lclk90	     (tx_lclk90),
+    		         .tx_lclk_div4	     (tx_lclk_div4),
+		         .rx_lclk	     (rx_lclk),
+	                 .rx_lclk_div4	     (rx_lclk_div4),
+                         .sys_clk            (clk),
+                         .\(.*\)             (@"(substring vl-cell-name  0 6)"_\1[]),
                          );
   */
 
    defparam elink0.ID = 12'h810;   
-   elink elink0 (.testmode		(1'b0),//tie to 1 to enable
+   elink elink0 (
 		 .rxi_lclk_p		(elink1_txo_lclk_p),
 		 .rxi_lclk_n		(elink1_txo_lclk_n),
 		 .rxi_frame_p		(elink1_txo_frame_p),
@@ -206,8 +231,7 @@ module dv_elink(/*AUTOARG*/
 		 .txi_rd_wait_n		(elink1_rxo_rd_wait_n),	
 		 /*AUTOINST*/
 		 // Outputs
-		 .rx_lclk_div4		(elink0_rx_lclk_div4),	 // Templated
-		 .tx_lclk_div4		(elink0_tx_lclk_div4),	 // Templated
+		 .rx_clk_pll		(elink0_rx_clk_pll),	 // Templated
 		 .rxo_wr_wait_p		(elink0_rxo_wr_wait_p),	 // Templated
 		 .rxo_wr_wait_n		(elink0_rxo_wr_wait_n),	 // Templated
 		 .rxo_rd_wait_p		(elink0_rxo_rd_wait_p),	 // Templated
@@ -219,9 +243,7 @@ module dv_elink(/*AUTOARG*/
 		 .txo_data_p		(elink0_txo_data_p[7:0]), // Templated
 		 .txo_data_n		(elink0_txo_data_n[7:0]), // Templated
 		 .chipid		(elink0_chipid[11:0]),	 // Templated
-		 .chip_resetb		(elink0_chip_resetb),	 // Templated
-		 .cclk_p		(elink0_cclk_p),	 // Templated
-		 .cclk_n		(elink0_cclk_n),	 // Templated
+		 .soft_reset		(elink0_soft_reset),	 // Templated
 		 .rxwr_access		(elink0_rxwr_access),	 // Templated
 		 .rxwr_packet		(elink0_rxwr_packet[PW-1:0]), // Templated
 		 .rxrd_access		(elink0_rxrd_access),	 // Templated
@@ -236,8 +258,13 @@ module dv_elink(/*AUTOARG*/
 		 .timeout		(elink0_timeout),	 // Templated
 		 // Inputs
 		 .reset			(reset),		 // Templated
-		 .pll_clk		(clkin),		 // Templated
+		 .ioreset		(reset),		 // Templated
 		 .sys_clk		(clk),			 // Templated
+		 .tx_lclk		(tx_lclk),		 // Templated
+		 .tx_lclk90		(tx_lclk90),		 // Templated
+		 .tx_lclk_div4		(tx_lclk_div4),		 // Templated
+		 .rx_lclk		(rx_lclk),		 // Templated
+		 .rx_lclk_div4		(rx_lclk_div4),		 // Templated
 		 .rxwr_wait		(elink0_rxwr_wait),	 // Templated
 		 .rxrd_wait		(elink0_rxrd_wait),	 // Templated
 		 .rxrr_wait		(elink0_rxrr_wait),	 // Templated
@@ -258,7 +285,7 @@ module dv_elink(/*AUTOARG*/
    assign elink1_rxrr_wait   = 1'b0;
    
    defparam elink1.ID = 12'h820;   
-   elink elink1 (.testmode		(1'b0),//tie to 1 to enable
+   elink elink1 (
 		 .rxi_lclk_p		(elink0_txo_lclk_p),
 		 .rxi_lclk_n		(elink0_txo_lclk_n),
 		 .rxi_frame_p		(elink0_txo_frame_p),
@@ -271,8 +298,7 @@ module dv_elink(/*AUTOARG*/
 		 .txi_rd_wait_n		(elink0_rxo_rd_wait_n),	
 		 /*AUTOINST*/
 		 // Outputs
-		 .rx_lclk_div4		(elink1_rx_lclk_div4),	 // Templated
-		 .tx_lclk_div4		(elink1_tx_lclk_div4),	 // Templated
+		 .rx_clk_pll		(elink1_rx_clk_pll),	 // Templated
 		 .rxo_wr_wait_p		(elink1_rxo_wr_wait_p),	 // Templated
 		 .rxo_wr_wait_n		(elink1_rxo_wr_wait_n),	 // Templated
 		 .rxo_rd_wait_p		(elink1_rxo_rd_wait_p),	 // Templated
@@ -284,9 +310,7 @@ module dv_elink(/*AUTOARG*/
 		 .txo_data_p		(elink1_txo_data_p[7:0]), // Templated
 		 .txo_data_n		(elink1_txo_data_n[7:0]), // Templated
 		 .chipid		(elink1_chipid[11:0]),	 // Templated
-		 .chip_resetb		(elink1_chip_resetb),	 // Templated
-		 .cclk_p		(elink1_cclk_p),	 // Templated
-		 .cclk_n		(elink1_cclk_n),	 // Templated
+		 .soft_reset		(elink1_soft_reset),	 // Templated
 		 .rxwr_access		(elink1_rxwr_access),	 // Templated
 		 .rxwr_packet		(elink1_rxwr_packet[PW-1:0]), // Templated
 		 .rxrd_access		(elink1_rxrd_access),	 // Templated
@@ -301,8 +325,13 @@ module dv_elink(/*AUTOARG*/
 		 .timeout		(elink1_timeout),	 // Templated
 		 // Inputs
 		 .reset			(reset),		 // Templated
-		 .pll_clk		(clkin),		 // Templated
+		 .ioreset		(reset),		 // Templated
 		 .sys_clk		(clk),			 // Templated
+		 .tx_lclk		(tx_lclk),		 // Templated
+		 .tx_lclk90		(tx_lclk90),		 // Templated
+		 .tx_lclk_div4		(tx_lclk_div4),		 // Templated
+		 .rx_lclk		(rx_lclk),		 // Templated
+		 .rx_lclk_div4		(rx_lclk_div4),		 // Templated
 		 .rxwr_wait		(elink1_rxwr_wait),	 // Templated
 		 .rxrd_wait		(elink1_rxrd_wait),	 // Templated
 		 .rxrr_wait		(elink1_rxrr_wait),	 // Templated
@@ -444,18 +473,10 @@ module dv_elink(/*AUTOARG*/
 					       .etime		(etime[31:0]));
    
 
-   /*elink AUTO_TEMPLATE (.reset		    (reset),
-                        // Outputs                        
-                        .txopll_bypass         ({clkin,clkin,clkin,clkin}),
-                        .clkin		    (clkin),
-                        .sys_clk            (clk),
-                        .\(.*\)             (@"(substring vl-cell-name  0 6)"_\1[]),
-                         );
-  */
-   
-   
-
-   elink_example elink_example (
+   elink_example elink_example (.sys_clk_p	(clkin),
+				.sys_clk_n	(~clkin),
+				.clkin_p	(clkin),
+				.clkin_n	(~clkin),
 				.chipid		(),
 				.cclk_p		(),
 				.cclk_n		(),	
@@ -484,11 +505,7 @@ module dv_elink(/*AUTOARG*/
 				.txo_data_n	(txo_data_n[7:0]),
 				.resetb		(resetb),
 				// Inputs
-				.reset		(reset),
-				.sys_clk_p	(sys_clk_p),
-				.sys_clk_n	(sys_clk_n),
-				.clkin_p	(clkin_p),
-				.clkin_n	(clkin_n));
+				.reset		(reset));
    
   
 endmodule // dv_elink
