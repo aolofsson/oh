@@ -1,3 +1,7 @@
+/*WARNING: INCOMPLETE MODEL, DON'T USE. I RECOMMEND AGAINST USING THIS
+ *BLOCK ALL TOGETHER. NOT OPEN SOURCE FRIENDLY /AO
+ */
+
 module ISERDESE2 (/*AUTOARG*/
    // Outputs
    O, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, SHIFTOUT1, SHIFTOUT2,
@@ -30,7 +34,7 @@ module ISERDESE2 (/*AUTOARG*/
    input  CE2;            // clock enable
    input  CLK;            // high speed clock input
    input  CLKB;           // high speed clock input (inverted)
-   input  CLKDIV;         // divided clock (for bitslip and CE module
+   input  CLKDIV;         // divided clock (for bitslip and CE module)
    input  CLKDIVP;        // for MIG only
    input  D;              // serial input data pin
    input  DDLY;           // serial input data from IDELAYE2
@@ -59,21 +63,31 @@ module ISERDESE2 (/*AUTOARG*/
 
    reg [3:0] even_samples;
    reg [3:0] odd_samples;
-   
+   reg 	     Q1; 
+   reg 	     Q2;
+   reg 	     Q3;
+   reg 	     Q4;   
+   reg 	     Q5;
+   reg 	     Q6;
+   reg 	     Q7;
+   reg 	     Q8;           
    always @ (posedge CLK)
-     odd_samples[3:0] <= {odd_samples[2:0],D};
+     odd_samples[3:0] <=   {odd_samples[2:0],D};//#0.1
 
    always @ (negedge CLK)
-     even_samples[3:0] <= {even_samples[2:0],D};
+     even_samples[3:0] <=  {even_samples[2:0],D};//#0.1
 
-   assign Q1 = odd_samples[0];
-   assign Q2 = even_samples[0];
-   assign Q3 = odd_samples[1];
-   assign Q4 = even_samples[1];
-   assign Q5 = odd_samples[2];
-   assign Q6 = even_samples[2];
-   assign Q7 = odd_samples[3];
-   assign Q8 = even_samples[3];
+   always @ (posedge CLKDIV)
+     begin
+	 Q1 <=  odd_samples[0];
+	 Q2 <=  even_samples[0];
+	 Q3 <=  odd_samples[1];
+	 Q4 <=  even_samples[1];
+	 Q5 <=  odd_samples[2];
+	 Q6 <=  even_samples[2];
+	 Q7 <=  odd_samples[3];
+	 Q8 <=  even_samples[3];
+     end
    
 
    //pass through
