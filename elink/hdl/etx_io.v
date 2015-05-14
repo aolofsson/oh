@@ -85,7 +85,7 @@ module etx_io (/*AUTOARG*/
      else if (tx_pointer[6] & tx_burst)
        tx_pointer[7:0] <= 8'b00001000; //burst
      else
-       tx_pointer[7:0] <= {tx_pointer[6:0],1'b0};
+       tx_pointer[7:0] <= {tx_pointer[6:0],tx_pointer[7]};
 
    //#############################
    //# Frame Signal
