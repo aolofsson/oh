@@ -1,10 +1,11 @@
 module etx_core(/*AUTOARG*/
    // Outputs
-   tx_data_par, tx_frame_par, txrd_wait, txrr_wait, txwr_wait,
+   tx_access, tx_burst, tx_packet, txrd_wait, txrr_wait, txwr_wait,
    etx_cfg_access, etx_cfg_packet,
    // Inputs
-   reset, clk, tx_rd_wait, tx_wr_wait, txrd_access, txrd_packet,
-   txrr_access, txrr_packet, txwr_access, txwr_packet, etx_cfg_wait
+   reset, clk, tx_io_wait, tx_rd_wait, tx_wr_wait, txrd_access,
+   txrd_packet, txrr_access, txrr_packet, txwr_access, txwr_packet,
+   etx_cfg_wait
    );
    parameter AW      = 32;
    parameter DW      = 32;
@@ -17,8 +18,10 @@ module etx_core(/*AUTOARG*/
    input 	   clk;   
   
    //IO interface
-   output [63:0]   tx_data_par;
-   output [7:0]    tx_frame_par;
+   output 	   tx_access;
+   output 	   tx_burst;
+   output [PW-1:0] tx_packet; 
+   input 	   tx_io_wait;  
    input 	   tx_rd_wait;
    input 	   tx_wr_wait;
    
@@ -318,8 +321,9 @@ module etx_core(/*AUTOARG*/
 			      // Outputs
 			      .etx_rd_wait	(etx_rd_wait),	 // Templated
 			      .etx_wr_wait	(etx_wr_wait),	 // Templated
-			      .tx_frame_par	(tx_frame_par[7:0]),
-			      .tx_data_par	(tx_data_par[63:0]),
+			      .tx_packet	(tx_packet[PW-1:0]),
+			      .tx_access	(tx_access),
+			      .tx_burst		(tx_burst),
 			      // Inputs
 			      .reset		(reset),
 			      .clk		(clk),
@@ -328,6 +332,7 @@ module etx_core(/*AUTOARG*/
 			      .tx_enable	(tx_enable),
 			      .gpio_data	(gpio_data[8:0]),
 			      .gpio_enable	(gpio_enable),
+			      .tx_io_wait	(tx_io_wait),
 			      .tx_rd_wait	(tx_rd_wait),
 			      .tx_wr_wait	(tx_wr_wait));
    

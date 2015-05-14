@@ -54,6 +54,13 @@ module elink_example(/*AUTOARG*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			done;			// From egen_txwr of egen.v
+   wire			rx_clk_pll;		// From elink of elink.v
+   wire			rx_lclk;		// From eclocks of eclocks.v
+   wire			rx_lclk_div4;		// From eclocks of eclocks.v
+   wire			soft_reset;		// From elink of elink.v
+   wire			tx_lclk;		// From eclocks of eclocks.v
+   wire			tx_lclk90;		// From eclocks of eclocks.v
+   wire			tx_lclk_div4;		// From eclocks of eclocks.v
    wire			txrd_access;		// From egen_txrd of egen.v
    wire [PW-1:0]	txrd_packet;		// From egen_txrd of egen.v
    wire			txrd_wait;		// From elink of elink.v
@@ -66,6 +73,7 @@ module elink_example(/*AUTOARG*/
    // End of automatics
    
    //local wires
+   wire 		pll_clk;		// To eclocks of eclocks.v
    wire 		emem_access;
    wire [PW-1:0]	emem_packet;
    wire		        rxrd_wait;		// To elink of elink.v
@@ -77,36 +85,49 @@ module elink_example(/*AUTOARG*/
    wire		        rxrr_access;		// From elink of elink.v
    wire [PW-1:0]	rxrr_packet;		// From elink of elink.v
 
-
    wire 		clkin;
    wire 		sys_clk_io;
    wire 		sys_clk;
    
-   //######
-   //CLOCK INPUT
-   //######
+   //PLL CLOCK INPUT
    IBUFGDS clk_buf1 (
 		         .I      (clkin_p),
 		         .IB     (clkin_n),
 		         .O      (clkin)
 			 );
-
-   BUFG clk_buf2 (.I (clkin),
+  
+   BUFG bufg_pll (.I (clkin),
 		  .O (pll_clk)
-		  );
-   
-		  
+		);
 
-
+   //SYSTEM CLOCK INPUT
    IBUFGDS clk_buf3 (
 		         .I      (sys_clk_p),
 		         .IB     (sys_clk_n),
 		         .O      (sys_clk_io)
 			 );
 
-   BUFG clk_buf4 (.I (sys_clk_io),
+   BUFG bufg_sys (.I (sys_clk_io),
 		  .O (sys_clk)
 		  );
+   
+   //######
+   //CLOCKS
+   //######
+   eclocks eclocks (
+		    .clkin_elink	(rx_clk_pll),
+		    .clkin_cclk		(pll_clk),
+		     /*AUTOINST*/
+		    // Outputs
+		    .tx_lclk		(tx_lclk),
+		    .tx_lclk90		(tx_lclk90),
+		    .tx_lclk_div4	(tx_lclk_div4),
+		    .rx_lclk		(rx_lclk),
+		    .rx_lclk_div4	(rx_lclk_div4),
+		    .cclk_p		(cclk_p),
+		    .cclk_n		(cclk_n),
+		    // Inputs
+		    .reset		(reset));
    
    //######
    //ELINK
@@ -119,16 +140,10 @@ module elink_example(/*AUTOARG*/
 		.mailbox_full		(),
 		.timeout		(),
 		.chipid			(),
-		.cclk_p			(cclk_p),
-		.cclk_n			(cclk_n),	
-		.rx_lclk_div4		(),
-		.chip_resetb		(resetb),
-		.tx_lclk_div4		(),
-		.sys_clk		(sys_clk),
-		.pll_clk		(pll_clk),
-		.testmode		(1'b0),
+		.ioreset		(reset),
 		/*AUTOINST*/
 		// Outputs
+		.rx_clk_pll		(rx_clk_pll),
 		.rxo_wr_wait_p		(rxo_wr_wait_p),
 		.rxo_wr_wait_n		(rxo_wr_wait_n),
 		.rxo_rd_wait_p		(rxo_rd_wait_p),
@@ -139,6 +154,7 @@ module elink_example(/*AUTOARG*/
 		.txo_frame_n		(txo_frame_n),
 		.txo_data_p		(txo_data_p[7:0]),
 		.txo_data_n		(txo_data_n[7:0]),
+		.soft_reset		(soft_reset),
 		.rxwr_access		(rxwr_access),
 		.rxwr_packet		(rxwr_packet[PW-1:0]),
 		.rxrd_access		(rxrd_access),
@@ -148,6 +164,11 @@ module elink_example(/*AUTOARG*/
 		.txrr_wait		(txrr_wait),
 		// Inputs
 		.reset			(reset),
+		.sys_clk		(sys_clk),
+		.tx_lclk		(tx_lclk),
+		.tx_lclk_div4		(tx_lclk_div4),
+		.rx_lclk		(rx_lclk),
+		.rx_lclk_div4		(rx_lclk_div4),
 		.rxi_lclk_p		(rxi_lclk_p),
 		.rxi_lclk_n		(rxi_lclk_n),
 		.rxi_frame_p		(rxi_frame_p),
@@ -199,7 +220,7 @@ module elink_example(/*AUTOARG*/
    defparam egen_txrd.DST_ID=12'h808;
    egen egen_txrd ( .start		(done),
 		    .done		(),
-		    .clk		  (sys_clk),
+		    .clk		(sys_clk),
 		    /*AUTOINST*/
 		   // Outputs
 		   .access_out		(txrd_access),		 // Templated
@@ -208,7 +229,6 @@ module elink_example(/*AUTOARG*/
 		   .reset		(reset),
 		   .wait_in		(txrd_wait));		 // Templated
    
-
    
    //#################
    //EMESH MEMORY

@@ -4,7 +4,7 @@ module erx_core (/*AUTOARG*/
    rxrr_packet, rxwr_access, rxwr_packet, erx_cfg_wait, mailbox_full,
    mailbox_not_empty,
    // Inputs
-   reset, clk, rx_data_par, rx_frame_par, rxrd_wait, rxrr_wait,
+   reset, clk, rx_packet, rx_access, rx_burst, rxrd_wait, rxrr_wait,
    rxwr_wait, erx_cfg_access, erx_cfg_packet
    );
 
@@ -20,8 +20,9 @@ module erx_core (/*AUTOARG*/
    input		clk;
 
    //IO Interface
-   input [63:0] 	rx_data_par;
-   input [7:0]		rx_frame_par;
+   input [PW-1:0] 	rx_packet;
+   input 		rx_access;
+   input 		rx_burst;
    output 		rx_rd_wait;
    output 		rx_wr_wait;
    
@@ -108,8 +109,9 @@ module erx_core (/*AUTOARG*/
 			      .reset		(reset),
 			      .rx_enable	(rx_enable),
 			      .clk		(clk),
-			      .rx_frame_par	(rx_frame_par[7:0]),
-			      .rx_data_par	(rx_data_par[63:0]));
+			      .rx_packet	(rx_packet[PW-1:0]),
+			      .rx_burst		(rx_burst),
+			      .rx_access	(rx_access));
 
 
 
@@ -266,7 +268,9 @@ module erx_core (/*AUTOARG*/
         */   
    
    assign rx_status[15:0] = {16'b0};
-  
+   assign gpio_datain[8:0]=9'b0;
+   
+  /*
    assign gpio_datain[8:0]= {rx_frame_par[0],
 			     rx_data_par[7],
 			     rx_data_par[6],
@@ -277,7 +281,7 @@ module erx_core (/*AUTOARG*/
 			     rx_data_par[1],
 			     rx_data_par[0]
 			     };
-
+   */
    
    erx_cfg erx_cfg (.rx_status    	(rx_status[15:0]),
 		    .timer_cfg		(),

@@ -1,13 +1,13 @@
 module erx (/*AUTOARG*/
    // Outputs
-   rx_lclk_div4, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
+   rx_clk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, rxwr_access, rxwr_packet, rxrd_access, rxrd_packet,
    rxrr_access, rxrr_packet, erx_cfg_wait, timeout, mailbox_full,
    mailbox_not_empty,
    // Inputs
-   reset, sys_clk, rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n,
-   rxi_data_p, rxi_data_n, rxwr_wait, rxrd_wait, rxrr_wait,
-   erx_cfg_access, erx_cfg_packet
+   reset, ioreset, sys_clk, rx_lclk, rx_lclk_div4, rxi_lclk_p,
+   rxi_lclk_n, rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n,
+   rxwr_wait, rxrd_wait, rxrr_wait, erx_cfg_access, erx_cfg_packet
    );
 
    parameter AW      = 32;
@@ -16,17 +16,20 @@ module erx (/*AUTOARG*/
    parameter RFAW    = 6;
    parameter ID      = 12'h800;
 
-   //reset & clock
-   input          reset;
-   input 	  sys_clk;	    //system input clock for fifos
-   output         rx_lclk_div4;    //for synchronization outside erx
+   //Clocks,reset,config
+   input          reset;                       // reset for core logic 
+   input          ioreset;                     // reset for io
+   input 	  sys_clk;	               // system clock for rx fifos
+   input 	  rx_lclk;	               // fast clock for io
+   input 	  rx_lclk_div4;		       // slow clock for rest of logic
+   output 	  rx_clk_pll;                  // clock output for pll
    
    //FROM IO Pins
-   input 	  rxi_lclk_p,  rxi_lclk_n;     //link rx clock input
-   input 	  rxi_frame_p,  rxi_frame_n;   //link rx frame signal
-   input [7:0] 	  rxi_data_p,   rxi_data_n;    //link rx data
-   output 	  rxo_wr_wait_p,rxo_wr_wait_n; //link rx write pushback output
-   output 	  rxo_rd_wait_p,rxo_rd_wait_n; //link rx read pushback output
+   input 	  rxi_lclk_p,   rxi_lclk_n;     // rx clock input
+   input 	  rxi_frame_p,  rxi_frame_n;    // rx frame signal
+   input [7:0] 	  rxi_data_p,   rxi_data_n;     // rx data
+   output 	  rxo_wr_wait_p,rxo_wr_wait_n;  // rx write pushback output
+   output 	  rxo_rd_wait_p,rxo_rd_wait_n;  // rx read pushback output
 
    //Master write
    output 	   rxwr_access;		
@@ -58,8 +61,9 @@ module erx (/*AUTOARG*/
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [63:0]		rx_data_par;		// From erx_io of erx_io.v
-   wire [7:0]		rx_frame_par;		// From erx_io of erx_io.v
+   wire			rx_access;		// From erx_io of erx_io.v
+   wire			rx_burst;		// From erx_io of erx_io.v
+   wire [PW-1:0]	rx_packet;		// From erx_io of erx_io.v
    wire			rx_rd_wait;		// From erx_core of erx_core.v
    wire			rx_wr_wait;		// From erx_core of erx_core.v
    wire			rxrd_fifo_access;	// From erx_core of erx_core.v
@@ -73,31 +77,24 @@ module erx (/*AUTOARG*/
    wire			rxwr_fifo_wait;		// From erx_fifo of erx_fifo.v
    // End of automatics
 
-   //regs
-   wire [15:0] 	rx_status;
-   wire 	rxwr_fifo_full;
-   wire 	rxrr_fifo_full;
-   wire 	rxrd_fifo_full;
-   wire 	rxrd_empty;
-   wire 	rxwr_empty;
-   wire 	rxrr_empty;
-   wire [103:0] edma_packet;		// From edma of edma.v, ...
-   
    /***********************************************************/
    /*RECEIVER  I/O LOGIC                                      */
    /***********************************************************/
    erx_io erx_io (
 		    /*AUTOINST*/
 		  // Outputs
+		  .rx_clk_pll		(rx_clk_pll),
 		  .rxo_wr_wait_p	(rxo_wr_wait_p),
 		  .rxo_wr_wait_n	(rxo_wr_wait_n),
 		  .rxo_rd_wait_p	(rxo_rd_wait_p),
 		  .rxo_rd_wait_n	(rxo_rd_wait_n),
-		  .rx_lclk_div4		(rx_lclk_div4),
-		  .rx_frame_par		(rx_frame_par[7:0]),
-		  .rx_data_par		(rx_data_par[63:0]),
+		  .rx_access		(rx_access),
+		  .rx_burst		(rx_burst),
+		  .rx_packet		(rx_packet[PW-1:0]),
 		  // Inputs
 		  .reset		(reset),
+		  .rx_lclk		(rx_lclk),
+		  .rx_lclk_div4		(rx_lclk_div4),
 		  .rxi_lclk_p		(rxi_lclk_p),
 		  .rxi_lclk_n		(rxi_lclk_n),
 		  .rxi_frame_p		(rxi_frame_p),
@@ -106,11 +103,12 @@ module erx (/*AUTOARG*/
 		  .rxi_data_n		(rxi_data_n[7:0]),
 		  .rx_wr_wait		(rx_wr_wait),
 		  .rx_rd_wait		(rx_rd_wait));
-
+   
    /**************************************************************/
    /*ELINK CORE LOGIC                                            */
    /**************************************************************/
-   /*erx_core   AUTO_TEMPLATE ( 
+   /*erx_core   AUTO_TEMPLATE ( .rx_packet	(rx_packet[PW-1:0]),
+		                .rx_access	(rx_access),
                                 .erx_cfg_access	(erx_cfg_access),
 		                .erx_cfg_packet	(erx_cfg_packet[PW-1:0]),
                                 .erx_cfg_wait	(erx_cfg_wait),
@@ -124,7 +122,7 @@ module erx (/*AUTOARG*/
    
    defparam erx_core.ID=ID;   
    erx_core erx_core ( .clk		(rx_lclk_div4),
-		       /*AUTOINST*/
+		      /*AUTOINST*/
 		      // Outputs
 		      .rx_rd_wait	(rx_rd_wait),		 // Templated
 		      .rx_wr_wait	(rx_wr_wait),		 // Templated
@@ -139,8 +137,9 @@ module erx (/*AUTOARG*/
 		      .mailbox_not_empty(mailbox_not_empty),
 		      // Inputs
 		      .reset		(reset),
-		      .rx_data_par	(rx_data_par[63:0]),
-		      .rx_frame_par	(rx_frame_par[7:0]),
+		      .rx_packet	(rx_packet[PW-1:0]),	 // Templated
+		      .rx_access	(rx_access),		 // Templated
+		      .rx_burst		(rx_burst),
 		      .rxrd_wait	(rxrd_fifo_wait),	 // Templated
 		      .rxrr_wait	(rxrr_fifo_wait),	 // Templated
 		      .rxwr_wait	(rxwr_fifo_wait),	 // Templated
