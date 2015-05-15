@@ -1,38 +1,61 @@
 module ereset (/*AUTOARG*/
    // Outputs
-   elink_reset, chip_resetb,
+   etx_reset, erx_reset, sys_reset,
    // Inputs
-   hard_reset, soft_reset
+   reset, sys_clk, tx_lclk_div4, rx_lclk_div4
    );
 
-   //inputs
-   input 	hard_reset;     //hard input reset
-   input 	soft_reset;     //soft reset driven by register
+   // reset inputs
+   input   reset;           // POR | ~elink_en (with appropriate delays..)
+   
+   //synchronization clocks
+   input   sys_clk;        // system clock
+   input   tx_lclk_div4;   // slow clock for TX
+   input   rx_lclk_div4;   // slow clock for RX
 
-   //outputs
-   output 	elink_reset;    // reset for all of elink logic
-   output       chip_resetb;    // reset for epiphany (active low)
- 
-   //Reset for link logic
-   assign elink_reset   = hard_reset | soft_reset;
+   //synchronous reset outputs
+   output  etx_reset;      // reset for TX slow logic
+   output  erx_reset;      // reset for RX slow logic
+   output  sys_reset;     // reset for system FIFOs
 
-   //May become more sophisticated later..
-   //(for example, for epiphany reset, you might want to include some
-   //some hard coded logic to avoid reset edge errata)
-   //also, for multi chip boards, since the coordinates are sampled on
-   //the rising edge of chip_resetb it may be beneficial to have one
-   //reset per chip and to stagger the 
+   wire    erx_resetb;
+   wire    etx_resetb;
+   wire    sys_resetb;
+   
+   
+   //erx reset synchronizer
+   synchronizer sync_erx (.out	 (erx_resetb),
+			  .in	 (1'b1),
+			  .clk	 (rx_lclk_div4),
+			  .reset (reset)
+			  );
 
-   assign chip_resetb   = ~(hard_reset | soft_reset); 
+   //etx reset synchronizer
+   synchronizer sync_etx (.out	 (etx_resetb),
+			  .in	 (1'b1),
+			  .clk	 (tx_lclk_div4),
+			  .reset (reset)
+			  );
+
+   //system reset synchronizer
+    synchronizer sync_sys (.out	 (sys_resetb),
+			  .in	 (1'b1),
+			  .clk	 (sys_clk),
+			  .reset (reset)
+			   );
+
+   assign etx_reset =~etx_resetb;
+   assign erx_reset =~erx_resetb;
+   assign sys_reset =~sys_resetb;
    
 endmodule // ereset
-
+// Local Variables:
+// verilog-library-directories:("." "../../common/hdl/")
+// End:
 /*
  Copyright (C) 2014 Adapteva, Inc.
  
  Contributed by Andreas Olofsson <andreas@adapteva.com>
- Contributed by Fred Huettig <fred@adapteva.com>
- Contributed by Roman Trogan <roman@adapteva.com>
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
