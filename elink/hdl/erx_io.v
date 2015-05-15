@@ -41,90 +41,91 @@ module erx_io (/*AUTOARG*/
    //############
    //# WIRES
    //############
-   wire [7:0]    rxi_data;         // High-speed serial data
-   wire          rxi_frame;        // serial frame
+   wire [7:0]    rxi_data;
+   wire          rxi_frame;
+   wire 	 rxi_lclk;
    wire 	 access_wide;
    reg 		 valid_packet;
-   wire [15:0]   data_in;
+   wire [15:0]   rx_word;
 
    //############
    //# REGS
    //############
    reg [7:0] 	 data_even_reg;   
    reg [7:0] 	 data_odd_reg;
-   reg  	 rx_frame;
-   reg  	 rx_frame_old;
+   wire 	 rx_frame;
+   wire  	 rx_frame_old;
    reg [111:0]   rx_sample; 
-   reg [6:0] 	 rx_pointer; //7 cycles
+   reg [6:0] 	 rx_pointer;
    reg 		 access;  
    reg 		 burst;
    reg [PW-1:0]  rx_packet_lclk;
    reg 		 rx_access;
    reg [PW-1:0]  rx_packet;
    reg 		 rx_burst;
-
-
+   wire 	 rx_lclk_iddr;
    
    //################################
    //# Input Buffers Instantiation
    //################################
 
-   IBUFDS
-	 #(.DIFF_TERM  ("TRUE"),
-       .IOSTANDARD (IOSTANDARD))
-	 ibuf_data[7:0]
-	   (.I     (rxi_data_p[7:0]),
-            .IB    (rxi_data_n[7:0]),
-            .O     (rxi_data[7:0]));
+   IBUFDS  #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTANDARD))
+   ibuf_data[7:0]
+     (.I     (rxi_data_p[7:0]),
+      .IB    (rxi_data_n[7:0]),
+      .O     (rxi_data[7:0]));
    
-   IBUFDS
-	 #(.DIFF_TERM  ("TRUE"), 
-       .IOSTANDARD (IOSTANDARD))
-	 ibuf_frame
-	   (.I     (rxi_frame_p),
-            .IB    (rxi_frame_n),
-            .O     (rxi_frame));
+   IBUFDS #(.DIFF_TERM  ("TRUE"), .IOSTANDARD (IOSTANDARD))
+   ibuf_frame
+     (.I     (rxi_frame_p),
+      .IB    (rxi_frame_n),
+      .O     (rxi_frame));
 
-   IBUFDS
-	 #(.DIFF_TERM  ("TRUE"), 
-       .IOSTANDARD (IOSTANDARD))
-	 ibuf_lclk
-	   (.I     (rxi_lclk_p),
-            .IB    (rxi_lclk_n),
-            .O     (rx_lclk_pll)
-	    );
-   
-   //#####################
-   //# FRAME EDGE DETECTOR
-   //#####################       
+   IBUFDS #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTANDARD))
+   ibuf_lclk
+     (.I     (rxi_lclk_p),
+      .IB    (rxi_lclk_n),
+      .O     (rxi_lclk)
+      );
+      
+   BUFG bufg_lclk (.I(rxi_lclk), 
+		   .O(rx_lclk_pll));
+    
+   //#############################
+   //# IDDR SAMPLERS
+   //#############################  
+   BUFIO bufio_lclk (.I(rxi_lclk), 
+		     .O(rx_lclk_iddr));
+   //DATA
+   genvar        i;
+   generate for(i=0; i<8; i=i+1)
+     begin : gen_iddr
+	IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"))
+	iddr_data (
+		   .Q1 (rx_word[i]),
+		   .Q2 (rx_word[i+8]),
+		   .C  (rx_lclk_iddr),
+		   .CE (1'b1),
+		   .D  (rxi_data[i]),
+		   .R  (reset),
+		   .S  (1'b0)
+		   );
+     end
+     endgenerate
 
-   always @ (posedge rx_lclk or posedge reset)
-     if(reset)
-       begin
-	  rx_frame     <= 1'b0;
-	  rx_frame_old <= rx_frame;	  
-       end
-     else
-       begin
-	  rx_frame     <= rxi_frame;
-	  rx_frame_old <= rx_frame;	  
-       end
-       
+   //FRAME
+   IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"))
+	iddr_frame (
+		   .Q1 (rx_frame_old),
+		   .Q2 (rx_frame),    
+		   .C  (rx_lclk_iddr),
+		   .CE (1'b1),
+		   .D  (rxi_frame),
+		   .R  (reset),
+		   .S  (1'b0)
+		   );
+              
    assign new_tran = rx_frame & ~rx_frame_old;
-
-   //#####################
-   //# DDR SAMPLERS
-   //#####################
-
-   //odd bytes
-   always @ (posedge rx_lclk)
-     data_even_reg[7:0] <= rxi_data[7:0];
-
-   //odd bytes
-   always @ (negedge rx_lclk)
-     data_odd_reg[7:0] <= rxi_data[7:0];
-
-   assign data_in[15:0] = {data_odd_reg[7:0],data_even_reg[7:0]};
 
    //#####################
    //#CREATE 112 BIT PACKET 
@@ -144,36 +145,24 @@ module erx_io (/*AUTOARG*/
      if(rx_frame)   
        begin
 	  if(rx_pointer[0])
-	    rx_sample[15:0]    <= data_in[15:0];
+	    rx_sample[15:0]    <= rx_word[15:0];
 	  if(rx_pointer[1])
-	    rx_sample[31:16]   <= data_in[15:0];
+	    rx_sample[31:16]   <= rx_word[15:0];
 	  if(rx_pointer[2])
-	    rx_sample[47:32]   <= data_in[15:0];
+	    rx_sample[47:32]   <= rx_word[15:0];
 	  if(rx_pointer[3])
-	    rx_sample[63:48]   <= data_in[15:0];
+	    rx_sample[63:48]   <= rx_word[15:0];
 	  if(rx_pointer[4])
-	    rx_sample[79:64]   <= data_in[15:0];
+	    rx_sample[79:64]   <= rx_word[15:0];
 	  if(rx_pointer[5])
-	    rx_sample[95:80]   <= data_in[15:0];
+	    rx_sample[95:80]   <= rx_word[15:0];
 	  if(rx_pointer[6])
-	    rx_sample[111:96]  <= data_in[15:0];	  
+	    rx_sample[111:96]  <= rx_word[15:0];	  
        end
-/*
-       case(rx_pointer[7:0])
-	 8'b0000001: rx_sample[15:0]   <= data_in[15:0];
-	 8'b0000010: rx_sample[31:16]  <= data_in[15:0];
-	 8'b0000100: rx_sample[47:32]  <= data_in[15:0];
-	 8'b0001000: rx_sample[63:48]  <= data_in[15:0];
-	 8'b0010000: rx_sample[79:64]  <= data_in[15:0];
-	 8'b0100000: rx_sample[95:80]  <= data_in[15:0];
-       	 8'b1000000: rx_sample[111:96] <= data_in[15:0];
-	 default: rx_sample[111:0] <= 'b0;
-       endcase // case (rx_pointer)
-*/
    
    //#####################  
    //#DATA VALID SIGNAL 
-   //#####################
+   //####################
    always @ (posedge rx_lclk)
      begin     
 	access       <= rx_pointer[6];
@@ -188,8 +177,9 @@ module erx_io (/*AUTOARG*/
    always @ (posedge rx_lclk)
      if(access)   
        begin
+
+	  burst                 <= rx_frame;	    //burst detected (for next cycle)
 	  //access
-	  burst                   <= rx_frame;	    //burst detected (for next cycle)
 	  rx_packet_lclk[0]     <= rx_sample[40];
 	  //write
 	  rx_packet_lclk[1]     <= rx_sample[41];

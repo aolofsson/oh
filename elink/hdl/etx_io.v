@@ -43,7 +43,6 @@ module etx_io (/*AUTOARG*/
    //############
    reg [7:0] 	  tx_pointer;   
    reg [15:0] 	  tx_data16;
-   reg [7:0] 	  tx_data;
    reg 		  tx_access_reg;
    reg 		  tx_frame;
    reg 		  tx_io_wait_reg;
@@ -59,6 +58,9 @@ module etx_io (/*AUTOARG*/
    wire [31:0] 	  dstaddr;
    wire [31:0] 	  data;
    wire [31:0] 	  srcaddr;
+   wire [7:0] 	  txo_data;
+   wire 	  txo_frame;   
+   wire 	  txo_lclk90;
    
    //#############################
    //# Disassemble packet (for clarity)
@@ -102,6 +104,7 @@ module etx_io (/*AUTOARG*/
    //#############################
    //# Frame Signal
    //#############################  
+   
    always @ (posedge tx_lclk or posedge reset)
      if(reset)
        tx_frame <= 1'b0;   
@@ -113,35 +116,71 @@ module etx_io (/*AUTOARG*/
    //#############################
    //# SELECTING DATA PER CYCLE
    //#############################  
-   //optimize later...
-   always @ (negedge tx_lclk)
+   always @ (posedge tx_lclk)
      case({tx_access,tx_pointer[6:0]})
        //Cycle0
-       8'b10000001: tx_data16[15:0] <= {ctrlmode[3:0],dstaddr[31:28],~write,7'b0};
+       8'b10000001: tx_data16[15:0] <= {~write,7'b0,ctrlmode[3:0],dstaddr[31:28]};
        //Cycle1
-       8'b10000010: tx_data16[15:0] <= {dstaddr[19:12],dstaddr[27:20]};
+       8'b10000010: tx_data16[15:0] <= {dstaddr[27:20],dstaddr[19:12]};
        //Cycle2
-       8'b10000100: tx_data16[15:0] <= {dstaddr[3:0],datamode[1:0],write,access,
-				        dstaddr[11:4]};       
+       8'b10000100: tx_data16[15:0] <= {dstaddr[11:4],
+					dstaddr[3:0],datamode[1:0],write,access
+				        };       
        //Cycle3
-       8'b10001000: tx_data16[15:0] <= {data[23:16],data[31:24]};
+       8'b10001000: tx_data16[15:0] <= {data[31:24],data[23:16]};
        //Cycle4				      
-       8'b10010000: tx_data16[15:0] <= {data[7:0],data[15:8]};            
+       8'b10010000: tx_data16[15:0] <= {data[15:8],data[7:0]};            
        //Cycle5
-       8'b10100000: tx_data16[15:0] <= {srcaddr[23:16],srcaddr[31:24]};
+       8'b10100000: tx_data16[15:0] <= {srcaddr[31:24],srcaddr[23:16]};
        //Cycle6
-       8'b11000000: tx_data16[15:0] <= {srcaddr[7:0],srcaddr[15:8]};
+       8'b11000000: tx_data16[15:0] <= {srcaddr[15:8],srcaddr[7:0]};
        default  tx_data16[15:0]    <= 16'b0;
      endcase // case (tx_pointer[7:0])
              
    //#############################
-   //# DATA (DDR)
+   //# ODDR DRIVERS
    //#############################  
-   always @ (negedge tx_lclk)
-     tx_data[7:0] <= tx_data16[15:8];
 
-   always @ (posedge tx_lclk)
-     tx_data[7:0] <= tx_data16[7:0];
+   //DATA
+   genvar        i;
+   generate for(i=0; i<8; i=i+1)
+     begin : gen_oddr
+	ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
+	oddr_data (
+		   .Q  (txo_data[i]),
+		   .C  (tx_lclk),
+		   .CE (1'b1),
+		   .D1 (tx_data16[i+8]),
+		   .D2 (tx_data16[i]),
+		   .R  (1'b0),
+		   .S  (1'b0)
+		   );
+     end
+     endgenerate
+
+   //FRAME
+   ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
+   oddr_frame (
+	      .Q  (txo_frame),
+	      .C  (tx_lclk),
+	      .CE (1'b1),
+	      .D1 (tx_frame),
+	      .D2 (tx_frame),
+	      .R  (reset), //TODO: should this be buffered?
+	      .S  (1'b0)
+	      );
+   
+   //LCLK
+   ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
+   oddr_lclk (
+	      .Q  (txo_lclk90),
+	      .C  (tx_lclk90),
+	      .CE (1'b1),
+	      .D1 (1'b1),
+	      .D2 (1'b0),
+	      .R  (reset),//make TX clock quiet during reset
+	      .S  (1'b0)
+	      );
 		  
    //##############################
    //# OUTPUT BUFFERS
@@ -150,17 +189,17 @@ module etx_io (/*AUTOARG*/
    OBUFDS obufds_data[7:0] (
 			     .O   (txo_data_p[7:0]),
 			     .OB  (txo_data_n[7:0]),
-			     .I   (tx_data)
+			     .I   (txo_data[7:0])
 			     );
    
    OBUFDS obufds_frame ( .O   (txo_frame_p),
 			 .OB  (txo_frame_n),
-			 .I   (tx_frame)
+			 .I   (txo_frame)
 			 );
 
    OBUFDS obufds_lclk ( .O   (txo_lclk_p),
 			.OB  (txo_lclk_n),
-			.I   (tx_lclk90)
+			.I   (txo_lclk90)
 			);
    
    //################################
@@ -201,6 +240,7 @@ endmodule // etx_io
 /*
   Copyright (C) 2014 Adapteva, Inc.
   Contributed by Andreas Olofsson <andreas@adapteva.com>
+  Contributed by Gunnar Hillerstrom
  
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
