@@ -97,12 +97,7 @@ module MMCME2_ADV # (
    //##############
    //#VCO 
    //##############
-   reg 	  vco_clk;
-   initial
-     begin
-	vco_clk = 1'b0;	
-     end
-   
+   reg 	  vco_clk = 1'b0;
    always
      #(VCO_PERIOD/2) vco_clk = ~vco_clk;
 
@@ -129,6 +124,9 @@ module MMCME2_ADV # (
 	POR=1'b0;	
      end
 
+   //BUG! This only supports divide by 2,4,8, etc for now
+   //TODO: This clearly won't work, need general purpose clock divider
+   //divide by 2-N (3,5,6,7 and all the other ugly numbers)
    genvar i;
    generate for(i=0; i<7; i=i+1)
      begin : gen_clkdiv
