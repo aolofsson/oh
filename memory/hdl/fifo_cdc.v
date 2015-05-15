@@ -8,29 +8,27 @@ module fifo_cdc (/*AUTOARG*/
    // Outputs
    wait_out, access_out, packet_out,
    // Inputs
-   clk_in, clk_out, reset, access_in, packet_in, wait_in
+   clk_in, reset_in, access_in, packet_in, clk_out, reset_out,
+   wait_in
    );
 
    parameter WIDTH    = 104;
    parameter DEPTH     = 16;
 
    /********************************/
-   /*Clocks/reset                  */
-   /********************************/  
-   input              clk_in;   
-   input              clk_out;   
-   input              reset;
-
+   /*Incoming Packet               */
    /********************************/
-   /*Input Packet*/
-   /********************************/  
+   input              clk_in;   
+   input              reset_in;
    input 	      access_in;   
    input [WIDTH-1:0]  packet_in;   
    output 	      wait_out;   
 
    /********************************/
-   /*Register RD/WR Packet to ERX*/
+   /*Outgoing Packet               */
    /********************************/  
+   input              clk_out;   
+   input              reset_out;
    output 	      access_out;   
    output [WIDTH-1:0] packet_out;   
    input 	      wait_in;   
@@ -47,26 +45,24 @@ module fifo_cdc (/*AUTOARG*/
    assign wait_out =  full;
 
    //Keep access high until "acknowledge"
-   always @ (posedge clk_out or posedge reset)
-     if(reset)
+   always @ (posedge clk_out)
+     if(reset_out)
        access_out <=1'b0;   
      else if(~wait_in)
        access_out <=rd_en;
    
    //Read response fifo (from master)
-
    defparam fifo.WIDTH=104;
    defparam fifo.DEPTH=16;
-   fifo_async  fifo(
-		    .prog_full		(),
+   fifo_async  fifo(.prog_full		(),
 		    .full		(full),
 		    // Outputs
 		    .dout		(packet_out[WIDTH-1:0]),
 		    .empty		(empty),
 		    .valid		(), 
 		    // Inputs
-		    .wr_rst		(reset),
-		    .rd_rst		(reset),
+		    .wr_rst		(reset_in),
+		    .rd_rst		(reset_out),
 		    .wr_clk		(clk_in),
 		    .rd_clk		(clk_out),
 		    .wr_en		(wr_en),
