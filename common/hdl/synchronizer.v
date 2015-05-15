@@ -10,7 +10,7 @@ module synchronizer (/*AUTOARG*/
    in, clk, reset
    );
 
-   parameter DW = 32;
+   parameter DW = 1;
    
    //Input Side   
    input  [DW-1:0] in;   
