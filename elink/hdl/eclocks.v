@@ -1,5 +1,5 @@
 /*###########################################################################
- # Function:  Clock generator for elink
+ # Function:  Clock and reset generator
  #      
  #  tx_lclk_div4 - Parallel data clock (125Mhz)
  #
@@ -15,36 +15,113 @@
 
 module eclocks (/*AUTOARG*/
    // Outputs
-   tx_lclk, tx_lclk90, tx_lclk_div4, rx_lclk, rx_lclk_div4, cclk_p,
-   cclk_n,
+   tx_lclk, tx_lclk90, tx_lclk_div4, rx_lclk, rx_lclk_div4,
+   rx_ref_clk, cclk_p, cclk_n, elink_reset, chip_resetb,
    // Inputs
-   reset, clkin_elink, clkin_cclk
+   hard_reset, elink_en, sys_clk, rx_lclk_pll
    );
 
-   /****************************************************************/
-   /*WARNING!! THIS CLOCK MUST MATCH THE ACTUAL INPUT CLOCK PERIOD!*/
-   /****************************************************************/
-
-   parameter  ELINK_CLKIN_PERIOD  = 3.3333333;  // (2.5-100ns, set by system)
-   parameter  CCLK_CLKIN_PERIOD   = 10;         // (2.5-100ns, set by system)
-
+   parameter  RCW                 = 4;          // reset counter width
+   
    //Input clock, reset, config interface
-   input      reset;             // hardware reset
-   input      clkin_elink;       // clock input for elink PLL
-   input      clkin_cclk;        // clock input for cclk PLL 
+   input      hard_reset;        // por_reset
+   input      elink_en;          // elink enable (from pin or register)
+   
+   //Main input clocks
+   input      sys_clk;           // clock for generating TX and CCLK
+   input      rx_lclk_pll;       // RX clock directly from IO
    
    //TX Clocks
-   output     tx_lclk;             // tx clock for DDR IO
-   output     tx_lclk90;           // tx output clock shifted by 90 degrees
-   output     tx_lclk_div4;        // tx slow clock for logic
+   output     tx_lclk;           // tx clock for DDR IO
+   output     tx_lclk90;         // tx output clock shifted by 90 degrees
+   output     tx_lclk_div4;      // tx slow clock for logic
    
    //RX Clocks
-   output     rx_lclk;            // rx high speed clock for DDR IO
-   output     rx_lclk_div4;       // rx slow clock for logic
+   output     rx_lclk;           // rx high speed clock for DDR IO
+   output     rx_lclk_div4;      // rx slow clock for logic
+   output     rx_ref_clk;        // clock for idelay element
 
    //Epiphany "free running" clock
    output     cclk_p, cclk_n;
-                 			
+
+   //Reset
+   output     elink_reset;       // reset for elink logic & IO   
+   output     chip_resetb;       // reset fpr Epiphany chip
+   
+   //###########################
+   // RESET STATE MACHINE
+   //###########################
+  
+   wire        cclk_locked;
+   wire        lclk_locked;   
+   reg [RCW:0] reset_counter = 'b0; //works b/c of free running counter!
+   reg 	       heartbeat;   
+   reg 	       reset_in;
+   reg 	       reset_sync;
+   reg 	       pll_locked_sync;
+   reg 	       pll_locked;
+   wire        pll_reset;
+   reg [2:0]   reset_state;
+   
+   //wrap around counter that generates a 1 cycle heartbeat       
+   //free running counter...
+   always @ (posedge sys_clk)
+     begin
+	reset_counter[RCW-1:0] <= reset_counter[RCW-1:0]+1'b1;
+	heartbeat              <= ~(|reset_counter[RCW-1:0]);
+     end
+   
+   //two clock synchronizer
+   always @ (posedge sys_clk)
+     begin
+	pll_locked_sync <= cclk_locked & lclk_locked;	
+	reset_sync      <= (hard_reset | ~elink_en);
+	reset_in        <= reset_sync;
+	pll_locked      <= pll_locked_sync;	
+     end
+   
+`define RESET_ALL       3'b000
+`define START_PLL       3'b001
+`define STOP_PLL        3'b010
+`define START_EPIPHANY  3'b011
+`define HOLD_IT         3'b100
+`define ACTIVE          3'b101
+	     
+   //Reset sequence state machine
+   
+   always @ (posedge sys_clk)
+     if(reset_in)
+       reset_state[2:0]        <= `RESET_ALL;   
+     else if(heartbeat)
+       case(reset_state[2:0])
+	 `RESET_ALL :
+	   reset_state[2:0]    <= `START_PLL;	 
+	 `START_PLL :
+	   if(pll_locked)
+		reset_state[2:0]  <= `STOP_PLL; 
+	 `STOP_PLL :
+	   reset_state[2:0]    <= `START_EPIPHANY;
+	 `START_EPIPHANY :
+	   reset_state[2:0]    <= `HOLD_IT;
+	 `HOLD_IT :
+	   if(pll_locked)
+	     reset_state[2:0]  <= `ACTIVE;
+	 `ACTIVE:
+	   reset_state[2:0]    <= `ACTIVE; //stay there until nex reset
+       endcase // case (reset_state[2:0])
+
+   
+   //reset PLL during 'reset' and during quiet time around reset edge
+   assign pll_reset   =  (reset_state[2:0]==`RESET_ALL)      |
+			 (reset_state[2:0]==`STOP_PLL)       | 
+			 (reset_state[2:0]==`START_EPIPHANY);
+   
+   assign chip_resetb =  (reset_state[2:0]==`START_EPIPHANY) |
+			 (reset_state[2:0]==`HOLD_IT) |
+			 (reset_state[2:0]==`ACTIVE);
+
+   assign elink_reset  =  (reset_state[2:0]!=`ACTIVE);
+     
 `ifdef TARGET_XILINX	
 
    wire       cclk_fb;
@@ -55,8 +132,9 @@ module eclocks (/*AUTOARG*/
    //###########################
    // MMCM/PLL FOR CCLK
    //###########################
-   parameter CCLK_VCO_MULT = 12;
-   parameter CCLK_DIVIDE   = 2;
+   parameter CCLK_VCO_MULT      = 12;
+   parameter CCLK_DIVIDE        = 2;  
+   parameter CCLK_CLKIN_PERIOD  = 10; // (2.5-100ns, set by system)
 
    MMCME2_ADV
      #(
@@ -99,10 +177,10 @@ module eclocks (/*AUTOARG*/
         .CLKOUT5(),
 	.CLKOUT6(),
 	.PWRDWN(1'b0),
-        .RST(1'b0),
+        .RST(pll_reset),     //reset
         .CLKFBIN(cclk_fb),
-        .CLKFBOUT(cclk_fb),       
-        .CLKIN1(clkin_cclk),
+        .CLKFBOUT(cclk_fb),  //feedback clock     
+        .CLKIN1(sys_clk),    //input clock
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
 	.DADDR(7'b0),
@@ -112,7 +190,7 @@ module eclocks (/*AUTOARG*/
 	.DWE(1'b0),
 	.DRDY(),
 	.DO(), 
-	.LOCKED(),
+	.LOCKED(cclk_locked), //locked indicator
 	.PSCLK(1'b0),
 	.PSEN(1'b0),
 	.PSDONE(),
@@ -127,18 +205,18 @@ module eclocks (/*AUTOARG*/
 		      );
 
    //###########################
-   // PLL FOR ELIN
+   // PLL FOR ELINK
    //###########################  
-   parameter LCLK_VCO_MULT = 5; //1500MHz
-   parameter TXCLK_DIVIDE  = 5; //500MHz
-   parameter RXCLK_DIVIDE  = 5; //300MHz
-   
+   parameter LCLK_VCO_MULT     = 5; //1500MHz
+   parameter TXCLK_DIVIDE      = 5; //500MHz
+   parameter RXCLK_DIVIDE      = 5; //300MHz
+   parameter LCLK_CLKIN_PERIOD = 3.3333333;  // (2.5-100ns, set by system)
    PLLE2_ADV
      #(
        .BANDWIDTH("OPTIMIZED"),          
        .CLKFBOUT_MULT(LCLK_VCO_MULT),
        .CLKFBOUT_PHASE(0.0),
-       .CLKIN1_PERIOD(ELINK_CLKIN_PERIOD),
+       .CLKIN1_PERIOD(LCLK_CLKIN_PERIOD),
        .CLKOUT0_DIVIDE(CCLK_DIVIDE),    // cclk
        .CLKOUT1_DIVIDE(TXCLK_DIVIDE),   // tx_lclk
        .CLKOUT2_DIVIDE(TXCLK_DIVIDE),   // tx_lclk90
@@ -169,10 +247,10 @@ module eclocks (/*AUTOARG*/
         .CLKOUT4(rx_lclk),
         .CLKOUT5(rx_lclk_div4),
 	.PWRDWN(1'b0),
-        .RST(1'b0),
+        .RST(pll_reset),
         .CLKFBIN(lclk_fb),
         .CLKFBOUT(lclk_fb),       
-        .CLKIN1(clkin_elink),
+        .CLKIN1(rx_lclk_pll),
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
 	.DADDR(7'b0),
@@ -182,11 +260,8 @@ module eclocks (/*AUTOARG*/
 	.DWE(1'b0),
 	.DRDY(),
 	.DO(), 
-	.LOCKED()
+	.LOCKED(lclk_locked)
         );
-
- 
-  
    
 `endif //  `ifdef TARGET_XILINX
 
@@ -269,6 +344,7 @@ endmodule // eclocks
 /*
   Copyright (C) 2014 Adapteva, Inc.
   Contributed by Andreas Olofsson <andreas@adapteva.com>
+  Contributed by Gunnar Hillerstrom 
  
    This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
