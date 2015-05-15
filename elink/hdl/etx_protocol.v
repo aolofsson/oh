@@ -100,17 +100,20 @@ module etx_protocol (/*AUTOARG*/
 		     .srcaddr_out	(),
 		     .packet_in		(tx_packet[PW-1:0]));//input
 
-   assign burst_addr[31:0]  = last_dstaddr[31:0]+ 4'd8;
+   assign burst_addr[31:0]  = last_dstaddr[31:0] + 4'd8;
 
    assign burst_type_match = {last_ctrlmode[3:0],last_datamode[1:0],last_write}
 			      ==
 		   	      {etx_ctrlmode[3:0],etx_datamode[1:0], etx_write};
    			      
-   assign tx_burst     = etx_write                             & //write 
+   assign tx_burst = 1'b0;   
+   /*
+   assign tx_burst     = etx_write                            & //write 
 	       	        (etx_datamode[1:0]==2'b11)            & //double only
 			burst_type_match                      & //same types
 			(burst_addr[31:0]==etx_dstaddr[31:0]);  //inc by 8
 			
+    */
    //#############################
    //# Wait signals (async)
    //#############################
