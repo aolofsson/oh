@@ -21,7 +21,23 @@ module eclocks (/*AUTOARG*/
    hard_reset, elink_en, sys_clk, rx_lclk_pll
    );
 
-   parameter  RCW                 = 4;          // reset counter width
+   parameter RCW                 = 4;          // reset counter width
+
+   //CCLK PLL
+   parameter SYS_CLK_PERIOD      = 10;         // (2.5-100ns, set by system)
+   parameter CCLK_VCO_MULT       = 12;         // 1200MHz
+   parameter CCLK_DIVIDE         = 2;          // 600MHz
+
+   //RX PLL
+   parameter RXCLK_PERIOD        = 3.3333333;  // (2.5-100ns, set by system)
+   parameter RXCLK_VCO_MULT      = 4;          // 1200MHz      
+   parameter RXCLK_DIVIDE        = 4;          // 300MHz
+   parameter RXCLK_PHASE         = 90;         // sim setting, tune for FPGA
+   parameter RXCLK_DIV4_PHASE    = 22.5;       // tune for FPGA!
+
+   //TX (WITH RX FOR NOW...)
+   parameter TXCLK_DIVIDE        = 4;          // 300MHz default
+
    
    //Input clock, reset, config interface
    input      hard_reset;        // por_reset
@@ -62,6 +78,8 @@ module eclocks (/*AUTOARG*/
    reg 	       pll_locked;
    wire        pll_reset;
    reg [2:0]   reset_state;
+   reg 	       cclk_locked_reg;
+   reg 	       cclk_locked_sync;
    
    //wrap around counter that generates a 1 cycle heartbeat       
    //free running counter...
@@ -74,10 +92,12 @@ module eclocks (/*AUTOARG*/
    //two clock synchronizer
    always @ (posedge sys_clk)
      begin
-	pll_locked_sync <= cclk_locked & lclk_locked;	
-	reset_sync      <= (hard_reset | ~elink_en);
-	reset_in        <= reset_sync;
-	pll_locked      <= pll_locked_sync;	
+	cclk_locked_reg <=  cclk_locked;
+	cclk_locked_sync <= cclk_locked_reg;	
+	pll_locked_sync   <= cclk_locked & lclk_locked;	
+	reset_sync        <= (hard_reset | ~elink_en);
+	reset_in          <= reset_sync;
+	pll_locked        <= pll_locked_sync;	
      end
    
 `define RESET_ALL       3'b000
@@ -97,14 +117,14 @@ module eclocks (/*AUTOARG*/
 	 `RESET_ALL :
 	   reset_state[2:0]    <= `START_PLL;	 
 	 `START_PLL :
-	   if(pll_locked)
+	   if(cclk_locked_sync)
 		reset_state[2:0]  <= `STOP_PLL; 
 	 `STOP_PLL :
 	   reset_state[2:0]    <= `START_EPIPHANY;
 	 `START_EPIPHANY :
 	   reset_state[2:0]    <= `HOLD_IT;
 	 `HOLD_IT :
-	   if(pll_locked)
+	   if(cclk_locked_sync)
 	     reset_state[2:0]  <= `ACTIVE;
 	 `ACTIVE:
 	   reset_state[2:0]    <= `ACTIVE; //stay there until nex reset
@@ -130,36 +150,35 @@ module eclocks (/*AUTOARG*/
    wire       cclk_alt;
    
    //###########################
-   // MMCM/PLL FOR CCLK
+   // MMCM/PLL FOR CCLK AND TX
    //###########################
-   parameter CCLK_VCO_MULT      = 12;
-   parameter CCLK_DIVIDE        = 2;  
-   parameter CCLK_CLKIN_PERIOD  = 10; // (2.5-100ns, set by system)
-
    MMCME2_ADV
      #(
        .BANDWIDTH("OPTIMIZED"),          
        .CLKFBOUT_MULT_F(CCLK_VCO_MULT),
        .CLKFBOUT_PHASE(0.0),
-       .CLKIN1_PERIOD(CCLK_CLKIN_PERIOD),
-       .CLKOUT0_DIVIDE_F(CCLK_DIVIDE),    // cclk
-       .CLKOUT1_DIVIDE(CCLK_DIVIDE*2),  // cclk/2
-       .CLKOUT2_DIVIDE(CCLK_DIVIDE*4),  // cclk/4
-       .CLKOUT3_DIVIDE(CCLK_DIVIDE*8),  // cclk/8
-       .CLKOUT4_DIVIDE(CCLK_DIVIDE*16), // cclk/16
-       .CLKOUT5_DIVIDE(CCLK_DIVIDE*32), // cclk/32          
+       .CLKIN1_PERIOD(SYS_CLK_PERIOD),
+       .CLKOUT0_DIVIDE_F(CCLK_DIVIDE),  // cclk      
+       .CLKOUT1_DIVIDE(TXCLK_DIVIDE),   // tx_lclk
+       .CLKOUT2_DIVIDE(TXCLK_DIVIDE),   // tx_lclk90
+       .CLKOUT3_DIVIDE(TXCLK_DIVIDE*4), // tx_lclk_div4
+       .CLKOUT4_DIVIDE(9),              // rx_ref_clk (for idelay)
+       .CLKOUT5_DIVIDE(128),            //   ??
+       .CLKOUT6_DIVIDE(128),            //   ??        
        .CLKOUT0_DUTY_CYCLE(0.5),         
        .CLKOUT1_DUTY_CYCLE(0.5),
        .CLKOUT2_DUTY_CYCLE(0.5),
        .CLKOUT3_DUTY_CYCLE(0.5),
        .CLKOUT4_DUTY_CYCLE(0.5),
        .CLKOUT5_DUTY_CYCLE(0.5),
+       .CLKOUT6_DUTY_CYCLE(0.5),
        .CLKOUT0_PHASE(0.0),
        .CLKOUT1_PHASE(0.0),
-       .CLKOUT2_PHASE(0.0),
+       .CLKOUT2_PHASE(90.0),
        .CLKOUT3_PHASE(0.0),
        .CLKOUT4_PHASE(0.0),
        .CLKOUT5_PHASE(0.0),
+       .CLKOUT6_PHASE(0.0),
        .DIVCLK_DIVIDE(1.0), 
        .REF_JITTER1(0.01), 
        .STARTUP_WAIT("FALSE") 
@@ -167,13 +186,13 @@ module eclocks (/*AUTOARG*/
        (
         .CLKOUT0(cclk),
 	.CLKOUT0B(),
-        .CLKOUT1(),
+        .CLKOUT1(tx_lclk),
 	.CLKOUT1B(),
-        .CLKOUT2(),
+        .CLKOUT2(tx_lclk90),
 	.CLKOUT2B(),
-        .CLKOUT3(),
+        .CLKOUT3(tx_lclk_div4),
 	.CLKOUT3B(),
-        .CLKOUT4(),
+        .CLKOUT4(rx_ref_clk),
         .CLKOUT5(),
 	.CLKOUT6(),
 	.PWRDWN(1'b0),
@@ -205,24 +224,21 @@ module eclocks (/*AUTOARG*/
 		      );
 
    //###########################
-   // PLL FOR ELINK
+   // PLL RX CLOCK ALIGNMENT
    //###########################  
-   parameter LCLK_VCO_MULT     = 5; //1500MHz
-   parameter TXCLK_DIVIDE      = 5; //500MHz
-   parameter RXCLK_DIVIDE      = 5; //300MHz
-   parameter LCLK_CLKIN_PERIOD = 3.3333333;  // (2.5-100ns, set by system)
+   
    PLLE2_ADV
      #(
        .BANDWIDTH("OPTIMIZED"),          
-       .CLKFBOUT_MULT(LCLK_VCO_MULT),
+       .CLKFBOUT_MULT(RXCLK_VCO_MULT),
        .CLKFBOUT_PHASE(0.0),
-       .CLKIN1_PERIOD(LCLK_CLKIN_PERIOD),
+       .CLKIN1_PERIOD(RXCLK_PERIOD),
        .CLKOUT0_DIVIDE(CCLK_DIVIDE),    // cclk
        .CLKOUT1_DIVIDE(TXCLK_DIVIDE),   // tx_lclk
        .CLKOUT2_DIVIDE(TXCLK_DIVIDE),   // tx_lclk90
        .CLKOUT3_DIVIDE(TXCLK_DIVIDE*4), // tx_lclk_div4
        .CLKOUT4_DIVIDE(RXCLK_DIVIDE),   // rx_lclk
-       .CLKOUT5_DIVIDE(RXCLK_DIVIDE*4), // rx_lclk_div4          
+       .CLKOUT5_DIVIDE(RXCLK_DIVIDE*4), // rx_lclk_div4
        .CLKOUT0_DUTY_CYCLE(0.5),         
        .CLKOUT1_DUTY_CYCLE(0.5),
        .CLKOUT2_DUTY_CYCLE(0.5),
@@ -233,17 +249,17 @@ module eclocks (/*AUTOARG*/
        .CLKOUT1_PHASE(0.0),
        .CLKOUT2_PHASE(90.0),
        .CLKOUT3_PHASE(0.0),
-       .CLKOUT4_PHASE(90.0),
-       .CLKOUT5_PHASE(90.0),
+       .CLKOUT4_PHASE(RXCLK_PHASE),
+       .CLKOUT5_PHASE(RXCLK_DIV4_PHASE),
        .DIVCLK_DIVIDE(1.0), 
        .REF_JITTER1(0.01), 
        .STARTUP_WAIT("FALSE") 
        ) pll_elink
        (
         .CLKOUT0(cclk_alt),
-        .CLKOUT1(tx_lclk),
-        .CLKOUT2(tx_lclk90),
-        .CLKOUT3(tx_lclk_div4),
+        .CLKOUT1(),
+        .CLKOUT2(),
+        .CLKOUT3(),
         .CLKOUT4(rx_lclk),
         .CLKOUT5(rx_lclk_div4),
 	.PWRDWN(1'b0),
