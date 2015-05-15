@@ -168,9 +168,21 @@ module MMCME2_ADV # (
    //#DUMMY DRIVES
    //##############
    assign CLKFBOUT=CLKIN1;
-   assign LOCKED=1'b0;
-  
    
+   //###########################
+   //#SANITY CHECK LOCK COUNTER
+   //############################
+   parameter LCW=4;   
+   reg [LCW-1:0] lock_counter;
+   wire 	 reset = POR | RST;   
+   
+   always @ (posedge CLKIN1 or posedge reset)
+     if(reset)
+       lock_counter[LCW-1:0]  <= {(LCW){1'b1}};
+     else if(~LOCKED)
+       lock_counter[LCW-1:0] <= lock_counter[LCW-1:0] - 1'b1;
+
+   assign LOCKED = ~(|lock_counter[LCW-1:0]);
    
 endmodule // MMCME2_ADV
 // Local Variables:
