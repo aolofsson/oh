@@ -1,13 +1,14 @@
 module erx (/*AUTOARG*/
    // Outputs
-   rx_clk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
+   rx_lclk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, rxwr_access, rxwr_packet, rxrd_access, rxrd_packet,
    rxrr_access, rxrr_packet, erx_cfg_wait, timeout, mailbox_full,
    mailbox_not_empty,
    // Inputs
-   reset, ioreset, sys_clk, rx_lclk, rx_lclk_div4, rxi_lclk_p,
-   rxi_lclk_n, rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n,
-   rxwr_wait, rxrd_wait, rxrr_wait, erx_cfg_access, erx_cfg_packet
+   erx_reset, sys_reset, sys_clk, rx_lclk, rx_lclk_div4, rx_ref_clk,
+   rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n, rxi_data_p,
+   rxi_data_n, rxwr_wait, rxrd_wait, rxrr_wait, erx_cfg_access,
+   erx_cfg_packet
    );
 
    parameter AW      = 32;
@@ -16,13 +17,16 @@ module erx (/*AUTOARG*/
    parameter RFAW    = 6;
    parameter ID      = 12'h800;
 
-   //Clocks,reset,config
-   input          reset;                       // reset for core logic 
-   input          ioreset;                     // reset for io
+   //Synched resets
+   input          erx_reset;                   // reset for core logic
+   input          sys_reset;                   // reset for fifos 
+
+   //Clocks
    input 	  sys_clk;	               // system clock for rx fifos
    input 	  rx_lclk;	               // fast clock for io
    input 	  rx_lclk_div4;		       // slow clock for rest of logic
-   output 	  rx_clk_pll;                  // clock output for pll
+   input 	  rx_ref_clk;                  // idelay reference clock   
+   output 	  rx_lclk_pll;                 // clock output for pll
    
    //FROM IO Pins
    input 	  rxi_lclk_p,   rxi_lclk_n;     // rx clock input
@@ -80,10 +84,10 @@ module erx (/*AUTOARG*/
    /***********************************************************/
    /*RECEIVER  I/O LOGIC                                      */
    /***********************************************************/
-   erx_io erx_io (
-		    /*AUTOINST*/
+   erx_io erx_io (.reset		(erx_reset),
+		  /*AUTOINST*/
 		  // Outputs
-		  .rx_clk_pll		(rx_clk_pll),
+		  .rx_lclk_pll		(rx_lclk_pll),
 		  .rxo_wr_wait_p	(rxo_wr_wait_p),
 		  .rxo_wr_wait_n	(rxo_wr_wait_n),
 		  .rxo_rd_wait_p	(rxo_rd_wait_p),
@@ -92,9 +96,9 @@ module erx (/*AUTOARG*/
 		  .rx_burst		(rx_burst),
 		  .rx_packet		(rx_packet[PW-1:0]),
 		  // Inputs
-		  .reset		(reset),
 		  .rx_lclk		(rx_lclk),
 		  .rx_lclk_div4		(rx_lclk_div4),
+		  .rx_ref_clk		(rx_ref_clk),
 		  .rxi_lclk_p		(rxi_lclk_p),
 		  .rxi_lclk_n		(rxi_lclk_n),
 		  .rxi_frame_p		(rxi_frame_p),
@@ -122,6 +126,7 @@ module erx (/*AUTOARG*/
    
    defparam erx_core.ID=ID;   
    erx_core erx_core ( .clk		(rx_lclk_div4),
+		       .reset           (erx_reset),
 		      /*AUTOINST*/
 		      // Outputs
 		      .rx_rd_wait	(rx_rd_wait),		 // Templated
@@ -136,7 +141,6 @@ module erx (/*AUTOARG*/
 		      .mailbox_full	(mailbox_full),
 		      .mailbox_not_empty(mailbox_not_empty),
 		      // Inputs
-		      .reset		(reset),
 		      .rx_packet	(rx_packet[PW-1:0]),	 // Templated
 		      .rx_access	(rx_access),		 // Templated
 		      .rx_burst		(rx_burst),
@@ -162,7 +166,8 @@ module erx (/*AUTOARG*/
 			.rxrr_fifo_wait	(rxrr_fifo_wait),
 			.rxwr_fifo_wait	(rxwr_fifo_wait),
 			// Inputs
-			.reset		(reset),
+			.erx_reset	(erx_reset),
+			.sys_reset	(sys_reset),
 			.rx_lclk_div4	(rx_lclk_div4),
 			.sys_clk	(sys_clk),
 			.rxwr_wait	(rxwr_wait),
@@ -177,7 +182,7 @@ module erx (/*AUTOARG*/
    
 endmodule // erx
 // Local Variables:
-// verilog-library-directories:("." "../../emmu/hdl" "../../edma/hdl" "../../memory/hdl" "../../emailbox/hdl")
+// verilog-library-directories:(".")
 // End:
 
 /*

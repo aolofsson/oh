@@ -41,35 +41,32 @@ module etx_protocol (/*AUTOARG*/
    //###################################################################
    reg           tx_access;
    reg [PW-1:0]  tx_packet; 
-   reg 		 tx_burst;
-
    wire		 tx_rd_wait_sync;
    wire 	 tx_wr_wait_sync;
-
    wire 	 etx_write;
    wire [1:0] 	 etx_datamode;
    wire [3:0]	 etx_ctrlmode;
    wire [AW-1:0] etx_dstaddr;
    wire [DW-1:0] etx_data;
-   wire [AW-1:0] etx_srcaddr;
+   wire 	 last_write;
+   wire [1:0] 	 last_datamode;
+   wire [3:0]	 last_ctrlmode;
+   wire [AW-1:0] last_dstaddr;   
    wire 	 etx_valid;
    reg           etx_io_wait;
-   
-   
-   
+   wire 	 burst_match;
+   wire 	 burst_type_match;
+   wire [31:0] 	 burst_addr;
+    
    //packet to emesh bundle
-   packet2emesh p2m (
-		     // Outputs
-		     .access_out	(),
-		     .write_out		(etx_write),
-		     .datamode_out	(etx_datamode[1:0]),
-		     .ctrlmode_out	(etx_ctrlmode[3:0]),
-		     .dstaddr_out	(etx_dstaddr[31:0]),
-		     .data_out		(etx_data[31:0]),
-		     .srcaddr_out	(etx_srcaddr[31:0]),
-		     // Inputs
-		     .packet_in		(etx_packet[PW-1:0])
-		     );
+   packet2emesh p2m0 (.access_out	(),
+		      .write_out	(etx_write),
+		      .datamode_out	(etx_datamode[1:0]),
+		      .ctrlmode_out	(etx_ctrlmode[3:0]),
+		      .dstaddr_out	(etx_dstaddr[31:0]),
+		      .data_out		(),
+		      .srcaddr_out	(),
+		      .packet_in	(etx_packet[PW-1:0]));//input
 
    //Only set valid if not wait 
    assign etx_valid = (tx_enable & etx_access & ~(etx_dstaddr[31:20]==ID)) &
@@ -77,23 +74,43 @@ module etx_protocol (/*AUTOARG*/
 			 (~etx_write & ~tx_rd_wait_sync)
 			 );
    
-
    //Prepare transaction / with burst
    always @ (posedge clk or posedge reset)
      if(reset)
        begin
 	  tx_packet[PW-1:0] <= 'b0;
 	  tx_access         <= 1'b0;	  
-	  tx_burst          <= 1'b0;//TODO
        end
    else if(~tx_io_wait)
        begin
 	  tx_packet[PW-1:0] <= etx_packet[PW-1:0];
 	  tx_access         <= etx_valid;
-	  tx_burst          <= 1'b0;//TODO
        end
    
-  
+   //#############################
+   //# Burst Detection
+   //#############################
+
+   packet2emesh p2m1 (.access_out	(last_access),
+		     .write_out		(last_write),
+		      .datamode_out	(last_datamode[1:0]),
+		     .ctrlmode_out	(last_ctrlmode[3:0]),
+		     .dstaddr_out	(last_dstaddr[31:0]),
+		     .data_out		(),
+		     .srcaddr_out	(),
+		     .packet_in		(tx_packet[PW-1:0]));//input
+
+   assign burst_addr[31:0]  = last_dstaddr[31:0]+ 4'd8;
+
+   assign burst_type_match = {last_ctrlmode[3:0],last_datamode[1:0],last_write}
+			      ==
+		   	      {etx_ctrlmode[3:0],etx_datamode[1:0], etx_write};
+   			      
+   assign tx_burst     = etx_write                             & //write 
+	       	        (etx_datamode[1:0]==2'b11)            & //double only
+			burst_type_match                      & //same types
+			(burst_addr[31:0]==etx_dstaddr[31:0]);  //inc by 8
+			
    //#############################
    //# Wait signals (async)
    //#############################
@@ -124,13 +141,8 @@ endmodule // etx_protocol
 // End:
 
 /*
-  File: etx_protocol.v
- 
-  This file is part of the Parallella Project.
-
   Copyright (C) 2014 Adapteva, Inc.
- Contributed by Fred Huettig <fred@adapteva.com>
- Contributed by Andreas Olofsson <andreas@adapteva.com>
+  Contributed by Andreas Olofsson <andreas@adapteva.com>
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

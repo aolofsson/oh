@@ -3,7 +3,7 @@ module etx_io (/*AUTOARG*/
    txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
    txo_data_n, tx_io_wait, tx_wr_wait, tx_rd_wait,
    // Inputs
-   ioreset, tx_lclk, tx_lclk90, tx_lclk_div4, txi_wr_wait_p,
+   reset, tx_lclk, tx_lclk90, tx_lclk_div4, txi_wr_wait_p,
    txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n, tx_packet, tx_access,
    tx_burst
    );
@@ -14,7 +14,7 @@ module etx_io (/*AUTOARG*/
    //###########
    //# reset, clocks
    //##########
-   input        ioreset;             //reset for io  
+   input        reset;             //reset for io  
    input 	tx_lclk;	     // fast clock for io
    input 	tx_lclk90;           // fast 90deg shifted lclk   
    input 	tx_lclk_div4;	     // slow clock for rest of logic   
@@ -84,7 +84,7 @@ module etx_io (/*AUTOARG*/
        tx_pointer[7:0] <= 8'b00000001; //new transaction
      else if (tx_pointer[6] & tx_burst)
        tx_pointer[7:0] <= 8'b00001000; //burst
-     else
+     else 
        tx_pointer[7:0] <= {tx_pointer[6:0],tx_pointer[7]};
 
    //#############################
@@ -93,8 +93,8 @@ module etx_io (/*AUTOARG*/
    //TODO: cleanup
    assign tx_io_wait = tx_access & ~tx_burst & ~tx_io_wait_reg;
       
-   always @ (posedge tx_lclk_div4 or posedge ioreset)
-     if(ioreset)
+   always @ (posedge tx_lclk_div4 or posedge reset)
+     if(reset)
        tx_io_wait_reg <= 1'b0;
      else	 
        tx_io_wait_reg <= tx_io_wait;
@@ -102,8 +102,8 @@ module etx_io (/*AUTOARG*/
    //#############################
    //# Frame Signal
    //#############################  
-   always @ (posedge tx_lclk or posedge ioreset)
-     if(ioreset)
+   always @ (posedge tx_lclk or posedge reset)
+     if(reset)
        tx_frame <= 1'b0;   
      else if(tx_pointer[0] & tx_access)
        tx_frame <= 1'b1;
@@ -115,22 +115,22 @@ module etx_io (/*AUTOARG*/
    //#############################  
    //optimize later...
    always @ (negedge tx_lclk)
-     case(tx_pointer[6:0])
+     case({tx_access,tx_pointer[6:0]})
        //Cycle0
-       7'b0000001: tx_data16[15:0] <= {ctrlmode[3:0],dstaddr[31:28],~write,7'b0};
+       8'b10000001: tx_data16[15:0] <= {ctrlmode[3:0],dstaddr[31:28],~write,7'b0};
        //Cycle1
-       7'b0000010: tx_data16[15:0] <= {dstaddr[19:12],dstaddr[27:20]};
+       8'b10000010: tx_data16[15:0] <= {dstaddr[19:12],dstaddr[27:20]};
        //Cycle2
-       7'b0000100: tx_data16[15:0] <= {dstaddr[3:0],datamode[1:0],write,access,
+       8'b10000100: tx_data16[15:0] <= {dstaddr[3:0],datamode[1:0],write,access,
 				        dstaddr[11:4]};       
        //Cycle3
-       7'b0001000: tx_data16[15:0] <= {data[23:16],data[31:24]};
+       8'b10001000: tx_data16[15:0] <= {data[23:16],data[31:24]};
        //Cycle4				      
-       7'b0010000: tx_data16[15:0] <= {data[7:0],data[15:8]};            
+       8'b10010000: tx_data16[15:0] <= {data[7:0],data[15:8]};            
        //Cycle5
-       7'b0100000: tx_data16[15:0] <= {srcaddr[23:16],srcaddr[31:24]};
+       8'b10100000: tx_data16[15:0] <= {srcaddr[23:16],srcaddr[31:24]};
        //Cycle6
-       7'b1000000: tx_data16[15:0] <= {srcaddr[7:0],srcaddr[15:8]};
+       8'b11000000: tx_data16[15:0] <= {srcaddr[7:0],srcaddr[15:8]};
        default  tx_data16[15:0]    <= 16'b0;
      endcase // case (tx_pointer[7:0])
              

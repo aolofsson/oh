@@ -4,7 +4,7 @@ module etx(/*AUTOARG*/
    txo_data_n, txrd_wait, txwr_wait, txrr_wait, etx_cfg_access,
    etx_cfg_packet,
    // Inputs
-   reset, ioreset, sys_clk, tx_lclk, tx_lclk90, tx_lclk_div4,
+   etx_reset, sys_reset, sys_clk, tx_lclk, tx_lclk90, tx_lclk_div4,
    txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n,
    txrd_access, txrd_packet, txwr_access, txwr_packet, txrr_access,
    txrr_packet, etx_cfg_wait
@@ -15,9 +15,11 @@ module etx(/*AUTOARG*/
    parameter RFAW    = 6;
    parameter ID      = 12'h000;
    
-   //Clocks,reset,config
-   input          reset;                       // reset for core logic 
-   input          ioreset;                     // reset for io
+   //Synched resets
+   input          etx_reset;                   // reset for core logic 
+   input 	  sys_reset;                   // reset for fifos   
+
+   //Clocks
    input 	  sys_clk;                     // clock for fifos   
    input 	  tx_lclk;	               // fast clock for io
    input 	  tx_lclk90;                     // 90 deg shifted lclk   
@@ -89,7 +91,8 @@ module etx(/*AUTOARG*/
 		      .txwr_fifo_access	(txwr_fifo_access),
 		      .txwr_fifo_packet	(txwr_fifo_packet[PW-1:0]),
 		      // Inputs
-		      .reset		(reset),
+		      .etx_reset	(etx_reset),
+		      .sys_reset	(sys_reset),
 		      .sys_clk		(sys_clk),
 		      .tx_lclk_div4	(tx_lclk_div4),
 		      .txrd_access	(txrd_access),
@@ -124,6 +127,7 @@ module etx(/*AUTOARG*/
    
    defparam etx_core.ID=ID;   
    etx_core etx_core (.clk		(tx_lclk_div4),
+		      .reset		(etx_reset),
 		      /*AUTOINST*/
 		      // Outputs
 		      .tx_access	(tx_access),		 // Templated
@@ -135,7 +139,6 @@ module etx(/*AUTOARG*/
 		      .etx_cfg_access	(etx_cfg_access),	 // Templated
 		      .etx_cfg_packet	(etx_cfg_packet[PW-1:0]), // Templated
 		      // Inputs
-		      .reset		(reset),
 		      .tx_io_wait	(tx_io_wait),		 // Templated
 		      .tx_rd_wait	(tx_rd_wait),		 // Templated
 		      .tx_wr_wait	(tx_wr_wait),		 // Templated
@@ -152,11 +155,11 @@ module etx(/*AUTOARG*/
    /*TRANSMIT I/O LOGIC                                       */
    /***********************************************************/
 
-   etx_io etx_io (
-		    /*AUTOINST*/
+   etx_io etx_io (.reset		(etx_reset),
+		  /*AUTOINST*/
 		  // Outputs
 		  .txo_lclk_p		(txo_lclk_p),
-		  .txo_lclk_n		(txo_lclk_n),
+		  .txo_lclk_n   	(txo_lclk_n),
 		  .txo_frame_p		(txo_frame_p),
 		  .txo_frame_n		(txo_frame_n),
 		  .txo_data_p		(txo_data_p[7:0]),
@@ -165,7 +168,6 @@ module etx(/*AUTOARG*/
 		  .tx_wr_wait		(tx_wr_wait),
 		  .tx_rd_wait		(tx_rd_wait),
 		  // Inputs
-		  .ioreset		(ioreset),
 		  .tx_lclk		(tx_lclk),
 		  .tx_lclk90		(tx_lclk90),
 		  .tx_lclk_div4		(tx_lclk_div4),

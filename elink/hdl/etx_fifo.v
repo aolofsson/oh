@@ -4,10 +4,11 @@ module etx_fifo(/*AUTOARG*/
    txrd_fifo_access, txrd_fifo_packet, txrr_fifo_access,
    txrr_fifo_packet, txwr_fifo_access, txwr_fifo_packet,
    // Inputs
-   reset, sys_clk, tx_lclk_div4, txrd_access, txrd_packet,
-   txwr_access, txwr_packet, txrr_access, txrr_packet, etx_cfg_wait,
-   txrd_fifo_wait, txrr_fifo_wait, txwr_fifo_wait
+   etx_reset, sys_reset, sys_clk, tx_lclk_div4, txrd_access,
+   txrd_packet, txwr_access, txwr_packet, txrr_access, txrr_packet,
+   etx_cfg_wait, txrd_fifo_wait, txrr_fifo_wait, txwr_fifo_wait
    );
+
    parameter AW      = 32;
    parameter DW      = 32;
    parameter PW      = 104;
@@ -15,7 +16,8 @@ module etx_fifo(/*AUTOARG*/
    parameter ID      = 12'h000;
    
    //Clocks,reset,config
-   input          reset;
+   input          etx_reset;
+   input          sys_reset;
    input 	  sys_clk;   
    input 	  tx_lclk_div4;	  // slow speed parallel clock
       
@@ -73,7 +75,8 @@ module etx_fifo(/*AUTOARG*/
                                .clk_in	   (sys_clk),
                                .access_in  (@"(substring vl-cell-name  0 4)"_access),
                                .rd_en      (@"(substring vl-cell-name  0 4)"_fifo_read),
-			       .reset	   (reset),
+			       .reset_in   (sys_reset),
+                               .reset_out  (etx_reset),
                                .packet_in  (@"(substring vl-cell-name  0 4)"_packet[PW-1:0]),
     );
     */
@@ -87,10 +90,11 @@ module etx_fifo(/*AUTOARG*/
 						 .packet_out		(txwr_fifo_packet[PW-1:0]), // Templated
 						 // Inputs
 						 .clk_in		(sys_clk),	 // Templated
-						 .clk_out		(tx_lclk_div4),	 // Templated
-						 .reset			(reset),	 // Templated
+						 .reset_in		(sys_reset),	 // Templated
 						 .access_in		(txwr_access),	 // Templated
 						 .packet_in		(txwr_packet[PW-1:0]), // Templated
+						 .clk_out		(tx_lclk_div4),	 // Templated
+						 .reset_out		(etx_reset),	 // Templated
 						 .wait_in		(txwr_fifo_wait)); // Templated
    
    //Read request fifo (from slave)
@@ -102,10 +106,11 @@ module etx_fifo(/*AUTOARG*/
 						  .packet_out		(txrd_fifo_packet[PW-1:0]), // Templated
 						  // Inputs
 						  .clk_in		(sys_clk),	 // Templated
-						  .clk_out		(tx_lclk_div4),	 // Templated
-						  .reset		(reset),	 // Templated
+						  .reset_in		(sys_reset),	 // Templated
 						  .access_in		(txrd_access),	 // Templated
 						  .packet_in		(txrd_packet[PW-1:0]), // Templated
+						  .clk_out		(tx_lclk_div4),	 // Templated
+						  .reset_out		(etx_reset),	 // Templated
 						  .wait_in		(txrd_fifo_wait)); // Templated
    
 
@@ -120,10 +125,11 @@ module etx_fifo(/*AUTOARG*/
 						 .packet_out		(txrr_fifo_packet[PW-1:0]), // Templated
 						 // Inputs
 						 .clk_in		(sys_clk),	 // Templated
-						 .clk_out		(tx_lclk_div4),	 // Templated
-						 .reset			(reset),	 // Templated
+						 .reset_in		(sys_reset),	 // Templated
 						 .access_in		(txrr_access),	 // Templated
 						 .packet_in		(txrr_packet[PW-1:0]), // Templated
+						 .clk_out		(tx_lclk_div4),	 // Templated
+						 .reset_out		(etx_reset),	 // Templated
 						 .wait_in		(txrr_fifo_wait)); // Templated
   
 

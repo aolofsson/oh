@@ -1,10 +1,11 @@
 module erx_io (/*AUTOARG*/
    // Outputs
-   rx_clk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
+   rx_lclk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, rx_access, rx_burst, rx_packet,
    // Inputs
-   reset, rx_lclk, rx_lclk_div4, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
-   rxi_frame_n, rxi_data_p, rxi_data_n, rx_wr_wait, rx_rd_wait
+   reset, rx_lclk, rx_lclk_div4, rx_ref_clk, rxi_lclk_p, rxi_lclk_n,
+   rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, rx_wr_wait,
+   rx_rd_wait
    );
 
    parameter IOSTANDARD = "LVDS_25";
@@ -16,7 +17,8 @@ module erx_io (/*AUTOARG*/
    input       reset;                       // reset
    input       rx_lclk;                     // fast I/O clock
    input       rx_lclk_div4;                // slow clock
-   output      rx_clk_pll;                  // clock output for pll
+   input       rx_ref_clk;                  // idelay reference clock   
+   output      rx_lclk_pll;                 // clock output for pll
    
    //##########################
    //# elink pins
@@ -89,7 +91,7 @@ module erx_io (/*AUTOARG*/
 	 ibuf_lclk
 	   (.I     (rxi_lclk_p),
             .IB    (rxi_lclk_n),
-            .O     (rx_clk_pll)
+            .O     (rx_lclk_pll)
 	    );
    
    //#####################
@@ -131,11 +133,11 @@ module erx_io (/*AUTOARG*/
    //write Pointer   
    always @ (posedge rx_lclk)
      if (~rx_frame)
-       rx_pointer[6:0]<=7'b0000001; //new frame
+       rx_pointer[6:0] <= 7'b0000001; //new frame
      else if (rx_pointer[6])
-       rx_pointer[6:0]<=7'b0001000; //anticipate burst
+       rx_pointer[6:0] <= 7'b0001000; //anticipate burst
      else if(rx_frame)
-       rx_pointer[6:0]<={rx_pointer[5:0],1'b0};//middle of frame
+       rx_pointer[6:0] <= {rx_pointer[5:0],1'b0};//middle of frame
       
    //convert to 112 bit packet
    always @ (posedge rx_lclk)
@@ -269,7 +271,7 @@ endmodule // erx_io
 
 /*
  Copyright (C) 2014 Adapteva, Inc.
- Contributed by Andreas Olofsson <fred@adapteva.com>
+ Contributed by Andreas Olofsson <andreas@adapteva.com>
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
