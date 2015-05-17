@@ -64,67 +64,13 @@ module erx_io (/*AUTOARG*/
    reg [PW-1:0]  rx_packet;
    reg 		 rx_burst;
    wire 	 rx_lclk_iddr;
+   wire [8:0] 	 rxi_delay_in;
+   wire [8:0] 	 rxi_delay_out;
    
-   //################################
-   //# Input Buffers Instantiation
-   //################################
+   //#####################
+   //#FRAME DETECTION
+   //#####################
 
-   IBUFDS  #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTANDARD))
-   ibuf_data[7:0]
-     (.I     (rxi_data_p[7:0]),
-      .IB    (rxi_data_n[7:0]),
-      .O     (rxi_data[7:0]));
-   
-   IBUFDS #(.DIFF_TERM  ("TRUE"), .IOSTANDARD (IOSTANDARD))
-   ibuf_frame
-     (.I     (rxi_frame_p),
-      .IB    (rxi_frame_n),
-      .O     (rxi_frame));
-
-   IBUFDS #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTANDARD))
-   ibuf_lclk
-     (.I     (rxi_lclk_p),
-      .IB    (rxi_lclk_n),
-      .O     (rxi_lclk)
-      );
-      
-   BUFG bufg_lclk (.I(rxi_lclk), 
-		   .O(rx_lclk_pll));
-    
-   //#############################
-   //# IDDR SAMPLERS
-   //#############################  
-   BUFIO bufio_lclk (.I(rxi_lclk), 
-		     .O(rx_lclk_iddr));
-   //DATA
-   genvar        i;
-   generate for(i=0; i<8; i=i+1)
-     begin : gen_iddr
-	IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"))
-	iddr_data (
-		   .Q1 (rx_word[i]),
-		   .Q2 (rx_word[i+8]),
-		   .C  (rx_lclk_iddr),
-		   .CE (1'b1),
-		   .D  (rxi_data[i]),
-		   .R  (reset),
-		   .S  (1'b0)
-		   );
-     end
-     endgenerate
-
-   //FRAME
-   IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"))
-	iddr_frame (
-		   .Q1 (rx_frame_old),
-		   .Q2 (rx_frame),    
-		   .C  (rx_lclk_iddr),
-		   .CE (1'b1),
-		   .D  (rxi_frame),
-		   .R  (reset),
-		   .S  (1'b0)
-		   );
-              
    assign new_tran = rx_frame & ~rx_frame_old;
 
    //#####################
@@ -227,33 +173,122 @@ module erx_io (/*AUTOARG*/
 	  rx_packet[PW-1:0] <= rx_packet_lclk[PW-1:0];
 	  rx_burst          <= burst;
        end
-  
-   //#####################################
-   //# Wait signals (asynchronous)
-   //#####################################
 
-   OBUFDS 
-     #(
-       .IOSTANDARD(IOSTANDARD),
-       .SLEW("SLOW")
-       ) OBUFDS_RXWRWAIT
-       (
-        .O(rxo_wr_wait_p),
-        .OB(rxo_wr_wait_n),
-        .I(rx_wr_wait)
-        );
+
+   //################################
+   //# I/O Buffers Instantiation
+   //################################
+
+   IBUFDS  #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTANDARD))
+   ibuf_data[7:0] 
+     (.I     (rxi_data_p[7:0]),
+      .IB    (rxi_data_n[7:0]),
+      .O     (rxi_data[7:0]));
    
-   OBUFDS 
-     #(
-       .IOSTANDARD(IOSTANDARD),
-       .SLEW("SLOW")
-       ) OBUFDS_RXRDWAIT
-       (
-        .O(rxo_rd_wait_p),
-        .OB(rxo_rd_wait_n),
-        .I(rx_rd_wait)
-        );
+   IBUFDS #(.DIFF_TERM  ("TRUE"), .IOSTANDARD (IOSTANDARD))
+   ibuf_frame
+     (.I     (rxi_frame_p),
+      .IB    (rxi_frame_n),
+      .O     (rxi_frame));
 
+   IBUFDS #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTANDARD))
+   ibuf_lclk (.I     (rxi_lclk_p),
+	      .IB    (rxi_lclk_n),
+	      .O     (rxi_lclk)
+	      );
+      
+   OBUFDS #(.IOSTANDARD(IOSTANDARD),.SLEW("SLOW")) 
+   obufds_wrwait (
+		    .O(rxo_wr_wait_p),
+		    .OB(rxo_wr_wait_n),
+		    .I(rx_wr_wait)
+		    );
+   
+   OBUFDS  #(.IOSTANDARD(IOSTANDARD),.SLEW("SLOW")) 
+   obufds_rdwait  (.O(rxo_rd_wait_p),
+		   .OB(rxo_rd_wait_n),
+		   .I(rx_rd_wait)
+		   );
+
+   //###################################
+   //#RX CLOCK
+   //###################################
+   BUFG bufg_lclk (.I(rxi_lclk), .O(rx_lclk_pll));
+
+   //###################################
+   //#IDELAY CIRCUIT
+   //###################################
+
+   assign  rxi_delay_in[8:0] ={rxi_frame,rxi_data[7:0]};
+   
+   //Do these need parameters?
+   IDELAYCTRL idelayctrl_inst (.RDY(),
+			       .REFCLK(rx_ref_clk),//200MHz clk (78ps tap delay)
+			       .RST(1'b0)
+			       );
+   
+   genvar        j;
+   generate for(j=0; j<9; j=j+1)
+     begin : gen_idelay	     
+	IDELAYE2 #(.CINVCTRL_SEL("FALSE"),
+		   .DELAY_SRC("IDATAIN"), 
+		   .HIGH_PERFORMANCE_MODE("FALSE"),
+		   .IDELAY_TYPE("FIXED"),
+		   .IDELAY_VALUE(14),
+		   .PIPE_SEL("FALSE"),
+		   .REFCLK_FREQUENCY(200.0),
+		   .SIGNAL_PATTERN("DATA"))
+	idelay_inst (.CNTVALUEOUT(),                   
+		     .DATAOUT(rxi_delay_out[j]),
+		     .C(1'b0),
+		     .CE(1'b0),
+		     .CINVCTRL(1'b0),
+		     .CNTVALUEIN(5'b0),
+		     .DATAIN(1'b0),
+		     .IDATAIN(rxi_delay_in[j]),
+		     .INC(1'b0),
+		     .LD(1'b0),
+		     .LDPIPEEN(1'b0),
+		     .REGRST(1'b0)
+		     );
+     end // block: gen_idelay
+   endgenerate
+
+   
+   //#############################
+   //# IDDR SAMPLERS
+   //#############################  
+   BUFIO bufio_lclk (.I(rxi_lclk), 
+		     .O(rx_lclk_iddr));
+   //DATA
+   genvar        i;
+   generate for(i=0; i<8; i=i+1)
+     begin : gen_iddr
+	IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"))
+	iddr_data (
+		   .Q1 (rx_word[i]),
+		   .Q2 (rx_word[i+8]),
+		   .C  (rx_lclk_iddr),
+		   .CE (1'b1),
+		   .D  (rxi_delay_out[i]),
+		   .R  (reset),
+		   .S  (1'b0)
+		   );
+     end
+     endgenerate
+
+   //FRAME
+   IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"))
+	iddr_frame (
+		   .Q1 (rx_frame_old),
+		   .Q2 (rx_frame),    
+		   .C  (rx_lclk_iddr),
+		   .CE (1'b1),
+		   .D  (rxi_delay_out[8]),
+		   .R  (reset),
+		   .S  (1'b0)
+		   );	
+   
 endmodule // erx_io
 // Local Variables:
 // verilog-library-directories:("." "../../emesh/hdl" "../../common/hdl")
@@ -262,6 +297,7 @@ endmodule // erx_io
 /*
  Copyright (C) 2014 Adapteva, Inc.
  Contributed by Andreas Olofsson <andreas@adapteva.com>
+ Contributed by Gunnar Hillerstrom
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
