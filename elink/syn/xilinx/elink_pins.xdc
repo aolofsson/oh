@@ -12,7 +12,7 @@ set_property IOSTANDARD LVDS_25  [get_ports {cclk*}]
 
 set_property IOSTANDARD LVCMOS25 [get_ports {start}]
 set_property IOSTANDARD LVCMOS25 [get_ports {chipid}]
-set_property IOSTANDARD LVCMOS25 [get_ports {resetb}]
+set_property IOSTANDARD LVCMOS25 [get_ports {chip_resetb}]
 set_property IOSTANDARD LVCMOS25 [get_ports {reset}]
 set_property IOSTANDARD LVDS_25  [get_ports {sys_clk*}]
 set_property IOSTANDARD LVDS_25  [get_ports {clkin_*}]
@@ -22,7 +22,7 @@ set_property IOSTANDARD LVDS_25  [get_ports {clkin_*}]
 #####################
 set_property PACKAGE_PIN H16 [get_ports {cclk_p}]
 set_property PACKAGE_PIN H17 [get_ports {cclk_n}]
-set_property PACKAGE_PIN G14 [get_ports {resetb}]
+set_property PACKAGE_PIN G14 [get_ports {chip_resetb}]
 
 set_property PACKAGE_PIN F16 [get_ports {txo_lclk_p}]
 set_property PACKAGE_PIN F17 [get_ports {txo_lclk_n}]
