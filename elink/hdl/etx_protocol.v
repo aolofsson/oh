@@ -39,6 +39,8 @@ module etx_protocol (/*AUTOARG*/
    //###################################################################
    //# Local regs & wires
    //###################################################################
+   reg 		   tx_burst;
+   
    reg           tx_access;
    reg [PW-1:0]  tx_packet; 
    wire		 tx_rd_wait_sync;
@@ -57,6 +59,7 @@ module etx_protocol (/*AUTOARG*/
    wire 	 burst_match;
    wire 	 burst_type_match;
    wire [31:0] 	 burst_addr;
+   wire 	 burst_addr_match;
     
    //packet to emesh bundle
    packet2emesh p2m0 (.access_out	(),
@@ -79,13 +82,23 @@ module etx_protocol (/*AUTOARG*/
      if(reset)
        begin
 	  tx_packet[PW-1:0] <= 'b0;
-	  tx_access         <= 1'b0;	  
+	  tx_access         <= 1'b0;
        end
    else if(~tx_io_wait)
-       begin
-	  tx_packet[PW-1:0] <= etx_packet[PW-1:0];
-	  tx_access         <= etx_valid;
+     begin
+	tx_packet[PW-1:0] <= etx_packet[PW-1:0];
+	tx_access         <= etx_valid;
        end
+
+   
+   always @ (posedge clk)
+     if(reset)
+       tx_burst <= 1'b0;   
+     else       
+       tx_burst          <= (etx_write                  & //write 
+	       	            (etx_datamode[1:0]==2'b11) & //double only
+			    burst_type_match           & //same types
+			    burst_addr_match);           //inc by 8
    
    //#############################
    //# Burst Detection
@@ -100,20 +113,15 @@ module etx_protocol (/*AUTOARG*/
 		     .srcaddr_out	(),
 		     .packet_in		(tx_packet[PW-1:0]));//input
 
-   assign burst_addr[31:0]  = last_dstaddr[31:0] + 4'd8;
+   assign burst_addr[31:0]   = (last_dstaddr[31:0] + 4'd8);
+   
+   assign burst_addr_match  = (burst_addr[31:0] == etx_dstaddr[31:0]);
 
    assign burst_type_match = {last_ctrlmode[3:0],last_datamode[1:0],last_write}
 			      ==
 		   	      {etx_ctrlmode[3:0],etx_datamode[1:0], etx_write};
    			      
-   assign tx_burst = 1'b0;   
-   /*
-   assign tx_burst     = etx_write                            & //write 
-	       	        (etx_datamode[1:0]==2'b11)            & //double only
-			burst_type_match                      & //same types
-			(burst_addr[31:0]==etx_dstaddr[31:0]);  //inc by 8
-			
-    */
+
    //#############################
    //# Wait signals (async)
    //#############################

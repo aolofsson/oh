@@ -36,10 +36,32 @@ module erx_protocol (/*AUTOARG*/
    output [PW-1:0] erx_packet;
    output 	   remap_bypass;    //needed for remapping logic
 
-   assign erx_access          = rx_access;
-   assign erx_packet[PW-1:0]  = rx_packet[PW-1:0];
+   reg [31:0] 	   dstaddr_reg;   
+   wire [31:0] 	   dstaddr_next;
+   wire [31:0] 	   dstaddr_mux;
+   reg 		   erx_access;
+   reg [PW-1:0]    erx_packet;
    
+   //Address generator for bursting
+   always @ (posedge clk)
+     if(rx_access)
+       dstaddr_reg[31:0]     <= dstaddr_mux[31:0];
 
+   assign dstaddr_next[31:0] = dstaddr_reg[31:0] + 4'b1000;
+   
+   assign dstaddr_mux[31:0] =  rx_burst ? dstaddr_next[31:0] :
+			                  rx_packet[39:8];
+      
+   //Pipeline stage
+   always @ (posedge clk)
+     begin
+	erx_access          <= rx_access;      
+	erx_packet[PW-1:0]  <= {rx_packet[PW-1:40],
+				 dstaddr_mux[31:0],
+				 rx_packet[7:0]
+			      };
+     end
+  
 endmodule // erx_protocol
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")

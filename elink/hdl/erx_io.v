@@ -68,12 +68,6 @@ module erx_io (/*AUTOARG*/
    wire [8:0] 	 rxi_delay_out;
    
    //#####################
-   //#FRAME DETECTION
-   //#####################
-
-   assign new_tran = rx_frame & ~rx_frame_old;
-
-   //#####################
    //#CREATE 112 BIT PACKET 
    //#####################
    
@@ -114,7 +108,14 @@ module erx_io (/*AUTOARG*/
 	access       <= rx_pointer[6];
 	valid_packet <= access;//data pipeline
      end
-     
+   
+   reg burst_detect;   
+   always @ (posedge rx_lclk)
+     if(access & rx_frame)
+       burst_detect <= 1'b1;
+     else if(~rx_frame)
+       burst_detect <= 1'b0;
+   
    //###################################
    //#SAMPLE AND HOLD DATA
    //###################################
@@ -123,8 +124,8 @@ module erx_io (/*AUTOARG*/
    always @ (posedge rx_lclk)
      if(access)   
        begin
-
-	  burst                 <= rx_frame;	    //burst detected (for next cycle)
+	  //pipelin burst (delay by one frame)
+	  burst                 <= burst_detect;	  
 	  //access
 	  rx_packet_lclk[0]     <= rx_sample[40];
 	  //write
@@ -163,7 +164,6 @@ module erx_io (/*AUTOARG*/
 				 .reset			(reset)
 				 );
 
-
    always @ (posedge rx_lclk_div4)
      rx_access <= access_wide;
    
@@ -171,7 +171,7 @@ module erx_io (/*AUTOARG*/
      if(access_wide)
        begin
 	  rx_packet[PW-1:0] <= rx_packet_lclk[PW-1:0];
-	  rx_burst          <= burst;
+	  rx_burst          <= burst;	  
        end
 
 
@@ -213,6 +213,7 @@ module erx_io (/*AUTOARG*/
    //###################################
    //#RX CLOCK
    //###################################
+
    BUFG bufg_lclk (.I(rxi_lclk), .O(rx_lclk_pll));
 
    //###################################
@@ -280,7 +281,7 @@ module erx_io (/*AUTOARG*/
    //FRAME
    IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"))
 	iddr_frame (
-		   .Q1 (rx_frame_old),
+		   .Q1 (),
 		   .Q2 (rx_frame),    
 		   .C  (rx_lclk_iddr),
 		   .CE (1'b1),

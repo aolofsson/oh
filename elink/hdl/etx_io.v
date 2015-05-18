@@ -46,7 +46,12 @@ module etx_io (/*AUTOARG*/
    reg 		  tx_access_reg;
    reg 		  tx_frame;
    reg 		  tx_io_wait_reg;
-
+   reg 		  io_reset;
+   reg 		  io_reset_in;
+   reg [PW-1:0]   tx_packet_reg;
+   reg [63:0] 	  tx_double;
+   reg [2:0] 	  tx_state_reg;
+   reg [2:0] 	  tx_state;
    //############
    //# WIRES
    //############
@@ -61,29 +66,105 @@ module etx_io (/*AUTOARG*/
    wire [7:0] 	  txo_data;
    wire 	  txo_frame;   
    wire 	  txo_lclk90;
- 
+   reg 		  tx_io_wait;
 
    //#############################
-   //# Disassemble packet (for clarity)
+   //# Transmit state machine
    //#############################  
-   packet2emesh p2e (
-		     // Outputs
-		     .access_out	(access),
-		     .write_out		(write),
-		     .datamode_out	(datamode[1:0]),
-		     .ctrlmode_out	(ctrlmode[3:0]),
-		     .dstaddr_out	(dstaddr[31:0]),
-		     .data_out		(data[31:0]),
-		     .srcaddr_out	(srcaddr[31:0]),
-		     // Inputs
-		     .packet_in		(tx_packet[PW-1:0]));
+  
+`define IDLE    3'b000
+`define CYCLE1  3'b001
+`define CYCLE2  3'b010
+`define CYCLE3  3'b011
+`define CYCLE4  3'b100
+`define CYCLE5  3'b101
+`define CYCLE6  3'b110
+`define CYCLE7  3'b111
+     
+always @ (posedge tx_lclk)
+  if(reset)
+    tx_state[2:0] <= `IDLE;
+  else
+    case (tx_state[2:0])
+      `IDLE   : tx_state[2:0] <= tx_access ? `CYCLE1 : `IDLE;
+      `CYCLE1 : tx_state[2:0] <= `CYCLE2;
+      `CYCLE2 : tx_state[2:0] <= `CYCLE3;
+      `CYCLE3 : tx_state[2:0] <= `CYCLE4;
+      `CYCLE4 : tx_state[2:0] <= `CYCLE5;
+      `CYCLE5 : tx_state[2:0] <= `CYCLE6;
+      `CYCLE6 : tx_state[2:0] <= `CYCLE7;
+      `CYCLE7 : tx_state[2:0] <= tx_burst ? `CYCLE4 : `IDLE;	
+    endcase // case (tx_state)   
    
+   assign tx_new_frame = (tx_state[2:0]==`CYCLE1);
+
+ 
+   //Creating wait pulse for slow clock domain
+   always @ (posedge tx_lclk)
+     if(reset | ~tx_access)
+       tx_io_wait <= 1'b0;
+     else if ((tx_state[2:0] ==`CYCLE4) & ~tx_burst)
+       tx_io_wait <= 1'b1;
+     else if (tx_state[2:0]==`CYCLE7)
+       tx_io_wait <= 1'b0;
+  
+   //Create frame signal for output
+   always @ (posedge tx_lclk)
+     begin
+	tx_state_reg[2:0]     <= tx_state[2:0];
+	tx_frame              <= |(tx_state_reg[2:0]);
+     end
+
+   //#############################
+   //# 2 CYCLE PACKET PIPELINE
+   //#############################  
+   always @ (posedge tx_lclk)
+     if (tx_access)
+       tx_packet_reg[PW-1:0] <= tx_packet[PW-1:0];
+
+    packet2emesh p2e (.access_out	(access),
+		      .write_out	(write),
+		      .datamode_out	(datamode[1:0]),
+		      .ctrlmode_out	(ctrlmode[3:0]),
+		      .dstaddr_out	(dstaddr[31:0]),
+		      .data_out		(data[31:0]),
+		      .srcaddr_out	(srcaddr[31:0]),
+		      .packet_in	(tx_packet_reg[PW-1:0]));
+ 
+   always @ (posedge tx_lclk)
+     if (tx_new_frame)
+       tx_double[63:0] <= {16'b0,//16
+			   write,7'b0,ctrlmode[3:0],//12
+			   dstaddr[31:0],datamode[1:0],write,access};//36
+     else if(tx_state[2:0]==`CYCLE4)
+       tx_double[63:0] <= {data[31:0],srcaddr[31:0]};
+  
+   //#############################
+   //# SELECTING DATA FOR TRANSMIT
+   //#############################  
+   
+   always @ (posedge tx_lclk)
+     case(tx_state_reg[2:0])
+       //Cycle1
+       3'b001: tx_data16[15:0]  <= tx_double[47:32];       
+       //Cycle2
+       3'b010: tx_data16[15:0]  <= tx_double[31:16];       
+       //Cycle3
+       3'b011: tx_data16[15:0]  <= tx_double[15:0];       
+       //Cycle4				      
+       3'b100: tx_data16[15:0]  <= tx_double[63:48];       
+       //Cycle5
+       3'b101: tx_data16[15:0]  <= tx_double[47:32];       
+       //Cycle6
+       3'b110: tx_data16[15:0]  <= tx_double[31:16];       
+       //Cycle7
+       3'b111: tx_data16[15:0]  <= tx_double[15:0];       
+       default  tx_data16[15:0] <= 16'b0;
+     endcase // case (tx_state[2:0])
+                
    //#############################
    //# RESET SYNCHRONIZER
-   //#############################  
-   reg 		  io_reset;
-   reg 		  io_reset_in;
-   
+   //#############################       
    always @ (posedge tx_lclk or posedge reset)
      if(reset)
        begin
@@ -95,66 +176,7 @@ module etx_io (/*AUTOARG*/
 	  io_reset_in  <= 1'b0;
 	  io_reset     <= io_reset_in; 
        end
-      
-   //#############################
-   //# Transaction state machine
-   //#############################  
-   always @ (posedge tx_lclk)
-     if (~tx_access)
-       tx_pointer[7:0] <= 8'b00000001; //new transaction
-     else if (tx_pointer[6] & tx_burst)
-       tx_pointer[7:0] <= 8'b00001000; //burst
-     else 
-       tx_pointer[7:0] <= {tx_pointer[6:0],tx_pointer[7]};
-
-   //#############################
-   //# Frame Signal
-   //#############################  
-   //TODO: cleanup
-   assign tx_io_wait = tx_access & ~tx_burst & ~tx_io_wait_reg;
-      
-   always @ (posedge tx_lclk_div4)
-     if(reset)
-       tx_io_wait_reg <= 1'b0;
-     else	 
-       tx_io_wait_reg <= tx_io_wait;
-   
-   //#############################
-   //# Frame Signal
-   //#############################  
-   
-   always @ (posedge tx_lclk)
-     if(io_reset)
-       tx_frame <= 1'b0;   
-     else if(tx_pointer[0] & tx_access)
-       tx_frame <= 1'b1;
-     else if(tx_pointer[7] & ~tx_burst)
-       tx_frame <= 1'b0;
-   
-   //#############################
-   //# SELECTING DATA PER CYCLE
-   //#############################  
-   always @ (posedge tx_lclk)
-     case({tx_access,tx_pointer[6:0]})
-       //Cycle0
-       8'b10000001: tx_data16[15:0] <= {~write,7'b0,ctrlmode[3:0],dstaddr[31:28]};
-       //Cycle1
-       8'b10000010: tx_data16[15:0] <= {dstaddr[27:20],dstaddr[19:12]};
-       //Cycle2
-       8'b10000100: tx_data16[15:0] <= {dstaddr[11:4],
-					dstaddr[3:0],datamode[1:0],write,access
-				        };       
-       //Cycle3
-       8'b10001000: tx_data16[15:0] <= {data[31:24],data[23:16]};
-       //Cycle4				      
-       8'b10010000: tx_data16[15:0] <= {data[15:8],data[7:0]};            
-       //Cycle5
-       8'b10100000: tx_data16[15:0] <= {srcaddr[31:24],srcaddr[23:16]};
-       //Cycle6
-       8'b11000000: tx_data16[15:0] <= {srcaddr[15:8],srcaddr[7:0]};
-       default  tx_data16[15:0]    <= 16'b0;
-     endcase // case (tx_pointer[7:0])
-             
+     
    //#############################
    //# ODDR DRIVERS
    //#############################  
