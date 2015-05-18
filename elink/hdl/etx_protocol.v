@@ -75,7 +75,7 @@ module etx_protocol (/*AUTOARG*/
 			 );
    
    //Prepare transaction / with burst
-   always @ (posedge clk or posedge reset)
+   always @ (posedge clk)
      if(reset)
        begin
 	  tx_packet[PW-1:0] <= 'b0;

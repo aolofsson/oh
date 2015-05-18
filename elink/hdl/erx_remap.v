@@ -70,7 +70,7 @@ module erx_remap (/*AUTOARG*/
 			     (remap_mode[1:0]==2'b01)    ? static_remap[31:0] :
 	  		                                   dynamic_remap[31:0];
       
-   always @ (posedge clk or posedge reset)
+   always @ (posedge clk)
      if (reset)
        begin
 	  emesh_access_out         <= 'b0;

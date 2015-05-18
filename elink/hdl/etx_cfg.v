@@ -85,7 +85,7 @@ module etx_cfg (/*AUTOARG*/
    //###########################
    //# TX CONFIG
    //###########################
-   always @ (posedge clk or posedge reset)
+   always @ (posedge clk)
      if(reset)
        ecfg_tx_config_reg[10:0] <= 11'b0;
      else if (ecfg_tx_config_write)
@@ -101,7 +101,7 @@ module etx_cfg (/*AUTOARG*/
    //###########################
    //# STATUS REGISTER
    //###########################   
-   always @ (posedge clk or posedge reset)
+   always @ (posedge clk)
      if(reset)
        ecfg_tx_status_reg[2:0] <= 'd0;
      else

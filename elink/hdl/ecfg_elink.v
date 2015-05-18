@@ -98,7 +98,7 @@ module ecfg_elink (/*AUTOARG*/
    //###########################
    //# RESET REG
    //###########################
-    always @ (posedge clk or posedge reset)
+    always @ (posedge clk)
       if(reset)
 	ecfg_reset_reg <= 1'b0;         
       else if (ecfg_reset_write)
@@ -109,7 +109,7 @@ module ecfg_elink (/*AUTOARG*/
    //###########################
    //# CCLK/LCLK (PLL)
    //###########################
-    always @ (posedge clk or posedge reset)
+    always @ (posedge clk)
      if(reset)
        ecfg_clk_reg[15:0] <= 16'h573;//all clocks on at lowest speed   
      else if (ecfg_clk_write)
@@ -120,7 +120,7 @@ module ecfg_elink (/*AUTOARG*/
    //###########################
    //# CHIPID
    //###########################
-   always @ (posedge clk or posedge reset)
+   always @ (posedge clk)
      if(reset)
        ecfg_chipid_reg[11:0] <= DEFAULT_CHIPID;
      else if (ecfg_chipid_write)

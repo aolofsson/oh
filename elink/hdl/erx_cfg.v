@@ -78,7 +78,7 @@ module erx_cfg (/*AUTOARG*/
    //###########################
    //# RXCFG
    //###########################
-   always @ (posedge clk or posedge reset)
+   always @ (posedge clk)
      if(reset)
        ecfg_rx_reg[31:0] <= 'b0;
      else if (ecfg_rx_write)
@@ -100,7 +100,7 @@ module erx_cfg (/*AUTOARG*/
    //###########################1
    //# DEBUG
    //###########################   
-   always @ (posedge clk or posedge reset)
+   always @ (posedge clk)
      if(reset)
        ecfg_rx_status_reg[2:0] <= 'b0;   
      else

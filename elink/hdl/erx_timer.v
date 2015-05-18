@@ -37,7 +37,7 @@ module erx_timer (/*AUTOARG*/
    assign timer_en = |(timer_cfg[1:0]);
    
   
-   always @ (posedge clk or posedge reset)
+   always @ (posedge clk)
      if(reset)
        begin
 	  do_count <=1'b0;	  

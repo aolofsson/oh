@@ -14,7 +14,7 @@ module etx_io (/*AUTOARG*/
    //###########
    //# reset, clocks
    //##########
-   input        reset;             //reset for io  
+   input        reset;               //reset for io  
    input 	tx_lclk;	     // fast clock for io
    input 	tx_lclk90;           // fast 90deg shifted lclk   
    input 	tx_lclk_div4;	     // slow clock for rest of logic   
@@ -61,7 +61,8 @@ module etx_io (/*AUTOARG*/
    wire [7:0] 	  txo_data;
    wire 	  txo_frame;   
    wire 	  txo_lclk90;
-   
+ 
+
    //#############################
    //# Disassemble packet (for clarity)
    //#############################  
@@ -77,7 +78,24 @@ module etx_io (/*AUTOARG*/
 		     // Inputs
 		     .packet_in		(tx_packet[PW-1:0]));
    
+   //#############################
+   //# RESET SYNCHRONIZER
+   //#############################  
+   reg 		  io_reset;
+   reg 		  io_reset_in;
    
+   always @ (posedge tx_lclk or posedge reset)
+     if(reset)
+       begin
+	  io_reset_in   <= 1'b1;
+	  io_reset      <= 1'b1;
+       end
+     else
+       begin
+	  io_reset_in  <= 1'b0;
+	  io_reset     <= io_reset_in; 
+       end
+      
    //#############################
    //# Transaction state machine
    //#############################  
@@ -95,7 +113,7 @@ module etx_io (/*AUTOARG*/
    //TODO: cleanup
    assign tx_io_wait = tx_access & ~tx_burst & ~tx_io_wait_reg;
       
-   always @ (posedge tx_lclk_div4 or posedge reset)
+   always @ (posedge tx_lclk_div4)
      if(reset)
        tx_io_wait_reg <= 1'b0;
      else	 
@@ -105,8 +123,8 @@ module etx_io (/*AUTOARG*/
    //# Frame Signal
    //#############################  
    
-   always @ (posedge tx_lclk or posedge reset)
-     if(reset)
+   always @ (posedge tx_lclk)
+     if(io_reset)
        tx_frame <= 1'b0;   
      else if(tx_pointer[0] & tx_access)
        tx_frame <= 1'b1;
@@ -166,7 +184,7 @@ module etx_io (/*AUTOARG*/
 	      .CE (1'b1),
 	      .D1 (tx_frame),
 	      .D2 (tx_frame),
-	      .R  (reset), //TODO: should this be buffered?
+	      .R  (io_reset), //TODO: should this be buffered?
 	      .S  (1'b0)
 	      );
    
@@ -178,7 +196,7 @@ module etx_io (/*AUTOARG*/
 	      .CE (1'b1),
 	      .D1 (1'b1),
 	      .D2 (1'b0),
-	      .R  (reset),//make TX clock quiet during reset
+	      .R  (io_reset),
 	      .S  (1'b0)
 	      );
 		  

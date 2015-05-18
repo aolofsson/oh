@@ -135,7 +135,7 @@ module ecfg_if (/*AUTOARG*/
    //Access out packet  
    assign access_forward = (mi_rx_en | mi_rd);
 
-   always @ (posedge  clk or posedge reset)
+   always @ (posedge  clk)
      if(reset)
        access_out   <= 1'b0;
      else if(~wait_in)
