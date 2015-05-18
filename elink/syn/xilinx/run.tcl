@@ -25,6 +25,10 @@ synth_design -top $TOP -part $PART
 write_checkpoint -force $OUTDIR/post_syn.dcp
 
 #report timing
+check_timing -verbose -file $OUTDIR/check_timing.rpt
+report_clocks -file $OUTDIR/clock_basic.rpt
+report_clock_interaction -delay_type min_max -significant_digits 3 -file $OUTDIR/clock_cdc.rpt
+report_clock_networks -file $OUTDIR/clock_networks.rpt
 report_timing_summary -file $OUTDIR/post_syn_timing_summary.rpt
 report_utilization -file $OUTDIR/post_syn_util.rpt
 
@@ -43,7 +47,9 @@ phys_opt_design
 #create a checkpoint
 write_checkpoint -force $OUTDIR/post_place.dcp
 
-#post placement reporyts
+#post placement repororts
+
+
 report_clock_utilization -file $OUTDIR/clock_util.rpt
 report_utilization -file $OUTDIR/post_place_util.rpt
 report_timing_summary -file $OUTDIR/post_place_timing_summary.rpt
