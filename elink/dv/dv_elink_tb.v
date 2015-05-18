@@ -51,7 +51,7 @@ module dv_elink_tb();
 
    //Forever clock
    always
-     #1  clk = ~clk; //fast clock
+     #5  clk = ~clk; //system clock (100MHz)
    
    wire clkstim = clk;
       

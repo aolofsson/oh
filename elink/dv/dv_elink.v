@@ -164,6 +164,7 @@ module dv_elink(/*AUTOARG*/
    //######
    //CLOCKS for all
    //######
+
    eclocks eclocks (.sys_clk		(clk),
 		    .hard_reset		(reset),
 		    .elink_en		(elink0_elink_en),
