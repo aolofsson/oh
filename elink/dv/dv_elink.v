@@ -586,21 +586,45 @@ module dv_elink(/*AUTOARG*/
 		     .s_axi_wstrb	(m_axi_wstrb[3:0]),	 // Templated
 		     .s_axi_wvalid	(m_axi_wvalid));		 // Templated
    
+
+   //HACK!!!!!
    wire          txrr_access;
    wire [PW-1:0] txrr_packet;
 
    //Read path
-   assign rxrd_access         = ext_access & ~ext_packet[1];
-   assign rxrd_packet[PW-1:0] = ext_packet[PW-1:0];
+   assign rxrd_access         = elink_axi_access & ~elink_axi_packet[1];
+   assign rxrd_packet[PW-1:0] = elink_axi_packet[PW-1:0];
         
    //Write path
-   assign rxwr_access         = ext_access & ext_packet[1];
-   assign rxwr_packet[PW-1:0] = ext_packet[PW-1:0];
+   assign rxwr_access         = elink_axi_access & elink_axi_packet[1];
+   assign rxwr_packet[PW-1:0] = elink_axi_packet[PW-1:0];
 
+   wire 	 elink_axi_access;
+   wire [PW-1:0] elink_axi_packet;
+   
+   defparam axi_fifo.WIDTH=104;
+   defparam axi_fifo.DEPTH=16;   
+   fifo_cdc  axi_fifo(
+			// Outputs
+			.wait_out	(),
+			.access_out	(elink_axi_access),
+			.packet_out	(elink_axi_packet[PW-1:0]),
+			// Inputs
+			.clk_in		(clk),
+			.clk_out	(clk),
+			.reset_in	(reset),
+			.reset_out	(reset),
+			.access_in	(ext_access),
+			.packet_in	(ext_packet[PW-1:0]),
+			.wait_in	((rxwr_access & rxwr_wait) |
+					 (rxrd_access & rxrd_wait)
+					 )
+			);   
+   
    //master interface (driving stimulus to TX path)
    emaxi tx_emaxi (.m_axi_aclk		(clk),
                    .m_axi_aresetn	(~reset),
-		   .txrr_access		(txrr_access),        //output for monitoring
+		   .txrr_access		(),        //output for monitoring
 		   .txrr_packet		(txrr_packet[PW-1:0]),//output for monitoring 
 		   .rxwr_wait		(rxwr_wait),          //ignore for now?
 		   .rxrd_wait		(rxrd_wait),          //ignore for now?		   
@@ -655,8 +679,8 @@ module dv_elink(/*AUTOARG*/
    wire 	 txwr_access;
    wire [PW-1:0] txrd_packet;
    wire 	 txrd_access;
-   wire [PW-1:0] emem2_packet;
-   wire 	 emem2_access;
+   wire 	 esaxi_rd_wait;
+   wire 	 esaxi_wr_wait;
    
    //slave interface (receiving from 
    esaxi rx_esaxi (.s_axi_aclk		(clk),
@@ -668,8 +692,8 @@ module dv_elink(/*AUTOARG*/
 		   .rxrr_wait		(),
 		   .txwr_wait		(esaxi_wr_wait),
 		   .txrd_wait		(esaxi_rd_wait),
-		   .rxrr_access		(emem2_access),
-		   .rxrr_packet		(emem2_packet[PW-1:0]),
+		   .rxrr_access		(rxrr_access),
+		   .rxrr_packet		(rxrr_packet[PW-1:0]),
                    /*AUTOINST*/
 		   // Outputs
 		   .s_axi_arready	(s_axi_arready),
@@ -712,8 +736,40 @@ module dv_elink(/*AUTOARG*/
 		   .s_axi_wstrb		(s_axi_wstrb[3:0]),
 		   .s_axi_wvalid	(s_axi_wvalid));
 
+
+   wire 	 emem2_access;
+   wire [PW-1:0] emem2_packet;
+ 
+   assign  emem2_access           = (txwr_access & ~(txwr_packet[39:28]==elink2.ID)) |
+				    (txrd_access & ~(txrd_packet[39:28]==elink2.ID));
    
+   assign  emem2_packet[PW-1:0]   = txwr_access ? txwr_packet[PW-1:0]:
+                                                  txrd_packet[PW-1:0];
+
+   assign esaxi_rd_wait = emem2_wait | txwr_access;
+   assign esaxi_wr_wait = 1'b0; //no wait on write
    
+   /*ememory AUTO_TEMPLATE ( 
+                        // Outputs
+                        .\(.*\)_out       (elink1_txrr_\1[]),
+                        .\(.*\)_in        (emem_\1[]),
+                        .wait_out	  (emem_wait),
+                         );
+   */
+
+   ememory emem2 (.wait_in	        (1'b0),       //only one read at a time, set to zero for no1
+		 .clk		        (clk),
+		 .wait_out		(emem2_wait),
+		 /*AUTOINST*/
+		 // Outputs
+		 .access_out		(rxrr_access),	 // Templated
+		 .packet_out		(rxrr_packet[PW-1:0]), // Templated
+		 // Inputs
+		 .reset			(reset),
+		 .access_in		(emem2_access),		 // Templated
+		 .packet_in		(emem2_packet[PW-1:0]));	 // Templated
+
+
    //######################################################################
    //4th ELINK (chip reference model)
    //######################################################################
@@ -736,6 +792,7 @@ module dv_elink(/*AUTOARG*/
 			.packet_in	(ext_packet[PW-1:0]),
 			.wait_in	(elink2_wait_out)
 			);   
+
    elink_e16 elink_ref (
 		     // Outputs
 		     .rxi_rd_wait	(),
