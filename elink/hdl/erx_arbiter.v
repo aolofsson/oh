@@ -111,24 +111,20 @@ module erx_arbiter (/*AUTOARG*/
 				  (erx_dstaddr[19:16] == 4'hD)
 				  );
    
-   assign rxrr_access = erx_rr_access |
-		   	     timeout       |
-			     ecfg_access;
+   assign rxrr_access = erx_rr_access   |
+			ecfg_access;
    
-   assign rxrr_packet[PW-1:0] = timeout    ?  {32'h0,32'hDEADBEEF,
-				  	           myid[11:0],4'hF,16'h0000,
-                                                   8'h03} :
-			   	     erx_rr_access ?  erx_packet[PW-1:0] :
-			 	                      ecfg_packet[PW-1:0];
+   assign rxrr_packet[PW-1:0] = erx_rr_access ?  erx_packet[PW-1:0] :
+			 	                 ecfg_packet[PW-1:0];
 
-   assign ecfg_wait = erx_rr_access | timeout;
+   assign ecfg_wait = erx_rr_access;
 
    //####################################
    //Write Path (direct)
    //####################################
 
    assign rxwr_access        = emmu_access & 
-			            emmu_write;
+			       emmu_write;
 
    assign rxwr_packet[PW-1:0] = emmu_packet[PW-1:0];
          
@@ -136,12 +132,12 @@ module erx_arbiter (/*AUTOARG*/
    //Read Path 
    //####################################
 
-   assign emmu_read               = (emmu_access & ~emmu_write);
+   assign emmu_read           = (emmu_access & ~emmu_write);
    
    assign rxrd_access         = emmu_read | edma_access;
    
    assign rxrd_packet[PW-1:0] = emmu_read ? emmu_packet[PW-1:0] : 
-				                 edma_packet[PW-1:0];
+				            edma_packet[PW-1:0];
    
    //####################################
    //Wait Signals
