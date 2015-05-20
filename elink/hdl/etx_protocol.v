@@ -71,11 +71,12 @@ module etx_protocol (/*AUTOARG*/
 		      .srcaddr_out	(),
 		      .packet_in	(etx_packet[PW-1:0]));//input
 
-   //Only set valid if not wait 
-   assign etx_valid = (tx_enable & etx_access & ~(etx_dstaddr[31:20]==ID)) &
-		       ((etx_write & ~tx_wr_wait_sync) | 
-			 (~etx_write & ~tx_rd_wait_sync)
-			 );
+   //Only set valid if not wait and 
+   assign etx_valid = (tx_enable & 
+		       etx_access & 
+		       ~((etx_dstaddr[31:20]==ID) & (etx_dstaddr[19:16]!=`EGROUP_RR)) &
+		      ((etx_write & ~tx_wr_wait_sync) | (~etx_write & ~tx_rd_wait_sync))
+		       );
    
    //Prepare transaction / with burst
    always @ (posedge clk)
