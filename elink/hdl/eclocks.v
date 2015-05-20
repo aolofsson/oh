@@ -18,7 +18,7 @@ module eclocks (/*AUTOARG*/
    tx_lclk, tx_lclk90, tx_lclk_div4, rx_lclk, rx_lclk_div4,
    rx_ref_clk, cclk_p, cclk_n, elink_reset, chip_resetb,
    // Inputs
-   hard_reset, elink_en, sys_clk, rx_lclk_pll
+   reset, elink_en, sys_clk, rx_clkin
    );
 
    parameter RCW                 = 4;          // reset counter width
@@ -40,12 +40,12 @@ module eclocks (/*AUTOARG*/
 
    
    //Input clock, reset, config interface
-   input      hard_reset;        // por_reset
+   input      reset;             // async input reset
    input      elink_en;          // elink enable (from pin or register)
    
    //Main input clocks
-   input      sys_clk;           // clock for generating TX and CCLK
-   input      rx_lclk_pll;       // RX clock directly from IO
+   input      sys_clk;            // always on input clk cclk/TX MMCM
+   input      rx_clkin;           // input clk for RX only PLL
    
    //TX Clocks
    output     tx_lclk;           // tx clock for DDR IO
@@ -95,7 +95,7 @@ module eclocks (/*AUTOARG*/
 	cclk_locked_reg <=  cclk_locked;
 	cclk_locked_sync <= cclk_locked_reg;	
 	pll_locked_sync   <= cclk_locked & lclk_locked;	
-	reset_sync        <= (hard_reset | ~elink_en);
+	reset_sync        <= (reset | ~elink_en);
 	reset_in          <= reset_sync;
 	pll_locked        <= pll_locked_sync;	
      end
@@ -266,7 +266,7 @@ module eclocks (/*AUTOARG*/
         .RST(pll_reset),
         .CLKFBIN(lclk_fb),
         .CLKFBOUT(lclk_fb),       
-        .CLKIN1(rx_lclk_pll),
+        .CLKIN1(rx_clkin),
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
 	.DADDR(7'b0),

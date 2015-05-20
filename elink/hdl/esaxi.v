@@ -111,6 +111,7 @@ module esaxi (/*autoarg*/
    reg [31:0] 	      axi_awaddr;  // 32b for epiphany addr
    reg [1:0] 	      axi_awburst;
    reg [2:0] 	      axi_awsize;
+   reg [IDW-1:0]      axi_bid;     //what to do with this?
  
    reg [31:0] 	      axi_araddr;
    reg [7:0] 	      axi_arlen;
@@ -121,6 +122,7 @@ module esaxi (/*autoarg*/
    reg [1:0] 	      s_axi_rresp;
    reg 		      s_axi_rlast;
    reg 		      s_axi_rvalid;
+   reg [IDW-1:0]      s_axi_rid;
    
    reg 		      read_active;
    reg [31:0] 	      read_addr;
@@ -209,7 +211,7 @@ module esaxi (/*autoarg*/
      begin
       if(~s_axi_aresetn)  
 	begin
-           s_axi_awready <= 1'b0;
+           s_axi_awready <= 1'b0; //TODO: why not set default as 1?
            write_active  <= 1'b0;           
 	end 
       else 
@@ -232,21 +234,23 @@ module esaxi (/*autoarg*/
      end // always @ (posedge s_axi_aclk )
    
    // capture address & other aw info, update address during cycle
+   
    always @( posedge s_axi_aclk ) 
      if (~s_axi_aresetn)  
        begin
-          //s_axi_bid          <= 'd0;  // capture for write response
-          axi_awaddr[31:0] <= 32'd0;
-          axi_awsize[2:0]  <= 3'd0;
-          axi_awburst[1:0] <= 2'd0;         
+          axi_bid[IDW-1:0]   <= 'd0;  // capture for write response
+          axi_awaddr[31:0]   <= 32'd0;
+          axi_awsize[2:0]    <= 3'd0;
+          axi_awburst[1:0]   <= 2'd0;         
        end 
      else 
        begin	  
           if( s_axi_awready & s_axi_awvalid ) 
 	    begin	     
+	       axi_bid[IDW-1:0] <= s_axi_awid[IDW-1:0];
                axi_awaddr[31:0] <= s_axi_awaddr[31:0];
-               axi_awsize       <= s_axi_awsize;  // 0=byte, 1=16b, 2=32b
-               axi_awburst      <= s_axi_awburst; // type, 0=fixed, 1=incr, 2=wrap
+               axi_awsize[2:0]  <= s_axi_awsize[2:0];  // 0=byte, 1=16b, 2=32b
+               axi_awburst[1:0] <= s_axi_awburst[1:0]; // type, 0=fixed, 1=incr, 2=wrap
             end 
 	  else if( s_axi_wvalid & s_axi_wready ) 
             if( axi_awburst == 2'b01 ) 
@@ -326,34 +330,34 @@ module esaxi (/*autoarg*/
    always @( posedge s_axi_aclk ) 
       if (~s_axi_aresetn) 
 	begin
-           axi_araddr[31:0] <= 0;
-           axi_arlen        <= 8'd0;
-           axi_arburst      <= 2'd0;
-           axi_arsize[2:0]  <= 3'b0;
-           s_axi_rlast      <= 1'b0;
-           //s_axi_rid        <= 'd0;         
+           axi_araddr[31:0]   <= 0;
+           axi_arlen          <= 8'd0;
+           axi_arburst        <= 2'd0;
+           axi_arsize[2:0]    <= 3'b0;
+           s_axi_rlast        <= 1'b0;
+           s_axi_rid[IDW-1:0] <= 'd0;         
 	end
       else 
 	begin         
          if( s_axi_arready & s_axi_arvalid ) 
 	   begin	      
-              axi_araddr[31:0]  <= s_axi_araddr[31:0]; //NOTE: upper 2 bits get chopped by Zynq
-              axi_arlen         <= s_axi_arlen;
-              axi_arburst       <= s_axi_arburst;
-              axi_arsize        <= s_axi_arsize;
-              s_axi_rlast       <= ~(|s_axi_arlen);
-              //s_axi_rid     <= s_axi_arid;              
+              axi_araddr[31:0]   <= s_axi_araddr[31:0]; //NOTE: upper 2 bits get chopped by Zynq
+              axi_arlen[7:0]     <= s_axi_arlen[7:0];
+              axi_arburst        <= s_axi_arburst;
+              axi_arsize         <= s_axi_arsize;
+              s_axi_rlast        <= ~(|s_axi_arlen[7:0]);
+              s_axi_rid[IDW-1:0] <= s_axi_arid[IDW-1:0];              
          end 
 	 else if( s_axi_rvalid & s_axi_rready) 
 	   begin	      
-              axi_arlen <= axi_arlen - 1;
-              if(axi_arlen == 8'd1)
+              axi_arlen[7:0] <= axi_arlen[7:0] - 1;
+              if(axi_arlen[7:0] == 8'd1)
 		s_axi_rlast <= 1'b1;              
               if( s_axi_arburst == 2'b01) 
 		begin //incremental burst
 		   // the read address for all the beats in the transaction are increments by awsize
 		   // note: this should be based on awsize instead to support narrow bursts, i think?
-		   axi_araddr[31:2] <= axi_araddr[31:2] + 1;
+		   axi_araddr[31:2] <= axi_araddr[31:2] + 1;//TODO: doesn;t seem right...
 		   //araddr aligned to 4 byte boundary
 		   axi_araddr[1:0]  <= 2'b0;   
 		   //for awsize = 4 bytes (010)
@@ -405,19 +409,13 @@ module esaxi (/*autoarg*/
        end // else: !if(~s_axi_aresetn)
 
    //Pipeline stage!
-   always @( posedge s_axi_aclk ) 
-     if (~s_axi_aresetn)
-       begin
-          txwr_data[31:0]     <= 32'd0;	  
-          txwr_dstaddr[31:0]  <= 32'd0;	 
-          txwr_datamode[1:0]  <= 2'd0;
-       end
-     else
-       begin
-          txwr_data[31:0]     <= txwr_data_reg[31:0];	  
-          txwr_dstaddr[31:0]  <= txwr_dstaddr_reg[31:0];	  
-          txwr_datamode[1:0]  <= txwr_datamode_reg[1:0];	  
-       end // else: !if(~s_axi_aresetn)
+   always @( posedge s_axi_aclk )     
+     begin
+        txwr_data[31:0]     <= txwr_data_reg[31:0];	  
+        txwr_dstaddr[31:0]  <= txwr_dstaddr_reg[31:0];	  
+        txwr_datamode[1:0]  <= txwr_datamode_reg[1:0];	  
+     end
+   
    
    //###################################################
    //#READ REQUEST (DATA CHANNEL)

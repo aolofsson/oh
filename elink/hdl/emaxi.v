@@ -2,7 +2,36 @@
  ########################################################################
  Epiphany eLink AXI Master Module
  ######################################################################## 
- */
+
+  NOTES:
+ --write channels: write address, write data, write response
+ --read channels: read address, read data channel
+ --'valid' source signal used to show valid address,data,control is available
+ --'ready' destination  ready signal indicates readyness to accept information
+ --'last' signal indicates the transfer of final data item
+ --read and write have separate address channels
+ --read data channel carries read data from slave to master
+ --write channel includes a byte lane strobe signal for every eight data bits
+ --there is no acknowledge on write, treated as buffered 
+ --channels are unidirectional
+ --valid is asserted uncondotionally
+ --ready occurs cycle after valid
+ --there can be no combinatorial path between input and output of interface
+ --destination is permitted to wait for valud before asserting READY
+ --source is not allowed to wait for READY to assert VALID
+ --AWVALID must remain asserted until the rising clock edge after slave asserts AWREADY??
+ --The default state of AWREADY can be either HIGH or LOW. This specification recommends a default state of HIGH.
+ --During a write burst, the master can assert the WVALID signal only when it drives valid write data.
+ --The default state of WREADY can be HIGH, but only if the slave can always accept write data in a single cycle.
+ --The master must assert the WLAST signal while it is driving the final write transfer in the burst.
+
+ --_aw=write address channel
+ --_ar=read address channel
+ --_r=read data channel
+ --_w=write data channel
+ --_b=write response channel
+
+  */
 
 module emaxi(/*autoarg*/
    // Outputs
@@ -131,12 +160,12 @@ module emaxi(/*autoarg*/
    wire 	       aw_go;
    wire 	       w_go;
    wire 	       readinfo_wren;
-   wire 	       readinfo_rden;
    wire 	       readinfo_full;
    wire [47:0] 	       readinfo_out;
    wire [47:0] 	       readinfo_in;
 
-
+   wire 	       awvalid_in;
+   
    wire [1:0] 	       rxwr_datamode;
    wire [AW-1:0]       rxwr_dstaddr;
    wire [DW-1:0]       rxwr_data;
@@ -189,7 +218,7 @@ module emaxi(/*autoarg*/
 		     .packet_out	(txrr_packet[PW-1:0]),
 		     // Inputs
 		     .access_in		(txrr_access),
-		     .write_in		(txrr_write),
+		     .write_in		(1'b1),
 		     .datamode_in	(txrr_datamode[1:0]),
 		     .ctrlmode_in	(txrr_ctrlmode[3:0]),
 		     .dstaddr_in	(txrr_dstaddr[AW-1:0]),
@@ -201,25 +230,28 @@ module emaxi(/*autoarg*/
    //AXI unimplemented constants
    //#########################################################################
 
-   assign m_axi_awburst[1:0]	= 2'b01;  //TODO???
-   assign m_axi_awcache[3:0]	= 4'b0010;//TODO??update value to 4'b0011 if coherent accesses to be used via the zynq acp port
-   assign m_axi_awprot[2:0]	= 3'h0;
-   assign m_axi_awqos[3:0]	= 4'h0;
-   assign m_axi_bready    	= 1'b1;   //TODO? axi_bready, why constant
-   
-   assign m_axi_arburst[1:0]	= 2'b01;//TODO???
-   assign m_axi_arcache[3:0]	= 4'b0010;
+   assign m_axi_awburst[1:0]	= 2'b01; //only increment burst supported
+   assign m_axi_awcache[3:0]	= 4'b0000;//TODO: correct value??
+   assign m_axi_awprot[2:0]	= 3'b000;
+   assign m_axi_awqos[3:0]	= 4'b0000;
+   assign m_axi_awlock          = 2'b00;
+
+   assign m_axi_arburst[1:0]	= 2'b01; //only increment burst supported
+   assign m_axi_arcache[3:0]	= 4'b0000;
    assign m_axi_arprot[2:0]	= 3'h0;
    assign m_axi_arqos[3:0]	= 4'h0;
 
+   assign m_axi_bready    	= 1'b1;//tie to wait signal????   
+   
    //#########################################################################
    //Write address channel
    //#########################################################################
 
    assign aw_go       = m_axi_awvalid & m_axi_awready;
    assign w_go        = m_axi_wvalid  & m_axi_wready;
-   assign rxwr_wait   = awvalid_b     | wvalid_b;
-
+   assign rxwr_wait   = awvalid_b   | wvalid_b;
+   assign awvalid_in  = rxwr_access & ~awvalid_b & ~wvalid_b;
+   
    // generate write-address signals
    always @( posedge m_axi_aclk )     
      if(~m_axi_aresetn) 
@@ -228,7 +260,10 @@ module emaxi(/*autoarg*/
           m_axi_awaddr[31:0] <= 32'd0;
           m_axi_awlen[7:0]   <= 8'd0;
           m_axi_awsize[2:0]  <= 3'd0;	  
-         
+          awvalid_b          <= 1'b0;
+          awaddr_b           <= 'd0;
+          awlen_b[7:0]       <= 'd0;
+          awsize_b[2:0]      <= 'd0;
        end 
      else 
        begin
@@ -243,19 +278,19 @@ module emaxi(/*autoarg*/
 		 end 
 	      else 
 		begin
-		   m_axi_awvalid       <= rxwr_access;
+		   m_axi_awvalid       <= awvalid_in;
 		   m_axi_awaddr[31:0]  <= rxwr_dstaddr[31:0];
 		   m_axi_awlen[7:0]    <= 8'b0;
 		   m_axi_awsize[2:0]   <= { 1'b0, rxwr_datamode[1:0]};
 		end
 	    end
-          if( rxwr_access & m_axi_awvalid & ~aw_go )
+          if( awvalid_in & m_axi_awvalid & ~aw_go )
             awvalid_b <= 1'b1;
           else if( aw_go )
             awvalid_b <= 1'b0;
           
 	 //Pipeline stage
-         if( rxwr_access )
+         if( awvalid_in )
 	   begin
               awaddr_b[31:0]  <= rxwr_dstaddr[31:0];
               awlen_b[7:0]    <= 8'b0;
@@ -316,7 +351,7 @@ module emaxi(/*autoarg*/
 	  m_axi_wvalid      <= 1'b0;
           m_axi_wdata[63:0] <= 64'b0;
           m_axi_wstrb[7:0]  <= 8'b0;
-          m_axi_wlast       <= 1'b1; // TODO: no bursts for now?	  
+          m_axi_wlast       <= 1'b1; // TODO:bursts!!	  
           wvalid_b          <= 1'b0;
           wdata_b[63:0]     <= 64'b0;
           wstrb_b[7:0]      <= 8'b0;         
@@ -333,7 +368,7 @@ module emaxi(/*autoarg*/
               end 
 	    else 
 	      begin
-		 m_axi_wvalid       <= rxwr_access;
+		 m_axi_wvalid       <= awvalid_in;
 		 m_axi_wdata[63:0]  <= wdata_aligned[63:0];
 		 m_axi_wstrb[7:0]   <= wstrb_aligned[7:0];
               end
@@ -344,7 +379,7 @@ module emaxi(/*autoarg*/
          else if( w_go )
            wvalid_b <= 1'b0;
 	  
-          if( rxwr_access ) 
+          if( awvalid_in ) 
 	    begin
                wdata_b[63:0] <= wdata_aligned[63:0];
                wstrb_b[7:0]  <= wstrb_aligned[7:0];
@@ -382,11 +417,9 @@ module emaxi(/*autoarg*/
       .clk                              (m_axi_aclk),
       .reset                            (~m_axi_aresetn),
       .wr_data                          (readinfo_in[47:0]),
-      .wr_en                            (rxrd_access & ~readinfo_full),
-      .rd_en                            (~txrr_wait & m_axi_rvalid)
+      .wr_en                            (m_axi_arvalid & m_axi_arready),
+      .rd_en                            (m_axi_rready & m_axi_rvalid)
       );
-
-  
 
    assign txrr_datamode[1:0]  = readinfo_out[1:0];
    assign txrr_ctrlmode[3:0]  = readinfo_out[5:2];
@@ -400,16 +433,13 @@ module emaxi(/*autoarg*/
    assign    m_axi_arsize[2:0]    = {1'b0, rxrd_datamode[1:0]};
    assign    m_axi_arlen[7:0]     = 8'd0;
    assign    m_axi_arvalid        = rxrd_access & ~readinfo_full;
-   assign    rxrd_wait            = ~(m_axi_arvalid & m_axi_arready);
-
+   assign    rxrd_wait            = m_axi_arvalid & ~m_axi_arready;
+   
    //#########################################################################
    //Read response channel
    //#########################################################################
 
-   assign m_axi_rready  = ~txrr_wait;
-   assign readinfo_rden = ~txrr_wait & m_axi_rvalid;
-
-   assign txrr_write  = 1'b1;
+   assign m_axi_rready  = ~txrr_wait; //pass through
    
    always @( posedge m_axi_aclk )
      if( ~m_axi_aresetn ) 
@@ -423,7 +453,7 @@ module emaxi(/*autoarg*/
        begin
           txrr_access_reg     <= m_axi_rready & m_axi_rvalid;
 	  txrr_access         <= txrr_access_reg;//added pipeline stage for data 
-	  txrr_srcaddr[31:0]  <= m_axi_rdata[63:32];
+	 
 	  // steer read data according to size & host address lsbs
 	  //all data needs to be right aligned
 	  //(this is due to the Epiphany right aligning all words)
@@ -452,9 +482,11 @@ module emaxi(/*autoarg*/
              else
                txrr_data[31:0] <= m_axi_rdata[31:0];
            // 64b word already defined by defaults above
-           2'd3: begin // 64b dword
-              txrr_data[31:0]  <= m_axi_rdata[31:0];              
-           end
+           2'd3: 
+	     begin // 64b dword
+		txrr_data[31:0]  <= m_axi_rdata[31:0];
+		txrr_srcaddr[31:0]  <= m_axi_rdata[63:32];
+             end
          endcase         
        end // else: !if( ~m_axi_aresetn )
    
