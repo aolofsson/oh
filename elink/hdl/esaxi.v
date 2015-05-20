@@ -18,7 +18,7 @@ module esaxi (/*autoarg*/
    parameter [11:0]  ID                  = 12'h810;
    parameter         IDW                 = 12;
    parameter         PW                  = 104;
-   parameter [15:0]  RETURN_ADDR         = {ID,4'hE};
+   parameter [15:0]  RETURN_ADDR         = {ID,`EGROUP_RR};
    parameter         AW                  = 32;
    parameter         DW                  = 32;
    
@@ -211,7 +211,7 @@ module esaxi (/*autoarg*/
      begin
       if(~s_axi_aresetn)  
 	begin
-           s_axi_awready <= 1'b0; //TODO: why not set default as 1?
+           s_axi_awready <= 1'b1; //TODO: why not set default as 1?
            write_active  <= 1'b0;           
 	end 
       else 
@@ -427,9 +427,11 @@ module esaxi (/*autoarg*/
    // -- because elink reads are not generally 
    // -- returned in order, we will only allow
    // -- one at a time.
-   
+
+   //TODO: Fix this nonsense, need to improve performance
+   //Allow up to N outstanding transactions, use ID to match them up
+   //Need to look at txrd_wait signal
    assign txrd_write         = 1'b0;
-   
    always @( posedge s_axi_aclk )
      if (~s_axi_aresetn) 
        begin
@@ -440,7 +442,7 @@ module esaxi (/*autoarg*/
           ractive_reg         <= 1'b0;
           rnext               <= 1'b0;          
       end 
-     else 
+     else
        begin
           ractive_reg         <= read_active;
           rnext               <= s_axi_rvalid & s_axi_rready & ~s_axi_rlast;        

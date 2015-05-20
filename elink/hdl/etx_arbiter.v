@@ -168,7 +168,7 @@ module etx_arbiter (/*AUTOARG*/
    assign write_in = etx_mux[1];
 
    always @ (posedge clk)
-     if ((write_in & ~etx_wr_wait) | (~write_in & ~etx_rd_wait))
+     if (access_in & (write_in & ~etx_wr_wait) | (~write_in & ~etx_rd_wait))
        begin
 	  etx_access         <= access_in;
 	  etx_packet[PW-1:0] <= etx_mux[PW-1:0];

@@ -453,7 +453,6 @@ module emaxi(/*autoarg*/
        begin
           txrr_access_reg     <= m_axi_rready & m_axi_rvalid;
 	  txrr_access         <= txrr_access_reg;//added pipeline stage for data 
-	 
 	  // steer read data according to size & host address lsbs
 	  //all data needs to be right aligned
 	  //(this is due to the Epiphany right aligning all words)
