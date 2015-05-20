@@ -117,7 +117,9 @@ module ecfg_if (/*AUTOARG*/
    assign mi_we = write  & mi_en;
    
    //signal to carry transaction from ETX to ERX block through fifo_cdc
-   assign mi_rx_en = mi_match & ~mi_en;
+   assign mi_rx_en = mi_match & 
+		     ((dstaddr[19:16]==4'hE) | (dstaddr[19:16]==4'hF)) &  
+		     ~mi_en;
       
    //ADDR
    assign mi_addr[14:0] = dstaddr[14:0];
