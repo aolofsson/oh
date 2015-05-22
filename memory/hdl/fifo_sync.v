@@ -63,36 +63,9 @@ module fifo_sync
 	end // else: !if( reset )
    end // always @ ( posedge clk )
       
-`ifdef TARGET_XILINX 
-   genvar               dn;   
-   generate for(dn=0; dn<DW; dn=dn+1)
-     begin : genbits
-        RAM32X1D RAM32X1D_inst
-          (
-           .DPO(rd_data[dn] ),   // Read-only 1-bit data output
-           .SPO(),            // Rw/ 1-bit data output
-           .A0(wr_addr[0]),     // Rw/ address[0] input bit
-           .A1(wr_addr[1]),     // Rw/ address[1] input bit
-           .A2(wr_addr[2]),     // Rw/ address[2] input bit
-           .A3(wr_addr[3]),     // Rw/ address[3] input bit
-           .A4(wr_addr[4]),     // Rw/ address[4] input bit
-           .D(wr_data[dn]),     // Write 1-bit data input
-           .DPRA0(rd_addr[0]),  // Read-only address[0] input bit
-           .DPRA1(rd_addr[1]),  // Read-only address[1] input bit
-           .DPRA2(rd_addr[2]),  // Read-only address[2] input bit
-           .DPRA3(rd_addr[3]),  // Read-only address[3] input bit
-           .DPRA4(rd_addr[4]),  // Read-only address[4] input bit
-           .WCLK(clk),        // Write clock input
-           .WE(wr_en)           // Write enable input
-           );
-     end
-   endgenerate
-   
-`elsif TARGET_CLEAN
 
    defparam mem.DW=DW;
-   defparam mem.AW=AW;
-   
+   defparam mem.AW=AW;   
    memory_dp mem (
 			// Outputs
 			.rd_data	(rd_data[DW-1:0]),
@@ -104,8 +77,6 @@ module fifo_sync
 			.rd_clk		(clk),
 			.rd_en		(rd_en),
 			.rd_addr	(rd_addr[AW-1:0]));
-
-`endif
 
    
 endmodule // fifo_sync

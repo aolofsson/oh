@@ -38,6 +38,7 @@ module fifo_cdc (/*AUTOARG*/
    wire 	      rd_en;   
    wire 	      empty;
    wire 	      full;
+   wire 	      valid;   
    reg 		      access_out;
       
    assign wr_en    = access_in & ~full;
@@ -50,7 +51,7 @@ module fifo_cdc (/*AUTOARG*/
        access_out <=1'b0;   
      else if(~wait_in)
        access_out <=rd_en;
-   
+
    //Read response fifo (from master)
    defparam fifo.WIDTH=104;
    defparam fifo.DEPTH=16;
@@ -59,7 +60,7 @@ module fifo_cdc (/*AUTOARG*/
 		    // Outputs
 		    .dout		(packet_out[WIDTH-1:0]),
 		    .empty		(empty),
-		    .valid		(), 
+		    .valid		(valid), 
 		    // Inputs
 		    .wr_rst		(reset_in),
 		    .rd_rst		(reset_out),
