@@ -9,8 +9,7 @@ module dv_elink(/*AUTOARG*/
    dut_passed, dut_failed, dut_rd_wait, dut_wr_wait, dut_access,
    dut_packet,
    // Inputs
-   rx_clkin, clk, reset, ext_access, ext_packet, ext_rd_wait,
-   ext_wr_wait
+   clk, reset, ext_access, ext_packet, ext_rd_wait, ext_wr_wait
    );
 
    parameter AW  = 32;
@@ -39,9 +38,6 @@ module dv_elink(/*AUTOARG*/
    input 	   ext_wr_wait;
 
    /*AUTOINPUT*/
-   // Beginning of automatic inputs (from unused autoinst inputs)
-   input		rx_clkin;		// To eclocks of eclocks.v
-   // End of automatics
   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
@@ -250,6 +246,7 @@ module dv_elink(/*AUTOARG*/
 		    .elink_en		(elink0_elink_en),
 		    .cclk_p		(),
 		    .cclk_n		(),
+		    .rx_clkin		(rx_lclk_pll),
 		     /*AUTOINST*/
 		    // Outputs
 		    .tx_lclk		(tx_lclk),
@@ -261,8 +258,7 @@ module dv_elink(/*AUTOARG*/
 		    .elink_reset	(elink_reset),
 		    .chip_resetb	(chip_resetb),
 		    // Inputs
-		    .reset		(reset),
-		    .rx_clkin		(rx_clkin));
+		    .reset		(reset));
 
    //Read path
    assign elink0_txrd_access         = ext_access & ~ext_packet[1];
@@ -287,7 +283,7 @@ module dv_elink(/*AUTOARG*/
 
    //not connected
    assign elink0_txrr_access         =  1'b0;
-   assign elink0_txrr_packet[PW-1:0] = 'b0;
+   assign elink0_txrr_packet[PW-1:0] =  'b0;
 
 
    //######################################################################
@@ -603,7 +599,7 @@ module dv_elink(/*AUTOARG*/
    wire [PW-1:0] elink_axi_packet;
    
    defparam axi_fifo.WIDTH=104;
-   defparam axi_fifo.DEPTH=16;   
+   defparam axi_fifo.DEPTH=64;   
    fifo_cdc  axi_fifo(
 			// Outputs
 			.wait_out	(),
@@ -625,7 +621,7 @@ module dv_elink(/*AUTOARG*/
    emaxi tx_emaxi (.m_axi_aclk		(clk),
                    .m_axi_aresetn	(~reset),
 		   .txrr_access		(),        //output for monitoring
-		   .txrr_packet		(txrr_packet[PW-1:0]),//output for monitoring 
+		   .txrr_packet		(),//output for monitoring 
 		   .rxwr_wait		(rxwr_wait),          //ignore for now?
 		   .rxrd_wait		(rxrd_wait),          //ignore for now?		   
 		   .rxwr_access		(rxwr_access),
@@ -760,14 +756,12 @@ module dv_elink(/*AUTOARG*/
    ememory emem2 (.wait_in	        (1'b0),       //only one read at a time, set to zero for no1
 		 .clk		        (clk),
 		 .wait_out		(emem2_wait),
-		 /*AUTOINST*/
-		 // Outputs
-		 .access_out		(rxrr_access),	 // Templated
-		 .packet_out		(rxrr_packet[PW-1:0]), // Templated
-		 // Inputs
-		 .reset			(reset),
-		 .access_in		(emem2_access),		 // Templated
-		 .packet_in		(emem2_packet[PW-1:0]));	 // Templated
+		 .access_out		(rxrr_access),
+		 .packet_out		(rxrr_packet[PW-1:0]),
+		  // Inputs
+		  .reset		(reset),
+		  .access_in		(emem2_access),
+		  .packet_in		(emem2_packet[PW-1:0]));
 
 
    //######################################################################
@@ -777,7 +771,7 @@ module dv_elink(/*AUTOARG*/
    wire [PW-1:0] elink2_packet;
    
    defparam model_fifo.WIDTH=104;
-   defparam model_fifo.DEPTH=16;   
+   defparam model_fifo.DEPTH=64;   
    fifo_cdc  model_fifo(
 			// Outputs
 			.wait_out	(),
