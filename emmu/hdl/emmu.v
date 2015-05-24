@@ -126,7 +126,7 @@ module emmu (/*AUTOARG*/
    //pipeline to compensate for table lookup pipeline 
    //assumes one cycle memory access!     
   
-   always @ (posedge  rd_clk or posedge reset)     
+   always @ (posedge  rd_clk)     
      if (reset)
        begin
 	  emesh_access_out         <= 1'b0;	  

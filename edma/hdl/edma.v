@@ -35,6 +35,12 @@ module edma (/*AUTOARG*/
    output [PW-1:0]   edma_packet;
    input 	     edma_wait;
 
+
+
+   
+
+
+   
    assign edma_access=1'b0;
    assign edma_packet='d0;
    assign  mi_dout='d0;
