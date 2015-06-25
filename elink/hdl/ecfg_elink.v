@@ -6,7 +6,7 @@
 
 module ecfg_elink (/*AUTOARG*/
    // Outputs
-   txwr_gated_access, elink_en, clk_config, chipid,
+   txwr_gated_access, elink_en, clk_config, e_chipid,
    // Inputs
    txwr_access, txwr_packet, clk, reset
    );
@@ -38,7 +38,7 @@ module ecfg_elink (/*AUTOARG*/
    /******************************/
    output 	 elink_en;         // elink master enable
    output [15:0] clk_config;       // clock settings (for pll)
-   output [11:0] chipid;           // chip-id for Epiphany   
+   output [11:0] e_chipid;           // chip-id for Epiphany   
    
    /*------------------------CODE BODY---------------------------------------*/
    
@@ -126,7 +126,7 @@ module ecfg_elink (/*AUTOARG*/
      else if (ecfg_chipid_write)
        ecfg_chipid_reg[11:0] <= mi_din[11:0];   
    
-   assign chipid[11:0]=ecfg_chipid_reg[5:2];   
+   assign e_chipid[11:0]=ecfg_chipid_reg[5:2];   
     
 endmodule // ecfg_elink
 

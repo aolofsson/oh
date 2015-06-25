@@ -16,7 +16,7 @@
 module eclocks (/*AUTOARG*/
    // Outputs
    tx_lclk, tx_lclk90, tx_lclk_div4, rx_lclk, rx_lclk_div4,
-   rx_ref_clk, cclk_p, cclk_n, elink_reset, chip_resetb,
+   rx_ref_clk, e_cclk_p, e_cclk_n, elink_reset, e_resetb,
    // Inputs
    reset, elink_en, sys_clk, rx_clkin
    );
@@ -58,11 +58,11 @@ module eclocks (/*AUTOARG*/
    output     rx_ref_clk;        // clock for idelay element
 
    //Epiphany "free running" clock
-   output     cclk_p, cclk_n;
+   output     e_cclk_p, e_cclk_n;
 
    //Reset
    output     elink_reset;       // reset for elink logic & IO   
-   output     chip_resetb;       // reset fpr Epiphany chip
+   output     e_resetb;          // reset fpr Epiphany chip
    
    //###########################
    // RESET STATE MACHINE
@@ -136,9 +136,9 @@ module eclocks (/*AUTOARG*/
 			 (reset_state[2:0]==`STOP_PLL)       | 
 			 (reset_state[2:0]==`START_EPIPHANY);
    
-   assign chip_resetb =  (reset_state[2:0]==`START_EPIPHANY) |
-			 (reset_state[2:0]==`HOLD_IT) |
-			 (reset_state[2:0]==`ACTIVE);
+   assign e_resetb    =  (reset_state[2:0]==`START_EPIPHANY) |
+		         (reset_state[2:0]==`HOLD_IT) |
+		         (reset_state[2:0]==`ACTIVE);
 
    assign elink_reset  =  (reset_state[2:0]!=`ACTIVE);
      
@@ -218,8 +218,8 @@ module eclocks (/*AUTOARG*/
 	.CLKINSTOPPED()
         );
 
-   OBUFDS  cclk_obuf (.O   (cclk_p),
-		      .OB  (cclk_n),
+   OBUFDS  cclk_obuf (.O   (e_cclk_p),
+		      .OB  (e_cclk_n),
 		      .I   (cclk)
 		      );
 

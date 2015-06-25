@@ -2,9 +2,10 @@ module elink(/*AUTOARG*/
    // Outputs
    rx_lclk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n,
-   txo_data_p, txo_data_n, chipid, elink_en, rxwr_access, rxwr_packet,
-   rxrd_access, rxrd_packet, rxrr_access, rxrr_packet, txwr_wait,
-   txrd_wait, txrr_wait, mailbox_not_empty, mailbox_full, timeout,
+   txo_data_p, txo_data_n, e_chipid, elink_en, rxwr_access,
+   rxwr_packet, rxrd_access, rxrd_packet, rxrr_access, rxrr_packet,
+   txwr_wait, txrd_wait, txrr_wait, mailbox_not_empty, mailbox_full,
+   timeout,
    // Inputs
    reset, sys_clk, tx_lclk, tx_lclk90, tx_lclk_div4, rx_lclk,
    rx_lclk_div4, rx_ref_clk, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
@@ -52,7 +53,7 @@ module elink(/*AUTOARG*/
    /********************************/
    /*EPIPHANY INTERFACE (I/O PINS) */
    /********************************/          
-   output [11:0]   chipid;	    // chip id strap pins for epiphany
+   output [11:0]   e_chipid;	    // chip id strap pins for epiphany
    output 	   elink_en;        // master enable for elink/epiphany 
    
    /*****************************/
@@ -138,7 +139,7 @@ module elink(/*AUTOARG*/
 			  .txwr_gated_access	(txwr_gated_access),
 			  .elink_en		(elink_en),
 			  .clk_config		(clk_config[15:0]),
-			  .chipid		(chipid[11:0]),
+			  .e_chipid		(e_chipid[11:0]),
 			  // Inputs
 			  .txwr_access		(txwr_access),
 			  .txwr_packet		(txwr_packet[PW-1:0]),

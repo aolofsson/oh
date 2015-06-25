@@ -41,8 +41,9 @@ module dv_elink(/*AUTOARG*/
   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [11:0]		chipid;			// From elink2 of axi_elink.v
-   wire [11:0]		elink0_chipid;		// From elink0 of elink.v
+   wire [11:0]		e_chipid;		// From elink2 of axi_elink.v
+   wire			e_resetb;		// From eclocks of eclocks.v
+   wire [11:0]		elink0_e_chipid;	// From elink0 of elink.v
    wire			elink0_elink_en;	// From elink0 of elink.v
    wire			elink0_mailbox_full;	// From elink0 of elink.v
    wire			elink0_mailbox_not_empty;// From elink0 of elink.v
@@ -66,7 +67,7 @@ module dv_elink(/*AUTOARG*/
    wire			elink0_txrd_wait;	// From elink0 of elink.v
    wire			elink0_txrr_wait;	// From elink0 of elink.v
    wire			elink0_txwr_wait;	// From elink0 of elink.v
-   wire [11:0]		elink1_chipid;		// From elink1 of elink.v
+   wire [11:0]		elink1_e_chipid;	// From elink1 of elink.v
    wire			elink1_elink_en;	// From elink1 of elink.v
    wire			elink1_mailbox_full;	// From elink1 of elink.v
    wire			elink1_mailbox_not_empty;// From elink1 of elink.v
@@ -244,8 +245,8 @@ module dv_elink(/*AUTOARG*/
 
    eclocks eclocks (.sys_clk		(clk),
 		    .elink_en		(elink0_elink_en),
-		    .cclk_p		(),
-		    .cclk_n		(),
+		    .e_cclk_p		(),
+		    .e_cclk_n		(),
 		    .rx_clkin		(rx_lclk_pll),
 		     /*AUTOINST*/
 		    // Outputs
@@ -256,7 +257,7 @@ module dv_elink(/*AUTOARG*/
 		    .rx_lclk_div4	(rx_lclk_div4),
 		    .rx_ref_clk		(rx_ref_clk),
 		    .elink_reset	(elink_reset),
-		    .chip_resetb	(chip_resetb),
+		    .e_resetb		(e_resetb),
 		    // Inputs
 		    .reset		(reset));
 
@@ -328,7 +329,7 @@ module dv_elink(/*AUTOARG*/
 		 .txo_frame_n		(elink0_txo_frame_n),	 // Templated
 		 .txo_data_p		(elink0_txo_data_p[7:0]), // Templated
 		 .txo_data_n		(elink0_txo_data_n[7:0]), // Templated
-		 .chipid		(elink0_chipid[11:0]),	 // Templated
+		 .e_chipid		(elink0_e_chipid[11:0]), // Templated
 		 .elink_en		(elink0_elink_en),	 // Templated
 		 .rxwr_access		(elink0_rxwr_access),	 // Templated
 		 .rxwr_packet		(elink0_rxwr_packet[PW-1:0]), // Templated
@@ -398,7 +399,7 @@ module dv_elink(/*AUTOARG*/
 		 .txo_frame_n		(elink1_txo_frame_n),	 // Templated
 		 .txo_data_p		(elink1_txo_data_p[7:0]), // Templated
 		 .txo_data_n		(elink1_txo_data_n[7:0]), // Templated
-		 .chipid		(elink1_chipid[11:0]),	 // Templated
+		 .e_chipid		(elink1_e_chipid[11:0]), // Templated
 		 .elink_en		(elink1_elink_en),	 // Templated
 		 .rxwr_access		(elink1_rxwr_access),	 // Templated
 		 .rxwr_packet		(elink1_rxwr_packet[PW-1:0]), // Templated
@@ -485,9 +486,9 @@ module dv_elink(/*AUTOARG*/
 		     .txi_wr_wait_n	(rxo_wr_wait_n),
 		     .txi_rd_wait_p	(rxo_rd_wait_p),
 		     .txi_rd_wait_n	(rxo_rd_wait_n),
-		     .chip_resetb	(chip_resetb), 
-		     .cclk_p		(cclk_p),
-		     .cclk_n		(cclk_n),
+		     .e_resetb   	(chip_resetb), 
+		     .e_cclk_p		(cclk_p),
+		     .e_cclk_n		(cclk_n),
 		     /*AUTOINST*/
 		     // Outputs
 		     .rxo_wr_wait_p	(rxo_wr_wait_p),
@@ -500,7 +501,7 @@ module dv_elink(/*AUTOARG*/
 		     .txo_frame_n	(txo_frame_n),
 		     .txo_data_p	(txo_data_p[7:0]),
 		     .txo_data_n	(txo_data_n[7:0]),
-		     .chipid		(chipid[11:0]),
+		     .e_chipid		(e_chipid[11:0]),
 		     .mailbox_not_empty	(mailbox_not_empty),
 		     .mailbox_full	(mailbox_full),
 		     .m_axi_awid	(s_axi_awid[IDW-1:0]),	 // Templated
