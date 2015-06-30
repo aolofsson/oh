@@ -14,7 +14,7 @@
  */
 
 //`define TARGET_XILINX //TODO this need to be global
-`include elink_constants.v
+`include "elink_constants.v"
 
 module eclocks (/*AUTOARG*/
    // Outputs

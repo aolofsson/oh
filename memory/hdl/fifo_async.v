@@ -1,4 +1,4 @@
-`include "../../elink/elink_constants.v"
+`include "../../elink/hdl/elink_constants.v"
 module fifo_async 
    (/*AUTOARG*/
    // Outputs
