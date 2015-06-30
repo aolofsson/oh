@@ -1,3 +1,6 @@
+`ifndef ELINK_REGMAP_V_
+`define ELINK_REGMAP_V_
+
 //MEMORY MAP
 
 //[31:20] = LINKID
@@ -39,3 +42,5 @@
 `define DMAAUTO0       5'd5 //F0514/F0534
 `define DMAAUTO1       5'd6 //F0518/F0538
 `define DMASTATUS      5'd7 //F051C/F053c
+
+`endif

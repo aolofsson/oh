@@ -13,6 +13,9 @@
  ############################################################################
  */
 
+//`define TARGET_XILINX //TODO this need to be global
+`include elink_constants.v
+
 module eclocks (/*AUTOARG*/
    // Outputs
    tx_lclk, tx_lclk90, tx_lclk_div4, rx_lclk, rx_lclk_div4,

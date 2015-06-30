@@ -1,3 +1,5 @@
+`include "elink_regmap.v"
+
 module etx_protocol (/*AUTOARG*/
    // Outputs
    etx_rd_wait, etx_wr_wait, tx_packet, tx_access, tx_burst,

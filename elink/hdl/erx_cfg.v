@@ -4,6 +4,7 @@
  ########################################################################
  
  */
+`include "elink_regmap.v"
 
 module erx_cfg (/*AUTOARG*/
    // Outputs

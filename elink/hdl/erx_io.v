@@ -8,7 +8,7 @@ module erx_io (/*AUTOARG*/
    rx_rd_wait
    );
 
-   parameter IOSTANDARD = "LVDS_25";
+   parameter IOSTD_ELINK = "LVDS_25";
    parameter PW = 104;
 
    //#########################
@@ -47,6 +47,7 @@ module erx_io (/*AUTOARG*/
    wire 	 access_wide;
    reg 		 valid_packet;
    wire [15:0]   rx_word;
+   wire     rx_ref_clk_idlyctrl;
 
    //############
    //# REGS
@@ -179,32 +180,32 @@ module erx_io (/*AUTOARG*/
    //# I/O Buffers Instantiation
    //################################
 
-   IBUFDS  #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTANDARD))
+   IBUFDS  #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTD_ELINK))
    ibuf_data[7:0] 
      (.I     (rxi_data_p[7:0]),
       .IB    (rxi_data_n[7:0]),
       .O     (rxi_data[7:0]));
    
-   IBUFDS #(.DIFF_TERM  ("TRUE"), .IOSTANDARD (IOSTANDARD))
+   IBUFDS #(.DIFF_TERM  ("TRUE"), .IOSTANDARD (IOSTD_ELINK))
    ibuf_frame
      (.I     (rxi_frame_p),
       .IB    (rxi_frame_n),
       .O     (rxi_frame));
 
-   IBUFDS #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTANDARD))
+   IBUFDS #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTD_ELINK))
    ibuf_lclk (.I     (rxi_lclk_p),
 	      .IB    (rxi_lclk_n),
 	      .O     (rxi_lclk)
 	      );
       
-   OBUFDS #(.IOSTANDARD(IOSTANDARD),.SLEW("SLOW")) 
+   OBUFDS #(.IOSTANDARD(IOSTD_ELINK),.SLEW("SLOW")) 
    obufds_wrwait (
 		    .O(rxo_wr_wait_p),
 		    .OB(rxo_wr_wait_n),
 		    .I(rx_wr_wait)
 		    );
    
-   OBUFDS  #(.IOSTANDARD(IOSTANDARD),.SLEW("SLOW")) 
+   OBUFDS  #(.IOSTANDARD(IOSTD_ELINK),.SLEW("SLOW")) 
    obufds_rdwait  (.O(rxo_rd_wait_p),
 		   .OB(rxo_rd_wait_n),
 		   .I(rx_rd_wait)
@@ -222,9 +223,11 @@ module erx_io (/*AUTOARG*/
 
    assign  rxi_delay_in[8:0] ={rxi_frame,rxi_data[7:0]};
    
+   BUFG bufg_rx_ref_clk( .I(rx_ref_clk), .O(rx_ref_clk_idlyctrl));
+
    //Do these need parameters?
    IDELAYCTRL idelayctrl_inst (.RDY(),
-			       .REFCLK(rx_ref_clk),//200MHz clk (78ps tap delay)
+			       .REFCLK(rx_ref_clk_idlyctrl),//200MHz clk (78ps tap delay)
 			       .RST(1'b0)
 			       );
    
