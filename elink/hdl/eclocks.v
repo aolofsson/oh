@@ -162,7 +162,7 @@ module eclocks (/*AUTOARG*/
        .CLKOUT1_DIVIDE(TXCLK_DIVIDE),   // tx_lclk
        .CLKOUT2_DIVIDE(TXCLK_DIVIDE),   // tx_lclk90
        .CLKOUT3_DIVIDE(TXCLK_DIVIDE*4), // tx_lclk_div4
-       .CLKOUT4_DIVIDE(9),              // rx_ref_clk (for idelay)
+       .CLKOUT4_DIVIDE(6),              // rx_ref_clk (for idelay)
        .CLKOUT5_DIVIDE(128),            //   ??
        .CLKOUT6_DIVIDE(128),            //   ??        
        .CLKOUT0_DUTY_CYCLE(0.5),         
