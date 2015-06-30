@@ -2788,6 +2788,10 @@
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
+          <spirit:name>../../elink/hdl/elink_constants.v</spirit:name>
+        <spirit:fileType>verilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
           <spirit:name>../../memory/hdl/fifo_async.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
@@ -2951,6 +2955,10 @@
       </spirit:file>
       <spirit:file>
         <spirit:name>../../elink/hdl/elink_regmap.v</spirit:name>
+        <spirit:fileType>verilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>../../elink/hdl/elink_constants.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>

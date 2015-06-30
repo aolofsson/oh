@@ -49,6 +49,7 @@ set files [list \
  "[file normalize "$oh_path/elink/hdl/etx_protocol.v"]"\
  "[file normalize "$oh_path/elink/hdl/ecfg_if.v"]"\
  "[file normalize "$oh_path/elink/hdl/etx_remap.v"]"\
+ "[file normalize "$oh_path/elink/hdl/elink_constants.v]"\
  "[file normalize "$oh_path/elink/hdl/erx_protocol.v"]"\
  "[file normalize "$oh_path/elink/hdl/etx_arbiter.v"]"\
  "[file normalize "$oh_path/elink/hdl/etx_cfg.v"]"\
@@ -159,6 +160,11 @@ set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "used_in_implementation" "0" $file_obj
 
 set file "$oh_path/elink/hdl/etx_remap.v"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "used_in_implementation" "0" $file_obj
+
+set file "$oh_path/elink/hdl/elink_constants.v"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "used_in_implementation" "0" $file_obj

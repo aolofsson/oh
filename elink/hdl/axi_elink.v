@@ -308,7 +308,7 @@ module axi_elink(/*AUTOARG*/
    //AXI SLAVE
    //########################################################
    
-   defparam esaxi.IDW=S_AXI;
+   defparam esaxi.IDW=S_IDW;
    esaxi esaxi (.s_axi_aclk		(sys_clk),
 		/*AUTOINST*/
 		// Outputs
