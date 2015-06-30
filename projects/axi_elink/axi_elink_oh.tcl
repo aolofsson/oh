@@ -49,7 +49,7 @@ set files [list \
  "[file normalize "$oh_path/elink/hdl/etx_protocol.v"]"\
  "[file normalize "$oh_path/elink/hdl/ecfg_if.v"]"\
  "[file normalize "$oh_path/elink/hdl/etx_remap.v"]"\
- "[file normalize "$oh_path/elink/hdl/elink_constants.v]"\
+ "[file normalize "$oh_path/elink/hdl/elink_constants.v"]"\
  "[file normalize "$oh_path/elink/hdl/erx_protocol.v"]"\
  "[file normalize "$oh_path/elink/hdl/etx_arbiter.v"]"\
  "[file normalize "$oh_path/elink/hdl/etx_cfg.v"]"\
