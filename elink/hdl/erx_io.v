@@ -1,3 +1,4 @@
+`include "elink_constants.v"
 module erx_io (/*AUTOARG*/
    // Outputs
    rx_lclk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
@@ -197,6 +198,23 @@ module erx_io (/*AUTOARG*/
 	      .IB    (rxi_lclk_n),
 	      .O     (rxi_lclk)
 	      );
+
+`ifdef EPHYCARD
+    OBUFT #(.IOSTANDARD("LVCMOS18"), .SLEW("SLOW"))
+    obuft_wrwait (
+		    .O(rxo_wr_wait_p),
+		    .T(rx_wr_wait),
+		    .I(1'b0)
+		    );
+		    
+	OBUFT #(.IOSTANDARD("LVCMOS18"), .SLEW("SLOW"))
+    obuft_rdwait (
+             .O(rxo_rd_wait_p),
+             .T(rx_rd_wait),
+             .I(1'b0)
+              );
+
+`else
       
    OBUFDS #(.IOSTANDARD(IOSTD_ELINK),.SLEW("SLOW")) 
    obufds_wrwait (
@@ -210,7 +228,7 @@ module erx_io (/*AUTOARG*/
 		   .OB(rxo_rd_wait_n),
 		   .I(rx_rd_wait)
 		   );
-
+`endif
    //###################################
    //#RX CLOCK
    //###################################

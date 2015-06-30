@@ -147,8 +147,10 @@ module eclocks (/*AUTOARG*/
      
 `ifdef TARGET_XILINX	
 
-   wire       cclk_fb;
-   wire       lclk_fb;
+   wire       cclk_fb_in;
+   wire       cclk_fb_out;
+   wire       lclk_fb_in;
+   wire       lclk_fb_out;
    wire       cclk;
    wire       cclk_alt;
    
@@ -200,8 +202,8 @@ module eclocks (/*AUTOARG*/
 	.CLKOUT6(),
 	.PWRDWN(1'b0),
         .RST(pll_reset),     //reset
-        .CLKFBIN(cclk_fb),
-        .CLKFBOUT(cclk_fb),  //feedback clock     
+        .CLKFBIN(cclk_fb_in),
+        .CLKFBOUT(cclk_fb_out),  //feedback clock     
         .CLKIN1(sys_clk),    //input clock
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
@@ -220,11 +222,38 @@ module eclocks (/*AUTOARG*/
 	.CLKFBSTOPPED(),
 	.CLKINSTOPPED()
         );
+        
+    BUFG pll_cclk_bufg(.I(cclk_fb_out), .O(cclk_fb_in));
 
+`ifdef EPHYCARD //Ephycard has cclk in a different region
+   wire cclk_bufmr;
+   wire cclk_bufio;
+   wire cclk_oddr;
+   
    OBUFDS  cclk_obuf (.O   (e_cclk_p),
 		      .OB  (e_cclk_n),
-		      .I   (cclk)
+		      .I   (cclk_oddr)
 		      );
+		      
+  ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
+  oddr_lclk (
+             .Q  (cclk_oddr),
+             .C  (cclk_bufio),
+             .CE (1'b1),
+             .D1 (1'b1),
+             .D2 (1'b0),
+             .R  (1'b0),
+             .S  (1'b0)
+             );
+	
+	BUFIO bufio_cclk(.O(cclk_bufio), .I(cclk_bufmr));
+    BUFMR bufmr_cclk(.O(cclk_bufmr), .I(cclk));
+`else
+   OBUFDS  cclk_obuf (.O   (e_cclk_p),
+       .OB  (e_cclk_n),
+       .I   (cclk)
+       );
+`endif
 
    //###########################
    // PLL RX CLOCK ALIGNMENT
@@ -267,8 +296,8 @@ module eclocks (/*AUTOARG*/
         .CLKOUT5(rx_lclk_div4),
 	.PWRDWN(1'b0),
         .RST(pll_reset),
-        .CLKFBIN(lclk_fb),
-        .CLKFBOUT(lclk_fb),       
+        .CLKFBIN(lclk_fb_in),
+        .CLKFBOUT(lclk_fb_out),       
         .CLKIN1(rx_clkin),
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
@@ -281,6 +310,8 @@ module eclocks (/*AUTOARG*/
 	.DO(), 
 	.LOCKED(lclk_locked)
         );
+     
+    BUFG pll_elink_bufg(.I(lclk_fb_out), .O(lclk_fb_in));
    
 `endif //  `ifdef TARGET_XILINX
 
