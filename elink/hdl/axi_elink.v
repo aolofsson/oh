@@ -33,6 +33,7 @@ module axi_elink(/*AUTOARG*/
    parameter ID          = 12'h810;
    parameter S_IDW         = 12;       //ID width for S_AXI
    parameter M_IDW         = 6;       //ID width for M_AXI
+   parameter IOSTD_ELINK  = "LVDS_25";
       
    /****************************/
    /*CLK AND RESET             */
@@ -222,7 +223,8 @@ module axi_elink(/*AUTOARG*/
    //########################################################
    //ELINK
    //########################################################
-
+    
+   defparam elink.IOSTD_ELINK=IOSTD_ELINK;
    elink elink(.reset			(elink_reset),
 	       /*AUTOINST*/
 	       // Outputs
@@ -305,7 +307,8 @@ module axi_elink(/*AUTOARG*/
    //########################################################
    //AXI SLAVE
    //########################################################
-
+   
+   defparam esaxi.IDW=S_AXI;
    esaxi esaxi (.s_axi_aclk		(sys_clk),
 		/*AUTOINST*/
 		// Outputs
@@ -363,6 +366,7 @@ module axi_elink(/*AUTOARG*/
    //AXI MASTER INTERFACE
    //########################################################
 
+   defparam emaxi.IDW=M_IDW;
    emaxi emaxi (.m_axi_aclk		(sys_clk),
 		/*AUTOINST*/
 		// Outputs
