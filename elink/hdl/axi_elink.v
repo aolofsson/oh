@@ -31,7 +31,9 @@ module axi_elink(/*AUTOARG*/
    parameter DW          = 32; 
    parameter PW          = 104;      //packet width   
    parameter ID          = 12'h810;
-   parameter IDW         = 12;       //ID width for AXI
+   parameter S_IDW         = 12;       //ID width for S_AXI
+   parameter M_IDW         = 6;       //ID width for M_AXI
+   parameter IOSTD_ELINK  = "LVDS_25";
       
    /****************************/
    /*CLK AND RESET             */
@@ -75,7 +77,7 @@ module axi_elink(/*AUTOARG*/
    input  	       m_axi_aresetn; // global reset singal.
 
    //Write address channel
-   output [IDW-1:0]    m_axi_awid;    // write address ID
+   output [M_IDW-1:0]    m_axi_awid;    // write address ID
    output [31 : 0]     m_axi_awaddr;  // master interface write address   
    output [7 : 0]      m_axi_awlen;   // burst length.
    output [2 : 0]      m_axi_awsize;  // burst size.
@@ -88,7 +90,7 @@ module axi_elink(/*AUTOARG*/
    input 	       m_axi_awready; // write address ready
 
    //Write data channel
-   output [IDW-1:0]    m_axi_wid;     
+   output [M_IDW-1:0]    m_axi_wid;     
    output [63 : 0]     m_axi_wdata;   // master interface write data.
    output [7 : 0]      m_axi_wstrb;   // byte write strobes
    output 	       m_axi_wlast;   // last transfer in a write burst.
@@ -96,13 +98,13 @@ module axi_elink(/*AUTOARG*/
    input 	       m_axi_wready;  // slave is ready for data
 
    //Write response channel
-   input [IDW-1:0]     m_axi_bid;
+   input [M_IDW-1:0]     m_axi_bid;
    input [1 : 0]       m_axi_bresp;   // status of the write transaction.
    input 	       m_axi_bvalid;  // valid write response
    output 	       m_axi_bready;  // master can accept write response.
 
    //Read address channel
-   output [IDW-1:0]    m_axi_arid;    // read address ID
+   output [M_IDW-1:0]    m_axi_arid;    // read address ID
    output [31 : 0]     m_axi_araddr;  // initial address of a read burst
    output [7 : 0]      m_axi_arlen;   // burst length
    output [2 : 0]      m_axi_arsize;  // burst size
@@ -115,7 +117,7 @@ module axi_elink(/*AUTOARG*/
    input 	       m_axi_arready; // slave is ready to accept an address
 
    //Read data channel   
-   input [IDW-1:0]     m_axi_rid; 
+   input [M_IDW-1:0]     m_axi_rid; 
    input [63 : 0]      m_axi_rdata;   // master read data
    input [1 : 0]       m_axi_rresp;   // status of the read transfer
    input 	       m_axi_rlast;   // signals last transfer in a read burst
@@ -129,7 +131,7 @@ module axi_elink(/*AUTOARG*/
    input 	   s_axi_aresetn;
    
    //Read address channel
-   input [IDW-1:0] s_axi_arid;    //write address ID
+   input [S_IDW-1:0] s_axi_arid;    //write address ID
    input [31:0]    s_axi_araddr;
    input [1:0] 	   s_axi_arburst;
    input [3:0] 	   s_axi_arcache;
@@ -142,7 +144,7 @@ module axi_elink(/*AUTOARG*/
    input 	   s_axi_arvalid;
    
    //Write address channel
-   input [IDW-1:0] s_axi_awid;    //write address ID
+   input [S_IDW-1:0] s_axi_awid;    //write address ID
    input [31:0]    s_axi_awaddr;
    input [1:0] 	   s_axi_awburst;
    input [3:0] 	   s_axi_awcache;
@@ -155,13 +157,13 @@ module axi_elink(/*AUTOARG*/
    output 	   s_axi_awready;
    
    //Buffered write response channel
-   output [IDW-1:0] s_axi_bid;    //write address ID
+   output [S_IDW-1:0] s_axi_bid;    //write address ID
    output [1:0]     s_axi_bresp;
    output 	    s_axi_bvalid;
    input 	    s_axi_bready;
    
    //Read channel
-   output [IDW-1:0] s_axi_rid;    //write address ID
+   output [S_IDW-1:0] s_axi_rid;    //write address ID
    output [31:0]    s_axi_rdata;
    output 	    s_axi_rlast;   
    output [1:0]     s_axi_rresp;
@@ -169,7 +171,7 @@ module axi_elink(/*AUTOARG*/
    input 	    s_axi_rready;
 
    //Write channel
-   input [IDW-1:0]  s_axi_wid;    //write address ID
+   input [S_IDW-1:0]  s_axi_wid;    //write address ID
    input [31:0]     s_axi_wdata;
    input 	    s_axi_wlast;   
    input [3:0] 	    s_axi_wstrb;
@@ -221,7 +223,8 @@ module axi_elink(/*AUTOARG*/
    //########################################################
    //ELINK
    //########################################################
-
+    
+   defparam elink.IOSTD_ELINK=IOSTD_ELINK;
    elink elink(.reset			(elink_reset),
 	       /*AUTOINST*/
 	       // Outputs
@@ -304,7 +307,8 @@ module axi_elink(/*AUTOARG*/
    //########################################################
    //AXI SLAVE
    //########################################################
-
+   
+   defparam esaxi.IDW=S_IDW;
    esaxi esaxi (.s_axi_aclk		(sys_clk),
 		/*AUTOINST*/
 		// Outputs
@@ -315,10 +319,10 @@ module axi_elink(/*AUTOARG*/
 		.rxrr_wait		(rxrr_wait),
 		.s_axi_arready		(s_axi_arready),
 		.s_axi_awready		(s_axi_awready),
-		.s_axi_bid		(s_axi_bid[IDW-1:0]),
+		.s_axi_bid		(s_axi_bid[S_IDW-1:0]),
 		.s_axi_bresp		(s_axi_bresp[1:0]),
 		.s_axi_bvalid		(s_axi_bvalid),
-		.s_axi_rid		(s_axi_rid[IDW-1:0]),
+		.s_axi_rid		(s_axi_rid[S_IDW-1:0]),
 		.s_axi_rdata		(s_axi_rdata[31:0]),
 		.s_axi_rlast		(s_axi_rlast),
 		.s_axi_rresp		(s_axi_rresp[1:0]),
@@ -330,7 +334,7 @@ module axi_elink(/*AUTOARG*/
 		.rxrr_access		(rxrr_access),
 		.rxrr_packet		(rxrr_packet[PW-1:0]),
 		.s_axi_aresetn		(s_axi_aresetn),
-		.s_axi_arid		(s_axi_arid[IDW-1:0]),
+		.s_axi_arid		(s_axi_arid[S_IDW-1:0]),
 		.s_axi_araddr		(s_axi_araddr[31:0]),
 		.s_axi_arburst		(s_axi_arburst[1:0]),
 		.s_axi_arcache		(s_axi_arcache[3:0]),
@@ -340,7 +344,7 @@ module axi_elink(/*AUTOARG*/
 		.s_axi_arqos		(s_axi_arqos[3:0]),
 		.s_axi_arsize		(s_axi_arsize[2:0]),
 		.s_axi_arvalid		(s_axi_arvalid),
-		.s_axi_awid		(s_axi_awid[IDW-1:0]),
+		.s_axi_awid		(s_axi_awid[S_IDW-1:0]),
 		.s_axi_awaddr		(s_axi_awaddr[31:0]),
 		.s_axi_awburst		(s_axi_awburst[1:0]),
 		.s_axi_awcache		(s_axi_awcache[3:0]),
@@ -352,7 +356,7 @@ module axi_elink(/*AUTOARG*/
 		.s_axi_awvalid		(s_axi_awvalid),
 		.s_axi_bready		(s_axi_bready),
 		.s_axi_rready		(s_axi_rready),
-		.s_axi_wid		(s_axi_wid[IDW-1:0]),
+		.s_axi_wid		(s_axi_wid[S_IDW-1:0]),
 		.s_axi_wdata		(s_axi_wdata[31:0]),
 		.s_axi_wlast		(s_axi_wlast),
 		.s_axi_wstrb		(s_axi_wstrb[3:0]),
@@ -362,6 +366,7 @@ module axi_elink(/*AUTOARG*/
    //AXI MASTER INTERFACE
    //########################################################
 
+   defparam emaxi.IDW=M_IDW;
    emaxi emaxi (.m_axi_aclk		(sys_clk),
 		/*AUTOINST*/
 		// Outputs
@@ -369,7 +374,7 @@ module axi_elink(/*AUTOARG*/
 		.rxrd_wait		(rxrd_wait),
 		.txrr_access		(txrr_access),
 		.txrr_packet		(txrr_packet[PW-1:0]),
-		.m_axi_awid		(m_axi_awid[IDW-1:0]),
+		.m_axi_awid		(m_axi_awid[M_IDW-1:0]),
 		.m_axi_awaddr		(m_axi_awaddr[31:0]),
 		.m_axi_awlen		(m_axi_awlen[7:0]),
 		.m_axi_awsize		(m_axi_awsize[2:0]),
@@ -379,13 +384,13 @@ module axi_elink(/*AUTOARG*/
 		.m_axi_awprot		(m_axi_awprot[2:0]),
 		.m_axi_awqos		(m_axi_awqos[3:0]),
 		.m_axi_awvalid		(m_axi_awvalid),
-		.m_axi_wid		(m_axi_wid[IDW-1:0]),
+		.m_axi_wid		(m_axi_wid[M_IDW-1:0]),
 		.m_axi_wdata		(m_axi_wdata[63:0]),
 		.m_axi_wstrb		(m_axi_wstrb[7:0]),
 		.m_axi_wlast		(m_axi_wlast),
 		.m_axi_wvalid		(m_axi_wvalid),
 		.m_axi_bready		(m_axi_bready),
-		.m_axi_arid		(m_axi_arid[IDW-1:0]),
+		.m_axi_arid		(m_axi_arid[M_IDW-1:0]),
 		.m_axi_araddr		(m_axi_araddr[31:0]),
 		.m_axi_arlen		(m_axi_arlen[7:0]),
 		.m_axi_arsize		(m_axi_arsize[2:0]),
@@ -405,11 +410,11 @@ module axi_elink(/*AUTOARG*/
 		.m_axi_aresetn		(m_axi_aresetn),
 		.m_axi_awready		(m_axi_awready),
 		.m_axi_wready		(m_axi_wready),
-		.m_axi_bid		(m_axi_bid[IDW-1:0]),
+		.m_axi_bid		(m_axi_bid[M_IDW-1:0]),
 		.m_axi_bresp		(m_axi_bresp[1:0]),
 		.m_axi_bvalid		(m_axi_bvalid),
 		.m_axi_arready		(m_axi_arready),
-		.m_axi_rid		(m_axi_rid[IDW-1:0]),
+		.m_axi_rid		(m_axi_rid[M_IDW-1:0]),
 		.m_axi_rdata		(m_axi_rdata[63:0]),
 		.m_axi_rresp		(m_axi_rresp[1:0]),
 		.m_axi_rlast		(m_axi_rlast),

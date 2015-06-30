@@ -1,3 +1,4 @@
+`include "elink_regmap.v"
 module esaxi (/*autoarg*/
    // Outputs
    txwr_access, txwr_packet, txrd_access, txrd_packet, rxrr_wait,
@@ -266,6 +267,8 @@ module esaxi (/*autoarg*/
    //###################################################
    //#WRITE RESPONSE CHANNEL
    //###################################################
+    assign s_axi_bid = axi_bid;
+   
    always @ (posedge s_axi_aclk)
      if(~s_axi_aresetn) 
        s_axi_wready <= 1'b0;      

@@ -19,6 +19,7 @@ module elink(/*AUTOARG*/
    parameter DW          = 32; 
    parameter PW          = 104;      //packet width   
    parameter ID          = 12'h810;
+   parameter IOSTD_ELINK = "LVDS_25";
 
    /****************************/
    /*CLK AND RESET             */
@@ -172,6 +173,7 @@ module elink(/*AUTOARG*/
    */
    
    defparam erx.ID=ID;
+   defparam erx.IOSTD_ELINK=IOSTD_ELINK;
    erx erx(
 	   /*AUTOINST*/
 	   // Outputs
@@ -222,6 +224,7 @@ module elink(/*AUTOARG*/
    */
 
    defparam etx.ID=ID;
+   defparam etx.IOSTD_ELINK=IOSTD_ELINK;
    etx etx(.txwr_access  (txwr_gated_access),
 	   /*AUTOINST*/
 	   // Outputs

@@ -1,3 +1,4 @@
+`include "elink_regmap.v"
 module erx_arbiter (/*AUTOARG*/
    // Outputs
    rx_rd_wait, rx_wr_wait, edma_wait, ecfg_wait, rxwr_access,
@@ -108,7 +109,7 @@ module erx_arbiter (/*AUTOARG*/
    assign erx_rr_access         = (erx_access & 
 				   erx_write & 
 				  (erx_dstaddr[31:20] == myid[11:0]) & 
-				  (erx_dstaddr[19:16] == 4'hD)
+				  (erx_dstaddr[19:16] == `EGROUP_RR) // Not sure about this...
 				  );
    
    assign rxrr_access = erx_rr_access   |

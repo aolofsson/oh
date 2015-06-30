@@ -134,7 +134,7 @@ always @ (posedge tx_lclk)
    always @ (posedge tx_lclk)
      if (tx_new_frame)
        tx_double[63:0] <= {16'b0,//16
-			   write,7'b0,ctrlmode[3:0],//12
+			   ~write,7'b0,ctrlmode[3:0],//12
 			   dstaddr[31:0],datamode[1:0],write,access};//36
      else if(tx_state[2:0]==`CYCLE4)
        tx_double[63:0] <= {data[31:0],srcaddr[31:0]};
