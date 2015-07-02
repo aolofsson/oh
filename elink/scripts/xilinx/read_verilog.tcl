@@ -1,9 +1,7 @@
 set SRC /home/aolofsson/Work_all/oh
 
 #ONLY FOR REFERENCE EXAMPLE
-read_verilog $SRC/elink/hdl/elink_example.v
-read_verilog $SRC/emesh/hdl/ememory.v
-read_verilog $SRC/emesh/hdl/egen.v
+read_verilog $SRC/elink/hdl/axi_elink.v
 
 #ELINK
 read_verilog $SRC/elink/hdl/elink_constants.v
