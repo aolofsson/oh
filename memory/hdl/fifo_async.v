@@ -7,8 +7,8 @@ module fifo_async
    wr_rst, rd_rst, wr_clk, rd_clk, wr_en, din, rd_en
    );
    
-   parameter WIDTH   = 104;        //FIFO width
-   parameter DEPTH   = 16;          //FIFO depth
+   parameter DW    = 104;        //FIFO width
+   parameter DEPTH = 16;          //FIFO depth
      
    //##########
    //# RESET/CLOCK
@@ -22,7 +22,7 @@ module fifo_async
    //# FIFO WRITE
    //##########
    input             wr_en;   
-   input [WIDTH-1:0] din;
+   input [DW-1:0] din;
    output            full;
    output            prog_full;
 
@@ -30,98 +30,72 @@ module fifo_async
    //# FIFO READ
    //###########
    input 	      rd_en;
-   output [WIDTH-1:0] dout;
+   output [DW-1:0] dout;
    output 	      empty;
    output 	      valid;
+
    
 `ifdef TARGET_CLEAN
 
-   parameter AW  = $clog2(DEPTH); //FIFO address width (for model)
-   
-   //Wires
-   wire [WIDTH/8-1:0] wr_vec;
-   wire [AW:0] 	      wr_rd_gray_pointer;
-   wire [AW:0] 	      rd_wr_gray_pointer;
-   wire [AW:0] 	      wr_gray_pointer;
-   wire [AW:0] 	      rd_gray_pointer;
-   wire [AW-1:0]      rd_addr;
-   wire [AW-1:0]      wr_addr;
-   reg 		      valid;
-   
-   assign wr_vec[WIDTH/8-1:0] = {(WIDTH/8){wr_en}};
-
-   //Valid data at output
-   always @ (posedge rd_clk or posedge rd_rst)
-     if(rd_rst)
-       valid <=1'b0;
-     else
-       valid <= rd_en;
-   
-   memory_dp #(.FW(WIDTH),.AW(AW)) memory_dp (
-					   // Outputs
-					   .rd_data	(dout[WIDTH-1:0]),
-					   // Inputs
-					   .wr_clk	(wr_clk),
-					   .wr_en	(wr_vec[WIDTH/8-1:0]),
-					   .wr_addr	(wr_addr[AW-1:0]),
-					   .wr_data	(din[WIDTH-1:0]),
-					   .rd_clk	(rd_clk),
-					   .rd_en	(rd_en),
-					   .rd_addr	(rd_addr[AW-1:0]));
-
-   //Read State Machine
-   fifo_empty_block #(.AW(AW)) fifo_empty_block(
-						// Outputs
-						.rd_fifo_empty	(empty),
-						.rd_addr	(rd_addr[AW-1:0]),
-						.rd_gray_pointer(rd_gray_pointer[AW:0]),
-						// Inputs
-						.reset		(rd_rst),
-						.rd_clk		(rd_clk),
-						.rd_wr_gray_pointer(rd_wr_gray_pointer[AW:0]),
-						.rd_read	(rd_en));
-   
-   //Write State Machine
-   fifo_full_block #(.AW(AW)) fifo_full_block(
-					      // Outputs
-					      .wr_fifo_prog_full(prog_full),
-					      .wr_fifo_full	(full),					      
-					      .wr_addr		(wr_addr[AW-1:0]),
-					      .wr_gray_pointer	(wr_gray_pointer[AW:0]),
-					      // Inputs
-					      .reset		(wr_rst),
-					      .wr_clk		(wr_clk),
-					      .wr_rd_gray_pointer(wr_rd_gray_pointer[AW:0]),
-					      .wr_write		(wr_en));
-   
-
-   synchronizer #(.DW(AW+1)) rd2wr_sync (.out		(wr_rd_gray_pointer[AW:0]),
-					 .in		(rd_gray_pointer[AW:0]),
-                                         .reset		(wr_rst),
-					 .clk		(wr_clk));
-   
-
-   synchronizer #(.DW(AW+1)) wr2rd_sync (.out		(rd_wr_gray_pointer[AW:0]),
-					 .in		(wr_gray_pointer[AW:0]),
-                                         .reset		(rd_rst),
-					 .clk		(rd_clk));
+   fifo_async_model fifo_model (.full		(),
+				.prog_full	(prog_full),
+				.almost_full	(full),
+				/*AUTOINST*/
+				// Outputs
+				.dout		(dout[DW-1:0]),
+				.empty		(empty),
+				.valid		(valid),
+				// Inputs
+				.wr_rst		(wr_rst),
+				.rd_rst		(rd_rst),
+				.wr_clk		(wr_clk),
+				.rd_clk		(rd_clk),
+				.wr_en		(wr_en),
+				.din		(din[DW-1:0]),
+				.rd_en		(rd_en));
    
 `elsif TARGET_XILINX   
    generate
-      if((WIDTH==104) & (DEPTH==16))
-	fifo_async_104x16 fifo_async_104x16 (
-					     .wr_clk(wr_clk),
-					     .wr_rst(wr_rst),
-					     .rd_clk(rd_clk),
-					     .rd_rst(rd_rst),
-					     .din(din[WIDTH-1:0]),
-					     .wr_en(wr_en),
-					     .rd_en(rd_en),
-					     .dout(dout[WIDTH-1:0]),
-					     .full(full),
-					     .empty(empty),
-					     .valid(valid)
-					     );	   
+      if((DW==104) & (DEPTH==16))
+	begin
+	   fifo_async_104x16 fifo_async_104x16 (.full		(),
+						.prog_full	(prog_full),
+						.almost_full	(full),
+						/*AUTOINST*/
+						// Outputs
+						.dout		(dout[DW-1:0]),
+						.empty		(empty),
+						.valid		(valid),
+						// Inputs
+						.wr_rst		(wr_rst),
+						.rd_rst		(rd_rst),
+						.wr_clk		(wr_clk),
+						.rd_clk		(rd_clk),
+						.wr_en		(wr_en),
+						.din		(din[DW-1:0]),
+						.rd_en		(rd_en));	   
+	end
+      else if((DW==104) & (DEPTH==32))
+	begin
+	   fifo_async_104x32 fifo_async_104x32 (.full		(),
+						.prog_full	(prog_full),
+						.almost_full	(full),
+						/*AUTOINST*/
+						// Outputs
+						.dout		(dout[DW-1:0]),
+						.empty		(empty),
+						.valid		(valid),
+						// Inputs
+						.wr_rst		(wr_rst),
+						.rd_rst		(rd_rst),
+						.wr_clk		(wr_clk),
+						.rd_clk		(rd_clk),
+						.wr_en		(wr_en),
+						.din		(din[DW-1:0]),
+						.rd_en		(rd_en));
+	   
+	end   
+	      
    endgenerate
    
       
@@ -130,7 +104,7 @@ module fifo_async
    
 endmodule // fifo_async
 // Local Variables:
-// verilog-library-directories:("." "../../common/hdl")
+// verilog-library-directories:("." "../../xilibs/hdl")
 // End:
 
 /*

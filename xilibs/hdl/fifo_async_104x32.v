@@ -1,5 +1,5 @@
 /* Model for xilinx async fifo*/
-module fifo_async_104x16 
+module fifo_async_104x32 
    (/*AUTOARG*/
    // Outputs
    full, prog_full, almost_full, dout, empty, valid,
@@ -36,7 +36,7 @@ module fifo_async_104x16
    output          valid;
 
    defparam fifo_model.DW=104;   
-   defparam fifo_model.DEPTH=16;   
+   defparam fifo_model.DEPTH=32;   
 
    fifo_async_model fifo_model (/*AUTOINST*/
 				// Outputs

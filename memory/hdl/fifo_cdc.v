@@ -12,7 +12,7 @@ module fifo_cdc (/*AUTOARG*/
    wait_in
    );
 
-   parameter WIDTH    = 104;
+   parameter DW    = 104;
    parameter DEPTH     = 16;
 
    /********************************/
@@ -21,7 +21,7 @@ module fifo_cdc (/*AUTOARG*/
    input              clk_in;   
    input              reset_in;
    input 	      access_in;   
-   input [WIDTH-1:0]  packet_in;   
+   input [DW-1:0]  packet_in;   
    output 	      wait_out;   
 
    /********************************/
@@ -30,7 +30,7 @@ module fifo_cdc (/*AUTOARG*/
    input              clk_out;   
    input              reset_out;
    output 	      access_out;   
-   output [WIDTH-1:0] packet_out;   
+   output [DW-1:0] packet_out;   
    input 	      wait_in;   
    
    //Local wires
@@ -53,12 +53,13 @@ module fifo_cdc (/*AUTOARG*/
        access_out <=rd_en;
 
    //Read response fifo (from master)
-   defparam fifo.WIDTH=104;
-   defparam fifo.DEPTH=16;
-   fifo_async  fifo(.prog_full		(),
-		    .full		(full),
+   defparam fifo.DW=DW;
+   defparam fifo.DEPTH=DEPTH;
+
+   fifo_async  fifo (.prog_full		(full),//stay safe for now
+		     .full		(),
 		    // Outputs
-		    .dout		(packet_out[WIDTH-1:0]),
+		    .dout		(packet_out[DW-1:0]),
 		    .empty		(empty),
 		    .valid		(valid), 
 		    // Inputs
@@ -67,7 +68,7 @@ module fifo_cdc (/*AUTOARG*/
 		    .wr_clk		(clk_in),
 		    .rd_clk		(clk_out),
 		    .wr_en		(wr_en),
-		    .din		(packet_in[WIDTH-1:0]),
+		    .din		(packet_in[DW-1:0]),
 		    .rd_en		(rd_en)
 		    );
       
