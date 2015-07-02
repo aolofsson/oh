@@ -248,7 +248,6 @@ always @ (posedge tx_lclk)
    //# Wait Input Buffers
    //################################
 
-//TODO: see below..
 `ifdef EPHYCARD
     assign tx_wr_wait = txi_wr_wait_p;
 `else   
