@@ -15,50 +15,62 @@ module elink(/*AUTOARG*/
    txrr_packet
    );
    
-   parameter AW          = 32;
-   parameter DW          = 32; 
+   parameter AW          = 32;       //native address width
+   parameter DW          = 32;       //native data width
    parameter PW          = 104;      //packet width   
-   parameter ID          = 12'h810;
+   parameter ID          = 12'h810;  //epiphany ID for elink (ie addr[31:20])
    parameter IOSTD_ELINK = "LVDS_25";
 
    /****************************/
-   /*CLK AND RESET             */
+   /*CLOCK AND RESET           */
    /****************************/
-   input        reset;            // por reset
-   input 	sys_clk;          // system clock for FIFOs only
-   input 	tx_lclk;	  // fast tx clock for IO
-   input 	tx_lclk90;        // fast 90deg shifted lclk   
-   input 	tx_lclk_div4;	  // slow tx clock for core logic
-   input 	rx_lclk;	  // rx input clock tweaked by pll for IO
-   input 	rx_lclk_div4;	  // slow rx clock for core logic
-   input        rx_ref_clk;       // 200MHz ref clock for idelay   
-   output 	rx_lclk_pll;      // rx_lclk input for pll
+   input        reset;         // hardware reset
+   input 	sys_clk;       // a single system clock for master/slave FIFOs
+   input 	tx_lclk;       // fast tx clock for IO
+   input 	tx_lclk90;     // fast 90deg shifted lclk   
+   input 	tx_lclk_div4;  // slow tx clock for core logic
+   input 	rx_lclk;       // rx input clock tweaked by pll for IO
+   input 	rx_lclk_div4;  // slow clock for rx logic 
+   input        rx_ref_clk;    // 200MHz ref clock for rx idelay elements   
+   output 	rx_lclk_pll;   // rx_lclk pass through input for pll
 
    /********************************/
-   /*ELINK I/O PINS                */
+   /*ELINK RECEIVER                */
    /********************************/          
-   //Receiver
    input 	rxi_lclk_p,   rxi_lclk_n;    // rx clock input
    input        rxi_frame_p,  rxi_frame_n;   // rx frame signal
    input [7:0] 	rxi_data_p,   rxi_data_n;    // rx data
    output       rxo_wr_wait_p,rxo_wr_wait_n; // rx write pushback output
    output       rxo_rd_wait_p,rxo_rd_wait_n; // rx read pushback output
-   
-   //Transmitter
+
+   /********************************/
+   /*ELINK TRANSMITTER             */
+   /********************************/          
    output 	txo_lclk_p,   txo_lclk_n;    // tx clock output
    output       txo_frame_p,  txo_frame_n;   // tx frame signal
    output [7:0] txo_data_p,   txo_data_n;    // tx data
    input 	txi_wr_wait_p,txi_wr_wait_n; // tx write pushback input
    input 	txi_rd_wait_p,txi_rd_wait_n; // tx read pushback input
 
-   /********************************/
-   /*EPIPHANY INTERFACE (I/O PINS) */
-   /********************************/          
-   output [11:0]   e_chipid;	    // chip id strap pins for epiphany
-   output 	   elink_en;        // master enable for elink/epiphany 
+   /*************************************/
+   /*EPIPHANY MISC INTERFACE (I/O PINS) */
+   /*************************************/          
+   output [11:0]   e_chipid;	// chip id strap pins for epiphany
+   output 	   elink_en;    // master enable (reset) for elink/epiphany 
    
    /*****************************/
-   /*"System" Interface         */
+   /*MAILBOX INTERRUPTS         */
+   /*****************************/
+   output       mailbox_not_empty;   
+   output       mailbox_full;
+
+   /*****************************/
+   /*READBACK TIMEOUT (TBD)     */
+   /*****************************/
+   output 	timeout;
+
+   /*****************************/
+   /*SYSTEM SIDE INTERFACE      */
    /*****************************/   
    
    //Master Write (from RX)
@@ -91,17 +103,6 @@ module elink(/*AUTOARG*/
    input [PW-1:0]  txrr_packet;
    output 	   txrr_wait;
 
-   /*****************************/
-   /*MAILBOX (interrupts)       */
-   /*****************************/
-   output       mailbox_not_empty;   
-   output       mailbox_full;
-
-   /*****************************/
-   /*READBACK TIMEOUT           */
-   /*****************************/
-   output 	timeout;
-   
    /*#############################################*/
    /*  END OF BLOCK INTERFACE                     */
    /*#############################################*/
@@ -260,7 +261,7 @@ module elink(/*AUTOARG*/
    /***********************************************************/
    /*TX-->RX REGISTER INTERFACE CONNECTION                    */
    /***********************************************************/
-   defparam ecfg_cdc.WIDTH=104;
+   defparam ecfg_cdc.DW=104;
    defparam ecfg_cdc.DEPTH=16;
    
    fifo_cdc ecfg_cdc (// Outputs
