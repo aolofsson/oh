@@ -18,6 +18,7 @@
  #
  ###########################################################################
  */
+`include "../../elink/hdl/elink_regmap.v" // is there a better way?
 
 module emailbox (/*AUTOARG*/
    // Outputs

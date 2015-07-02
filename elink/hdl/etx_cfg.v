@@ -3,6 +3,7 @@
  ELINK TX CONFIGURATION REGISTER FILE
  ######################################################################## 
  */
+`include "elink_regmap.v"
 module etx_cfg (/*AUTOARG*/
    // Outputs
    mi_dout, tx_enable, mmu_enable, gpio_enable, remap_enable,

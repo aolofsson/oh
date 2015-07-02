@@ -4,6 +4,8 @@
  ######################################################################## 
  */
 
+`include "elink_regmap.v"
+
 module ecfg_elink (/*AUTOARG*/
    // Outputs
    txwr_gated_access, elink_en, clk_config, e_chipid,

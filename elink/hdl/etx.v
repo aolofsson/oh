@@ -14,7 +14,8 @@ module etx(/*AUTOARG*/
    parameter PW      = 104;
    parameter RFAW    = 6;
    parameter ID      = 12'h000;
-   
+   parameter IOSTD_ELINK="LVDS_25";
+
    //Synched resets
    input          etx_reset;                   // reset for core logic 
    input 	  sys_reset;                   // reset for fifos   
@@ -155,6 +156,7 @@ module etx(/*AUTOARG*/
    /*TRANSMIT I/O LOGIC                                       */
    /***********************************************************/
 
+   defparam etx_io.IOSTD_ELINK=IOSTD_ELINK;
    etx_io etx_io (.reset		(etx_reset),
 		  /*AUTOINST*/
 		  // Outputs
