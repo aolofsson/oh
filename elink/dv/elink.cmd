@@ -1,5 +1,3 @@
-../hdl/elink_constants.v
-../hdl/elink_regmap.v
 dv_elink_tb.v
 elink_e16_model.v
 -y .
@@ -11,6 +9,8 @@ elink_e16_model.v
 -y ../../emesh/hdl
 -y ../../emmu/hdl
 -y ../../edma/hdl
+-y ../../xilibs/ip/fifo_async_104x16
+-y ../../xilibs/ip/fifo_async_104x32
 
 
 
