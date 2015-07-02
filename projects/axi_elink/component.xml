@@ -2780,159 +2780,159 @@
     <spirit:fileSet>
       <spirit:name>xilinx_anylanguagesynthesis_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/xilibs/ip/fifo_async_104x16.xci</spirit:name>
+        <spirit:name>../../xilibs/ip/fifo_async_104x16.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/elink_constants.v</spirit:name>
+        <spirit:name>../../elink/hdl/elink_constants.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/memory/hdl/fifo_async.v</spirit:name>
+        <spirit:name>../../memory/hdl/fifo_async.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/memory/hdl/memory_dp.v</spirit:name>
+        <spirit:name>../../memory/hdl/memory_dp.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/emesh/hdl/packet2emesh.v</spirit:name>
+        <spirit:name>../../emesh/hdl/packet2emesh.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/emesh/hdl/emesh2packet.v</spirit:name>
+        <spirit:name>../../emesh/hdl/emesh2packet.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/common/hdl/arbiter_priority.v</spirit:name>
+        <spirit:name>../../common/hdl/arbiter_priority.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/common/hdl/synchronizer.v</spirit:name>
+        <spirit:name>../../common/hdl/synchronizer.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/emmu/hdl/emmu.v</spirit:name>
+        <spirit:name>../../emmu/hdl/emmu.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/memory/hdl/fifo_cdc.v</spirit:name>
+        <spirit:name>../../memory/hdl/fifo_cdc.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/elink_regmap.v</spirit:name>
+        <spirit:name>../../elink/hdl/elink_regmap.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/emailbox/hdl/emailbox.v</spirit:name>
+        <spirit:name>../../emailbox/hdl/emailbox.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/edma/hdl/edma.v</spirit:name>
+        <spirit:name>../../edma/hdl/edma.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_arbiter.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_arbiter.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/common/hdl/pulse_stretcher.v</spirit:name>
+        <spirit:name>../../common/hdl/pulse_stretcher.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_protocol.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_protocol.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/ecfg_if.v</spirit:name>
+        <spirit:name>../../elink/hdl/ecfg_if.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_remap.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_remap.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_protocol.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_protocol.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_arbiter.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_arbiter.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_cfg.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_cfg.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_cfg.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_cfg.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_remap.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_remap.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_io.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_io.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_io.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_io.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_fifo.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_fifo.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_core.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_core.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_core.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_core.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_fifo.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_fifo.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/ecfg_elink.v</spirit:name>
+        <spirit:name>../../elink/hdl/ecfg_elink.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/ereset.v</spirit:name>
+        <spirit:name>../../elink/hdl/ereset.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/memory/hdl/fifo_sync.v</spirit:name>
+        <spirit:name>../../memory/hdl/fifo_sync.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/elink.v</spirit:name>
+        <spirit:name>../../elink/hdl/elink.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/emaxi.v</spirit:name>
+        <spirit:name>../../elink/hdl/emaxi.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/esaxi.v</spirit:name>
+        <spirit:name>../../elink/hdl/esaxi.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/eclocks.v</spirit:name>
+        <spirit:name>../../elink/hdl/eclocks.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/axi_elink.v</spirit:name>
+        <spirit:name>../../elink/hdl/axi_elink.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -2953,159 +2953,159 @@
     <spirit:fileSet>
       <spirit:name>xilinx_anylanguagebehavioralsimulation_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/xilibs/ip/fifo_async_104x16.xci</spirit:name>
+        <spirit:name>../../xilibs/ip/fifo_async_104x16.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/elink_constants.v</spirit:name>
+        <spirit:name>../../elink/hdl/elink_constants.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/memory/hdl/fifo_async.v</spirit:name>
+        <spirit:name>../../memory/hdl/fifo_async.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/memory/hdl/memory_dp.v</spirit:name>
+        <spirit:name>../../memory/hdl/memory_dp.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/emesh/hdl/packet2emesh.v</spirit:name>
+        <spirit:name>../../emesh/hdl/packet2emesh.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/emesh/hdl/emesh2packet.v</spirit:name>
+        <spirit:name>../../emesh/hdl/emesh2packet.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/common/hdl/arbiter_priority.v</spirit:name>
+        <spirit:name>../../common/hdl/arbiter_priority.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/common/hdl/synchronizer.v</spirit:name>
+        <spirit:name>../../common/hdl/synchronizer.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/emmu/hdl/emmu.v</spirit:name>
+        <spirit:name>../../emmu/hdl/emmu.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/memory/hdl/fifo_cdc.v</spirit:name>
+        <spirit:name>../../memory/hdl/fifo_cdc.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/elink_regmap.v</spirit:name>
+        <spirit:name>../../elink/hdl/elink_regmap.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/emailbox/hdl/emailbox.v</spirit:name>
+        <spirit:name>../../emailbox/hdl/emailbox.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/edma/hdl/edma.v</spirit:name>
+        <spirit:name>../../edma/hdl/edma.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_arbiter.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_arbiter.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/common/hdl/pulse_stretcher.v</spirit:name>
+        <spirit:name>../../common/hdl/pulse_stretcher.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_protocol.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_protocol.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/ecfg_if.v</spirit:name>
+        <spirit:name>../../elink/hdl/ecfg_if.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_remap.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_remap.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_protocol.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_protocol.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_arbiter.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_arbiter.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_cfg.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_cfg.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_cfg.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_cfg.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_remap.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_remap.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_io.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_io.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_io.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_io.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_fifo.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_fifo.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_core.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_core.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx_core.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx_core.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx_fifo.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx_fifo.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/ecfg_elink.v</spirit:name>
+        <spirit:name>../../elink/hdl/ecfg_elink.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/etx.v</spirit:name>
+        <spirit:name>../../elink/hdl/etx.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/ereset.v</spirit:name>
+        <spirit:name>../../elink/hdl/ereset.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/erx.v</spirit:name>
+        <spirit:name>../../elink/hdl/erx.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/memory/hdl/fifo_sync.v</spirit:name>
+        <spirit:name>../../memory/hdl/fifo_sync.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/elink.v</spirit:name>
+        <spirit:name>../../elink/hdl/elink.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/emaxi.v</spirit:name>
+        <spirit:name>../../elink/hdl/emaxi.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/esaxi.v</spirit:name>
+        <spirit:name>../../elink/hdl/esaxi.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/eclocks.v</spirit:name>
+        <spirit:name>../../elink/hdl/eclocks.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/patrik/projects/elink_oh/oh/elink/hdl/axi_elink.v</spirit:name>
+        <spirit:name>../../elink/hdl/axi_elink.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -3187,7 +3187,7 @@
       <xilinx:coreRevision>4</xilinx:coreRevision>
       <xilinx:coreCreationDateTime>2015-06-30T21:35:37Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
-        <xilinx:tag xilinx:name="patrik:user:axi_elink:1.0_ARCHIVE_LOCATION">/home/patrik/projects/elink_oh/oh/projects/axi_elink</xilinx:tag>
+        <xilinx:tag xilinx:name="patrik:user:axi_elink:1.0_ARCHIVE_LOCATION">../../projects/axi_elink</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
