@@ -32,7 +32,8 @@ update_ip_catalog -rebuild
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
 set files [list \
- "[file normalize "$oh_path/xilibs/ip/fifo_async_104x16.xci"]"\
+ "[file normalize "$oh_path/xilibs/ip/fifo_async_104x16/fifo_async_104x16.xci"]"\
+ "[file normalize "$oh_path/xilibs/ip/fifo_async_104x32/fifo_async_104x32.xci"]"\
  "[file normalize "$oh_path/memory/hdl/fifo_async.v"]"\
  "[file normalize "$oh_path/memory/hdl/memory_dp.v"]"\
  "[file normalize "$oh_path/emesh/hdl/packet2emesh.v"]"\
@@ -76,13 +77,24 @@ set files [list \
 add_files -norecurse -fileset $obj $files
 
 # Set 'sources_1' fileset file properties for remote files
-set file "$oh_path/xilibs/ip/fifo_async_104x16.xci"
+set file "$oh_path/xilibs/ip/fifo_async_104x16/fifo_async_104x16.xci"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 if { ![get_property "is_locked" $file_obj] } {
   set_property "synth_checkpoint_mode" "Singular" $file_obj
 }
 set_property "used_in_implementation" "0" $file_obj
+
+# Set 'sources_1' fileset file properties for remote files
+set file "$oh_path/xilibs/ip/fifo_async_104x32/fifo_async_104x32.xci"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+if { ![get_property "is_locked" $file_obj] } {
+  set_property "synth_checkpoint_mode" "Singular" $file_obj
+}
+set_property "used_in_implementation" "0" $file_obj
+
+
 
 set file "$oh_path/memory/hdl/fifo_async.v"
 set file [file normalize $file]
