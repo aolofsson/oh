@@ -48,7 +48,6 @@ elink
        |     |----etx_mmu (advanced dstaddr mapping)
        |     |----etx_cfgif (configuration interface)
        |     |----etx_cfg (basic rx config registers)
-       |     |----etx_dma (DMA master)
        |     |----etx_arbiter (sends rx transaction to WR/RD/RR fifo)
        |----etx_fifo
              |----txwr_fifo (write fifo)     
@@ -125,27 +124,30 @@ The elink has the following clock domains:
 *txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample the dual data rate data.  
 
     
-###INTERFACE SIGNALS
+###INTERFACE SIGNALS  
    
-SIGNAL            |DIR| DESCRIPTION 
-------------------|---|--------------
-txo_frame_{p/n}   | O | TX packet framing signal
-txo_lclk{p/n}     | O | TX clock aligned in the center of the data eye
-txo_data{p/n}[7:0]| O | TX dual data rate (DDR) that transmits packet
-txi_rd_wait{p/n}  | I | TX push back (input) for read transactions
-txi_wd_wait{p/n}  | I | TX push back (input) for write transactions
-rxi_frame{p/n}    | I | RX packet framing signal.
-rxi_lclk{p/n}     | I | RX clock aligned in the center of the data eye
-rxi_data{p/n}[7:0]| I | RX dual data rate (DDR) that transmits packet
-rxo_rd_wait{p/n}  | O | RX push back (output) for read transactions
-rxo_wr_wait{p/n}  | O | RX push back (output) for write transactions
-reset             | I | Reset input
-pll_clk           | I | Clock input for CCLK/LCLK PLL
-sys_clk           | I | System clock for FIFOs
-embox_not_empty   | O | Mailbox not empty (connect to interrupt line)   
-embox_full        | O | Mailbox is full indicator
-m_*               |IO | AXI master interface
-s_*               |IO | AXI slave interface 
+SIGNAL             | DIR| DESCRIPTION 
+-------------------|----|--------------
+m_*                | IO | AXI master interface
+s_*                | IO | AXI slave interface 
+txo_frame_{p/n}    | O  | TX packet framing signal
+txo_lclk_{p/n}     | O  | TX clock aligned in the center of the data eye
+txo_data_{p/n}[7:0]| O  | TX dual data rate (DDR) that transmits packet
+txi_rd_wait_{p/n}  | I  | TX push back (input) for read transactions
+txi_wd_wait{p/n}   | I  | TX push back (input) for write transactions
+rxi_frame_{p/n}    | I  | RX packet framing signal.
+rxi_lclk_{p/n}     | I  | RX clock aligned in the center of the data eye
+rxi_data_{p/n}[7:0]| I  | RX dual data rate (DDR) that transmits packet
+rxo_rd_wait_{p/n}  | O  | RX push back (output) for read transactions
+rxo_wr_wait_{p/n}  | O  | RX push back (output) for write transactions
+reset              | I  | Reset input  
+pll_clk            | I  | Clock input for CCLK/LCLK PLL  
+sys_clk            | I  | System clock for FIFOs
+embox_not_empty    | O  | Mailbox not empty (connect to interrupt line)   
+embox_full         | O  | Mailbox is full indicator
+e_chipid[11:0]     | O  | ID for Epiphany chip  (optional)  
+e_resetb           | O  | Active low reset for Epiphany chip (optional)  
+e_cclk_{p/n}       | O  | High speed clock for Epiphany chip (optional)  
 
 ###FPGA RESOURCE USAGE
 The following table shows the rough resource usage of the elink synthesized with the xc7z010clg400-1 as a target.
@@ -192,37 +194,29 @@ REGISTER       | AC | ADDRESS | DESCRIPTION
 ---------------|----|---------|------------------
 E_RESET        | -W | 0xF0200 | Soft reset
 E_CLK          | -W | 0xF0204 | Clock configuration
-E_CHIPID       | RW | 0xF0208 | Chip ID for Epiphany pins
+E_CHIPID       | RW | 0xF0208 | Chip ID for Epiphany pins  
+E_VERSION      | RW | 0xF020C | Version number (static)  
+E_MAILBOXLO    | RW | 0xF0310 | RX mailbox (lower 32 bit)  
+E_MAILBOXHI    | RW | 0xF0314 | RX mailbox (upper 32 bits)  
 ***************|****|*********|**************************
-E_VERSION      | RW | 0xF020C | Version number (static)
 ETX_CFG        | RW | 0xF0210 | TX configuration
 ETX_STATUS     | R- | 0xF0214 | TX status
 ETX_GPIO       | RW | 0xF0218 | TX data in GPIO mode
-ETX_DMACFG     | RW | 0xF0500 | RX DMA configuration
-ETX_DMACOUNT   | RW | 0xF0504 | RX DMA count
-ETX_DMASTRIDE  | RW | 0xF0508 | RX DMA stride
-ETX_DMASRCADDR | RW | 0xF050c | RX DMA source addres
-ETX_DMADSTADDR | RW | 0xF0510 | RX DMA slave buffer (lo)
-ETX_DMAAUTO0   | RW | 0xF0514 | RX DMA slave buffer (hi)
-ETX_DMAAUTO1   | RW | 0xF0518 | RX DMA slave buffer (hi)
-ETX_DMASTATUS  | RW | 0xF051c | RX DMA status
 ***************|****|*********|********************
 ETX_MMU        | -W | 0xE0000 | TX MMU table 
 ***************|****|*********|********************
 ERX_CFG        | RW | 0xF0300 | RX configuration
 ERX_STATUS     | R- | 0xF0304 | RX status register
 ERX_GPIO       | R  | 0xF0308 | RX data in GPIO mode
-ERX_OFFSET     | RW | 0xF030C | RX memory offset in remap mode
-E_MAILBOXLO    | RW | 0xF0310 | RX mailbox (lower 32 bit)
-E_MAILBOXHI    | RW | 0xF0314 | RX mailbox (upper 32 bits)
-ERX_DMACFG     | RW | 0xF0520 | TX DMA configuration
-ERX_DMACOUNT   | RW | 0xF0524 | TX DMA count
-ERX_DMASTRIDE  | RW | 0xF0528 | TX DMA stride
-ETX_DMASRCADDR | RW | 0xF052c | TX DMA source addres
-ERX_DMADSTADDR | RW | 0xF0530 | TX DMA destination address
-ERX_DMAAUTO0   | RW | 0xF0534 | TX DMA slave buffer (lo)
-ERX_DMAAUTO1   | RW | 0xF0538 | TX DMA slERXave buffer (hi)
-ERX_DMASTATUS  | RW | 0xF053c | TX DMA status      
+ERX_OFFSET     | RW | 0xF030C | RX mem offset in remap mode
+ERX_DMACFG     | RW | 0xF0520 | RX DMA configuration
+ERX_DMACOUNT   | RW | 0xF0524 | RX DMA count
+ERX_DMASTRIDE  | RW | 0xF0528 | RX DMA stride
+ERX_DMASRCADDR | RW | 0xF052c | RX DMA source addres
+ERX_DMADSTADDR | RW | 0xF0530 | RX DMA destination address
+ERX_DMAAUTO0   | RW | 0xF0534 | RX DMA slave buffer (lo)
+ERX_DMAAUTO1   | RW | 0xF0538 | RX DMA slERXave buffer (hi)
+ERX_DMASTATUS  | RW | 0xF053c | RX DMA status      
 ***************|****|*********|********************
 ERX_MMU        | -W | 0xE8000 | RX MMU table 
 
@@ -391,7 +385,7 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [31:0]  | Upper data of RX FIFO
 
-###DMACFG (0xF0500/0xF0520)
+###EXR_DMACFG (0xF0500)
 Configuration register for DMA.
 
 FIELD    | DESCRIPTION 
@@ -411,14 +405,14 @@ FIELD    | DESCRIPTION
  [12]    | 0: Destination address shift disabled
          | 1: Left shifts stride by 16 bits
          
-###DMACOUNT (0xF0504/0xF0524)
+###ERX_DMACOUNT (0xF0504)
 The number of DMA left to complete The DMA transfer is complete when the DMACOUNT register reaches zero.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | The number of transfers remaining
 
-###DMASTRIDE (0xF0508/0xF0528)
+###ERX_DMASTRIDE (0xF0508)
 Two signed 16-bit values specifying the stride, in bytes, used to update the DMASRCADDR and DMADSTADDR after each completed transfer. 
 
 FIELD    | DESCRIPTION 
@@ -426,14 +420,14 @@ FIELD    | DESCRIPTION
  [15:0]  | Value to add to DMASRCADDR after each transaction
  [31:16] | Value to add to DMADSTADDR after each transaction
 
-###DMASRCADDR (0xF050C/0xF052C)
+###ERX_DMASRCADDR (0xF050C)
 The current 32-bit address being read from in master mode.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | Current transaction destination address to write to
 
-###DMADSTADDR (0xF0510/0xF0530)
+###ERX_DMADSTADDR (0xF0510)
 The current 32-bit address being transferred.
 
 FIELD    | DESCRIPTION 
@@ -441,7 +435,7 @@ FIELD    | DESCRIPTION
  [31:0]  | Current transaction destination address to write to
 
 
-###DMAAUTO0 (0xF0514/0xF0534)
+###ERX_DMAAUTO0 (0xF0514)
 Auto DMA register
 
 FIELD    | DESCRIPTION 
@@ -449,7 +443,7 @@ FIELD    | DESCRIPTION
  [31:0]  | TBD
 
 
-###DMAAUTO1 (0xF0518/0xF0538)
+###ERX_DMAAUTO1 (0xF0518)
 Auto DMA register
 
 FIELD    | DESCRIPTION 
