@@ -139,7 +139,7 @@ endmodule // erx
 // End:
 
 /*
- Copyright (C) 2014 Adapteva, Inc.
+ Copyright (C) 2015 Adapteva, Inc.
   
  Contributed by Andreas Olofsson <andreas@adapteva.com>
 

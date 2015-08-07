@@ -68,9 +68,7 @@ endmodule // erx_protocol
 // End:
 
 /*
-  This file is part of the Parallella Project.
-
-  Copyright (C) 2014 Adapteva, Inc.
+  Copyright (C) 2015 Adapteva, Inc.
   Contributed by Andreas Olofsson <andreas@adapteva.com>
 
   This program is free software: you can redistribute it and/or modify

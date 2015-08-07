@@ -31,9 +31,9 @@ module axi_elink(/*AUTOARG*/
    parameter DW          = 32; 
    parameter PW          = 104;      //packet width   
    parameter ID          = 12'h810;
-   parameter S_IDW         = 12;       //ID width for S_AXI
-   parameter M_IDW         = 6;       //ID width for M_AXI
-   parameter IOSTD_ELINK  = "LVDS_25";
+   parameter S_IDW       = 12;       //ID width for S_AXI
+   parameter M_IDW       = 6;        //ID width for M_AXI
+   parameter IOSTD_ELINK = "LVDS_25";
       
    /****************************/
    /*CLK AND RESET             */
@@ -77,7 +77,7 @@ module axi_elink(/*AUTOARG*/
    input  	       m_axi_aresetn; // global reset singal.
 
    //Write address channel
-   output [M_IDW-1:0]    m_axi_awid;    // write address ID
+   output [M_IDW-1:0]  m_axi_awid;    // write address ID
    output [31 : 0]     m_axi_awaddr;  // master interface write address   
    output [7 : 0]      m_axi_awlen;   // burst length.
    output [2 : 0]      m_axi_awsize;  // burst size.
@@ -98,13 +98,13 @@ module axi_elink(/*AUTOARG*/
    input 	       m_axi_wready;  // slave is ready for data
 
    //Write response channel
-   input [M_IDW-1:0]     m_axi_bid;
+   input [M_IDW-1:0]   m_axi_bid;
    input [1 : 0]       m_axi_bresp;   // status of the write transaction.
    input 	       m_axi_bvalid;  // valid write response
    output 	       m_axi_bready;  // master can accept write response.
 
    //Read address channel
-   output [M_IDW-1:0]    m_axi_arid;    // read address ID
+   output [M_IDW-1:0]  m_axi_arid;    // read address ID
    output [31 : 0]     m_axi_araddr;  // initial address of a read burst
    output [7 : 0]      m_axi_arlen;   // burst length
    output [2 : 0]      m_axi_arsize;  // burst size
@@ -427,7 +427,7 @@ endmodule // elink
 // End:
 
 /*
- Copyright (C) 2014 Adapteva, Inc.
+ Copyright (C) 2015 Adapteva, Inc.
  
  Contributed by Andreas Olofsson <andreas@adapteva.com>
 
