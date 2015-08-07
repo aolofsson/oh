@@ -285,8 +285,8 @@ TX configuration settings
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
- [0]     | 0:  TX disable
-         | 1:  TX enable
+ [0]     | 0:  TX disabled (not implemented)  
+         | 1:  TX enabled
  [1]     | 0:  MMU disabled
          | 1:  MMU enabled
  [3:2]   | 00: Address remapping disabled
@@ -385,7 +385,7 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [31:0]  | Upper data of RX FIFO
 
-###EXR_DMACFG (0xF0500)
+###ERX_DMACFG (0xF0500)
 Configuration register for DMA.
 
 FIELD    | DESCRIPTION 
