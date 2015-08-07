@@ -2,8 +2,17 @@
 
 ELINK INTRODUCTION
 =====================================
-The "elink" is a low-latency/high-speed interface for communicating between FPGAs and ASICs (such as Epiphany). The interface can achieve a peak throughput of 8 Gbit/s (duplex) in modern FPGAs using 24 LVDS signal pairs.  
+The "elink" is a low-latency/high-speed interface for communicating between FPGAs and ASICs (such as EpiphanyIII). The interface can achieve a peak throughput of 8 Gbit/s (duplex) in modern FPGAs using 24 LVDS signal pairs.  
 
+###HOW TO SIMULATE  
+```sh
+$ sudo apt-get install gtkwave iverilog   
+$ git clone https://github.com/parallella/oh.git  
+$ cd oh/elink/dv  
+$ ./run.sh  
+$ gtkwave test.vcd
+
+```
 ###STRUCTURE
 
 ![alt tag](docs/elink.png)
@@ -57,7 +66,7 @@ The default elink communication protocol uses source synchronous clocks, a packe
            _______________________________________________________________
  FRAME   _/                                                        \______ 
                
- DATA   XXXX|B00|B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14.
+ DATA   XXXX|B00|B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14
 
 ```
            
@@ -142,11 +151,11 @@ s_*               |IO | AXI slave interface
 The following table shows the rough resource usage of the elink synthesized with the xc7z010clg400-1 as a target.
 (as of May 12, 2015)  
 
-Instance             |Module                   |Cells 
----------------------|-------------------------|------
+Instance             |Module                   | FPGA Cells 
+---------------------|-------------------------|------------
   elink              |elink                    |  9809
-  --ecfg_cdc         |fifo_cdc                 |   994
   --eclocks          |eclocks                  |     3
+  --ecfg_cdc         |fifo_cdc                 |   994
   --erx              |erx                      |  5200
   ----erx_core       |erx_core                 |  2450
   ------erx_cfg      |erx_cfg                  |   174
@@ -183,8 +192,8 @@ REGISTER       | AC | ADDRESS | DESCRIPTION
 ---------------|----|---------|------------------
 E_RESET        | -W | 0xF0200 | Soft reset
 E_CLK          | -W | 0xF0204 | Clock configuration
-E_CHIPID       | RW | 0xF0208 | Chip ID to drive to Epiphany pins
-***************|****|*********|********************
+E_CHIPID       | RW | 0xF0208 | Chip ID for Epiphany pins
+***************|****|*********|**************************
 E_VERSION      | RW | 0xF020C | Version number (static)
 ETX_CFG        | RW | 0xF0210 | TX configuration
 ETX_STATUS     | R- | 0xF0214 | TX status
@@ -226,7 +235,7 @@ Reset control register for the elink and Epiphany chip
 FIELD    | DESCRIPTION 
 -------- | --------------------------------------------------
  [0]     | 0: active
-         | 1: resets the elink and Epiphany chip 
+         | 1: resets elink and Epiphany chip 
 
 ###E_CLK (0xF0204) (NOT IMPLEMENTED) 
 Transmit and Epiphany clock settings.
@@ -430,7 +439,6 @@ The current 32-bit address being transferred.
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | Current transaction destination address to write to
-
 
 
 ###DMAAUTO0 (0xF0514/0xF0534)
