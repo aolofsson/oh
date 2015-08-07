@@ -11,18 +11,16 @@
  1) host writes (highest)
  2) read requests from host
  3) read responses
- 4) DMA (lowest)
 
  */
 
 module etx_arbiter (/*AUTOARG*/
    // Outputs
-   txwr_wait, txrd_wait, txrr_wait, edma_wait, etx_access, etx_packet,
-   etx_rr,
+   txwr_wait, txrd_wait, txrr_wait, etx_access, etx_packet, etx_rr,
    // Inputs
    clk, reset, txwr_access, txwr_packet, txrd_access, txrd_packet,
-   txrr_access, txrr_packet, edma_access, edma_packet, etx_rd_wait,
-   etx_wr_wait, etx_cfg_wait, ctrlmode_bypass, ctrlmode
+   txrr_access, txrr_packet, etx_rd_wait, etx_wr_wait, etx_cfg_wait,
+   ctrlmode_bypass, ctrlmode
    );
 
    parameter PW = 104;
@@ -46,11 +44,6 @@ module etx_arbiter (/*AUTOARG*/
    input 	   txrr_access;
    input [PW-1:0]  txrr_packet;
    output          txrr_wait;
-
-   //DMA Master (not implemented, TODO)
-   input 	   edma_access;
-   input [PW-1:0]  edma_packet;
-   output 	   edma_wait;
 
    //Wait signal inputs
    input           etx_rd_wait;
@@ -76,11 +69,9 @@ module etx_arbiter (/*AUTOARG*/
    wire [3:0] 	   txwr_ctrlmode;
    wire 	   access_in;   
    wire [PW-1:0]   etx_packet_mux;
-   wire 	   edma_grant;
    wire 	   txrr_grant;
    wire 	   txrd_grant;
    wire 	   txwr_grant;
-   wire 	   edma_arb_wait;
    wire 	   txrr_arb_wait;
    wire 	   txrd_arb_wait;
    wire 	   txwr_arb_wait;
@@ -112,27 +103,23 @@ module etx_arbiter (/*AUTOARG*/
    //##########################################################################
   
    
-   arbiter_priority #(.ARW(4)) arbiter (.grant({edma_grant,//lowest priority
-						txrr_grant,	
+   arbiter_priority #(.ARW(3)) arbiter (.grant({txrr_grant,	
 						txrd_grant,
 						txwr_grant //highest priority
 						}),
-				        .await({edma_arb_wait,
-						txrr_arb_wait,	
+				        .await({txrr_arb_wait,	
 						txrd_arb_wait,
 						txwr_arb_wait
 						}),	
-					.request({edma_access,
-						txrr_access,	
-						txrd_access,
-						txwr_access
-						})	
+					.request({txrr_access,	
+						  txrd_access,
+						  txwr_access
+						  })	
 				  );
    //Priority Mux
    assign etx_mux[PW-1:0] =({(PW){txwr_grant}} & txwr_data[PW-1:0]) |
 			   ({(PW){txrd_grant}} & txrd_data[PW-1:0]) |
-			   ({(PW){txrr_grant}} & txrr_packet[PW-1:0]) |
-			   ({(PW){edma_grant}} & edma_packet[PW-1:0]);
+			   ({(PW){txrr_grant}} & txrr_packet[PW-1:0]);
  
    //######################################################################
    //Pushback (stall) Signals
@@ -140,29 +127,24 @@ module etx_arbiter (/*AUTOARG*/
    
    //Write waits on pin wr wait or cfg_wait
    assign txwr_wait = etx_wr_wait | 
-		           etx_cfg_wait;
+		      etx_cfg_wait;
    
    //Host read request (self throttling, one read at a time)
    assign txrd_wait = etx_rd_wait | 
-		           etx_cfg_wait | 
-		           txrd_arb_wait;
+		      etx_cfg_wait | 
+		      txrd_arb_wait;
    //Read response
    assign txrr_wait = etx_wr_wait | 
-		           etx_cfg_wait | 
-		           txrr_arb_wait;
-
-   //DMA (conservative)
-   assign edma_wait = etx_wr_wait | etx_rd_wait  | 
 		      etx_cfg_wait | 
-		      edma_arb_wait;
+		      txrr_arb_wait;
 
+ 
    //#####################################################################
    //# Pipeline stage (arbiter+mux takes time..)
    //#####################################################################
    assign access_in = (txwr_grant & ~txwr_wait) |
 		      (txrd_grant & ~txrd_wait) |
-		      (txrr_grant & ~txrr_wait) |
-		      (edma_grant & ~edma_wait);
+		      (txrr_grant & ~txrr_wait);
 
    //Pipeline + stall
    assign write_in = etx_mux[1];

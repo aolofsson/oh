@@ -23,8 +23,8 @@ module etx(/*AUTOARG*/
    //Clocks
    input 	  sys_clk;                     // clock for fifos   
    input 	  tx_lclk;	               // fast clock for io
-   input 	  tx_lclk90;                     // 90 deg shifted lclk   
-   input 	  tx_lclk_div4;		       // slow clock for rest of logic   
+   input 	  tx_lclk90;                   // 90 deg shifted lclk   
+   input 	  tx_lclk_div4;		       // slow clock for core logic   
 
    //Transmit signals for IO
    output 	  txo_lclk_p,   txo_lclk_n;     // tx clock output

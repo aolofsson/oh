@@ -56,9 +56,6 @@ module etx_core(/*AUTOARG*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [3:0]		ctrlmode;		// From etx_cfg of etx_cfg.v
    wire			ctrlmode_bypass;	// From etx_cfg of etx_cfg.v
-   wire			edma_access;		// From etx_dma of edma.v
-   wire [PW-1:0]	edma_packet;		// From etx_dma of edma.v
-   wire			edma_wait;		// From etx_arbiter of etx_arbiter.v
    wire			emmu_access;		// From etx_mmu of emmu.v
    wire [PW-1:0]	emmu_packet;		// From etx_mmu of emmu.v
    wire			etx_access;		// From etx_arbiter of etx_arbiter.v
@@ -74,8 +71,6 @@ module etx_core(/*AUTOARG*/
    wire [DW-1:0]	mi_cfg_dout;		// From etx_cfg of etx_cfg.v
    wire			mi_cfg_en;		// From etx_cfgif of ecfg_if.v
    wire [63:0]		mi_din;			// From etx_cfgif of ecfg_if.v
-   wire [DW-1:0]	mi_dma_dout;		// From etx_dma of edma.v
-   wire			mi_dma_en;		// From etx_cfgif of ecfg_if.v
    wire [DW-1:0]	mi_mmu_dout;		// From etx_mmu of emmu.v
    wire			mi_mmu_en;		// From etx_cfgif of ecfg_if.v
    wire			mi_we;			// From etx_cfgif of ecfg_if.v
@@ -84,39 +79,7 @@ module etx_core(/*AUTOARG*/
    wire			tx_enable;		// From etx_cfg of etx_cfg.v
    // End of automatics
 
-   /************************************************************/
-   /*EDMA ("4th channel")                                      */
-   /************************************************************/
-  
-  
-   /*edma AUTO_TEMPLATE (
-                         .mi_en		(mi_dma_en),
-                         .edma_access	(edma_access),   
-                         .mi_dout       (mi_dma_dout[DW-1:0]),
-                         .edma_access	(edma_access),
-                         .edma_write	(edma_packet[1]),
-	                 .edma_datamode	(edma_packet[3:2]),
-	                 .edma_ctrlmode	(edma_packet[7:4]),
-	                 .edma_dstaddr	(edma_packet[39:8]),
-	                 .edma_data	(edma_packet[71:40]),
-	                 .edma_srcaddr	(edma_packet[103:72]),
-                               );
-    */
-   
-   edma etx_dma (/*AUTOINST*/
-		 // Outputs
-		 .mi_dout		(mi_dma_dout[DW-1:0]),	 // Templated
-		 .edma_access		(edma_access),		 // Templated
-		 .edma_packet		(edma_packet[PW-1:0]),
-		 // Inputs
-		 .reset			(reset),
-		 .clk			(clk),
-		 .mi_en			(mi_dma_en),		 // Templated
-		 .mi_we			(mi_we),
-		 .mi_addr		(mi_addr[RFAW+1:0]),
-		 .mi_din		(mi_din[63:0]),
-		 .edma_wait		(edma_wait));
-   
+     
    /************************************************************/
    /*ELINK TRANSMIT ARBITER                                    */
    /************************************************************/
@@ -127,7 +90,6 @@ module etx_core(/*AUTOARG*/
 			    .txwr_wait		(txwr_wait),
 			    .txrd_wait		(txrd_wait),
 			    .txrr_wait		(txrr_wait),
-			    .edma_wait		(edma_wait),
 			    .etx_access		(etx_access),
 			    .etx_packet		(etx_packet[PW-1:0]),
 			    .etx_rr		(etx_rr),
@@ -140,8 +102,6 @@ module etx_core(/*AUTOARG*/
 			    .txrd_packet	(txrd_packet[PW-1:0]),
 			    .txrr_access	(txrr_access),
 			    .txrr_packet	(txrr_packet[PW-1:0]),
-			    .edma_access	(edma_access),
-			    .edma_packet	(edma_packet[PW-1:0]),
 			    .etx_rd_wait	(etx_rd_wait),
 			    .etx_wr_wait	(etx_wr_wait),
 			    .etx_cfg_wait	(etx_cfg_wait),
@@ -156,7 +116,6 @@ module etx_core(/*AUTOARG*/
     .\(.*\)_in          (etx_\1[]),
     .\(.*\)_out         (etx_cfg_\1[]),
     .mi_dout0		({32'b0,mi_cfg_dout[31:0]}),
-    .mi_dout1		({32'b0,mi_dma_dout[31:0]}),
     .mi_dout2		({32'b0,mi_mmu_dout[31:0]}),
     .wait_in		(etx_cfg_wait),
     );
@@ -164,10 +123,11 @@ module etx_core(/*AUTOARG*/
    
    defparam etx_cfgif.RX =0;   
    ecfg_if etx_cfgif (.mi_dout3		(64'b0),
+		      .mi_dout1		(64'b0), 
+		      .mi_dma_en	(),
 		      /*AUTOINST*/
 		      // Outputs
 		      .mi_mmu_en	(mi_mmu_en),
-		      .mi_dma_en	(mi_dma_en),
 		      .mi_cfg_en	(mi_cfg_en),
 		      .mi_we		(mi_we),
 		      .mi_addr		(mi_addr[14:0]),
@@ -180,7 +140,6 @@ module etx_core(/*AUTOARG*/
 		      .access_in	(etx_access),		 // Templated
 		      .packet_in	(etx_packet[PW-1:0]),	 // Templated
 		      .mi_dout0		({32'b0,mi_cfg_dout[31:0]}), // Templated
-		      .mi_dout1		({32'b0,mi_dma_dout[31:0]}), // Templated
 		      .mi_dout2		({32'b0,mi_mmu_dout[31:0]}), // Templated
 		      .wait_in		(etx_cfg_wait));		 // Templated
    
@@ -338,7 +297,7 @@ module etx_core(/*AUTOARG*/
    
 endmodule // elink
 // Local Variables:
-// verilog-library-directories:("." "../../emmu/hdl" "../../memory/hdl" "../../edma/hdl/")
+// verilog-library-directories:("." "../../emmu/hdl" "../../memory/hdl")
 // End:
 
 

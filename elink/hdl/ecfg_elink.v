@@ -40,7 +40,7 @@ module ecfg_elink (/*AUTOARG*/
    /******************************/
    output 	 elink_en;         // elink master enable
    output [15:0] clk_config;       // clock settings (for pll)
-   output [11:0] e_chipid;           // chip-id for Epiphany   
+   output [11:0] e_chipid;         // chip-id for Epiphany   
    
    /*------------------------CODE BODY---------------------------------------*/
    

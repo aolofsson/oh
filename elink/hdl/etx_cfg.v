@@ -150,7 +150,7 @@ endmodule // ecfg_tx
 
 
 /*
-  Copyright (C) 2013 Adapteva, Inc.
+  Copyright (C) 2015 Adapteva, Inc.
   Contributed by Andreas Olofsson <andreas@adapteva.com>
  
    This program is free software: you can redistribute it and/or modify
