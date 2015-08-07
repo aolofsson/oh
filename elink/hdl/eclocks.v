@@ -94,8 +94,8 @@ module eclocks (/*AUTOARG*/
    //two clock synchronizer
    always @ (posedge sys_clk)
      begin
-	cclk_locked_reg <=  cclk_locked;
-	cclk_locked_sync <= cclk_locked_reg;	
+	cclk_locked_reg   <= cclk_locked;
+	cclk_locked_sync  <= cclk_locked_reg;	
 	pll_locked_sync   <= cclk_locked & lclk_locked;	
 	reset_sync        <= (reset | ~elink_en);
 	reset_in          <= reset_sync;

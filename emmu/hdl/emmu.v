@@ -46,8 +46,7 @@ module emmu (/*AUTOARG*/
 
    /*****************************/
    /*Register Access Interface  */
-   /*****************************/
-  
+   /*****************************/  
    input 	     mi_en;               //memory access 
    input  	     mi_we;               //byte wise write enable
    input [14:0]      mi_addr;             //address
@@ -59,8 +58,7 @@ module emmu (/*AUTOARG*/
    /*****************************/  
    input 	     emesh_access_in;
    input [PW-1:0]    emesh_packet_in;
-   
- 
+    
    /*****************************/
    /*EMESH OUTPUTS              */
    /*****************************/

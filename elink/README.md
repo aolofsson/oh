@@ -225,16 +225,11 @@ Reset control register for the elink and Epiphany chip
 
 FIELD    | DESCRIPTION 
 -------- | --------------------------------------------------
- [0]     | 0: elink is active
-         | 1: elink in reset
- [1]     | 0: epiphany chip is active
-         | 1: epiphany chip in reset
- [2]     | 1: Starts an internal reset and clock sequnce block
-         |    (self resetting bit)
+ [0]     | 0: active
+         | 1: resets the elink and Epiphany chip 
 
-###E_CLK (0xF0204)  
+###E_CLK (0xF0204) (NOT IMPLEMENTED) 
 Transmit and Epiphany clock settings.
-(NOTE: Current PLL only supports fixed frequency)  
   
 FIELD    | DESCRIPTION 
 ---------| --------------------------------------------------
@@ -255,7 +250,7 @@ FIELD    | DESCRIPTION
          | 0110: cclk=pllclk/64
          | 0111: cclk=pllclk/128 (MIN)
          | 1xxx: RESERVED
- [11:8]  | 0000: lclk=pllclk/1
+ [11:8]  | 0000: lclk=pllclk/1 (NOT IMPLEMENTED!)
          | 0001: lclk=pllclk/2
          | 0010: lclk=pllclk/4
          | 0011: lclk=pllclk/8
