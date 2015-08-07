@@ -456,13 +456,14 @@ FIELD    | DESCRIPTION
  [31:0]  | TBD
 
 
-###ETX_MMU (0xE0000)
+###ETX_MMU (0xE0000)  
 A table of N entries for translating incoming 12 bit address to a new value. Entries are aligned on 8 byte boundaries
  
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [11:0]  | Output address bits 31:20
  [43:12] | Output address bits 63:32 (TBD)
+
 
 ###ERX_MMU (0xE8000)
 A table of N entries for translating incoming 12 bit address to a new value. Entries are aligned on 8 byte boundaries.
@@ -471,6 +472,7 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [11:0]  | Output address bits 31:20
  [43:12] | Output address bits 63:32 (TBD)
+
 
 ###ERX_READBACK (0xDxxxx)
 Source address to specify for slave (host) read requests

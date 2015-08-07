@@ -1,17 +1,20 @@
+set pwd [file dirname [info script]]
+source $pwd/../../../include/oh.tcl
+
 ###########################################################
 #STEP0: Define variables
 set OUTDIR ./tmp
 set PART xc7z010clg400-1
-set TOP elink_example
+set TOP axi_elink
 
 file mkdir $OUTDIR
 
 ###########################################################
 #STEP1: Read sources, constraints, IP files
 create_project -in_memory -part $PART -force my_project
-source read_verilog.tcl
-source read_constraints.tcl
-source read_ip.tcl
+source $pwd/read_verilog.tcl
+source $pwd/read_constraints.tcl
+source $pwd/read_ip.tcl
 
 ###########################################################
 #STEP2: SYNTHESIS
@@ -79,12 +82,3 @@ write_verilog -force $OUTDIR/$TOP.v
 write_xdc -no_fixed_only -force $OUTDIR/$TOP.xdc
 
 write_bitstream -force $OUTDIR/$TOP.bit
-
-
-
-
-
-
-
-
-

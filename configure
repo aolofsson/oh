@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if ! which vivado 1>/dev/null; then
+    echo ERROR: Vivado not in PATH
+    echo 'Try "source /opt/Xilinx/Vivado/201X.X/settings.sh"'
+    exit 1
+fi
+
+top_srcdir=$(dirname $(readlink -f "$0"))
+top_builddir=$(pwd)
+sed "s|@top_srcdir@|${top_srcdir}|g;s|@top_builddir@|${top_builddir}|g" \
+    < $top_srcdir/Makefile.in > $top_builddir/Makefile

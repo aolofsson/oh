@@ -1,0 +1,33 @@
+have_vivado	:= $(shell which vivado 1>/dev/null 2>/dev/null && echo yes)
+top_srcdir	:= @top_srcdir@
+top_builddir	:= @top_builddir@
+
+export
+
+.PHONY: builddeps all parallella-16-nohdmi clean
+
+help:
+	@echo "TARGETS:"
+	@echo "all -- everything (TODO)"
+	@echo "parallella-z7020 -- Parallella Embedded (no HDMI)"
+
+builddeps:
+	@if [ "x$(have_vivado)" != "xyes" ]; then echo vivado not in path; exit 1; fi
+
+all: builddeps parallella-z7020
+
+# TODO
+parallella-z7020: builddeps
+	vivado -mode batch -source $(top_srcdir)/projects/parallella-z7020/system_project.tcl
+
+# Temporary
+package_axi_elink: builddeps
+	vivado -mode batch -source $(top_srcdir)/elink/scripts/xilinx/package_axi_elink.tcl
+
+# Temporary
+elink: builddeps
+	vivado -mode batch -source $(top_srcdir)/elink/scripts/xilinx/run.tcl
+
+clean:
+	find . \( -name "vivado*.log" -or -name "vivado*.jou" \) -delete
+
