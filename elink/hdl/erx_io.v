@@ -1,3 +1,6 @@
+/*
+ This block receives the IO transaction and converts to a 104 bit packet. 
+ */
 `include "elink_constants.v"
 module erx_io (/*AUTOARG*/
    // Outputs

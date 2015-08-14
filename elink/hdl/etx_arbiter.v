@@ -149,13 +149,23 @@ module etx_arbiter (/*AUTOARG*/
    //Pipeline + stall
    assign write_in = etx_mux[1];
 
+   //access
+    always @ (posedge clk)
+      if (reset)
+	begin
+	   etx_access         <= 1'b0;   
+	   etx_rr            <= 1'b0;	   
+	end
+      else if (access_in & (write_in & ~etx_wr_wait) | (~write_in & ~etx_rd_wait))
+	begin
+	   etx_access         <= access_in;
+	   etx_rr             <= txrr_grant;
+	end	   
+
+   //packet
    always @ (posedge clk)
      if (access_in & (write_in & ~etx_wr_wait) | (~write_in & ~etx_rd_wait))
-       begin
-	  etx_access         <= access_in;
-	  etx_packet[PW-1:0] <= etx_mux[PW-1:0];
-	  etx_rr             <= txrr_grant;
-       end
+	  etx_packet[PW-1:0] <= etx_mux[PW-1:0];	 
    
 endmodule // etx_arbiter
 // Local Variables:
@@ -164,8 +174,6 @@ endmodule // etx_arbiter
 
 
 /*
-  File: etx_arbiter.v
-
   Copyright (C) 2015 Adapteva, Inc.
   Contributed by Andreas Olofsson <andreas@adapteva.com>
 

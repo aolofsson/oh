@@ -1,16 +1,11 @@
 /*
- ########################################################################
- EPIPHANY eLink RX Protocol block
- ########################################################################
- 
- This block takes the parallel output of the input deserializers, locates
- valid frame transitions, and decodes the bytes into standard eMesh 
- protocol (104-bit transactions).
+ This block handles the autoincrement needed for bursting and detects 
+ read responses
  */
-
+`include "elink_regmap.v"
 module erx_protocol (/*AUTOARG*/
    // Outputs
-   erx_access, erx_packet, remap_bypass,
+   erx_rdwr_access, erx_rr_access, erx_packet,
    // Inputs
    reset, rx_enable, clk, rx_packet, rx_burst, rx_access
    );
@@ -18,7 +13,7 @@ module erx_protocol (/*AUTOARG*/
    parameter AW   = 32;
    parameter DW   = 32;
    parameter PW   = 104;
-   parameter ID   = 0;
+   parameter ID   = 12'h800; //link id
 
    
    // System reset input
@@ -32,15 +27,25 @@ module erx_protocol (/*AUTOARG*/
    input 	   rx_access;
    
    // Output to MMU / filter
-   output          erx_access;
+   output          erx_rdwr_access;
+   output          erx_rr_access;
    output [PW-1:0] erx_packet;
-   output 	   remap_bypass;    //needed for remapping logic
 
+
+   //wires
    reg [31:0] 	   dstaddr_reg;   
    wire [31:0] 	   dstaddr_next;
    wire [31:0] 	   dstaddr_mux;
-   reg 		   erx_access;
+   reg 		   erx_rdwr_access;
+   reg 		   erx_rr_access;
    reg [PW-1:0]    erx_packet;
+   wire [11:0] 	   myid;
+   wire [31:0] 	   rx_addr;
+   wire 	   read_response;
+
+   //parsing inputs
+   assign 	 myid[11:0]     = ID;   
+   assign        rx_addr[31:0]  = rx_packet[39:8];
    
    //Address generator for bursting
    always @ (posedge clk)
@@ -50,15 +55,25 @@ module erx_protocol (/*AUTOARG*/
    assign dstaddr_next[31:0] = dstaddr_reg[31:0] + 4'b1000;
    
    assign dstaddr_mux[31:0] =  rx_burst ? dstaddr_next[31:0] :
-			                  rx_packet[39:8];
+			                  rx_addr[31:0];
       
-   //Pipeline stage
+   
+   //Read response detector
+   assign read_response = (rx_addr[31:20] == myid[11:0]) & 
+			  (rx_addr[19:16] == `EGROUP_RR);
+      
+   
+   //Pipeline stage and decode  
    always @ (posedge clk)
      begin
-	erx_access          <= rx_access;      
+	//Write/read request
+	erx_rdwr_access     <= rx_access & ~read_response;      
+	//Read response
+	erx_rr_access       <= rx_access & read_response;
+	//Common packet
 	erx_packet[PW-1:0]  <= {rx_packet[PW-1:40],
-				 dstaddr_mux[31:0],
-				 rx_packet[7:0]
+				dstaddr_mux[31:0],
+				rx_packet[7:0]
 			      };
      end
   
