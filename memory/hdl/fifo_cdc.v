@@ -21,7 +21,7 @@ module fifo_cdc (/*AUTOARG*/
    input              clk_in;   
    input              reset_in;
    input 	      access_in;   
-   input [DW-1:0]  packet_in;   
+   input [DW-1:0]     packet_in;   
    output 	      wait_out;   
 
    /********************************/
@@ -30,7 +30,7 @@ module fifo_cdc (/*AUTOARG*/
    input              clk_out;   
    input              reset_out;
    output 	      access_out;   
-   output [DW-1:0] packet_out;   
+   output [DW-1:0]    packet_out;   
    input 	      wait_in;   
    
    //Local wires
@@ -41,7 +41,7 @@ module fifo_cdc (/*AUTOARG*/
    wire 	      valid;   
    reg 		      access_out;
       
-   assign wr_en    = access_in & ~full;
+   assign wr_en    = access_in;//&~full
    assign rd_en    = ~empty & ~wait_in;
    assign wait_out =  full;
 
