@@ -116,12 +116,12 @@ module etx_protocol (/*AUTOARG*/
 		     .srcaddr_out	(),
 		     .packet_in		(tx_packet[PW-1:0]));//input
 
-   assign burst_addr[31:0]   = (last_dstaddr[31:0] + 4'd8);
+   assign burst_addr[31:0]  = (last_dstaddr[31:0] + 4'd8);
    
    assign burst_addr_match  = (burst_addr[31:0] == etx_dstaddr[31:0]);
 
-   assign burst_type_match = {last_ctrlmode[3:0],last_datamode[1:0],last_write}
-			      ==
+   assign burst_type_match  = {last_ctrlmode[3:0],last_datamode[1:0],last_write}
+			       ==
 		   	      {etx_ctrlmode[3:0],etx_datamode[1:0], etx_write};
    			      
 

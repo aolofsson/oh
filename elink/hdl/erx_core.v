@@ -142,9 +142,7 @@ module erx_core (/*AUTOARG*/
 			.remap_mode	(remap_mode[1:0]),
 			.remap_sel	(remap_sel[11:0]),
 			.remap_pattern	(remap_pattern[11:0]),
-			.remap_base	(remap_base[31:0]),
-			.rx_rd_wait	(rx_rd_wait),
-			.rx_wr_wait	(rx_wr_wait));
+			.remap_base	(remap_base[31:0]));
    
  
    
@@ -161,12 +159,13 @@ module erx_core (/*AUTOARG*/
                         .mi_dout   	        (mi_mmu_dout[DW-1:0]),
                         .emesh_packet_hi_out	(),
                         .mi_en	                (mi_mmu_en),
-                        .emesh_rd_wait		(rx_rd_wait),
-		        .emesh_wr_wait		(rx_wr_wait),	 
+                        
                            );
    */
 
    emmu erx_mmu (.mmu_bp		(1'b0),	
+		 .emesh_rd_wait		(1'b0), //absorbed by fifo
+		 .emesh_wr_wait		(1'b0),
 		 /*AUTOINST*/
 		 // Outputs
 		 .mi_dout		(mi_mmu_dout[DW-1:0]),	 // Templated
@@ -183,9 +182,7 @@ module erx_core (/*AUTOARG*/
 		 .mi_addr		(mi_addr[14:0]),
 		 .mi_din		(mi_din[DW-1:0]),
 		 .emesh_access_in	(emesh_remap_access),	 // Templated
-		 .emesh_packet_in	(emesh_remap_packet[PW-1:0]), // Templated
-		 .emesh_rd_wait		(rx_rd_wait),		 // Templated
-		 .emesh_wr_wait		(rx_wr_wait));		 // Templated
+		 .emesh_packet_in	(emesh_remap_packet[PW-1:0])); // Templated
    
 
    /************************************************************/
