@@ -15,6 +15,10 @@ module erx_io (/*AUTOARG*/
    parameter IOSTD_ELINK = "LVDS_25";
    parameter PW = 104;
 
+   // Can we do this in a better way?
+   parameter [8:0] RX_TAP_DELAY [8:0]   = {10,11,10,10,10,11,11,11,11};
+   
+
    //#########################
    //# reset, clocks
    //#########################
@@ -73,12 +77,9 @@ module erx_io (/*AUTOARG*/
    wire [8:0] 	 rxi_delay_out;
    wire 	 reset_sync;
    
-
-
    //Reset sync
    always @ (posedge rx_lclk)
      reset_sync <= reset;
-
    
    //#####################
    //#CREATE 112 BIT PACKET 
@@ -175,12 +176,14 @@ module erx_io (/*AUTOARG*/
    //###################################
  
    //stretch access pulse to 4 cycles
-   pulse_stretcher #(.DW(3)) ps0 (.out			(access_wide),
-				 .in			(valid_packet),
-				 .clk			(rx_lclk),
-				 .reset			(reset_sync)
-				 );
+   pulse_stretcher #(.DW(3)) 
+   ps0 (
+	.out(access_wide),
+	.in(valid_packet),
+	.clk(rx_lclk),
+	.reset(reset_sync));
 
+   
    always @ (posedge rx_lclk_div4)
      rx_access <= access_wide;
    
@@ -248,7 +251,7 @@ module erx_io (/*AUTOARG*/
    //#RX CLOCK
    //###################################
 
-   BUFG bufg_lclk (.I(rxi_lclk), .O(rx_lclk_pll));
+   assign rx_lclk_pll = rxi_lclk;
 
    //###################################
    //#IDELAY CIRCUIT
@@ -264,7 +267,7 @@ module erx_io (/*AUTOARG*/
 		   .DELAY_SRC("IDATAIN"), 
 		   .HIGH_PERFORMANCE_MODE("FALSE"),
 		   .IDELAY_TYPE("FIXED"),
-		   .IDELAY_VALUE(14),
+		   .IDELAY_VALUE(RX_TAP_DELAY[j]),
 		   .PIPE_SEL("FALSE"),
 		   .REFCLK_FREQUENCY(200.0),
 		   .SIGNAL_PATTERN("DATA"))
@@ -288,8 +291,7 @@ module erx_io (/*AUTOARG*/
    //#############################
    //# IDDR SAMPLERS
    //#############################  
-   BUFIO bufio_lclk (.I(rxi_lclk), 
-		     .O(rx_lclk_iddr));
+ 
    //DATA
    genvar        i;
    generate for(i=0; i<8; i=i+1)
@@ -298,7 +300,7 @@ module erx_io (/*AUTOARG*/
 	iddr_data (
 		   .Q1 (rx_word[i]),
 		   .Q2 (rx_word[i+8]),
-		   .C  (rx_lclk_iddr),
+		   .C  (rx_lclk),
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[i]),
 		   .R  (reset_sync),
@@ -312,7 +314,7 @@ module erx_io (/*AUTOARG*/
 	iddr_frame (
 		   .Q1 (rx_frame[0]),
 		   .Q2 (rx_frame[1]),    
-		   .C  (rx_lclk_iddr),
+		   .C  (rx_lclk),
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[8]),
 		   .R  (reset_sync),

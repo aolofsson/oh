@@ -23,19 +23,12 @@ module eclocks (/*AUTOARG*/
    reset, elink_en, sys_clk, rx_clkin
    );
 
-   parameter RCW                 = 4;          // reset counter width
+   parameter RCW                 = 8;          // reset counter width
 
    //CCLK PLL
    parameter SYS_CLK_PERIOD      = 10;         // (2.5-100ns, set by system)
-   parameter CCLK_VCO_MULT       = 12;         // 1200MHz
+   parameter MMCM_VCO_MULT       = 12;         // 1200MHz
    parameter CCLK_DIVIDE         = 2;          // 600MHz
-
-   //RX PLL
-   parameter RXCLK_PERIOD        = 3.3333333;  // (2.5-100ns, set by system)
-   parameter RXCLK_VCO_MULT      = 4;          // 1200MHz      
-   parameter RXCLK_DIVIDE        = 4;          // 300MHz
-   parameter RXCLK_PHASE         = 90;         // sim setting, tune for FPGA
-   parameter RXCLK_DIV4_PHASE    = 22.5;       // tune for FPGA!
 
    //TX (WITH RX FOR NOW...)
    parameter TXCLK_DIVIDE        = 4;          // 300MHz default
@@ -69,29 +62,44 @@ module eclocks (/*AUTOARG*/
    //# WIRES
    //############
 
+   //CCLK
+   wire       cclk_reset;
+   wire       cclk_i;
+   wire       cclk_bufio;
+   wire       cclk_oddr;
+   
    //Idelay controller
    wire       idelay_reset;
    wire       idelay_ready; //ignore this?
    wire       idelay_ref_clk_i;
    wire       idelay_ref_clk;
    
+   //RX
+   wire       rx_lclk_i;
+   wire       rx_lclk_div4_i;
+   
+   //TX
+   wire       tx_lclk_i;
+   wire       tx_lclk90_i;
+   wire       tx_lckl_div4_i;
+
+   //MMCM feedback
+   wire       mmcm_fb_in;
+   wire       mmcm_fb_out;
    
    //###########################
    // RESET STATE MACHINE
    //###########################
   
-   wire        cclk_locked;
-   wire        lclk_locked;   
    reg [RCW:0] reset_counter = 'b0; //works b/c of free running counter!
    reg 	       heartbeat;   
    reg 	       reset_in;
    reg 	       reset_sync;
-   reg 	       pll_locked_sync;
-   reg 	       pll_locked;
-   wire        pll_reset;
+
+   wire        mmcm_reset;
    reg [2:0]   reset_state;
-   reg 	       cclk_locked_reg;
-   reg 	       cclk_locked_sync;
+   reg 	       mmcm_locked_reg;
+   reg 	       mmcm_locked_sync;
    
    //wrap around counter that generates a 1 cycle heartbeat       
    //free running counter...
@@ -104,17 +112,15 @@ module eclocks (/*AUTOARG*/
    //two clock synchronizer
    always @ (posedge sys_clk)
      begin
-	cclk_locked_reg   <= cclk_locked;
-	cclk_locked_sync  <= cclk_locked_reg;	
-	pll_locked_sync   <= cclk_locked & lclk_locked;	
+	mmcm_locked_reg   <= mmcm_locked;
+	mmcm_locked_sync  <= mmcm_locked_reg;	
 	reset_sync        <= (reset | ~elink_en);
 	reset_in          <= reset_sync;
-	pll_locked        <= pll_locked_sync;	
      end
    
 `define RESET_ALL       3'b000
-`define START_PLL       3'b001
-`define STOP_PLL        3'b010
+`define START_MMCM       3'b001
+`define STOP_CCLK        3'b010
 `define START_EPIPHANY  3'b011
 `define HOLD_IT         3'b100
 `define ACTIVE          3'b101
@@ -127,16 +133,16 @@ module eclocks (/*AUTOARG*/
      else if(heartbeat)
        case(reset_state[2:0])
 	 `RESET_ALL :
-	   reset_state[2:0]    <= `START_PLL;	 
-	 `START_PLL :
-	   if(cclk_locked_sync)
-		reset_state[2:0]  <= `STOP_PLL; 
-	 `STOP_PLL :
+	   reset_state[2:0]    <= `START_MMCM;	 
+	 `START_MMCM :
+	   if(mmcm_locked_sync)
+		reset_state[2:0]  <= `STOP_CCLK; 
+	 `STOP_CCLK :
 	   reset_state[2:0]    <= `START_EPIPHANY;
 	 `START_EPIPHANY :
 	   reset_state[2:0]    <= `HOLD_IT;
 	 `HOLD_IT :
-	   if(cclk_locked_sync)
+	   if(mmcm_locked_sync) //TODO: this is not necessary
 	     reset_state[2:0]  <= `ACTIVE;
 	 `ACTIVE:
 	   reset_state[2:0]    <= `ACTIVE; //stay there until nex reset
@@ -144,32 +150,29 @@ module eclocks (/*AUTOARG*/
 
    
    //reset PLL during 'reset' and during quiet time around reset edge
-   assign pll_reset   =  (reset_state[2:0]==`RESET_ALL)      |
-			 (reset_state[2:0]==`STOP_PLL)       | 
-			 (reset_state[2:0]==`START_EPIPHANY);
+   assign mmcm_reset   =  (reset_state[2:0]==`RESET_ALL);
+
+   assign idelay_reset =  (reset_state[2:0]==`RESET_ALL) |
+			  (reset_state[2:0]==`START_MMCM);
+   
+   assign cclk_reset =  (reset_state[2:0]==`STOP_CCLK) | 
+			(reset_state[2:0]==`START_EPIPHANY);
    
    assign e_resetb    =  (reset_state[2:0]==`START_EPIPHANY) |
 		         (reset_state[2:0]==`HOLD_IT) |
 		         (reset_state[2:0]==`ACTIVE);
 
    assign elink_reset  =  (reset_state[2:0]!=`ACTIVE);
-     
+   
 `ifdef TARGET_XILINX	
 
-   wire       cclk_fb_in;
-   wire       cclk_fb_out;
-   wire       lclk_fb_in;
-   wire       lclk_fb_out;
-   wire       cclk;
-   wire       cclk_alt;
-   
    //###########################
    // MMCM/PLL FOR CCLK AND TX
    //###########################
    MMCME2_ADV
      #(
        .BANDWIDTH("OPTIMIZED"),          
-       .CLKFBOUT_MULT_F(CCLK_VCO_MULT),
+       .CLKFBOUT_MULT_F(MMCM_VCO_MULT),
        .CLKFBOUT_PHASE(0.0),
        .CLKIN1_PERIOD(SYS_CLK_PERIOD),
        .CLKOUT0_DIVIDE_F(CCLK_DIVIDE),  // cclk      
@@ -198,21 +201,21 @@ module eclocks (/*AUTOARG*/
        .STARTUP_WAIT("FALSE") 
        ) pll_cclk
        (
-        .CLKOUT0(cclk),
+        .CLKOUT0(cclk_i),
 	.CLKOUT0B(),
-        .CLKOUT1(tx_lclk),
+        .CLKOUT1(tx_lclk_i),
 	.CLKOUT1B(),
-        .CLKOUT2(tx_lclk90),
+        .CLKOUT2(tx_lclk90_i),
 	.CLKOUT2B(),
-        .CLKOUT3(tx_lclk_div4),
+        .CLKOUT3(tx_lclk_div4_i),
 	.CLKOUT3B(),
-        .CLKOUT4(rx_ref_clk),
+        .CLKOUT4(idelay_ref_clk_i),
         .CLKOUT5(),
 	.CLKOUT6(),
 	.PWRDWN(1'b0),
-        .RST(pll_reset),     //reset
-        .CLKFBIN(cclk_fb_in),
-        .CLKFBOUT(cclk_fb_out),  //feedback clock     
+        .RST(mmcm_reset),     //reset
+        .CLKFBIN(mmcm_fb_in),
+        .CLKFBOUT(mmcm_fb_out),  //feedback clock     
         .CLKIN1(sys_clk),    //input clock
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
@@ -223,7 +226,7 @@ module eclocks (/*AUTOARG*/
 	.DWE(1'b0),
 	.DRDY(),
 	.DO(), 
-	.LOCKED(cclk_locked), //locked indicator
+	.LOCKED(mmcm_locked), //locked indicator
 	.PSCLK(1'b0),
 	.PSEN(1'b0),
 	.PSDONE(),
@@ -231,101 +234,62 @@ module eclocks (/*AUTOARG*/
 	.CLKFBSTOPPED(),
 	.CLKINSTOPPED()
         );
-        
-    BUFG pll_cclk_bufg(.I(cclk_fb_out), .O(cclk_fb_in));
-
-`ifdef EPHYCARD //Ephycard has cclk in a different region
-   wire cclk_bufmr;
-   wire cclk_bufio;
-   wire cclk_oddr;
    
+
+   //Tx clock buffers  TODO: change to bufr? change port in MMCM in that case!!
+   BUFG tx_lclk_bufg_i(.I(tx_lclk_i), .O(tx_lclk));
+   BUFG tx_lclk_div4_bufg_i (.I(tx_lclk_div4_i), .O(tx_lclk_div4));
+   BUFG tx_lclk90_bufg_i (.I(tx_lclk90_i), .O(tx_lclk90));
+   
+   //Idelay ref clock buffer
+   BUFG idelay_ref_bufg_i(.I(idelay_ref_clk_i), .O(idelay_ref_clk));
+   
+   //Rx clock buffers
+   BUFR rx_lclk_bufr_i(.I(rx_clkin), .O(rx_lclk));
+   
+   BUFR #(.BUFR_DIVIDE("4")) 
+   rx_lclk_div4_bufr_i
+     (
+      .I(rx_clkin), 
+      .O(rx_lclk_div4),
+      .CE(1'b1),
+      .CLR(1'b0));
+
+   //Feedback buffer
+   BUFR mmcm_fb_bufr_i(.I(mmcm_fb_out), .O(mmcm_fb_in));
+
+   
+   //###########################
+   // CCLK
+   //###########################
+
+   //CCLK differential buffer
    OBUFDS  cclk_obuf (.O   (e_cclk_p),
 		      .OB  (e_cclk_n),
 		      .I   (cclk_oddr)
 		      );
-		      
-  ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
-  oddr_lclk (
-             .Q  (cclk_oddr),
-             .C  (cclk_bufio),
-             .CE (1'b1),
-             .D1 (1'b1),
-             .D2 (1'b0),
-             .R  (1'b0),
-             .S  (1'b0)
-             );
-	
-	BUFIO bufio_cclk(.O(cclk_bufio), .I(cclk_bufmr));
-    BUFMR bufmr_cclk(.O(cclk_bufmr), .I(cclk));
-`else
-   OBUFDS  cclk_obuf (.O   (e_cclk_p),
-       .OB  (e_cclk_n),
-       .I   (cclk)
-       );
-`endif
 
-   //###########################
-   // PLL RX CLOCK ALIGNMENT
-   //###########################  
+   //CCLK oddr 
+   ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"),
+	  .SRTYPE("ASYNC"))
+   oddr_lclk (
+              .Q  (cclk_oddr),
+              .C  (cclk_bufio),
+              .CE (1'b1),
+              .D1 (1'b1),
+              .D2 (1'b0),
+              .R  (1'b0),
+              .S  (1'b0));
+
+   //CCLK bufio
+   BUFIO bufio_cclk(.O(cclk_bufio), .I(cclk_i));
+
+
    
-   PLLE2_ADV
-     #(
-       .BANDWIDTH("OPTIMIZED"),          
-       .CLKFBOUT_MULT(RXCLK_VCO_MULT),
-       .CLKFBOUT_PHASE(0.0),
-       .CLKIN1_PERIOD(RXCLK_PERIOD),
-       .CLKOUT0_DIVIDE(CCLK_DIVIDE),    // cclk
-       .CLKOUT1_DIVIDE(TXCLK_DIVIDE),   // tx_lclk
-       .CLKOUT2_DIVIDE(TXCLK_DIVIDE),   // tx_lclk90
-       .CLKOUT3_DIVIDE(TXCLK_DIVIDE*4), // tx_lclk_div4
-       .CLKOUT4_DIVIDE(RXCLK_DIVIDE),   // rx_lclk
-       .CLKOUT5_DIVIDE(RXCLK_DIVIDE*4), // rx_lclk_div4
-       .CLKOUT0_DUTY_CYCLE(0.5),         
-       .CLKOUT1_DUTY_CYCLE(0.5),
-       .CLKOUT2_DUTY_CYCLE(0.5),
-       .CLKOUT3_DUTY_CYCLE(0.5),
-       .CLKOUT4_DUTY_CYCLE(0.5),
-       .CLKOUT5_DUTY_CYCLE(0.5),
-       .CLKOUT0_PHASE(0.0),
-       .CLKOUT1_PHASE(0.0),
-       .CLKOUT2_PHASE(90.0),
-       .CLKOUT3_PHASE(0.0),
-       .CLKOUT4_PHASE(RXCLK_PHASE),
-       .CLKOUT5_PHASE(RXCLK_DIV4_PHASE),
-       .DIVCLK_DIVIDE(1.0), 
-       .REF_JITTER1(0.01), 
-       .STARTUP_WAIT("FALSE") 
-       ) pll_elink
-       (
-        .CLKOUT0(cclk_alt),
-        .CLKOUT1(),
-        .CLKOUT2(),
-        .CLKOUT3(),
-        .CLKOUT4(rx_lclk),
-        .CLKOUT5(rx_lclk_div4),
-	.PWRDWN(1'b0),
-        .RST(pll_reset),
-        .CLKFBIN(lclk_fb_in),
-        .CLKFBOUT(lclk_fb_out),       
-        .CLKIN1(rx_clkin),
-	.CLKIN2(1'b0),
-	.CLKINSEL(1'b1),      
-	.DADDR(7'b0),
-        .DCLK(1'b0),
-	.DEN(1'b0),
-	.DI(16'b0),
-	.DWE(1'b0),
-	.DRDY(),
-	.DO(), 
-	.LOCKED(lclk_locked)
-        );
-     
-    BUFG pll_elink_bufg(.I(lclk_fb_out), .O(lclk_fb_in));
-
    //###########################
    // Idelay controller
    //###########################
-   
+
    BUFG idelay_ref_bufg_i(.I(idelay_ref_clk_i), .O(idelay_ref_clk));
    
    (* IODELAY_GROUP = "IDELAY_GROUP" *) // Group name for IDELAYCTRL
