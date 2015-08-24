@@ -290,7 +290,6 @@ module eclocks (/*AUTOARG*/
    // Idelay controller
    //###########################
 
-   BUFG idelay_ref_bufg_i(.I(idelay_ref_clk_i), .O(idelay_ref_clk));
    
    (* IODELAY_GROUP = "IDELAY_GROUP" *) // Group name for IDELAYCTRL
    IDELAYCTRL idelayctrl_inst 

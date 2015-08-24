@@ -259,7 +259,6 @@ module axi_elink(/*AUTOARG*/
 	       .tx_lclk_div4		(tx_lclk_div4),
 	       .rx_lclk			(rx_lclk),
 	       .rx_lclk_div4		(rx_lclk_div4),
-	       .rx_ref_clk		(rx_ref_clk),
 	       .rxi_lclk_p		(rxi_lclk_p),
 	       .rxi_lclk_n		(rxi_lclk_n),
 	       .rxi_frame_p		(rxi_frame_p),

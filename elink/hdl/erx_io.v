@@ -62,7 +62,7 @@ module erx_io (/*AUTOARG*/
    reg [7:0] 	 data_even_reg;   
    reg [7:0] 	 data_odd_reg;
    wire [1:0] 	 rx_frame;
-   reg [1:] 	 rx_frame_sync;
+   reg [1:0] 	 rx_frame_sync;
    wire  	 rx_frame_old;
    reg [111:0]   rx_sample; 
    reg [6:0] 	 rx_pointer;
@@ -75,7 +75,7 @@ module erx_io (/*AUTOARG*/
    wire 	 rx_lclk_iddr;
    wire [8:0] 	 rxi_delay_in;
    wire [8:0] 	 rxi_delay_out;
-   wire 	 reset_sync;
+   reg 	 reset_sync;
    
    //Reset sync
    always @ (posedge rx_lclk)
