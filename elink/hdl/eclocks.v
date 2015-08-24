@@ -18,7 +18,7 @@
 module eclocks (/*AUTOARG*/
    // Outputs
    tx_lclk, tx_lclk90, tx_lclk_div4, rx_lclk, rx_lclk_div4,
-   rx_ref_clk, e_cclk_p, e_cclk_n, elink_reset, e_resetb,
+   e_cclk_p, e_cclk_n, elink_reset, e_resetb,
    // Inputs
    reset, elink_en, sys_clk, rx_clkin
    );
@@ -57,14 +57,24 @@ module eclocks (/*AUTOARG*/
    //RX Clocks
    output     rx_lclk;           // rx high speed clock for DDR IO
    output     rx_lclk_div4;      // rx slow clock for logic
-   output     rx_ref_clk;        // clock for idelay element
-
+ 
    //Epiphany "free running" clock
    output     e_cclk_p, e_cclk_n;
 
    //Reset
    output     elink_reset;       // reset for elink logic & IO   
    output     e_resetb;          // reset fpr Epiphany chip
+   
+   //############
+   //# WIRES
+   //############
+
+   //Idelay controller
+   wire       idelay_reset;
+   wire       idelay_ready; //ignore this?
+   wire       idelay_ref_clk_i;
+   wire       idelay_ref_clk;
+   
    
    //###########################
    // RESET STATE MACHINE
@@ -311,6 +321,19 @@ module eclocks (/*AUTOARG*/
         );
      
     BUFG pll_elink_bufg(.I(lclk_fb_out), .O(lclk_fb_in));
+
+   //###########################
+   // Idelay controller
+   //###########################
+   
+   BUFG idelay_ref_bufg_i(.I(idelay_ref_clk_i), .O(idelay_ref_clk));
+   
+   (* IODELAY_GROUP = "IDELAY_GROUP" *) // Group name for IDELAYCTRL
+   IDELAYCTRL idelayctrl_inst 
+     (
+      .RDY(idelay_ready), // check ready flag in reset sequence?
+      .REFCLK(idelay_ref_clk),//200MHz clk (78ps tap delay)
+      .RST(idelay_reset));
    
 `endif //  `ifdef TARGET_XILINX
 

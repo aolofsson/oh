@@ -5,7 +5,7 @@ module erx (/*AUTOARG*/
    rxrr_access, rxrr_packet, erx_cfg_wait, timeout, mailbox_full,
    mailbox_not_empty,
    // Inputs
-   erx_reset, sys_reset, sys_clk, rx_lclk, rx_lclk_div4, rx_ref_clk,
+   erx_reset, sys_reset, sys_clk, rx_lclk, rx_lclk_div4,
    rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n, rxi_data_p,
    rxi_data_n, rxwr_wait, rxrd_wait, rxrr_wait, erx_cfg_access,
    erx_cfg_packet
@@ -26,7 +26,6 @@ module erx (/*AUTOARG*/
    input 	  sys_clk;	               // system clock for rx fifos
    input 	  rx_lclk;	               // fast clock for io
    input 	  rx_lclk_div4;		       // slow clock for rest of logic
-   input 	  rx_ref_clk;                  // idelay reference clock   
    output 	  rx_lclk_pll;                 // clock output for pll
    
    //FROM IO Pins
@@ -100,7 +99,6 @@ module erx (/*AUTOARG*/
 		  // Inputs
 		  .rx_lclk		(rx_lclk),
 		  .rx_lclk_div4		(rx_lclk_div4),
-		  .rx_ref_clk		(rx_ref_clk),
 		  .rxi_lclk_p		(rxi_lclk_p),
 		  .rxi_lclk_n		(rxi_lclk_n),
 		  .rxi_frame_p		(rxi_frame_p),

@@ -194,7 +194,6 @@ module axi_elink(/*AUTOARG*/
    wire			rx_lclk;		// From eclocks of eclocks.v
    wire			rx_lclk_div4;		// From eclocks of eclocks.v
    wire			rx_lclk_pll;		// From elink of elink.v
-   wire			rx_ref_clk;		// From eclocks of eclocks.v
    wire			rxrd_access;		// From elink of elink.v
    wire [PW-1:0]	rxrd_packet;		// From elink of elink.v
    wire			rxrd_wait;		// From emaxi of emaxi.v
@@ -293,7 +292,6 @@ module axi_elink(/*AUTOARG*/
 		    .tx_lclk_div4	(tx_lclk_div4),
 		    .rx_lclk		(rx_lclk),
 		    .rx_lclk_div4	(rx_lclk_div4),
-		    .rx_ref_clk		(rx_ref_clk),
 		    .e_cclk_p		(e_cclk_p),
 		    .e_cclk_n		(e_cclk_n),
 		    .elink_reset	(elink_reset),

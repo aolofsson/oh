@@ -7,7 +7,7 @@ module erx_io (/*AUTOARG*/
    rx_lclk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, rx_access, rx_burst, rx_packet,
    // Inputs
-   reset, rx_lclk, rx_lclk_div4, rx_ref_clk, rxi_lclk_p, rxi_lclk_n,
+   reset, rx_lclk, rx_lclk_div4, rxi_lclk_p, rxi_lclk_n,
    rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, rx_wr_wait,
    rx_rd_wait
    );
@@ -21,7 +21,6 @@ module erx_io (/*AUTOARG*/
    input       reset;                       // reset
    input       rx_lclk;                     // fast I/O clock
    input       rx_lclk_div4;                // slow clock
-   input       rx_ref_clk;                  // idelay reference clock   
    output      rx_lclk_pll;                 // clock output for pll
    
    //##########################
@@ -244,17 +243,10 @@ module erx_io (/*AUTOARG*/
 
    assign  rxi_delay_in[8:0] ={rxi_frame,rxi_data[7:0]};
    
-   BUFG bufg_rx_ref_clk( .I(rx_ref_clk), .O(rx_ref_clk_idlyctrl));
-
-   //Do these need parameters?
-   IDELAYCTRL idelayctrl_inst (.RDY(),
-			       .REFCLK(rx_ref_clk_idlyctrl),//200MHz clk (78ps tap delay)
-			       .RST(1'b0)
-			       );
-   
    genvar        j;
    generate for(j=0; j<9; j=j+1)
-     begin : gen_idelay	     
+     begin : gen_idelay
+	(* IODELAY_GROUP = "IDELAY_GROUP" *) // Group name for IDELAYCTRL
 	IDELAYE2 #(.CINVCTRL_SEL("FALSE"),
 		   .DELAY_SRC("IDATAIN"), 
 		   .HIGH_PERFORMANCE_MODE("FALSE"),
