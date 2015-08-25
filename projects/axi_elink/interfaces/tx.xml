@@ -2,7 +2,7 @@
 <spirit:busDefinition xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <spirit:vendor>Adapteva</spirit:vendor>
   <spirit:library>user</spirit:library>
-  <spirit:name>e_cclk</spirit:name>
+  <spirit:name>tx</spirit:name>
   <spirit:version>1.0</spirit:version>
   <spirit:directConnection>false</spirit:directConnection>
   <spirit:isAddressable>false</spirit:isAddressable>
