@@ -8,7 +8,7 @@ module elink(/*AUTOARG*/
    timeout,
    // Inputs
    reset, sys_clk, tx_lclk, tx_lclk90, tx_lclk_div4, rx_lclk,
-   rx_lclk_div4, rx_ref_clk, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
+   rx_lclk_div4, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
    rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
    txi_rd_wait_p, txi_rd_wait_n, rxwr_wait, rxrd_wait, rxrr_wait,
    txwr_access, txwr_packet, txrd_access, txrd_packet, txrr_access,
@@ -31,7 +31,6 @@ module elink(/*AUTOARG*/
    input 	tx_lclk_div4;  // slow tx clock for core logic
    input 	rx_lclk;       // rx input clock tweaked by pll for IO
    input 	rx_lclk_div4;  // slow clock for rx logic 
-   input        rx_ref_clk;    // 200MHz ref clock for rx idelay elements   
    output 	rx_lclk_pll;   // rx_lclk pass through input for pll
 
    /********************************/
@@ -199,7 +198,6 @@ module elink(/*AUTOARG*/
 	   .sys_clk			(sys_clk),
 	   .rx_lclk			(rx_lclk),
 	   .rx_lclk_div4		(rx_lclk_div4),
-	   .rx_ref_clk			(rx_ref_clk),
 	   .rxi_lclk_p			(rxi_lclk_p),
 	   .rxi_lclk_n			(rxi_lclk_n),
 	   .rxi_frame_p			(rxi_frame_p),

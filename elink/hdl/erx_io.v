@@ -7,7 +7,7 @@ module erx_io (/*AUTOARG*/
    rx_lclk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, rx_access, rx_burst, rx_packet,
    // Inputs
-   reset, rx_lclk, rx_lclk_div4, rx_ref_clk, rxi_lclk_p, rxi_lclk_n,
+   reset, rx_lclk, rx_lclk_div4, rxi_lclk_p, rxi_lclk_n,
    rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, rx_wr_wait,
    rx_rd_wait
    );
@@ -15,13 +15,16 @@ module erx_io (/*AUTOARG*/
    parameter IOSTD_ELINK = "LVDS_25";
    parameter PW = 104;
 
+   // Can we do this in a better way?
+   parameter [8:0] RX_TAP_DELAY [8:0]   = {10,11,10,10,10,11,11,11,11};
+   
+
    //#########################
    //# reset, clocks
    //#########################
    input       reset;                       // reset
    input       rx_lclk;                     // fast I/O clock
    input       rx_lclk_div4;                // slow clock
-   input       rx_ref_clk;                  // idelay reference clock   
    output      rx_lclk_pll;                 // clock output for pll
    
    //##########################
@@ -51,14 +54,15 @@ module erx_io (/*AUTOARG*/
    wire 	 access_wide;
    reg 		 valid_packet;
    wire [15:0]   rx_word;
-   wire     rx_ref_clk_idlyctrl;
-
+   reg [15:0] 	 rx_word_sync;
+   
    //############
    //# REGS
    //############
    reg [7:0] 	 data_even_reg;   
    reg [7:0] 	 data_odd_reg;
-   wire 	 rx_frame;
+   wire [1:0] 	 rx_frame;
+   reg [1:0] 	 rx_frame_sync;
    wire  	 rx_frame_old;
    reg [111:0]   rx_sample; 
    reg [6:0] 	 rx_pointer;
@@ -71,54 +75,67 @@ module erx_io (/*AUTOARG*/
    wire 	 rx_lclk_iddr;
    wire [8:0] 	 rxi_delay_in;
    wire [8:0] 	 rxi_delay_out;
+   reg 	 reset_sync;
+   
+   //Reset sync
+   always @ (posedge rx_lclk)
+     reset_sync <= reset;
    
    //#####################
    //#CREATE 112 BIT PACKET 
    //#####################
-   
+   //TODO: clean up!
    //write Pointer   
    always @ (posedge rx_lclk)
-     if (~rx_frame)
-       rx_pointer[6:0] <= 7'b0000001; //new frame
-     else if (rx_pointer[6])
-       rx_pointer[6:0] <= 7'b0001000; //anticipate burst
-     else if(rx_frame)
-       rx_pointer[6:0] <= {rx_pointer[5:0],1'b0};//middle of frame
-      
-   //convert to 112 bit packet
-   always @ (posedge rx_lclk)
-     if(rx_frame)   
+     if (~rx_frame_sync[1]) begin
+	rx_pointer <= 3'b0; //new frame
+	access <= 1'b0;
+     end
+     else if (rx_pointer != 3'd6 && (rx_frame_sync != 2'b00))
        begin
-	  if(rx_pointer[0])
-	    rx_sample[15:0]    <= rx_word[15:0];
-	  if(rx_pointer[1])
-	    rx_sample[31:16]   <= rx_word[15:0];
-	  if(rx_pointer[2])
-	    rx_sample[47:32]   <= rx_word[15:0];
-	  if(rx_pointer[3])
-	    rx_sample[63:48]   <= rx_word[15:0];
-	  if(rx_pointer[4])
-	    rx_sample[79:64]   <= rx_word[15:0];
-	  if(rx_pointer[5])
-	    rx_sample[95:80]   <= rx_word[15:0];
-	  if(rx_pointer[6])
-	    rx_sample[111:96]  <= rx_word[15:0];	  
+	rx_pointer <= rx_pointer + 1; //anticipate burst
+	access <= 1'b0;
+     end
+     else begin
+	rx_pointer <= 3'd3;//middle of frame
+	access <= 1'b1;
+     end
+
+   
+   // shift register for rx_word
+   always @ (posedge rx_lclk)
+     case (rx_frame_sync[1:0])
+       2'b01 : begin
+	  rx_sample[111:8] <= rx_sample[103:0];
+	  rx_sample[7:0] <= rx_word_sync[7:0];
        end
+       2'b10 : begin
+	  rx_sample[111:8] <= rx_sample[103:0];
+	  rx_sample[7:0] <= rx_word_sync[15:8];
+       end
+       2'b11 : begin
+	  rx_sample[111:16] <= rx_sample[95:0];
+	  rx_sample[15:0] <= rx_word_sync[15:0];
+       end
+       default :
+	 rx_sample <= rx_sample;
+     endcase // case (rx_frame_sync[1:0])
+   
    
    //#####################  
    //#DATA VALID SIGNAL 
    //####################
+ 
    always @ (posedge rx_lclk)
      begin     
-	access       <= rx_pointer[6];
 	valid_packet <= access;//data pipeline
      end
    
    reg burst_detect;   
    always @ (posedge rx_lclk)
-     if(access & rx_frame)
+     if(access & rx_frame_sync[1])
        burst_detect <= 1'b1;
-     else if(~rx_frame)
+     else if(~rx_frame_sync)
        burst_detect <= 1'b0;
    
    //###################################
@@ -131,44 +148,42 @@ module erx_io (/*AUTOARG*/
        begin
 	  //pipelin burst (delay by one frame)
 	  burst                 <= burst_detect;	  
+	  
 	  //access
-	  rx_packet_lclk[0]     <= rx_sample[40];
+	  rx_packet_lclk[0]     <= rx_sample[64];
+	  
 	  //write
-	  rx_packet_lclk[1]     <= rx_sample[41];
+	  rx_packet_lclk[1]     <= rx_sample[65];
+	  
 	  //datamode
-	  rx_packet_lclk[3:2]   <= rx_sample[43:42];
+	  rx_packet_lclk[3:2]   <= rx_sample[67:66];
+	  
 	  //ctrlmode
-	  rx_packet_lclk[7:4]   <= rx_sample[15:12];
+	  rx_packet_lclk[7:4]   <= rx_sample[103:100];
+	  
 	  //dstaddr
-	  rx_packet_lclk[39:8]  <= {rx_sample[11:8],
-			             rx_sample[23:16],
-			             rx_sample[31:24],
-			             rx_sample[39:32],
-			             rx_sample[47:44]};
+	  rx_packet_lclk[39:8]  <= rx_sample[99:68];
+	  
 	  //data
-	  rx_packet_lclk[71:40] <= {rx_sample[55:48],
-			              rx_sample[63:56],
-			              rx_sample[71:64],
-			              rx_sample[79:72]};	
+	  rx_packet_lclk[71:40] <= rx_sample[63:32];
+	  
 	  //srcaddr
-	  rx_packet_lclk[103:72]<= {rx_sample[87:80],
-			              rx_sample[95:88],
-			              rx_sample[103:96],
-			              rx_sample[111:104]
-				      };	
-     end
+	  rx_packet_lclk[103:72]<= rx_sample[31:0];
+       end
 
    //###################################
    //#SYNCHRONIZE TO SLOW CLK
    //###################################
  
    //stretch access pulse to 4 cycles
-   pulse_stretcher #(.DW(3)) ps0 (.out			(access_wide),
-				 .in			(valid_packet),
-				 .clk			(rx_lclk),
-				 .reset			(reset)
-				 );
+   pulse_stretcher #(.DW(3)) 
+   ps0 (
+	.out(access_wide),
+	.in(valid_packet),
+	.clk(rx_lclk),
+	.reset(reset_sync));
 
+   
    always @ (posedge rx_lclk_div4)
      rx_access <= access_wide;
    
@@ -236,7 +251,7 @@ module erx_io (/*AUTOARG*/
    //#RX CLOCK
    //###################################
 
-   BUFG bufg_lclk (.I(rxi_lclk), .O(rx_lclk_pll));
+   assign rx_lclk_pll = rxi_lclk;
 
    //###################################
    //#IDELAY CIRCUIT
@@ -244,22 +259,15 @@ module erx_io (/*AUTOARG*/
 
    assign  rxi_delay_in[8:0] ={rxi_frame,rxi_data[7:0]};
    
-   BUFG bufg_rx_ref_clk( .I(rx_ref_clk), .O(rx_ref_clk_idlyctrl));
-
-   //Do these need parameters?
-   IDELAYCTRL idelayctrl_inst (.RDY(),
-			       .REFCLK(rx_ref_clk_idlyctrl),//200MHz clk (78ps tap delay)
-			       .RST(1'b0)
-			       );
-   
    genvar        j;
    generate for(j=0; j<9; j=j+1)
-     begin : gen_idelay	     
+     begin : gen_idelay
+	(* IODELAY_GROUP = "IDELAY_GROUP" *) // Group name for IDELAYCTRL
 	IDELAYE2 #(.CINVCTRL_SEL("FALSE"),
 		   .DELAY_SRC("IDATAIN"), 
 		   .HIGH_PERFORMANCE_MODE("FALSE"),
 		   .IDELAY_TYPE("FIXED"),
-		   .IDELAY_VALUE(14),
+		   .IDELAY_VALUE(RX_TAP_DELAY[j]),
 		   .PIPE_SEL("FALSE"),
 		   .REFCLK_FREQUENCY(200.0),
 		   .SIGNAL_PATTERN("DATA"))
@@ -283,36 +291,44 @@ module erx_io (/*AUTOARG*/
    //#############################
    //# IDDR SAMPLERS
    //#############################  
-   BUFIO bufio_lclk (.I(rxi_lclk), 
-		     .O(rx_lclk_iddr));
+ 
    //DATA
    genvar        i;
    generate for(i=0; i<8; i=i+1)
      begin : gen_iddr
-	IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"))
+	IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE"), .SRTYPE("ASYNC"))
 	iddr_data (
 		   .Q1 (rx_word[i]),
 		   .Q2 (rx_word[i+8]),
-		   .C  (rx_lclk_iddr),
+		   .C  (rx_lclk),
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[i]),
-		   .R  (reset),
+		   .R  (reset_sync),
 		   .S  (1'b0)
 		   );
      end
      endgenerate
 
    //FRAME
-   IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"))
+   IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE"), .SRTYPE("ASYNC"))
 	iddr_frame (
-		   .Q1 (),
-		   .Q2 (rx_frame),    
-		   .C  (rx_lclk_iddr),
+		   .Q1 (rx_frame[0]),
+		   .Q2 (rx_frame[1]),    
+		   .C  (rx_lclk),
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[8]),
-		   .R  (reset),
+		   .R  (reset_sync),
 		   .S  (1'b0)
-		   );	
+		   );
+
+   //Pipe stage
+   always @ (posedge rx_lclk)
+     rx_frame_sync <= rx_frame;
+
+   //Pipe stage
+   always @ (posedge rx_lclk)
+     rx_word_sync <= rx_word;
+   
    
 endmodule // erx_io
 // Local Variables:
