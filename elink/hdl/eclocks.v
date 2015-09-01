@@ -27,12 +27,16 @@ module eclocks (/*AUTOARG*/
 
    //CCLK PLL
    parameter SYS_CLK_PERIOD      = 10;         // (2.5-100ns, set by system)
-   parameter MMCM_VCO_MULT       = 12;         // 1200MHz
+   parameter CCLK_VCO_MULT       = 12;         // 1200MHz
    parameter CCLK_DIVIDE         = 2;          // 600MHz
 
    //TX (WITH RX FOR NOW...)
    parameter TXCLK_DIVIDE        = 4;          // 300MHz default
 
+   //RX
+   parameter RXCLK_VCO_MULT      = 4;
+   parameter RXCLK_PERIOD        = 3.3333;
+   parameter RXCLK_DIVIDE        = 4;          // 300MHz default
    
    //Input clock, reset, config interface
    input      reset;             // async input reset
@@ -83,9 +87,17 @@ module eclocks (/*AUTOARG*/
    wire       tx_lclk90_i;
    wire       tx_lckl_div4_i;
 
-   //MMCM feedback
-   wire       mmcm_fb_in;
-   wire       mmcm_fb_out;
+   //MMCM & PLL
+   wire       cclk_fb_in;
+   wire       cclk_fb_out;
+   wire       lclk_fb_i;
+   wire       pll_reset;
+   wire       pll_locked;
+   wire       lclk_fb_in;
+   wire       lclk_fb_out;
+   reg 	      pll_locked_reg;
+   reg 	      pll_locked_sync;
+   
    
    //###########################
    // RESET STATE MACHINE
@@ -96,10 +108,8 @@ module eclocks (/*AUTOARG*/
    reg 	       reset_in;
    reg 	       reset_sync;
 
-   wire        mmcm_reset;
    reg [2:0]   reset_state;
-   reg 	       mmcm_locked_reg;
-   reg 	       mmcm_locked_sync;
+
    
    //wrap around counter that generates a 1 cycle heartbeat       
    //free running counter...
@@ -112,18 +122,19 @@ module eclocks (/*AUTOARG*/
    //two clock synchronizer
    always @ (posedge sys_clk)
      begin
-	mmcm_locked_reg   <= mmcm_locked;
-	mmcm_locked_sync  <= mmcm_locked_reg;	
+	//TODO: Does rx_lclk always run when cclk does? Restb ?
+	pll_locked_reg   <= lclk_locked & cclk_locked;
+	pll_locked_sync  <= pll_locked_reg;	
 	reset_sync        <= (reset | ~elink_en);
 	reset_in          <= reset_sync;
      end
    
-`define RESET_ALL       3'b000
-`define START_MMCM       3'b001
+`define RESET_ALL        3'b000
+`define START_CCLK       3'b001
 `define STOP_CCLK        3'b010
-`define START_EPIPHANY  3'b011
-`define HOLD_IT         3'b100
-`define ACTIVE          3'b101
+`define START_EPIPHANY   3'b011
+`define HOLD_IT          3'b100
+`define ACTIVE           3'b101
 	     
    //Reset sequence state machine
    
@@ -133,16 +144,16 @@ module eclocks (/*AUTOARG*/
      else if(heartbeat)
        case(reset_state[2:0])
 	 `RESET_ALL :
-	   reset_state[2:0]    <= `START_MMCM;	 
-	 `START_MMCM :
-	   if(mmcm_locked_sync)
+	   reset_state[2:0]    <= `START_CCLK;	 
+	 `START_CCLK :
+	   if(pll_locked_sync)
 		reset_state[2:0]  <= `STOP_CCLK; 
 	 `STOP_CCLK :
 	   reset_state[2:0]    <= `START_EPIPHANY;
 	 `START_EPIPHANY :
 	   reset_state[2:0]    <= `HOLD_IT;
 	 `HOLD_IT :
-	   if(mmcm_locked_sync) //TODO: this is not necessary
+	   if(pll_locked_sync)
 	     reset_state[2:0]  <= `ACTIVE;
 	 `ACTIVE:
 	   reset_state[2:0]    <= `ACTIVE; //stay there until nex reset
@@ -150,10 +161,10 @@ module eclocks (/*AUTOARG*/
 
    
    //reset PLL during 'reset' and during quiet time around reset edge
-   assign mmcm_reset   =  (reset_state[2:0]==`RESET_ALL);
-
+   assign pll_reset   =  (reset_state[2:0]==`RESET_ALL);
+ 
    assign idelay_reset =  (reset_state[2:0]==`RESET_ALL) |
-			  (reset_state[2:0]==`START_MMCM);
+			  (reset_state[2:0]==`START_CCLK);
    
    assign cclk_reset =  (reset_state[2:0]==`STOP_CCLK) | 
 			(reset_state[2:0]==`START_EPIPHANY);
@@ -167,18 +178,18 @@ module eclocks (/*AUTOARG*/
 `ifdef TARGET_XILINX	
 
    //###########################
-   // MMCM/PLL FOR CCLK AND TX
+   // MMCM FOR CCLK
    //###########################
    MMCME2_ADV
      #(
        .BANDWIDTH("OPTIMIZED"),          
-       .CLKFBOUT_MULT_F(MMCM_VCO_MULT),
+       .CLKFBOUT_MULT_F(CCLK_VCO_MULT),
        .CLKFBOUT_PHASE(0.0),
        .CLKIN1_PERIOD(SYS_CLK_PERIOD),
        .CLKOUT0_DIVIDE_F(CCLK_DIVIDE),  // cclk      
-       .CLKOUT1_DIVIDE(TXCLK_DIVIDE),   // tx_lclk
-       .CLKOUT2_DIVIDE(TXCLK_DIVIDE),   // tx_lclk90
-       .CLKOUT3_DIVIDE(TXCLK_DIVIDE*4), // tx_lclk_div4
+       .CLKOUT1_DIVIDE(),
+       .CLKOUT2_DIVIDE(),
+       .CLKOUT3_DIVIDE(),
        .CLKOUT4_DIVIDE(6),              // rx_ref_clk (for idelay)
        .CLKOUT5_DIVIDE(128),            //   ??
        .CLKOUT6_DIVIDE(128),            //   ??        
@@ -191,7 +202,7 @@ module eclocks (/*AUTOARG*/
        .CLKOUT6_DUTY_CYCLE(0.5),
        .CLKOUT0_PHASE(0.0),
        .CLKOUT1_PHASE(0.0),
-       .CLKOUT2_PHASE(90.0),
+       .CLKOUT2_PHASE(0.0),
        .CLKOUT3_PHASE(0.0),
        .CLKOUT4_PHASE(0.0),
        .CLKOUT5_PHASE(0.0),
@@ -203,19 +214,19 @@ module eclocks (/*AUTOARG*/
        (
         .CLKOUT0(cclk_i),
 	.CLKOUT0B(),
-        .CLKOUT1(tx_lclk_i),
+        .CLKOUT1(),
 	.CLKOUT1B(),
-        .CLKOUT2(tx_lclk90_i),
+        .CLKOUT2(),
 	.CLKOUT2B(),
-        .CLKOUT3(tx_lclk_div4_i),
+        .CLKOUT3(),
 	.CLKOUT3B(),
         .CLKOUT4(idelay_ref_clk_i),
         .CLKOUT5(),
 	.CLKOUT6(),
 	.PWRDWN(1'b0),
-        .RST(mmcm_reset),     //reset
-        .CLKFBIN(mmcm_fb_in),
-        .CLKFBOUT(mmcm_fb_out),  //feedback clock     
+        .RST(pll_reset),     //reset
+        .CLKFBIN(cclk_fb_in),
+        .CLKFBOUT(cclk_fb_out),  //feedback clock     
         .CLKIN1(sys_clk),    //input clock
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
@@ -226,7 +237,7 @@ module eclocks (/*AUTOARG*/
 	.DWE(1'b0),
 	.DRDY(),
 	.DO(), 
-	.LOCKED(mmcm_locked), //locked indicator
+	.LOCKED(cclk_locked), //locked indicator
 	.PSCLK(1'b0),
 	.PSEN(1'b0),
 	.PSDONE(),
@@ -236,29 +247,82 @@ module eclocks (/*AUTOARG*/
         );
    
 
-   //Tx clock buffers  TODO: change to bufr? change port in MMCM in that case!!
+   //Idelay ref clock buffer
+   BUFG idelay_ref_bufg_i(.I(idelay_ref_clk_i), .O(idelay_ref_clk));
+   
+   //Feedback buffer
+   BUFG cclk_fb_bufg_i(.I(cclk_fb_out), .O(cclk_fb_in));
+
+
+   //###########################
+   // PLL RX AND TX
+   //###########################  
+   
+   PLLE2_ADV
+     #(
+       .BANDWIDTH("OPTIMIZED"),          
+       .CLKFBOUT_MULT(RXCLK_VCO_MULT),
+       .CLKFBOUT_PHASE(0.0),
+       .CLKIN1_PERIOD(RXCLK_PERIOD),
+       .CLKOUT0_DIVIDE(),
+       .CLKOUT1_DIVIDE(TXCLK_DIVIDE),   // tx_lclk
+       .CLKOUT2_DIVIDE(TXCLK_DIVIDE),   // tx_lclk90
+       .CLKOUT3_DIVIDE(TXCLK_DIVIDE*4), // tx_lclk_div4
+       .CLKOUT4_DIVIDE(RXCLK_DIVIDE),   // rx_lclk
+       .CLKOUT5_DIVIDE(RXCLK_DIVIDE*4), // rx_lclk_div4
+       .CLKOUT0_DUTY_CYCLE(0.5),         
+       .CLKOUT1_DUTY_CYCLE(0.5),
+       .CLKOUT2_DUTY_CYCLE(0.5),
+       .CLKOUT3_DUTY_CYCLE(0.5),
+       .CLKOUT4_DUTY_CYCLE(0.5),
+       .CLKOUT5_DUTY_CYCLE(0.5),
+       .CLKOUT0_PHASE(0.0),
+       .CLKOUT1_PHASE(0.0),
+       .CLKOUT2_PHASE(90.0),
+       .CLKOUT3_PHASE(0.0),
+       .CLKOUT4_PHASE(0.0),
+       .CLKOUT5_PHASE(0.0),
+       .DIVCLK_DIVIDE(1.0), 
+       .REF_JITTER1(0.01), 
+       .STARTUP_WAIT("FALSE") 
+       ) pll_elink
+       (
+        .CLKOUT0(),
+        .CLKOUT1(tx_lclk_i),
+        .CLKOUT2(tx_lclk90_i),
+        .CLKOUT3(tx_lclk_div4_i),
+        .CLKOUT4(rx_lclk_i),
+        .CLKOUT5(rx_lclk_div4_i),
+	.PWRDWN(1'b0),
+        .RST(pll_reset),
+        .CLKFBIN(lclk_fb_in),
+        .CLKFBOUT(lclk_fb_out),       
+        .CLKIN1(rx_clkin),
+	.CLKIN2(1'b0),
+	.CLKINSEL(1'b1),      
+	.DADDR(7'b0),
+        .DCLK(1'b0),
+	.DEN(1'b0),
+	.DI(16'b0),
+	.DWE(1'b0),
+	.DRDY(),
+	.DO(), 
+	.LOCKED(lclk_locked)
+        );
+
+   //Tx clock buffers
    BUFG tx_lclk_bufg_i(.I(tx_lclk_i), .O(tx_lclk));
    BUFG tx_lclk_div4_bufg_i (.I(tx_lclk_div4_i), .O(tx_lclk_div4));
    BUFG tx_lclk90_bufg_i (.I(tx_lclk90_i), .O(tx_lclk90));
    
-   //Idelay ref clock buffer
-   BUFG idelay_ref_bufg_i(.I(idelay_ref_clk_i), .O(idelay_ref_clk));
-   
    //Rx clock buffers
-   BUFR rx_lclk_bufr_i(.I(rx_clkin), .O(rx_lclk));
-   
-   BUFR #(.BUFR_DIVIDE("4")) 
-   rx_lclk_div4_bufr_i
-     (
-      .I(rx_clkin), 
-      .O(rx_lclk_div4),
-      .CE(1'b1),
-      .CLR(1'b0));
+   BUFG rx_lclk_bufg_i(.I(rx_lclk_i), .O(rx_lclk));
+   BUFG rx_lclk_div4_bufg_i(.I(rx_lclk_div4_i), .O(rx_lclk_div4));
+  
+   //Feedback buffers
+   BUFG lclk_fb_bufg_i0(.I(lclk_fb_out), .O(lclk_fb_i));
+   BUFG lclk_fb_bufg_i1(.I(lclk_fb_i), .O(lclk_fb_in));
 
-   //Feedback buffer
-   BUFR mmcm_fb_bufr_i(.I(mmcm_fb_out), .O(mmcm_fb_in));
-
-   
    //###########################
    // CCLK
    //###########################

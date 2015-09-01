@@ -16,7 +16,7 @@ module erx_io (/*AUTOARG*/
    parameter PW = 104;
 
    // Can we do this in a better way?
-   parameter [8:0] RX_TAP_DELAY [8:0]   = {10,11,10,10,10,11,11,11,11};
+   parameter [8:0] RX_TAP_DELAY [8:0]   = {14,15,14,15,14,15,15,15,15};
    
 
    //#########################
@@ -75,7 +75,7 @@ module erx_io (/*AUTOARG*/
    wire 	 rx_lclk_iddr;
    wire [8:0] 	 rxi_delay_in;
    wire [8:0] 	 rxi_delay_out;
-   reg 	 reset_sync;
+   reg 		 reset_sync;
    
    //Reset sync
    always @ (posedge rx_lclk)
@@ -211,11 +211,14 @@ module erx_io (/*AUTOARG*/
       .IB    (rxi_frame_n),
       .O     (rxi_frame));
 
-   IBUFDS #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTD_ELINK))
+
+   IBUFGDS #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTD_ELINK))
    ibuf_lclk (.I     (rxi_lclk_p),
 	      .IB    (rxi_lclk_n),
 	      .O     (rxi_lclk)
 	      );
+	      
+
 
 `ifdef EPHYCARD
     OBUFT #(.IOSTANDARD("LVCMOS18"), .SLEW("SLOW"))
@@ -251,7 +254,8 @@ module erx_io (/*AUTOARG*/
    //#RX CLOCK
    //###################################
 
-   assign rx_lclk_pll = rxi_lclk;
+   BUFG rxi_lclk_bufg_i(.I(rxi_lclk), .O(rx_lclk_pll));
+   BUFIO rx_lclk_bufio_i(.I(rxi_lclk), .O(rx_lclk_iddr));
 
    //###################################
    //#IDELAY CIRCUIT
@@ -300,7 +304,7 @@ module erx_io (/*AUTOARG*/
 	iddr_data (
 		   .Q1 (rx_word[i]),
 		   .Q2 (rx_word[i+8]),
-		   .C  (rx_lclk),
+		   .C  (rx_lclk_iddr),
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[i]),
 		   .R  (reset_sync),
@@ -314,7 +318,7 @@ module erx_io (/*AUTOARG*/
 	iddr_frame (
 		   .Q1 (rx_frame[0]),
 		   .Q2 (rx_frame[1]),    
-		   .C  (rx_lclk),
+		   .C  (rx_lclk_iddr),
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[8]),
 		   .R  (reset_sync),
