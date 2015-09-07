@@ -280,7 +280,7 @@ FIELD    | DESCRIPTION
  [7:0]   | Platform version
  [15:8]  | Revision number
 
-###ETX_CFG (0xF020C)
+###ETX_CFG (0xF0210)
 TX configuration settings
 
 FIELD    | DESCRIPTION 
