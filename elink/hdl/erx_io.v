@@ -7,18 +7,32 @@ module erx_io (/*AUTOARG*/
    rx_lclk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, rx_access, rx_burst, rx_packet,
    // Inputs
-   reset, rx_lclk, rx_lclk_div4, rxi_lclk_p, rxi_lclk_n,
-   rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, rx_wr_wait,
-   rx_rd_wait
+   reset, rx_lclk, rx_lclk_div4, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
+   rxi_frame_n, rxi_data_p, rxi_data_n, rx_wr_wait, rx_rd_wait
    );
 
    parameter IOSTD_ELINK = "LVDS_25";
    parameter PW = 104;
 
    // Can we do this in a better way?
-   parameter [8:0] RX_TAP_DELAY [8:0]   = {14,15,14,15,14,15,15,15,15};
+   //parameter [8:0] RX_TAP_DELAY [8:0];
    
+   reg [3:0] RX_TAP_DELAY[8:0];
+   initial
+     begin
+	RX_TAP_DELAY[0]=4'd15;
+	RX_TAP_DELAY[1]=4'd15;
+	RX_TAP_DELAY[2]=4'd15;
+	RX_TAP_DELAY[3]=4'd15;
+	RX_TAP_DELAY[4]=4'd14;
+	RX_TAP_DELAY[5]=4'd15;
+	RX_TAP_DELAY[6]=4'd14;
+	RX_TAP_DELAY[7]=4'd15;
+	RX_TAP_DELAY[8]=4'd14;
+     end
 
+   
+   
    //#########################
    //# reset, clocks
    //#########################
@@ -267,11 +281,12 @@ module erx_io (/*AUTOARG*/
    generate for(j=0; j<9; j=j+1)
      begin : gen_idelay
 	(* IODELAY_GROUP = "IDELAY_GROUP" *) // Group name for IDELAYCTRL
+	
 	IDELAYE2 #(.CINVCTRL_SEL("FALSE"),
 		   .DELAY_SRC("IDATAIN"), 
 		   .HIGH_PERFORMANCE_MODE("FALSE"),
 		   .IDELAY_TYPE("FIXED"),
-		   .IDELAY_VALUE(RX_TAP_DELAY[j]),
+		   .IDELAY_VALUE(0), //(RX_TAP_DELAY[j]
 		   .PIPE_SEL("FALSE"),
 		   .REFCLK_FREQUENCY(200.0),
 		   .SIGNAL_PATTERN("DATA"))
