@@ -23,8 +23,13 @@ module eclocks (/*AUTOARG*/
    reset, elink_en, sys_clk, rx_clkin
    );
 
+//TODO: change to parameter 
+`ifdef SIM
+   parameter RCW                 = 4;          // reset counter width
+`else
    parameter RCW                 = 8;          // reset counter width
-
+`endif
+   
    //CCLK PLL
    parameter SYS_CLK_PERIOD      = 10;         // (2.5-100ns, set by system)
    parameter CCLK_VCO_MULT       = 12;         // 1200MHz
@@ -183,16 +188,16 @@ module eclocks (/*AUTOARG*/
    MMCME2_ADV
      #(
        .BANDWIDTH("OPTIMIZED"),          
-       .CLKFBOUT_MULT_F(CCLK_VCO_MULT),
+       .CLKFBOUT_MULT_F(CCLK_VCO_MULT),  //12 (1200)
        .CLKFBOUT_PHASE(0.0),
-       .CLKIN1_PERIOD(SYS_CLK_PERIOD),
-       .CLKOUT0_DIVIDE_F(CCLK_DIVIDE),  // cclk      
+       .CLKIN1_PERIOD(SYS_CLK_PERIOD),   //100   
+       .CLKOUT0_DIVIDE_F(CCLK_DIVIDE),   //2 
        .CLKOUT1_DIVIDE(128),
        .CLKOUT2_DIVIDE(128),
        .CLKOUT3_DIVIDE(128),
-       .CLKOUT4_DIVIDE(128),              // rx_ref_clk (for idelay)
-       .CLKOUT5_DIVIDE(128),            //   ??
-       .CLKOUT6_DIVIDE(128),            //   ??        
+       .CLKOUT4_DIVIDE(6),               // 200  (1200/6)
+       .CLKOUT5_DIVIDE(128),             //   ??
+       .CLKOUT6_DIVIDE(128),             //   ??        
        .CLKOUT0_DUTY_CYCLE(0.5),         
        .CLKOUT1_DUTY_CYCLE(0.5),
        .CLKOUT2_DUTY_CYCLE(0.5),
@@ -261,15 +266,15 @@ module eclocks (/*AUTOARG*/
    PLLE2_ADV
      #(
        .BANDWIDTH("OPTIMIZED"),          
-       .CLKFBOUT_MULT(RXCLK_VCO_MULT),
+       .CLKFBOUT_MULT(CCLK_VCO_MULT),              
        .CLKFBOUT_PHASE(0.0),
-       .CLKIN1_PERIOD(RXCLK_PERIOD),
+       .CLKIN1_PERIOD(SYS_CLK_PERIOD),  //100
        .CLKOUT0_DIVIDE(128),
-       .CLKOUT1_DIVIDE(TXCLK_DIVIDE),   // tx_lclk
-       .CLKOUT2_DIVIDE(TXCLK_DIVIDE),   // tx_lclk90
-       .CLKOUT3_DIVIDE(TXCLK_DIVIDE*4), // tx_lclk_div4
-       .CLKOUT4_DIVIDE(RXCLK_DIVIDE),   // rx_lclk
-       .CLKOUT5_DIVIDE(RXCLK_DIVIDE*4), // rx_lclk_div4
+       .CLKOUT1_DIVIDE(TXCLK_DIVIDE),   // tx_lclk      (300MHz)
+       .CLKOUT2_DIVIDE(TXCLK_DIVIDE),   // tx_lclk90    (300MHz)
+       .CLKOUT3_DIVIDE(TXCLK_DIVIDE*4), // tx_lclk_div4 (75MHz)
+       .CLKOUT4_DIVIDE(RXCLK_DIVIDE),   // rx_lclk      (300MHz)
+       .CLKOUT5_DIVIDE(RXCLK_DIVIDE*4), // rx_lclk_div4 (75MHz)
        .CLKOUT0_DUTY_CYCLE(0.5),         
        .CLKOUT1_DUTY_CYCLE(0.5),
        .CLKOUT2_DUTY_CYCLE(0.5),
@@ -297,7 +302,7 @@ module eclocks (/*AUTOARG*/
         .RST(pll_reset),
         .CLKFBIN(lclk_fb_in),
         .CLKFBOUT(lclk_fb_out),       
-        .CLKIN1(rx_clkin),
+        .CLKIN1(sys_clk),
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
 	.DADDR(7'b0),
@@ -347,8 +352,6 @@ module eclocks (/*AUTOARG*/
 
    //CCLK bufio
    BUFIO bufio_cclk(.O(cclk_bufio), .I(cclk_i));
-
-
    
    //###########################
    // Idelay controller
