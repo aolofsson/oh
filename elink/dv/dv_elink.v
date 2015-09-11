@@ -137,7 +137,6 @@ module dv_elink(/*AUTOARG*/
    wire			m_axi_wvalid;		// From tx_emaxi of emaxi.v
    wire			rx_lclk;		// From eclocks of eclocks.v
    wire			rx_lclk_div4;		// From eclocks of eclocks.v
-   wire			rx_ref_clk;		// From eclocks of eclocks.v
    wire			rxo_rd_wait_n;		// From elink2 of axi_elink.v
    wire			rxo_rd_wait_p;		// From elink2 of axi_elink.v
    wire			rxo_wr_wait_n;		// From elink2 of axi_elink.v
@@ -257,7 +256,6 @@ module dv_elink(/*AUTOARG*/
 		    .tx_lclk_div4	(tx_lclk_div4),
 		    .rx_lclk		(rx_lclk),
 		    .rx_lclk_div4	(rx_lclk_div4),
-		    .rx_ref_clk		(rx_ref_clk),
 		    .elink_reset	(elink_reset),
 		    .e_resetb		(e_resetb),
 		    // Inputs
@@ -294,7 +292,6 @@ module dv_elink(/*AUTOARG*/
    //######################################################################
 
    /*elink AUTO_TEMPLATE (.reset	     (elink_reset),
-                         .rx_ref_clk         (rx_ref_clk),
                          // Outputs                        
                          .io_reset	     (io_reset),
                          .tx_lclk	     (tx_lclk),
@@ -353,7 +350,6 @@ module dv_elink(/*AUTOARG*/
 		 .tx_lclk_div4		(tx_lclk_div4),		 // Templated
 		 .rx_lclk		(rx_lclk),		 // Templated
 		 .rx_lclk_div4		(rx_lclk_div4),		 // Templated
-		 .rx_ref_clk		(rx_ref_clk),		 // Templated
 		 .rxwr_wait		(elink0_rxwr_wait),	 // Templated
 		 .rxrd_wait		(elink0_rxrd_wait),	 // Templated
 		 .rxrr_wait		(elink0_rxrr_wait),	 // Templated
@@ -423,7 +419,6 @@ module dv_elink(/*AUTOARG*/
 		 .tx_lclk_div4		(tx_lclk_div4),		 // Templated
 		 .rx_lclk		(rx_lclk),		 // Templated
 		 .rx_lclk_div4		(rx_lclk_div4),		 // Templated
-		 .rx_ref_clk		(rx_ref_clk),		 // Templated
 		 .rxwr_wait		(elink1_rxwr_wait),	 // Templated
 		 .rxrd_wait		(elink1_rxrd_wait),	 // Templated
 		 .rxrr_wait		(elink1_rxrr_wait),	 // Templated
@@ -435,6 +430,18 @@ module dv_elink(/*AUTOARG*/
 		 .txrr_packet		(elink1_txrr_packet[PW-1:0])); // Templated
    
 
+
+
+   reg [8:0] counter;
+   wire      elink1_random_wait;
+   
+   always @ (posedge clk)
+     if(reset)
+       counter <= 'b0;
+     else
+       counter <= counter+1;
+
+   assign elink1_random_wait = counter > 256;
    
    assign  emem_access           = (elink1_rxwr_access & ~(elink1_rxwr_packet[39:28]==elink1.ID)) |
 				   (elink1_rxrd_access & ~(elink1_rxrd_packet[39:28]==elink1.ID));
@@ -443,7 +450,7 @@ module dv_elink(/*AUTOARG*/
                                                         elink1_rxrd_packet[PW-1:0];
 
    assign elink1_rxrd_wait = emem_wait | elink1_rxwr_access;
-   assign elink1_rxwr_wait = 1'b0; //no wait on write
+   assign elink1_rxwr_wait = elink1_random_wait;
    
    /*ememory AUTO_TEMPLATE ( 
                         // Outputs
