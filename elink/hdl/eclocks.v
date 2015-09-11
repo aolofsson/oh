@@ -187,10 +187,10 @@ module eclocks (/*AUTOARG*/
        .CLKFBOUT_PHASE(0.0),
        .CLKIN1_PERIOD(SYS_CLK_PERIOD),
        .CLKOUT0_DIVIDE_F(CCLK_DIVIDE),  // cclk      
-       .CLKOUT1_DIVIDE(),
-       .CLKOUT2_DIVIDE(),
-       .CLKOUT3_DIVIDE(),
-       .CLKOUT4_DIVIDE(6),              // rx_ref_clk (for idelay)
+       .CLKOUT1_DIVIDE(128),
+       .CLKOUT2_DIVIDE(128),
+       .CLKOUT3_DIVIDE(128),
+       .CLKOUT4_DIVIDE(128),              // rx_ref_clk (for idelay)
        .CLKOUT5_DIVIDE(128),            //   ??
        .CLKOUT6_DIVIDE(128),            //   ??        
        .CLKOUT0_DUTY_CYCLE(0.5),         
@@ -264,7 +264,7 @@ module eclocks (/*AUTOARG*/
        .CLKFBOUT_MULT(RXCLK_VCO_MULT),
        .CLKFBOUT_PHASE(0.0),
        .CLKIN1_PERIOD(RXCLK_PERIOD),
-       .CLKOUT0_DIVIDE(),
+       .CLKOUT0_DIVIDE(128),
        .CLKOUT1_DIVIDE(TXCLK_DIVIDE),   // tx_lclk
        .CLKOUT2_DIVIDE(TXCLK_DIVIDE),   // tx_lclk90
        .CLKOUT3_DIVIDE(TXCLK_DIVIDE*4), // tx_lclk_div4
