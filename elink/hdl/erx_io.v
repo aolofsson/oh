@@ -31,8 +31,6 @@ module erx_io (/*AUTOARG*/
 	RX_TAP_DELAY[8]=4'd14;
      end
 
-   
-   
    //#########################
    //# reset, clocks
    //#########################

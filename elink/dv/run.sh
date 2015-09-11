@@ -7,7 +7,7 @@
 TRANS=$(wc -l test.memh)
 TRANS=${TRANS:0:3}
 #RANDOM TEST
-iverilog -I ../hdl -f elink.cmd -DMANUAL -DTRANS=$TRANS -DTESTNAME=test.memh -DTARGET_XILINX
+iverilog -I ../hdl -f elink.cmd -DMANUAL -DTRANS=$TRANS -DTESTNAME=test.memh -DTARGET_XILINX -DSIM
 #iverilog -f elink.cmd -DAUTO
 
 #Running sim
