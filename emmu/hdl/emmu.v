@@ -58,16 +58,16 @@ module emmu (/*AUTOARG*/
    /*****************************/  
    input 	     emesh_access_in;
    input [PW-1:0]    emesh_packet_in;
-    
+   input 	     emesh_rd_wait;
+   input 	     emesh_wr_wait;
+
    /*****************************/
    /*EMESH OUTPUTS              */
    /*****************************/
    output 	     emesh_access_out;
    output [PW-1:0]   emesh_packet_out;   
    output [31:0]     emesh_packet_hi_out;
-   input 	     emesh_rd_wait;
-   input 	     emesh_wr_wait;
-
+   
    /*****************************/
    /*REGISTERS                  */
    /*****************************/
@@ -123,8 +123,9 @@ module emmu (/*AUTOARG*/
    /*****************************/   
    //pipeline to compensate for table lookup pipeline 
    //assumes one cycle memory access!     
-  
-   always @ (posedge  rd_clk)     
+
+
+    always @ (posedge  rd_clk)     
      if (reset)
        begin
 	  emesh_access_out         <= 1'b0;	  
@@ -134,7 +135,7 @@ module emmu (/*AUTOARG*/
 	  emesh_access_out         <= emesh_access_in;
 	  emesh_packet_reg[PW-1:0] <= emesh_packet_in[PW-1:0];	  
        end
-            
+     	 
    assign emesh_dstaddr_out[63:0] = (mmu_en & ~mmu_bp) ? {emmu_lookup_data[43:0], emesh_packet_reg[27:8]} :
 				                         {32'b0,emesh_packet_reg[39:8]}; 
       
@@ -153,7 +154,7 @@ endmodule // emmu
 // End:
 
 /*
-  Copyright (C) 2014 Adapteva, Inc.
+  Copyright (C) 2015 Adapteva, Inc.
   Contributed by Andreas Olofsson <andreas@adapteva.com>
  
    This program is free software: you can redistribute it and/or modify
