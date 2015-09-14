@@ -10,6 +10,17 @@
  #  rx_lclk      - High speed RX clock for IO (clkin freq)
  #
  #  rx_lclk_div4 - Low speed RX clock for logic (75MHz)
+ #
+ #
+ # Zynq Limits:
+ #
+ # vco: min=800MHz, max=1600MHz
+ # fin: min=19MHz, max=800MHz
+ # bufio: 600MHz max 
+ # bufg:  464MHz max
+ # bufr:  315MHz max
+ # bufh:  464MHz max
+ #
  ############################################################################
  */
 
@@ -155,14 +166,14 @@ module eclocks (/*AUTOARG*/
    MMCME2_ADV
      #(
        .BANDWIDTH("OPTIMIZED"),          
-       .CLKFBOUT_MULT_F(CCLK_VCO_MULT),
+       .CLKFBOUT_MULT_F(MMCM_VCO_MULT),
        .CLKFBOUT_PHASE(0.0),
-       .CLKIN1_PERIOD(SYS_CLK_PERIOD),
+       .CLKIN1_PERIOD(SYSCLK_PERIOD),
        .CLKOUT0_DIVIDE_F(CCLK_DIVIDE),  // cclk      
        .CLKOUT1_DIVIDE(TXCLK_DIVIDE),   // tx_lclk
        .CLKOUT2_DIVIDE(TXCLK_DIVIDE),   // tx_lclk90
        .CLKOUT3_DIVIDE(TXCLK_DIVIDE*4), // tx_lclk_div4
-       .CLKOUT4_DIVIDE(9),              // rx_ref_clk (for idelay)
+       .CLKOUT4_DIVIDE(IREF_DIVIDE),    // rx_ref_clk (for idelay)
        .CLKOUT5_DIVIDE(128),            //   ??
        .CLKOUT6_DIVIDE(128),            //   ??        
        .CLKOUT0_DUTY_CYCLE(0.5),         
