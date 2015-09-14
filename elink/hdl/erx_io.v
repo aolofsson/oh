@@ -1,4 +1,4 @@
-/*
+\/*
  This block receives the IO transaction and converts to a 104 bit packet. 
  */
 `include "elink_constants.v"
@@ -266,8 +266,8 @@ module erx_io (/*AUTOARG*/
    //#RX CLOCK
    //###################################
 
-   BUFG rxi_lclk_bufg_i(.I(rxi_lclk), .O(rx_lclk_pll));
-   BUFIO rx_lclk_bufio_i(.I(rxi_lclk), .O(rx_lclk_iddr));
+   BUFG rxi_lclk_bufg_i(.I(rxi_lclk), .O(rx_lclk_pll));  //for rest of io
+   BUFIO rx_lclk_bufio_i(.I(rxi_lclk), .O(rx_lclk_iddr));//for iddr
 
    //###################################
    //#IDELAY CIRCUIT

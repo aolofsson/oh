@@ -7,10 +7,15 @@
  #
  #  tx_lclk90    - DDR "Clock" for IO (500MHz)
  #
- #  rx_lclk      - High speed RX clock for IO (clkin freq)
+ #  rx_lclk      - High speed RX clock for IO (300MHz phase shifted)
  #
  #  rx_lclk_div4 - Low speed RX clock for logic (75MHz)
  ############################################################################
+ 
+ 
+ 
+ 
+ 
  */
 
 `include "elink_constants.v"
