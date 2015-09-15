@@ -57,32 +57,58 @@ module PLLE2_ADV #(
 );
 
   //#LOCAL DERIVED PARAMETERS
-   parameter VCO_PERIOD = (CLKIN1_PERIOD * DIVCLK_DIVIDE) / CLKFBOUT_MULT;
-   parameter CLK0_DELAY = VCO_PERIOD * CLKOUT0_DIVIDE * (CLKOUT0_PHASE/360);
-   parameter CLK1_DELAY = VCO_PERIOD * CLKOUT1_DIVIDE * (CLKOUT1_PHASE/360);
-   parameter CLK2_DELAY = VCO_PERIOD * CLKOUT2_DIVIDE * (CLKOUT2_PHASE/360);
-   parameter CLK3_DELAY = VCO_PERIOD * CLKOUT3_DIVIDE * (CLKOUT3_PHASE/360);
-   parameter CLK4_DELAY = VCO_PERIOD * CLKOUT4_DIVIDE * (CLKOUT4_PHASE/360);
-   parameter CLK5_DELAY = VCO_PERIOD * CLKOUT5_DIVIDE * (CLKOUT5_PHASE/360);
-      
-   //##############
-   //#VCO 
-   //##############
-   reg 	  vco_clk;
-   initial
-     begin
-	vco_clk = 1'b0;	
+   localparam real VCO_PERIOD = (CLKIN1_PERIOD * DIVCLK_DIVIDE) / CLKFBOUT_MULT;
+   localparam real CLK0_DELAY = VCO_PERIOD * CLKOUT0_DIVIDE * (CLKOUT0_PHASE/360);
+   localparam real CLK1_DELAY = VCO_PERIOD * CLKOUT1_DIVIDE * (CLKOUT1_PHASE/360);
+   localparam real CLK2_DELAY = VCO_PERIOD * CLKOUT2_DIVIDE * (CLKOUT2_PHASE/360);
+   localparam real CLK3_DELAY = VCO_PERIOD * CLKOUT3_DIVIDE * (CLKOUT3_PHASE/360);
+   localparam real CLK4_DELAY = VCO_PERIOD * CLKOUT4_DIVIDE * (CLKOUT4_PHASE/360);
+   localparam real CLK5_DELAY = VCO_PERIOD * CLKOUT5_DIVIDE * (CLKOUT5_PHASE/360);
+
+   localparam phases = CLKFBOUT_MULT / DIVCLK_DIVIDE;
+   
+   //########################################################################
+   //# CLOCK MULTIPLIER
+   //########################################################################
+
+   //TODO: implement  DIVCLK_DIVIDE
+   //   
+   integer 	j;   
+   reg [2*phases-1:0] 	delay;
+   always @ (CLKIN1)
+     begin	
+	for(j=0; j<(2*phases); j=j+1)
+	  delay[j] <= #(CLKIN1_PERIOD*j/(2*phases)) CLKIN1;
      end
    
-   always
-     #(VCO_PERIOD/2) vco_clk = ~vco_clk;
+   reg [(phases)-1:0] 	clk_comb;
+    always @ (delay)
+      begin
+	 for(j=0; j<(phases); j=j+1)
+	   clk_comb[j] <= delay[2*j] & ~delay[2*j+1];	 
+      end
+   
+   reg vco_clk;   
+   integer k;   
+   always @*
+     begin
+	vco_clk = 1'b0;
+	for(k=0; k<(phases); k=k+1)
+	  vco_clk = vco_clk | clk_comb[k];
+     end
+ 
+
+   //########################################################################
+   //# POR
+   //########################################################################
+
    wire 	 reset = POR | RST;
    
    //##############
    //#DIVIDERS
    //##############
-   wire [3:0] DIVCFG[5:0]; 
-   wire [5:0] CLKOUT_DIV;
+   wire [3:0] 	 DIVCFG[5:0]; 
+   wire [5:0] 	 CLKOUT_DIV;
       
    assign DIVCFG[0] = $clog2(CLKOUT0_DIVIDE);
    assign DIVCFG[1] = $clog2(CLKOUT1_DIVIDE);
@@ -90,7 +116,6 @@ module PLLE2_ADV #(
    assign DIVCFG[3] = $clog2(CLKOUT3_DIVIDE);
    assign DIVCFG[4] = $clog2(CLKOUT4_DIVIDE);
    assign DIVCFG[5] = $clog2(CLKOUT5_DIVIDE);
-
 
    //ugly POR reset
    reg 	      POR;
@@ -142,7 +167,7 @@ module PLLE2_ADV #(
    //###########################
    //#SANITY CHECK LOCK COUNTER
    //############################
-   parameter LCW=4;   
+   localparam LCW=4;   
    reg [LCW-1:0] lock_counter;
  
    

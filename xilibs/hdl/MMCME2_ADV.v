@@ -85,22 +85,45 @@ module MMCME2_ADV # (
 );
 
   //#LOCAL DERIVED PARAMETERS
- parameter VCO_PERIOD = (CLKIN1_PERIOD * DIVCLK_DIVIDE) / CLKFBOUT_MULT_F;
- parameter CLK0_DELAY = VCO_PERIOD * CLKOUT0_DIVIDE_F * (CLKOUT0_PHASE/360);
- parameter CLK1_DELAY = VCO_PERIOD * CLKOUT1_DIVIDE * (CLKOUT1_PHASE/360);
- parameter CLK2_DELAY = VCO_PERIOD * CLKOUT2_DIVIDE * (CLKOUT2_PHASE/360);
- parameter CLK3_DELAY = VCO_PERIOD * CLKOUT3_DIVIDE * (CLKOUT3_PHASE/360);
- parameter CLK4_DELAY = VCO_PERIOD * CLKOUT4_DIVIDE * (CLKOUT4_PHASE/360);
- parameter CLK5_DELAY = VCO_PERIOD * CLKOUT5_DIVIDE * (CLKOUT5_PHASE/360);
- parameter CLK6_DELAY = VCO_PERIOD * CLKOUT6_DIVIDE * (CLKOUT6_PHASE/360);
-      
-   //##############
-   //#VCO 
-   //##############
-   reg 	  vco_clk = 1'b0;
-   always
-     #(VCO_PERIOD/2) vco_clk = ~vco_clk;
+   localparam VCO_PERIOD = (CLKIN1_PERIOD * DIVCLK_DIVIDE) / CLKFBOUT_MULT_F;
+   localparam CLK0_DELAY = VCO_PERIOD * CLKOUT0_DIVIDE_F * (CLKOUT0_PHASE/360);
+   localparam CLK1_DELAY = VCO_PERIOD * CLKOUT1_DIVIDE * (CLKOUT1_PHASE/360);
+   localparam CLK2_DELAY = VCO_PERIOD * CLKOUT2_DIVIDE * (CLKOUT2_PHASE/360);
+   localparam CLK3_DELAY = VCO_PERIOD * CLKOUT3_DIVIDE * (CLKOUT3_PHASE/360);
+   localparam CLK4_DELAY = VCO_PERIOD * CLKOUT4_DIVIDE * (CLKOUT4_PHASE/360);
+   localparam CLK5_DELAY = VCO_PERIOD * CLKOUT5_DIVIDE * (CLKOUT5_PHASE/360);
+   localparam CLK6_DELAY = VCO_PERIOD * CLKOUT6_DIVIDE * (CLKOUT6_PHASE/360);
 
+   localparam phases = CLKFBOUT_MULT_F / DIVCLK_DIVIDE;
+   //########################################################################
+   //# CLOCK MULTIPLIER
+   //########################################################################
+
+   //   
+   integer 	j;   
+   reg [2*phases-1:0] 	delay;
+   always @ (CLKIN1)
+     begin	
+	for(j=0; j<(2*phases); j=j+1)
+	  delay[j] <= #(CLKIN1_PERIOD*j/(2*phases)) CLKIN1;
+     end
+   
+   reg [(phases)-1:0] 	clk_comb;
+    always @ (delay)
+      begin
+	 for(j=0; j<(phases); j=j+1)
+	   clk_comb[j] <= delay[2*j] & ~delay[2*j+1];	 
+      end
+   
+   reg vco_clk;   
+   integer k;   
+   always @*
+     begin
+	vco_clk = 1'b0;
+	for(k=0; k<(phases); k=k+1)
+	  vco_clk = vco_clk | clk_comb[k];
+     end
+    
    //##############
    //#DIVIDERS
    //##############
