@@ -1,6 +1,7 @@
-\/*
+/*
  This block receives the IO transaction and converts to a 104 bit packet. 
  */
+
 `include "elink_constants.v"
 module erx_io (/*AUTOARG*/
    // Outputs
@@ -12,7 +13,10 @@ module erx_io (/*AUTOARG*/
    );
 
    parameter IOSTD_ELINK = "LVDS_25";
-   parameter PW = 104;
+   parameter PW          = 104;
+   parameter ETYPE      = 0;//0=parallella
+                            //1=ephycard     
+   
 
    // Can we do this in a better way?
    //parameter [8:0] RX_TAP_DELAY [8:0];
@@ -73,9 +77,7 @@ module erx_io (/*AUTOARG*/
    //############
    reg [7:0] 	 data_even_reg;   
    reg [7:0] 	 data_odd_reg;
-   wire [1:0] 	 rx_frame;
-   reg [1:0] 	 rx_frame_sync;
-   wire  	 rx_frame_old;
+   wire  	 rx_frame;
    reg [111:0]   rx_sample; 
    reg [6:0] 	 rx_pointer;
    reg 		 access;  
@@ -93,63 +95,63 @@ module erx_io (/*AUTOARG*/
    always @ (posedge rx_lclk)
      reset_sync <= reset;
    
-   //#####################
+
+    //#####################
    //#CREATE 112 BIT PACKET 
    //#####################
-   //TODO: clean up!
+   
    //write Pointer   
    always @ (posedge rx_lclk)
-     if (~rx_frame_sync[1]) begin
-	rx_pointer <= 3'b0; //new frame
-	access <= 1'b0;
-     end
-     else if (rx_pointer != 3'd6 && (rx_frame_sync != 2'b00))
+     if (~rx_frame)
+       rx_pointer[6:0] <= 7'b0000001; //new frame
+     else if (rx_pointer[6])
+       rx_pointer[6:0] <= 7'b0001000; //anticipate burst
+     else if(rx_frame)
+       rx_pointer[6:0] <= {rx_pointer[5:0],1'b0};//middle of frame
+      
+   //convert to 112 bit packet
+   always @ (posedge rx_lclk)
+     if(rx_frame)   
        begin
-	rx_pointer <= rx_pointer + 1; //anticipate burst
-	access <= 1'b0;
-     end
-     else begin
-	rx_pointer <= 3'd3;//middle of frame
-	access <= 1'b1;
-     end
+	  if(rx_pointer[0])
+	    rx_sample[15:0]    <= rx_word[15:0];
+	  if(rx_pointer[1])
+	    rx_sample[31:16]   <= rx_word[15:0];
+	  if(rx_pointer[2])
+	    rx_sample[47:32]   <= rx_word[15:0];
+	  if(rx_pointer[3])
+	    rx_sample[63:48]   <= rx_word[15:0];
+	  if(rx_pointer[4])
+	    rx_sample[79:64]   <= rx_word[15:0];
+	  if(rx_pointer[5])
+	    rx_sample[95:80]   <= rx_word[15:0];
+	  if(rx_pointer[6])
+	    rx_sample[111:96]  <= rx_word[15:0];	  
+       end
+
+
 
    
-   // shift register for rx_word
-   always @ (posedge rx_lclk)
-     case (rx_frame_sync[1:0])
-       2'b01 : begin
-	  rx_sample[111:8] <= rx_sample[103:0];
-	  rx_sample[7:0] <= rx_word_sync[7:0];
-       end
-       2'b10 : begin
-	  rx_sample[111:8] <= rx_sample[103:0];
-	  rx_sample[7:0] <= rx_word_sync[15:8];
-       end
-       2'b11 : begin
-	  rx_sample[111:16] <= rx_sample[95:0];
-	  rx_sample[15:0] <= rx_word_sync[15:0];
-       end
-       default :
-	 rx_sample <= rx_sample;
-     endcase // case (rx_frame_sync[1:0])
    
    
    //#####################  
    //#DATA VALID SIGNAL 
    //####################
- 
+
+
    always @ (posedge rx_lclk)
      begin     
+	access       <= rx_pointer[6];
 	valid_packet <= access;//data pipeline
      end
-   
+
    reg burst_detect;   
    always @ (posedge rx_lclk)
-     if(access & rx_frame_sync[1])
+     if(access & rx_frame)
        burst_detect <= 1'b1;
-     else if(~rx_frame_sync)
+     else if(~rx_frame)
        burst_detect <= 1'b0;
-   
+      
    //###################################
    //#SAMPLE AND HOLD DATA
    //###################################
@@ -160,29 +162,38 @@ module erx_io (/*AUTOARG*/
        begin
 	  //pipelin burst (delay by one frame)
 	  burst                 <= burst_detect;	  
-	  
-	  //access
-	  rx_packet_lclk[0]     <= rx_sample[64];
-	  
-	  //write
-	  rx_packet_lclk[1]     <= rx_sample[65];
-	  
-	  //datamode
-	  rx_packet_lclk[3:2]   <= rx_sample[67:66];
-	  
-	  //ctrlmode
-	  rx_packet_lclk[7:4]   <= rx_sample[103:100];
-	  
-	  //dstaddr
-	  rx_packet_lclk[39:8]  <= rx_sample[99:68];
-	  
-	  //data
-	  rx_packet_lclk[71:40] <= rx_sample[63:32];
-	  
-	  //srcaddr
-	  rx_packet_lclk[103:72]<= rx_sample[31:0];
-       end
 
+	  //access
+	  rx_packet_lclk[0]     <= rx_sample[40];
+
+	  //write
+	  rx_packet_lclk[1]     <= rx_sample[41];
+
+	  //datamode
+	  rx_packet_lclk[3:2]   <= rx_sample[43:42];
+
+	  //ctrlmode
+	  rx_packet_lclk[7:4]   <= rx_sample[15:12];
+
+	  //dstaddr
+	  rx_packet_lclk[39:8]  <= {rx_sample[11:8],
+			             rx_sample[23:16],
+			             rx_sample[31:24],
+			             rx_sample[39:32],
+			             rx_sample[47:44]};
+	  //data
+	  rx_packet_lclk[71:40] <= {rx_sample[55:48],
+			              rx_sample[63:56],
+			              rx_sample[71:64],
+			              rx_sample[79:72]};	
+	  //srcaddr
+	  rx_packet_lclk[103:72]<= {rx_sample[87:80],
+			              rx_sample[95:88],
+			              rx_sample[103:96],
+			              rx_sample[111:104]
+				      };	
+     end
+   
    //###################################
    //#SYNCHRONIZE TO SLOW CLK
    //###################################
@@ -231,37 +242,40 @@ module erx_io (/*AUTOARG*/
 	      );
 	      
 
-
-`ifdef EPHYCARD
-    OBUFT #(.IOSTANDARD("LVCMOS18"), .SLEW("SLOW"))
-    obuft_wrwait (
-		    .O(rxo_wr_wait_p),
-		    .T(rx_wr_wait),
-		    .I(1'b0)
-		    );
-		    
-	OBUFT #(.IOSTANDARD("LVCMOS18"), .SLEW("SLOW"))
-    obuft_rdwait (
-             .O(rxo_rd_wait_p),
-             .T(rx_rd_wait),
-             .I(1'b0)
-              );
-
-`else
-      
-   OBUFDS #(.IOSTANDARD(IOSTD_ELINK),.SLEW("SLOW")) 
-   obufds_wrwait (
-		    .O(rxo_wr_wait_p),
-		    .OB(rxo_wr_wait_n),
-		    .I(rx_wr_wait)
-		    );
-   
-   OBUFDS  #(.IOSTANDARD(IOSTD_ELINK),.SLEW("SLOW")) 
-   obufds_rdwait  (.O(rxo_rd_wait_p),
-		   .OB(rxo_rd_wait_n),
-		   .I(rx_rd_wait)
-		   );
-`endif
+   generate
+      if(ETYPE==1)
+	begin	   
+	   OBUFT #(.IOSTANDARD("LVCMOS18"), .SLEW("SLOW"))
+	   obuft_wrwait (
+			 .O(rxo_wr_wait_p),
+			 .T(rx_wr_wait),
+			 .I(1'b0)
+			 );
+	   
+	   OBUFT #(.IOSTANDARD("LVCMOS18"), .SLEW("SLOW"))
+	   obuft_rdwait (
+			 .O(rxo_rd_wait_p),
+			 .T(rx_rd_wait),
+			 .I(1'b0)
+			 );	   	   
+	end      
+      else if(ETYPE==0)
+	begin
+	   OBUFDS #(.IOSTANDARD(IOSTD_ELINK),.SLEW("SLOW")) 
+	   obufds_wrwait (
+			  .O(rxo_wr_wait_p),
+			  .OB(rxo_wr_wait_n),
+			  .I(rx_wr_wait)
+			  );
+	   
+	   OBUFDS  #(.IOSTANDARD(IOSTD_ELINK),.SLEW("SLOW")) 
+	   obufds_rdwait  (.O(rxo_rd_wait_p),
+			   .OB(rxo_rd_wait_n),
+			   .I(rx_rd_wait)
+			   );
+	end
+endgenerate
+     
    //###################################
    //#RX CLOCK
    //###################################
@@ -312,8 +326,8 @@ module erx_io (/*AUTOARG*/
    //DATA
    genvar        i;
    generate for(i=0; i<8; i=i+1)
-     begin : gen_iddr
-	IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE"), .SRTYPE("ASYNC"))
+     begin : gen_iddr           
+	IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"), .SRTYPE("ASYNC"))
 	iddr_data (
 		   .Q1 (rx_word[i]),
 		   .Q2 (rx_word[i+8]),
@@ -327,25 +341,16 @@ module erx_io (/*AUTOARG*/
      endgenerate
 
    //FRAME
-   IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE"), .SRTYPE("ASYNC"))
+   IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"), .SRTYPE("ASYNC"))
 	iddr_frame (
-		   .Q1 (rx_frame[0]),
-		   .Q2 (rx_frame[1]),    
+		   .Q1 (rx_frame),
+		   .Q2 (),    
 		   .C  (rx_lclk_iddr),
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[8]),
 		   .R  (reset_sync),
 		   .S  (1'b0)
 		   );
-
-   //Pipe stage
-   always @ (posedge rx_lclk)
-     rx_frame_sync <= rx_frame;
-
-   //Pipe stage
-   always @ (posedge rx_lclk)
-     rx_word_sync <= rx_word;
-   
    
 endmodule // erx_io
 // Local Variables:
