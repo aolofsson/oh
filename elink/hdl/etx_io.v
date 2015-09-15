@@ -11,8 +11,9 @@ module etx_io (/*AUTOARG*/
    );
 
    parameter IOSTD_ELINK = "LVDS_25";
-   parameter PW   = 104;
-   
+   parameter PW          = 104;
+   parameter ETYPE       = 0;//0=parallella
+                             //1=ephycard     
    //###########
    //# reset, clocks
    //##########
@@ -247,35 +248,38 @@ always @ (posedge tx_lclk)
    //################################
    //# Wait Input Buffers
    //################################
-
-`ifdef EPHYCARD
-    assign tx_wr_wait = txi_wr_wait_p;
-`else   
-   IBUFDS
-     #(.DIFF_TERM  ("TRUE"),     // Differential termination
-       .IOSTANDARD (IOSTD_ELINK))
-   ibufds_wrwait
-     (.I     (txi_wr_wait_p),
-      .IB    (txi_wr_wait_n),
-      .O     (tx_wr_wait));
-`endif
-  
+   
+   generate
+      if(ETYPE==1)
+	begin
+	   assign tx_wr_wait = txi_wr_wait_p;
+	end
+      else if (ETYPE==0)
+	begin
+	   IBUFDS
+	     #(.DIFF_TERM  ("TRUE"),     // Differential termination
+	       .IOSTANDARD (IOSTD_ELINK))
+	   ibufds_wrwait
+	     (.I     (txi_wr_wait_p),
+	      .IB    (txi_wr_wait_n),
+	      .O     (tx_wr_wait));	 
+	end
+   endgenerate
+         
 //TODO: Come up with cleaner defines for this
 //Parallella and other platforms...   
 `ifdef TODO
   IBUFDS
      #(.DIFF_TERM  ("TRUE"),     // Differential termination
        .IOSTANDARD (IOSTD_ELINK))
-   ibufds_rdwait
+      ibufds_rdwait
      (.I     (txi_rd_wait_p),
       .IB    (txi_rd_wait_n),
       .O     (tx_rd_wait));
 `else
    //On Parallella this signal comes in single-ended
-   assign tx_rd_wait = txi_rd_wait_p;
+      assign tx_rd_wait = txi_rd_wait_p;
 `endif
-
-
    
 endmodule // etx_io
 // Local Variables:

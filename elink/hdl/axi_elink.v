@@ -223,7 +223,9 @@ module axi_elink(/*AUTOARG*/
    //ELINK
    //########################################################
     
-   defparam elink.IOSTD_ELINK=IOSTD_ELINK;
+   defparam elink.IOSTD_ELINK = IOSTD_ELINK;
+   defparam elink.ETYPE       = 0;
+
    elink elink(.reset			(elink_reset),
 	       /*AUTOINST*/
 	       // Outputs

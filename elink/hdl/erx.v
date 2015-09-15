@@ -11,12 +11,13 @@ module erx (/*AUTOARG*/
    erx_cfg_packet
    );
 
-   parameter AW      = 32;
-   parameter DW      = 32;
-   parameter PW      = 104;
-   parameter RFAW    = 6;
-   parameter ID      = 12'h800;
-   parameter IOSTD_ELINK="LVDS_25";
+   parameter AW          = 32;
+   parameter DW          = 32;
+   parameter PW          = 104;
+   parameter RFAW        = 6;
+   parameter ID          = 12'h800;
+   parameter IOSTD_ELINK = "LVDS_25";
+   parameter ETYPE       = 0;   
 
    //Synched resets
    input          erx_reset;                   // reset for core logic
@@ -85,6 +86,7 @@ module erx (/*AUTOARG*/
    /*RECEIVER  I/O LOGIC                                      */
    /***********************************************************/
    defparam erx_io.IOSTD_ELINK=IOSTD_ELINK;
+   defparam erx_io.ETYPE=ETYPE;   
    erx_io erx_io (.reset		(erx_reset),
 		  /*AUTOINST*/
 		  // Outputs

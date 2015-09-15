@@ -9,13 +9,13 @@ module etx(/*AUTOARG*/
    txrd_access, txrd_packet, txwr_access, txwr_packet, txrr_access,
    txrr_packet, etx_cfg_wait
    );
-   parameter AW      = 32;
-   parameter DW      = 32;
-   parameter PW      = 104;
-   parameter RFAW    = 6;
-   parameter ID      = 12'h000;
-   parameter IOSTD_ELINK="LVDS_25";
-
+   parameter AW          = 32;
+   parameter DW          = 32;
+   parameter PW          = 104;
+   parameter RFAW        = 6;
+   parameter ID          = 12'h000;
+   parameter IOSTD_ELINK = "LVDS_25";
+   parameter ETYPE       = 0;   
    //Synched resets
    input          etx_reset;                   // reset for core logic 
    input 	  sys_reset;                   // reset for fifos   
