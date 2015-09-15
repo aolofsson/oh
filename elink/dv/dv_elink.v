@@ -276,6 +276,8 @@ module dv_elink(/*AUTOARG*/
 			   .elink_en		(elink0_elink_en), // Templated
 			   .rx_clkin		(elink0_rx_lclk_pll)); // Templated
 
+   defparam elink1_eclocks.PLL_VCO_MULT =  1;  //needed to align clocks for RX
+   
    eclocks elink1_eclocks (.sys_clk		(clk),			   
 			   .e_cclk_p		(),
 			   .e_cclk_n		(),
@@ -636,8 +638,8 @@ module dv_elink(/*AUTOARG*/
    wire 	 elink_axi_access;
    wire [PW-1:0] elink_axi_packet;
    
-   defparam axi_fifo.DW=104;
-   defparam axi_fifo.DEPTH=64;   
+   defparam axi_fifo.DW    = 104;
+   defparam axi_fifo.DEPTH = 32;  //TODO: fix the model, only 16/32 allowed!  
    fifo_cdc  axi_fifo(
 			// Outputs
 			.wait_out	(),
@@ -808,8 +810,8 @@ module dv_elink(/*AUTOARG*/
    wire elink2_access;
    wire [PW-1:0] elink2_packet;
    
-   defparam model_fifo.DW=104;
-   defparam model_fifo.DEPTH=64;   
+   defparam model_fifo.DW    = 104;
+   defparam model_fifo.DEPTH = 32;   
    fifo_cdc  model_fifo(
 			// Outputs
 			.wait_out	(),
@@ -822,7 +824,7 @@ module dv_elink(/*AUTOARG*/
 			.reset_out	(reset),
 			.access_in	(ext_access),
 			.packet_in	(ext_packet[PW-1:0]),
-			.wait_in	(elink2_wait_out)
+			.wait_in	(1'b0)//elink2_wait_out
 			);   
 
    elink_e16 elink_ref (
@@ -847,9 +849,9 @@ module dv_elink(/*AUTOARG*/
 		     .c1_clk_in		(clk),
 		     .c2_clk_in		(clk),
 		     .c3_clk_in		(clk),
-		     .rxi_data		(elink0_txo_data_p[7:0]),
-		     .rxi_lclk		(elink0_txo_lclk_p),
-		     .rxi_frame		(elink0_txo_frame_p),
+		     .rxi_data		(8'b0),
+		     .rxi_lclk		(1'b0),
+		     .rxi_frame		(1'b0),
 		     .txo_rd_wait	(1'b0),
 		     .txo_wr_wait	(1'b0),
 		     .c0_mesh_access_in	(elink2_access),
