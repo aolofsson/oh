@@ -5,14 +5,13 @@ module etx_io (/*AUTOARG*/
    txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
    txo_data_n, tx_io_wait, tx_wr_wait, tx_rd_wait,
    // Inputs
-   reset, tx_lclk, tx_lclk90, tx_lclk_div4, txi_wr_wait_p,
-   txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n, tx_packet, tx_access,
-   tx_burst
+   reset, tx_lclk, tx_lclk90, txi_wr_wait_p, txi_wr_wait_n,
+   txi_rd_wait_p, txi_rd_wait_n, tx_packet, tx_access, tx_burst
    );
 
    parameter IOSTD_ELINK = "LVDS_25";
    parameter PW          = 104;
-   parameter ETYPE       = 0;//0=parallella
+   parameter ETYPE       = 1;//0=parallella
                              //1=ephycard     
    //###########
    //# reset, clocks
@@ -20,7 +19,6 @@ module etx_io (/*AUTOARG*/
    input        reset;               //reset for io  
    input 	tx_lclk;	     // fast clock for io
    input 	tx_lclk90;           // fast 90deg shifted lclk   
-   input 	tx_lclk_div4;	     // slow clock for rest of logic   
    
    //###########
    //# eLink pins
@@ -248,7 +246,10 @@ always @ (posedge tx_lclk)
    //################################
    //# Wait Input Buffers
    //################################
-   
+
+assign tx_wr_wait = txi_wr_wait_p;
+
+/*   
    generate
       if(ETYPE==1)
 	begin
@@ -265,6 +266,7 @@ always @ (posedge tx_lclk)
 	      .O     (tx_wr_wait));	 
 	end
    endgenerate
+*/
          
 //TODO: Come up with cleaner defines for this
 //Parallella and other platforms...   
