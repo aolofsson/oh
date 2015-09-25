@@ -123,7 +123,7 @@ The elink has the following clock domains:
 * txo_lclk: Used by the etx_io for transmitting dual rate data at pins
 * txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample the dual data rate data.
 
-![alt tag](docs/clocking.svg)
+![alt tag](docs/clocking.png)
     
 ###INTERFACE SIGNALS  
    
