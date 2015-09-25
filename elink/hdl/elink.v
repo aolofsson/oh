@@ -20,7 +20,7 @@ module elink(/*AUTOARG*/
    parameter PW          = 104;      //packet width   
    parameter ID          = 12'h810;  //epiphany ID for elink (ie addr[31:20])
    parameter IOSTD_ELINK = "LVDS_25";
-   parameter ETYPE       = 0;
+   parameter ETYPE       = 1;
    
    /****************************/
    /*CLOCK AND RESET           */
@@ -175,7 +175,7 @@ module elink(/*AUTOARG*/
    
    defparam erx.ID          = ID;
    defparam erx.IOSTD_ELINK = IOSTD_ELINK;
-   defparam erx.ETYPE       = 0;
+   defparam erx.ETYPE       = ETYPE;
    
    erx erx(
 	   /*AUTOINST*/
@@ -227,7 +227,7 @@ module elink(/*AUTOARG*/
 
    defparam etx.ID          = ID;
    defparam etx.IOSTD_ELINK = IOSTD_ELINK;
-   defparam etx.ETYPE       = 0;
+   defparam etx.ETYPE       = ETYPE;
 
    etx etx(.txwr_access  (txwr_gated_access),
 	   /*AUTOINST*/
@@ -265,7 +265,7 @@ module elink(/*AUTOARG*/
    /*TX-->RX REGISTER INTERFACE CONNECTION                    */
    /***********************************************************/
    defparam ecfg_cdc.DW=104;
-   defparam ecfg_cdc.DEPTH=16;
+   defparam ecfg_cdc.DEPTH=32;
    
    fifo_cdc ecfg_cdc (// Outputs
 		      .wait_out		(etx_cfg_wait),	

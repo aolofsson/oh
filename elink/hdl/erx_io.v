@@ -14,10 +14,9 @@ module erx_io (/*AUTOARG*/
 
    parameter IOSTD_ELINK = "LVDS_25";
    parameter PW          = 104;
-   parameter ETYPE      = 0;//0=parallella
+   parameter ETYPE       = 1;//0=parallella
                             //1=ephycard     
    
-
    // Can we do this in a better way?
    //parameter [8:0] RX_TAP_DELAY [8:0];
    
@@ -34,6 +33,7 @@ module erx_io (/*AUTOARG*/
 	RX_TAP_DELAY[7]=4'd15;
 	RX_TAP_DELAY[8]=4'd14;
      end
+  
 
    //#########################
    //# reset, clocks
@@ -240,8 +240,22 @@ module erx_io (/*AUTOARG*/
 	      .IB    (rxi_lclk_n),
 	      .O     (rxi_lclk)
 	      );
-	      
 
+
+	  OBUFT #(.IOSTANDARD("LVCMOS18"), .SLEW("SLOW"))
+	   obuft_wrwait (
+			 .O(rxo_wr_wait_p),
+			 .T(rx_wr_wait),
+			 .I(1'b0)
+			 );
+	   
+	   OBUFT #(.IOSTANDARD("LVCMOS18"), .SLEW("SLOW"))
+	   obuft_rdwait (
+			 .O(rxo_rd_wait_p),
+			 .T(rx_rd_wait),
+			 .I(1'b0)
+			 );	   	        
+/*
    generate
       if(ETYPE==1)
 	begin	   
@@ -275,7 +289,7 @@ module erx_io (/*AUTOARG*/
 			   );
 	end
 endgenerate
-     
+*/     
    //###################################
    //#RX CLOCK
    //###################################

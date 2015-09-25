@@ -17,7 +17,7 @@ module erx (/*AUTOARG*/
    parameter RFAW        = 6;
    parameter ID          = 12'h800;
    parameter IOSTD_ELINK = "LVDS_25";
-   parameter ETYPE       = 0;   
+   parameter ETYPE       = 1;   
 
    //Synched resets
    input          erx_reset;                   // reset for core logic

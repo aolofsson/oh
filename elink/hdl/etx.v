@@ -15,7 +15,7 @@ module etx(/*AUTOARG*/
    parameter RFAW        = 6;
    parameter ID          = 12'h000;
    parameter IOSTD_ELINK = "LVDS_25";
-   parameter ETYPE       = 0;   
+   parameter ETYPE       = 1;   
    //Synched resets
    input          etx_reset;                   // reset for core logic 
    input 	  sys_reset;                   // reset for fifos   
@@ -161,7 +161,7 @@ module etx(/*AUTOARG*/
 		  /*AUTOINST*/
 		  // Outputs
 		  .txo_lclk_p		(txo_lclk_p),
-		  .txo_lclk_n   	(txo_lclk_n),
+		  .txo_lclk_n		(txo_lclk_n),
 		  .txo_frame_p		(txo_frame_p),
 		  .txo_frame_n		(txo_frame_n),
 		  .txo_data_p		(txo_data_p[7:0]),
@@ -172,7 +172,6 @@ module etx(/*AUTOARG*/
 		  // Inputs
 		  .tx_lclk		(tx_lclk),
 		  .tx_lclk90		(tx_lclk90),
-		  .tx_lclk_div4		(tx_lclk_div4),
 		  .txi_wr_wait_p	(txi_wr_wait_p),
 		  .txi_wr_wait_n	(txi_wr_wait_n),
 		  .txi_rd_wait_p	(txi_rd_wait_p),
