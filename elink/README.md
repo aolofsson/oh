@@ -116,13 +116,14 @@ The "access" signals indicate a valid transaction. The wait signals indicate tha
 ###Clocking and Reset
 The elink has the following clock domains:
 
-*sys_clk : used by the axi interfaces  
-*rxi_lclk_div4: Used for the erx_core logic  
-*txo_lclk_div: Used for the etx_core logic  
-*rxi_lclk: Used by the erx_io for clocking in dual data rate data at pins  
-*txo_lclk: Used by the etx_io for transmitting dual rate data at pins  
-*txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample the dual data rate data.  
+* sys_clk : used by the axi interfaces
+* rxi_lclk_div4: Used for the erx_core logic
+* txo_lclk_div: Used for the etx_core logic
+* rxi_lclk: Used by the erx_io for clocking in dual data rate data at pins
+* txo_lclk: Used by the etx_io for transmitting dual rate data at pins
+* txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample the dual data rate data.
 
+![alt tag](docs/clocking.svg)
     
 ###INTERFACE SIGNALS  
    
