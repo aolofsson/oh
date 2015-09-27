@@ -333,7 +333,8 @@ module dv_elink(/*AUTOARG*/
                          );
   */
 
-   defparam elink0.ID = 12'h810;   
+   defparam elink0.ID    = 12'h810;   
+   defparam elink0.ETYPE = 0; 
    elink elink0 (
 		 .rxi_lclk_p		(elink1_txo_lclk_p),
 		 .rxi_lclk_n		(elink1_txo_lclk_n),
@@ -403,6 +404,8 @@ module dv_elink(/*AUTOARG*/
    assign elink1_rxrr_wait   = 1'b0;
    
    defparam elink1.ID = 12'h820;   
+   defparam elink1.ETYPE = 0; 
+
    elink elink1 (
 		 .rxi_lclk_p		(elink0_txo_lclk_p),
 		 .rxi_lclk_n		(elink0_txo_lclk_n),
@@ -511,7 +514,9 @@ module dv_elink(/*AUTOARG*/
                          );
   */
 
-   defparam elink2.ID = 12'h810;   
+   defparam elink2.ID    = 12'h810;   
+   defparam elink2.ETYPE = 0; 
+
    axi_elink elink2 (.sys_clk		(clk),
 		     .m_axi_aresetn	(~reset),
 		     .s_axi_aresetn	(~reset),
