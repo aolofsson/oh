@@ -107,13 +107,14 @@ module eclocks (/*AUTOARG*/
    wire       cclk_fb_out;
    wire       lclk_fb_i;
    wire       pll_reset;
-   wire       pll_locked;
+   wire       cclk_locked;
    wire       lclk_fb_in;
    wire       lclk_fb_out;
-   reg 	      pll_locked_reg;
-   reg 	      pll_locked_sync;
+   reg 	      cclk_locked_reg;
+   reg 	      cclk_locked_sync;
+   reg 	      rx_locked_reg;
+   reg 	      rx_locked_sync;
    wire       lclk_locked;   
-   wire       cclk_locked;
    
    //###########################
    // RESET STATE MACHINE
@@ -139,8 +140,10 @@ module eclocks (/*AUTOARG*/
    always @ (posedge sys_clk)
      begin
 	//TODO: Does rx_lclk always run when cclk does? Restb ?
-	pll_locked_reg    <= cclk_locked; // & clk_locked 
-	pll_locked_sync   <= pll_locked_reg;	
+        rx_locked_reg     <= lclk_locked;	
+        rx_locked_sync    <=  rx_locked_reg;	
+	cclk_locked_reg    <= cclk_locked; // & clk_locked 
+	cclk_locked_sync   <= cclk_locked_reg;	
 	reset_sync        <= (reset | ~elink_en);
 	reset_in          <= reset_sync;
      end
@@ -150,8 +153,9 @@ module eclocks (/*AUTOARG*/
 `define STOP_CCLK        3'b010
 `define START_EPIPHANY   3'b011
 `define HOLD_IT          3'b100
-`define ACTIVE           3'b101
-	     
+`define TX_ACTIVE        3'b101
+`define ACTIVE           3'b110
+
    //Reset sequence state machine
    
    always @ (posedge sys_clk)
@@ -162,23 +166,28 @@ module eclocks (/*AUTOARG*/
 	 `RESET_ALL :
 	   reset_state[2:0]      <= `START_CCLK;	 
 	 `START_CCLK :
-	   if(pll_locked_sync)
+	   if(cclk_locked_sync)
 	     reset_state[2:0]  <= `STOP_CCLK; 
 	 `STOP_CCLK :
 	   reset_state[2:0]    <= `START_EPIPHANY;
 	 `START_EPIPHANY :
 	   reset_state[2:0]    <= `HOLD_IT;
 	 `HOLD_IT :
-	   if(pll_locked_sync)
-	     reset_state[2:0]  <= `ACTIVE;
+	   if(cclk_locked_sync)
+	     reset_state[2:0]  <= `TX_ACTIVE;
+	 `TX_ACTIVE :
+	   reset_state[2:0]    <= `ACTIVE;
 	 `ACTIVE:
 	   reset_state[2:0]    <= `ACTIVE; //stay there until nex reset
+
        endcase // case (reset_state[2:0])
 
    
    //reset PLL during 'reset' and during quiet time around reset edge
-   assign pll_reset   =  (reset_state[2:0]==`RESET_ALL);
- 
+
+   //TODO: this is a bug if the RX gets a clock that is not a turnaround from TX
+   assign pll_reset   =  (reset_state[2:0] != `ACTIVE);
+    
    assign idelay_reset =  (reset_state[2:0]==`RESET_ALL) |
 			  (reset_state[2:0]==`START_CCLK);
    
@@ -188,10 +197,14 @@ module eclocks (/*AUTOARG*/
    
    assign e_resetb    =  (reset_state[2:0]==`START_EPIPHANY) |
 		         (reset_state[2:0]==`HOLD_IT) |
-		         (reset_state[2:0]==`ACTIVE);
-
-   assign elink_reset  =  (reset_state[2:0]!=`ACTIVE);
+		         (reset_state[2:0]==`ACTIVE) |
+   		         (reset_state[2:0]==`TX_ACTIVE);
    
+
+   assign elink_reset  =  (reset_state[2:0] != `TX_ACTIVE) &
+			  (reset_state[2:0] != `ACTIVE);
+   
+			     
 `ifdef TARGET_XILINX	
 
    //###########################
