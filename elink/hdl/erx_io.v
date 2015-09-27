@@ -11,16 +11,15 @@ module erx_io (/*AUTOARG*/
    reset, rx_lclk, rx_lclk_div4, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
    rxi_frame_n, rxi_data_p, rxi_data_n, rx_wr_wait, rx_rd_wait
    );
-
    parameter IOSTD_ELINK = "LVDS_25";
    parameter PW          = 104;
    parameter ETYPE       = 1;//0=parallella
-                            //1=ephycard     
+                             //1=ephycard     
    
    // Can we do this in a better way?
    //parameter [8:0] RX_TAP_DELAY [8:0];
    
-   reg [3:0] RX_TAP_DELAY[8:0];
+   reg [3:0] RX_TAP_DELAY[9:0];
    initial
      begin
 	RX_TAP_DELAY[0]=4'd15;
@@ -32,6 +31,7 @@ module erx_io (/*AUTOARG*/
 	RX_TAP_DELAY[6]=4'd14;
 	RX_TAP_DELAY[7]=4'd15;
 	RX_TAP_DELAY[8]=4'd14;
+	RX_TAP_DELAY[9]=4'd0;
      end
   
 
@@ -87,8 +87,8 @@ module erx_io (/*AUTOARG*/
    reg [PW-1:0]  rx_packet;
    reg 		 rx_burst;
    wire 	 rx_lclk_iddr;
-   wire [8:0] 	 rxi_delay_in;
-   wire [8:0] 	 rxi_delay_out;
+   wire [9:0] 	 rxi_delay_in;
+   wire [9:0] 	 rxi_delay_out;
    reg 		 reset_sync;
    
    //Reset sync
@@ -127,12 +127,7 @@ module erx_io (/*AUTOARG*/
 	    rx_sample[95:80]   <= rx_word[15:0];
 	  if(rx_pointer[6])
 	    rx_sample[111:96]  <= rx_word[15:0];	  
-       end
-
-
-
-   
-   
+       end // if (rx_frame)
    
    //#####################  
    //#DATA VALID SIGNAL 
@@ -240,22 +235,7 @@ module erx_io (/*AUTOARG*/
 	      .IB    (rxi_lclk_n),
 	      .O     (rxi_lclk)
 	      );
-
-
-	  OBUFT #(.IOSTANDARD("LVCMOS18"), .SLEW("SLOW"))
-	   obuft_wrwait (
-			 .O(rxo_wr_wait_p),
-			 .T(rx_wr_wait),
-			 .I(1'b0)
-			 );
-	   
-	   OBUFT #(.IOSTANDARD("LVCMOS18"), .SLEW("SLOW"))
-	   obuft_rdwait (
-			 .O(rxo_rd_wait_p),
-			 .T(rx_rd_wait),
-			 .I(1'b0)
-			 );	   	        
-/*
+ 
    generate
       if(ETYPE==1)
 	begin	   
@@ -288,23 +268,24 @@ module erx_io (/*AUTOARG*/
 			   .I(rx_rd_wait)
 			   );
 	end
-endgenerate
-*/     
+   endgenerate
+   
    //###################################
    //#RX CLOCK
-   //###################################
-
+   //###################################   
    BUFG rxi_lclk_bufg_i(.I(rxi_lclk), .O(rx_lclk_pll));  //for rest of io
-   BUFIO rx_lclk_bufio_i(.I(rxi_lclk), .O(rx_lclk_iddr));//for iddr
-
+   
+   //BUFIO rx_lclk_bufio_i(.I(rxi_lclk), .O(rx_lclk_iddr));//for iddr
+   assign rx_lclk_iddr =  rxi_delay_out[9];
+   
    //###################################
    //#IDELAY CIRCUIT
    //###################################
 
-   assign  rxi_delay_in[8:0] ={rxi_frame,rxi_data[7:0]};
+   assign  rxi_delay_in[9:0] ={rxi_lclk,rxi_frame,rxi_data[7:0]};
    
    genvar        j;
-   generate for(j=0; j<9; j=j+1)
+   generate for(j=0; j<10; j=j+1)
      begin : gen_idelay
 	(* IODELAY_GROUP = "IDELAY_GROUP" *) // Group name for IDELAYCTRL
 	

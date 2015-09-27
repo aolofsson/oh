@@ -207,7 +207,7 @@ always @ (posedge tx_lclk)
 	      .CE (1'b1),
 	      .D1 (tx_frame),
 	      .D2 (tx_frame),
-	      .R  (io_reset), //TODO: should this be buffered?
+	      .R  (io_reset), 
 	      .S  (1'b0)
 	      );
    
@@ -247,9 +247,6 @@ always @ (posedge tx_lclk)
    //# Wait Input Buffers
    //################################
 
-assign tx_wr_wait = txi_wr_wait_p;
-
-/*   
    generate
       if(ETYPE==1)
 	begin
@@ -266,8 +263,8 @@ assign tx_wr_wait = txi_wr_wait_p;
 	      .O     (tx_wr_wait));	 
 	end
    endgenerate
-*/
-         
+   
+   
 //TODO: Come up with cleaner defines for this
 //Parallella and other platforms...   
 `ifdef TODO
@@ -280,7 +277,7 @@ assign tx_wr_wait = txi_wr_wait_p;
       .O     (tx_rd_wait));
 `else
    //On Parallella this signal comes in single-ended
-      assign tx_rd_wait = txi_rd_wait_p;
+   assign tx_rd_wait = txi_rd_wait_p;
 `endif
    
 endmodule // etx_io

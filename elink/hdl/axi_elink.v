@@ -27,7 +27,7 @@ module axi_elink(/*AUTOARG*/
    s_axi_wstrb, s_axi_wvalid
    );
    
-   parameter AW          = 32;
+    parameter AW          = 32;
    parameter DW          = 32; 
    parameter PW          = 104;      //packet width   
    parameter ID          = 12'h810;
