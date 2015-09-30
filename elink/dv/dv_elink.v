@@ -275,8 +275,6 @@ module dv_elink(/*AUTOARG*/
 			   .reset		(reset),	 // Templated
 			   .elink_en		(elink0_elink_en), // Templated
 			   .rx_clkin		(elink0_rx_lclk_pll)); // Templated
-
-   defparam elink1_eclocks.PLL_VCO_MULT =  1;  //needed to align clocks for RX
    
    eclocks elink1_eclocks (.sys_clk		(clk),			   
 			   .e_cclk_p		(),
