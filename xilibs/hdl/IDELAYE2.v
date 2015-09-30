@@ -42,7 +42,11 @@ module IDELAYE2 (/*AUTOARG*/
    input 	REGRST;      // reset for pipeline register
 
    assign DATAOUT = IDATAIN;
-   
+
+   initial
+     begin
+	$display("Delay %d %m",IDELAY_VALUE);	
+     end
 endmodule // IDELAYE2
 
 

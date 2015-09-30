@@ -68,6 +68,22 @@ module PLLE2_ADV #(
    localparam phases = CLKFBOUT_MULT / DIVCLK_DIVIDE;
    
    //########################################################################
+   //# POR
+   //########################################################################
+   //ugly POR reset
+   reg 	      POR;
+   initial
+     begin
+	POR=1'b1;
+	#1
+	POR=1'b0;	
+     end
+
+   reg reset;
+   always @ (posedge CLKIN1)
+     reset <= POR | RST;
+   
+   //########################################################################
    //# CLOCK MULTIPLIER
    //########################################################################
 
@@ -85,7 +101,7 @@ module PLLE2_ADV #(
     always @ (delay)
       begin
 	 for(j=0; j<(phases); j=j+1)
-	   clk_comb[j] <= delay[2*j] & ~delay[2*j+1];	 
+	   clk_comb[j] <= ~reset & delay[2*j] & ~delay[2*j+1];	 
       end
    
    reg vco_clk;   
@@ -96,13 +112,6 @@ module PLLE2_ADV #(
 	for(k=0; k<(phases); k=k+1)
 	  vco_clk = vco_clk | clk_comb[k];
      end
- 
-
-   //########################################################################
-   //# POR
-   //########################################################################
-
-   wire 	 reset = POR | RST;
    
    //##############
    //#DIVIDERS
@@ -116,16 +125,7 @@ module PLLE2_ADV #(
    assign DIVCFG[3] = $clog2(CLKOUT3_DIVIDE);
    assign DIVCFG[4] = $clog2(CLKOUT4_DIVIDE);
    assign DIVCFG[5] = $clog2(CLKOUT5_DIVIDE);
-
-   //ugly POR reset
-   reg 	      POR;
-   initial
-     begin
-	POR=1'b1;
-	#1
-	POR=1'b0;	
-     end
-
+ 
    genvar i;
    generate for(i=0; i<6; i=i+1)
      begin : gen_clkdiv
@@ -139,8 +139,15 @@ module PLLE2_ADV #(
      end      
    endgenerate
 
+   reg [5:0] CLKOUT_DIV_LOCK;   
+   always @ (posedge (CLKIN1&vco_clk) or negedge (CLKIN1&~vco_clk))
+     begin
+	CLKOUT_DIV_LOCK[5:0] <= CLKOUT_DIV[5:0];	
+     end
+
+   
    //##############
-   //#PHASE DELAY
+   //#SUB PHASE DELAY
    //##############
    reg CLKOUT0;
    reg CLKOUT1;
@@ -149,14 +156,14 @@ module PLLE2_ADV #(
    reg CLKOUT4;
    reg CLKOUT5;
    
-   always @ (CLKOUT_DIV)
+   always @ (CLKOUT_DIV_LOCK)
      begin	
-	CLKOUT0 <= #(CLK0_DELAY) ~reset & CLKOUT_DIV[0];
-	CLKOUT1 <= #(CLK1_DELAY) ~reset & CLKOUT_DIV[1];
-	CLKOUT2 <= #(CLK2_DELAY) ~reset & CLKOUT_DIV[2];
-	CLKOUT3 <= #(CLK3_DELAY) ~reset & CLKOUT_DIV[3];
-	CLKOUT4 <= #(CLK4_DELAY) ~reset & CLKOUT_DIV[4];
-	CLKOUT5 <= #(CLK5_DELAY) ~reset & CLKOUT_DIV[5];
+	CLKOUT0 <= #(CLK0_DELAY) ~reset & CLKOUT_DIV_LOCK[0];
+	CLKOUT1 <= #(CLK1_DELAY) ~reset & CLKOUT_DIV_LOCK[1];
+	CLKOUT2 <= #(CLK2_DELAY) ~reset & CLKOUT_DIV_LOCK[2];
+	CLKOUT3 <= #(CLK3_DELAY) ~reset & CLKOUT_DIV_LOCK[3];
+	CLKOUT4 <= #(CLK4_DELAY) ~reset & CLKOUT_DIV_LOCK[4];
+	CLKOUT5 <= #(CLK5_DELAY) ~reset & CLKOUT_DIV_LOCK[5];
      end
 
    //##############
