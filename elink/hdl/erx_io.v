@@ -11,30 +11,28 @@ module erx_io (/*AUTOARG*/
    reset, rx_lclk, rx_lclk_div4, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
    rxi_frame_n, rxi_data_p, rxi_data_n, rx_wr_wait, rx_rd_wait
    );
-   parameter IOSTD_ELINK = "LVDS_25";
+   parameter IOSTD_ELINK = "LVDS_25";  
    parameter PW          = 104;
    parameter ETYPE       = 1;//0=parallella
                              //1=ephycard     
    
    // Can we do this in a better way?
-   //parameter [8:0] RX_TAP_DELAY [8:0];
-   
-   reg [3:0] RX_TAP_DELAY[9:0];
-   initial
-     begin
-	RX_TAP_DELAY[0]=4'd15;
-	RX_TAP_DELAY[1]=4'd15;
-	RX_TAP_DELAY[2]=4'd15;
-	RX_TAP_DELAY[3]=4'd15;
-	RX_TAP_DELAY[4]=4'd14;
-	RX_TAP_DELAY[5]=4'd15;
-	RX_TAP_DELAY[6]=4'd14;
-	RX_TAP_DELAY[7]=4'd15;
-	RX_TAP_DELAY[8]=4'd14;
-	RX_TAP_DELAY[9]=4'd0;
-     end
-  
+   //parameter [3:0] RX_TAP_DELAY [8:0]=;
+   //parameter  RX_TAP_DELAY = 1;
 
+   parameter [5*10:0] RX_TAP_DELAY ={5'd0,  //clk
+				     5'd12, //frame
+				     5'd12, //d7
+				     5'd12, //d6
+				     5'd12, //d5
+				     5'd12, //d4
+				     5'd12, //d3
+				     5'd12, //d2
+				     5'd12, //d1
+				     5'd12  //d0
+				   };
+   
+   
    //#########################
    //# reset, clocks
    //#########################
@@ -252,6 +250,9 @@ module erx_io (/*AUTOARG*/
 			 .T(rx_rd_wait),
 			 .I(1'b0)
 			 );	   	   
+
+	   assign rxo_wr_wait_n = 1'b0;
+	   assign rxo_rd_wait_n = 1'b0;	   
 	end      
       else if(ETYPE==0)
 	begin
@@ -273,11 +274,10 @@ module erx_io (/*AUTOARG*/
    //###################################
    //#RX CLOCK
    //###################################   
-   BUFG rxi_lclk_bufg_i(.I(rxi_lclk), .O(rx_lclk_pll));  //for rest of io
+   BUFG rxi_lclk_bufg_i(.I(rxi_lclk), .O(rx_lclk_pll));  //for mmcm
    
-   //BUFIO rx_lclk_bufio_i(.I(rxi_lclk), .O(rx_lclk_iddr));//for iddr
-   assign rx_lclk_iddr =  rxi_delay_out[9];
-   
+   BUFIO rx_lclk_bufio_i(.I(rxi_delay_out[9]), .O(rx_lclk_iddr));//for iddr (NOT USED!)
+
    //###################################
    //#IDELAY CIRCUIT
    //###################################
@@ -293,7 +293,7 @@ module erx_io (/*AUTOARG*/
 		   .DELAY_SRC("IDATAIN"), 
 		   .HIGH_PERFORMANCE_MODE("FALSE"),
 		   .IDELAY_TYPE("FIXED"),
-		   .IDELAY_VALUE(0), //(RX_TAP_DELAY[j]
+		   .IDELAY_VALUE(RX_TAP_DELAY[(j+1)*5-1:j*5]),
 		   .PIPE_SEL("FALSE"),
 		   .REFCLK_FREQUENCY(200.0),
 		   .SIGNAL_PATTERN("DATA"))
@@ -326,7 +326,7 @@ module erx_io (/*AUTOARG*/
 	iddr_data (
 		   .Q1 (rx_word[i]),
 		   .Q2 (rx_word[i+8]),
-		   .C  (rx_lclk_iddr),
+		   .C  (rx_lclk),//rx_lclk_iddr
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[i]),
 		   .R  (reset_sync),
@@ -340,7 +340,7 @@ module erx_io (/*AUTOARG*/
 	iddr_frame (
 		   .Q1 (rx_frame),
 		   .Q2 (),    
-		   .C  (rx_lclk_iddr),
+		   .C  (rx_lclk),//rx_lclk_iddr
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[8]),
 		   .R  (reset_sync),

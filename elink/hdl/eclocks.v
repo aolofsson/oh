@@ -329,7 +329,7 @@ module eclocks (/*AUTOARG*/
         .CLKOUT5(rx_lclk_div4_i),
 	.PWRDWN(1'b0),
         .RST(pll_reset),
-        .CLKFBIN(lclk_fb_in),
+        .CLKFBIN(lclk_fb_in),//lclk_fb_in
         .CLKFBOUT(lclk_fb_out),       
         .CLKIN1(rx_clkin),
 	.CLKIN2(1'b0),
@@ -345,13 +345,14 @@ module eclocks (/*AUTOARG*/
         );
    
    //Rx clock buffers
-   BUFG rx_lclk_bufg_i(.I(rx_lclk_i), .O(rx_lclk));
-   BUFG rx_lclk_div4_bufg_i(.I(rx_lclk_div4_i), .O(rx_lclk_div4));
-  
-   //Feedback buffers
-   BUFG lclk_fb_bufg_i0(.I(lclk_fb_out), .O(lclk_fb_in));
+   BUFG rx_lclk_bufg_i(.I(rx_lclk_i), .O(rx_lclk));                 //goes to erx_io
+   BUFG rx_lclk_div4_bufg_i(.I(rx_lclk_div4_i), .O(rx_lclk_div4));  //goes to erx_io
 
-   //###########################
+    
+   //Feedback buffers
+   BUFG lclk_fb_bufg_i0(.I(rx_lclk), .O(lclk_fb_in)); //.I(lclk_fb_in),
+   
+ //###########################
    // CCLK
    //###########################
 
