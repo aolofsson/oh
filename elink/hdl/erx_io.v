@@ -5,7 +5,7 @@
 `include "elink_constants.v"
 module erx_io (/*AUTOARG*/
    // Outputs
-   rx_lclk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
+   rx_clkin, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, rx_access, rx_burst, rx_packet,
    // Inputs
    reset, rx_lclk, rx_lclk_div4, idelay_value, load_taps, rxi_lclk_p,
@@ -20,10 +20,10 @@ module erx_io (/*AUTOARG*/
    //#########################
    //# reset, clocks
    //#########################
-   input       reset;                       // reset
+   input       reset;                       // async reset
    input       rx_lclk;                     // fast I/O clock
    input       rx_lclk_div4;                // slow clock
-   output      rx_lclk_pll;                 // clock output for pll
+   output      rx_clkin;                    // clock output for pll
 
    //#########################
    //# idelays
@@ -78,10 +78,6 @@ module erx_io (/*AUTOARG*/
    wire [9:0] 	 rxi_delay_in;
    wire [9:0] 	 rxi_delay_out;
    reg 		 reset_sync;
-   
-   //Reset sync
-   always @ (posedge rx_lclk)
-     reset_sync <= reset;
    
     //#####################
    //#CREATE 112 BIT PACKET 
@@ -276,7 +272,7 @@ module erx_io (/*AUTOARG*/
    //###################################
    //#RX CLOCK
    //###################################   
-   BUFG rxi_lclk_bufg_i(.I(rxi_lclk), .O(rx_lclk_pll));  //for mmcm
+   BUFG rxi_lclk_bufg_i(.I(rxi_lclk), .O(rx_clkin));  //for mmcm
    
    BUFIO rx_lclk_bufio_i(.I(rxi_delay_out[9]), .O(rx_lclk_iddr));//for iddr (NOT USED!)
 

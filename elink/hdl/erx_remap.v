@@ -12,8 +12,8 @@ module erx_remap (/*AUTOARG*/
    parameter ID = 12'h808;
    
    //Clock/reset
-   input clk;
-   input reset;
+   input          clk;
+   input          reset;        //async reset
    
    //Input from arbiter
    input          emesh_access_in;
@@ -69,7 +69,7 @@ module erx_remap (/*AUTOARG*/
 
 
    //Access
-   always @ (posedge clk)
+   always @ (posedge clk or posedge reset)
      if (reset)
        emesh_access_out         <= 1'b0;
      else

@@ -94,7 +94,7 @@ module erx_cfg (/*AUTOARG*/
      else if (ecfg_rx_write)
        ecfg_rx_reg[31:0] <= mi_din[31:0];
 
-   assign rx_enable           = 1'b1;//is there any good reason turn RX off?
+   assign rx_enable           = 1'b1;
    assign mmu_enable          = ecfg_rx_reg[1];
    assign remap_mode[1:0]     = ecfg_rx_reg[3:2];
    assign remap_sel[11:0]     = ecfg_rx_reg[15:4];

@@ -16,7 +16,7 @@ module erx_core (/*AUTOARG*/
 
 
    //clock and reset
-   input		reset;
+   input		reset;  //async reset!
    input		clk;
 
    //IO Interface
@@ -81,7 +81,6 @@ module erx_core (/*AUTOARG*/
    wire [1:0]		remap_mode;		// From erx_cfg of erx_cfg.v
    wire [11:0]		remap_pattern;		// From erx_cfg of erx_cfg.v
    wire [11:0]		remap_sel;		// From erx_cfg of erx_cfg.v
-   wire			rx_enable;		// From erx_cfg of erx_cfg.v
    // End of automatics
 
      
@@ -108,14 +107,11 @@ module erx_core (/*AUTOARG*/
 			      .erx_rr_access	(erx_rr_access),
 			      .erx_packet	(erx_packet[PW-1:0]),
 			      // Inputs
-			      .reset		(reset),
-			      .rx_enable	(rx_enable),
 			      .clk		(clk),
+			      .reset		(reset),
 			      .rx_packet	(rx_packet[PW-1:0]),
 			      .rx_burst		(rx_burst),
 			      .rx_access	(rx_access));
-
-
 
    /**************************************************************/
    /*ADDRESS REMPAPPING                                          */
@@ -282,16 +278,17 @@ module erx_core (/*AUTOARG*/
    
    erx_cfg erx_cfg (.rx_status    	(rx_status[15:0]),
 		    .timer_cfg		(),
+		    .rx_enable		(),//TODO:what to do with this??
 		     /*AUTOINST*/
 		    // Outputs
 		    .mi_dout		(mi_cfg_dout[DW-1:0]),	 // Templated
-		    .rx_enable		(rx_enable),
 		    .mmu_enable		(mmu_enable),
 		    .remap_mode		(remap_mode[1:0]),
 		    .remap_base		(remap_base[31:0]),
 		    .remap_pattern	(remap_pattern[11:0]),
 		    .remap_sel		(remap_sel[11:0]),
 		    .idelay_value	(idelay_value[39:0]),
+		    .load_taps		(load_taps),
 		    // Inputs
 		    .reset		(reset),
 		    .clk		(clk),
@@ -300,13 +297,6 @@ module erx_core (/*AUTOARG*/
 		    .mi_addr		(mi_addr[14:0]),
 		    .mi_din		(mi_din[31:0]),
 		    .gpio_datain	(gpio_datain[8:0]));
-    
-   
-   
-  
-   
- 
-   
    
    /************************************************************/
    /*ELINK DMA                                                 */
@@ -349,7 +339,7 @@ module erx_core (/*AUTOARG*/
 
    defparam erx_arbiter.ID    = ID;
    erx_arbiter erx_arbiter (.timeout	(1'b0),//TODO
-			/*AUTOINST*/
+			    /*AUTOINST*/
 			    // Outputs
 			    .rx_rd_wait		(rx_rd_wait),
 			    .rx_wr_wait		(rx_wr_wait),
@@ -373,9 +363,9 @@ module erx_core (/*AUTOARG*/
 			    .rxwr_wait		(rxwr_wait),
 			    .rxrd_wait		(rxrd_wait),
 			    .rxrr_wait		(rxrr_wait));
-
    
-endmodule // erx
+endmodule // erx_core
+
 // Local Variables:
 // verilog-library-directories:("." "../../emmu/hdl" "../../edma/hdl" "../../memory/hdl" "../../emailbox/hdl")
 // End:

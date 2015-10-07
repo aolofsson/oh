@@ -1,14 +1,13 @@
 module erx (/*AUTOARG*/
    // Outputs
-   rx_lclk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
-   rxo_rd_wait_n, rxwr_access, rxwr_packet, rxrd_access, rxrd_packet,
-   rxrr_access, rxrr_packet, erx_cfg_wait, timeout, mailbox_full,
+   rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n,
+   rxwr_access, rxwr_packet, rxrd_access, rxrd_packet, rxrr_access,
+   rxrr_packet, erx_cfg_wait, timeout, mailbox_full,
    mailbox_not_empty,
    // Inputs
-   erx_reset, sys_reset, sys_clk, rx_lclk, rx_lclk_div4,
-   rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n, rxi_data_p,
-   rxi_data_n, rxwr_wait, rxrd_wait, rxrr_wait, erx_cfg_access,
-   erx_cfg_packet
+   soft_reset, sys_reset, sys_clk, rxi_lclk_p, rxi_lclk_n,
+   rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, rxwr_wait,
+   rxrd_wait, rxrr_wait, erx_cfg_access, erx_cfg_packet
    );
 
    parameter AW          = 32;
@@ -19,15 +18,10 @@ module erx (/*AUTOARG*/
    parameter IOSTD_ELINK = "LVDS_25";
    parameter ETYPE       = 1;   
 
-   //Synched resets
-   input          erx_reset;                   // reset for core logic
-   input          sys_reset;                   // reset for fifos 
-
-   //Clocks
-   input 	  sys_clk;	               // system clock for rx fifos
-   input 	  rx_lclk;	               // fast clock for io
-   input 	  rx_lclk_div4;		       // slow clock for rest of logic
-   output 	  rx_lclk_pll;                 // clock output for pll
+   //Synched resets, clock
+   input          soft_reset;                 // sw driven reset
+   input          sys_reset;                  // async reset
+   input 	  sys_clk;	              // system clock for fifo/clocks
    
    //FROM IO Pins
    input 	  rxi_lclk_p,   rxi_lclk_n;     // rx clock input
@@ -66,8 +60,14 @@ module erx (/*AUTOARG*/
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire			erx_reset;		// From erx_clocks of erx_clocks.v
+   wire [39:0]		idelay_value;		// From erx_core of erx_core.v
+   wire			load_taps;		// From erx_core of erx_core.v
    wire			rx_access;		// From erx_io of erx_io.v
    wire			rx_burst;		// From erx_io of erx_io.v
+   wire			rx_clkin;		// From erx_io of erx_io.v
+   wire			rx_lclk;		// From erx_clocks of erx_clocks.v
+   wire			rx_lclk_div4;		// From erx_clocks of erx_clocks.v
    wire [PW-1:0]	rx_packet;		// From erx_io of erx_io.v
    wire			rx_rd_wait;		// From erx_core of erx_core.v
    wire			rx_wr_wait;		// From erx_core of erx_core.v
@@ -83,6 +83,20 @@ module erx (/*AUTOARG*/
    // End of automatics
 
    /***********************************************************/
+   /*CLOCK/RESET                                              */
+   /***********************************************************/
+   erx_clocks erx_clocks(/*AUTOINST*/
+			 // Outputs
+			 .rx_lclk		(rx_lclk),
+			 .rx_lclk_div4		(rx_lclk_div4),
+			 .erx_reset		(erx_reset),
+			 // Inputs
+			 .sys_reset		(sys_reset),
+			 .soft_reset		(soft_reset),
+			 .sys_clk		(sys_clk),
+			 .rx_clkin		(rx_clkin));
+   
+   /***********************************************************/
    /*RECEIVER  I/O LOGIC                                      */
    /***********************************************************/
    defparam erx_io.IOSTD_ELINK=IOSTD_ELINK;
@@ -90,7 +104,7 @@ module erx (/*AUTOARG*/
    erx_io erx_io (.reset		(erx_reset),
 		  /*AUTOINST*/
 		  // Outputs
-		  .rx_lclk_pll		(rx_lclk_pll),
+		  .rx_clkin		(rx_clkin),
 		  .rxo_wr_wait_p	(rxo_wr_wait_p),
 		  .rxo_wr_wait_n	(rxo_wr_wait_n),
 		  .rxo_rd_wait_p	(rxo_rd_wait_p),
@@ -101,6 +115,8 @@ module erx (/*AUTOARG*/
 		  // Inputs
 		  .rx_lclk		(rx_lclk),
 		  .rx_lclk_div4		(rx_lclk_div4),
+		  .idelay_value		(idelay_value[39:0]),
+		  .load_taps		(load_taps),
 		  .rxi_lclk_p		(rxi_lclk_p),
 		  .rxi_lclk_n		(rxi_lclk_n),
 		  .rxi_frame_p		(rxi_frame_p),
@@ -133,6 +149,8 @@ module erx (/*AUTOARG*/
 		      // Outputs
 		      .rx_rd_wait	(rx_rd_wait),		 // Templated
 		      .rx_wr_wait	(rx_wr_wait),		 // Templated
+		      .idelay_value	(idelay_value[39:0]),
+		      .load_taps	(load_taps),
 		      .rxrd_access	(rxrd_fifo_access),	 // Templated
 		      .rxrd_packet	(rxrd_fifo_packet[PW-1:0]), // Templated
 		      .rxrr_access	(rxrr_fifo_access),	 // Templated

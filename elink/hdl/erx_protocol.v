@@ -7,7 +7,7 @@ module erx_protocol (/*AUTOARG*/
    // Outputs
    erx_rdwr_access, erx_rr_access, erx_packet,
    // Inputs
-   reset, rx_enable, clk, rx_packet, rx_burst, rx_access
+   clk, reset, rx_packet, rx_burst, rx_access
    );
 
    parameter AW   = 32;
@@ -17,11 +17,11 @@ module erx_protocol (/*AUTOARG*/
 
    
    // System reset input
-   input           reset;
-   input 	   rx_enable;//Enables receiver
+   input           clk;
+   input           reset;    //async reset
 
    // Parallel interface, 8 eLink bytes at a time
-   input           clk;
+   
    input [PW-1:0]  rx_packet;
    input 	   rx_burst;
    input 	   rx_access;
