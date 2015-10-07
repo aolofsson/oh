@@ -8,7 +8,7 @@ module etx_io (/*AUTOARG*/
    reset, tx_lclk, tx_lclk90, txi_wr_wait_p, txi_wr_wait_n,
    txi_rd_wait_p, txi_rd_wait_n, tx_packet, tx_access, tx_burst
    );
-
+   
    parameter IOSTD_ELINK = "LVDS_25";
    parameter PW          = 104;
    parameter ETYPE       = 1;//0=parallella
@@ -16,9 +16,9 @@ module etx_io (/*AUTOARG*/
    //###########
    //# reset, clocks
    //##########
-   input        reset;               //reset for io  
-   input 	tx_lclk;	     // fast clock for io
-   input 	tx_lclk90;           // fast 90deg shifted lclk   
+   input        reset;               //sync reset for io  
+   input 	tx_lclk;	     //fast clock for io
+   input 	tx_lclk90;           //fast 90deg shifted lclk   
    
    //###########
    //# eLink pins
@@ -47,8 +47,6 @@ module etx_io (/*AUTOARG*/
    reg 		  tx_access_reg;
    reg 		  tx_frame;
    reg 		  tx_io_wait_reg;
-   reg 		  io_reset;
-   reg 		  io_reset_in;
    reg [PW-1:0]   tx_packet_reg;
    reg [63:0] 	  tx_double;
    reg [2:0] 	  tx_state_reg;
@@ -68,7 +66,7 @@ module etx_io (/*AUTOARG*/
    wire 	  txo_frame;   
    wire 	  txo_lclk90;
    reg 		  tx_io_wait;
-
+   
    //#############################
    //# Transmit state machine
    //#############################  
@@ -162,22 +160,7 @@ always @ (posedge tx_lclk)
        3'b111: tx_data16[15:0]  <= tx_double[15:0];       
        default  tx_data16[15:0] <= 16'b0;
      endcase // case (tx_state[2:0])
-                
-   //#############################
-   //# RESET SYNCHRONIZER
-   //#############################       
-   always @ (posedge tx_lclk or posedge reset)
-     if(reset)
-       begin
-	  io_reset_in   <= 1'b1;
-	  io_reset      <= 1'b1;
-       end
-     else
-       begin
-	  io_reset_in  <= 1'b0;
-	  io_reset     <= io_reset_in; 
-       end
-     
+                       
    //#############################
    //# ODDR DRIVERS
    //#############################  
@@ -200,14 +183,14 @@ always @ (posedge tx_lclk)
      endgenerate
 
    //FRAME
-   ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
+   ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"), .SRTYPE ("SYNC"))
    oddr_frame (
 	      .Q  (txo_frame),
 	      .C  (tx_lclk),
 	      .CE (1'b1),
 	      .D1 (tx_frame),
 	      .D2 (tx_frame),
-	      .R  (io_reset), 
+	      .R  (reset), 
 	      .S  (1'b0)
 	      );
    
@@ -219,7 +202,7 @@ always @ (posedge tx_lclk)
 	      .CE (1'b1),
 	      .D1 (1'b1),
 	      .D2 (1'b0),
-	      .R  (io_reset),
+	      .R  (reset),//should be no reason to reset clock, static input
 	      .S  (1'b0)
 	      );
 		  
