@@ -38,9 +38,13 @@ module ODDR (/*AUTOARG*/
      else
        Q2 <= D2;
   
-   always @ (negedge C)
-     Q2_reg <= Q2;
-      
+   always @ (negedge C or posedge R)
+     if (R)
+       Q2_reg <= 1'b0;
+     else
+       Q2_reg <= Q2;
+
+       
    assign Q = C ? Q1 : Q2_reg;
       
 endmodule // ODDR
