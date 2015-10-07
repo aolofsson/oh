@@ -8,16 +8,23 @@
 
 module ecfg_elink (/*AUTOARG*/
    // Outputs
-   txwr_gated_access, elink_en, clk_config, e_chipid,
+   txwr_gated_access, etx_soft_reset, erx_soft_reset, clk_config,
+   chipid,
    // Inputs
-   txwr_access, txwr_packet, clk, reset
+   clk, por_reset, txwr_access, txwr_packet
    );
 
    parameter RFAW             = 6;     // 32 registers for now
    parameter PW               = 104;   // 32 registers for now
    parameter ID               = 12'h000;
    parameter DEFAULT_CHIPID   = 12'h808;
-   
+
+   /******************************/
+   /*Clock/reset                 */
+   /******************************/
+   input 	  clk;   
+   input 	  por_reset;       // POR "hard reset"
+
    /******************************/
    /*REGISTER ACCESS             */
    /******************************/
@@ -28,24 +35,19 @@ module ecfg_elink (/*AUTOARG*/
    /*FILTERED WRITE FOR TX FIFO  */
    /******************************/
    output 	  txwr_gated_access;
-
-   /******************************/
-   /*Clock/reset                 */
-   /******************************/
-   input 	  clk;   
-   input 	  reset;         // POR "hard reset"
-
+   
    /******************************/
    /*Outputs                     */
    /******************************/
-   output 	 elink_en;         // elink master enable
-   output [15:0] clk_config;       // clock settings (for pll)
-   output [11:0] e_chipid;         // chip-id for Epiphany   
+   output 	 etx_soft_reset;  // tx soft reset (level)
+   output 	 erx_soft_reset;  // rx soft reset (level)
+   output [15:0] clk_config;      // clock settings (for pll)
+   output [11:0] chipid;          // chip-id for Epiphany   
    
    /*------------------------CODE BODY---------------------------------------*/
    
    //registers
-   reg          ecfg_reset_reg;
+   reg [1:0] 	ecfg_reset_reg;
    reg [15:0] 	ecfg_clk_reg;
    reg [11:0] 	ecfg_chipid_reg;
    reg [31:0] 	mi_dout;
@@ -94,26 +96,27 @@ module ecfg_elink (/*AUTOARG*/
    /*FILTER ACCESS              */
    /*****************************/
    assign 	txwr_gated_access =  txwr_access & ~(ecfg_reset_write | 
-						   ecfg_clk_write   |
-                                                   ecfg_chipid_write);
+						     ecfg_clk_write   |
+                                                     ecfg_chipid_write);
    
    //###########################
    //# RESET REG (ASYNC)
    //###########################
-    always @ (posedge clk or posedge reset)
-      if(reset)
-	ecfg_reset_reg <= 1'b0;         
+    always @ (posedge clk or posedge por_reset)
+      if(por_reset)
+	ecfg_reset_reg[1:0] <= 'b0;         
       else if (ecfg_reset_write)
-	ecfg_reset_reg <= mi_din[0];  
+	ecfg_reset_reg[1:0] <= mi_din[1:0];  
 
-   assign elink_en    =~ecfg_reset_reg; //always on, TODO: fix!
+   assign etx_soft_reset  = ecfg_reset_reg[0];
+   assign erx_soft_reset  = ecfg_reset_reg[1];
      
    //###########################
    //# CCLK/LCLK (PLL)
    //###########################
    //TODO: implement!
-    always @ (posedge clk)
-     if(reset)
+    always @ (posedge clk or posedge por_reset)
+     if(por_reset)
        ecfg_clk_reg[15:0] <= 16'h573;//all clocks on at lowest speed   
      else if (ecfg_clk_write)
        ecfg_clk_reg[15:0] <= mi_din[15:0];
@@ -123,13 +126,13 @@ module ecfg_elink (/*AUTOARG*/
    //###########################
    //# CHIPID
    //###########################
-   always @ (posedge clk)
-     if(reset)
+   always @ (posedge clk or posedge por_reset)
+     if(por_reset)
        ecfg_chipid_reg[11:0] <= DEFAULT_CHIPID;
      else if (ecfg_chipid_write)
        ecfg_chipid_reg[11:0] <= mi_din[11:0];   
    
-   assign e_chipid[11:0]=ecfg_chipid_reg[5:2];   
+   assign chipid[11:0]=ecfg_chipid_reg[5:2];   
     
 endmodule // ecfg_elink
 

@@ -1,13 +1,12 @@
 module etx(/*AUTOARG*/
    // Outputs
    txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
-   txo_data_n, txrd_wait, txwr_wait, txrr_wait, etx_cfg_access,
-   etx_cfg_packet,
+   txo_data_n, cclk_p, cclk_n, chip_resetb, txrd_wait, txwr_wait,
+   txrr_wait, etx_cfg_access, etx_cfg_packet,
    // Inputs
-   etx_reset, sys_reset, sys_clk, tx_lclk, tx_lclk90, tx_lclk_div4,
-   txi_wr_wait_p, txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n,
-   txrd_access, txrd_packet, txwr_access, txwr_packet, txrr_access,
-   txrr_packet, etx_cfg_wait
+   sys_reset, soft_reset, sys_clk, txi_wr_wait_p, txi_wr_wait_n,
+   txi_rd_wait_p, txi_rd_wait_n, txrd_access, txrd_packet,
+   txwr_access, txwr_packet, txrr_access, txrr_packet, etx_cfg_wait
    );
    parameter AW          = 32;
    parameter DW          = 32;
@@ -16,15 +15,13 @@ module etx(/*AUTOARG*/
    parameter ID          = 12'h000;
    parameter IOSTD_ELINK = "LVDS_25";
    parameter ETYPE       = 1;   
+
    //Synched resets
-   input          etx_reset;                   // reset for core logic 
    input 	  sys_reset;                   // reset for fifos   
+   input 	  soft_reset;		       // software controlled reset
 
    //Clocks
    input 	  sys_clk;                     // clock for fifos   
-   input 	  tx_lclk;	               // fast clock for io
-   input 	  tx_lclk90;                   // 90 deg shifted lclk   
-   input 	  tx_lclk_div4;		       // slow clock for core logic   
 
    //Transmit signals for IO
    output 	  txo_lclk_p,   txo_lclk_n;     // tx clock output
@@ -32,7 +29,11 @@ module etx(/*AUTOARG*/
    output [7:0]   txo_data_p, txo_data_n;       // tx data (dual data rate)
    input 	  txi_wr_wait_p,txi_wr_wait_n;  // tx async write pushback
    input 	  txi_rd_wait_p, txi_rd_wait_n; // tx async read pushback
-      
+   
+   //Epiphany Chip Signals
+   output 	  cclk_p,cclk_n;   
+   output 	  chip_resetb;
+         
    //Read Request Channel Input
    input 	  txrd_access;
    input [PW-1:0] txrd_packet;
@@ -58,6 +59,12 @@ module etx(/*AUTOARG*/
         
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire			etx_reset;		// From etx_clocks of etx_clocks.v
+   wire			tx_lclk;		// From etx_clocks of etx_clocks.v
+   wire			tx_lclk90;		// From etx_clocks of etx_clocks.v
+   wire			tx_lclk_div4;		// From etx_clocks of etx_clocks.v
+   // End of automatics
+   // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			tx_access;		// From etx_core of etx_core.v
    wire			tx_burst;		// From etx_core of etx_core.v
    wire			tx_io_wait;		// From etx_io of etx_io.v
@@ -74,7 +81,26 @@ module etx(/*AUTOARG*/
    wire [PW-1:0]	txwr_fifo_packet;	// From etx_fifo of etx_fifo.v
    wire			txwr_fifo_wait;		// From etx_core of etx_core.v
   
+   /************************************************************/
+   /*Clocks                                                    */
+   /************************************************************/
+   etx_clocks etx_clocks (
+			  .etx_io_reset		(etx_io_reset),
+			  /*AUTOINST*/
+			  // Outputs
+			  .tx_lclk		(tx_lclk),
+			  .tx_lclk90		(tx_lclk90),
+			  .tx_lclk_div4		(tx_lclk_div4),
+			  .cclk_p		(cclk_p),
+			  .cclk_n		(cclk_n),
+			  .etx_reset		(etx_reset),
+			  .chip_resetb		(chip_resetb),
+			  // Inputs
+			  .sys_reset		(sys_reset),
+			  .soft_reset		(soft_reset),
+			  .sys_clk		(sys_clk));
    
+
    /************************************************************/
    /*FIFOs                                                     */
    /************************************************************/
@@ -157,7 +183,7 @@ module etx(/*AUTOARG*/
    /***********************************************************/
 
    defparam etx_io.IOSTD_ELINK=IOSTD_ELINK;
-   etx_io etx_io (.reset		(etx_reset),
+   etx_io etx_io (.reset		(etx_io_reset),
 		  /*AUTOINST*/
 		  // Outputs
 		  .txo_lclk_p		(txo_lclk_p),

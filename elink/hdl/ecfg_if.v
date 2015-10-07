@@ -23,7 +23,7 @@ module ecfg_if (/*AUTOARG*/
    /*Clocks/reset                  */
    /********************************/  
    input             clk;  
-   input             reset;
+   input             reset;   //async reset
 
    /********************************/
    /*Incoming Packet               */
@@ -137,7 +137,7 @@ module ecfg_if (/*AUTOARG*/
    //Access out packet  
    assign access_forward = (mi_rx_en | mi_rd);
 
-   always @ (posedge clk)
+   always @ (posedge clk or posedge reset)
      if(reset)
        access_out   <= 1'b0;
      else if(~wait_in)

@@ -2,16 +2,16 @@ module axi_elink(/*AUTOARG*/
    // Outputs
    rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n,
    txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
-   txo_data_n, e_chipid, e_resetb, e_cclk_p, e_cclk_n,
-   mailbox_not_empty, mailbox_full, m_axi_awid, m_axi_awaddr,
-   m_axi_awlen, m_axi_awsize, m_axi_awburst, m_axi_awlock,
-   m_axi_awcache, m_axi_awprot, m_axi_awqos, m_axi_awvalid, m_axi_wid,
-   m_axi_wdata, m_axi_wstrb, m_axi_wlast, m_axi_wvalid, m_axi_bready,
-   m_axi_arid, m_axi_araddr, m_axi_arlen, m_axi_arsize, m_axi_arburst,
-   m_axi_arlock, m_axi_arcache, m_axi_arprot, m_axi_arqos,
-   m_axi_arvalid, m_axi_rready, s_axi_arready, s_axi_awready,
-   s_axi_bid, s_axi_bresp, s_axi_bvalid, s_axi_rid, s_axi_rdata,
-   s_axi_rlast, s_axi_rresp, s_axi_rvalid, s_axi_wready,
+   txo_data_n, chipid, chip_resetb, cclk_p, cclk_n, mailbox_not_empty,
+   mailbox_full, m_axi_awid, m_axi_awaddr, m_axi_awlen, m_axi_awsize,
+   m_axi_awburst, m_axi_awlock, m_axi_awcache, m_axi_awprot,
+   m_axi_awqos, m_axi_awvalid, m_axi_wid, m_axi_wdata, m_axi_wstrb,
+   m_axi_wlast, m_axi_wvalid, m_axi_bready, m_axi_arid, m_axi_araddr,
+   m_axi_arlen, m_axi_arsize, m_axi_arburst, m_axi_arlock,
+   m_axi_arcache, m_axi_arprot, m_axi_arqos, m_axi_arvalid,
+   m_axi_rready, s_axi_arready, s_axi_awready, s_axi_bid, s_axi_bresp,
+   s_axi_bvalid, s_axi_rid, s_axi_rdata, s_axi_rlast, s_axi_rresp,
+   s_axi_rvalid, s_axi_wready,
    // Inputs
    reset, sys_clk, rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n,
    rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
@@ -62,9 +62,9 @@ module axi_elink(/*AUTOARG*/
    /********************************/
    /*EPIPHANY INTERFACE (I/O PINS) */
    /********************************/          
-   output [11:0] e_chipid;	        //chip id strap pins for Epiphany
-   output 	 e_resetb;              //chip reset for Epiphany (active low)
-   output 	 e_cclk_p,e_cclk_n;     //high speed clock (up to 1GHz) to Epiphany
+   output [11:0] chipid;	        //chip id strap pins for Epiphany
+   output 	 chip_resetb;              //chip reset for Epiphany (active low)
+   output 	 cclk_p,cclk_n;     //high speed clock (up to 1GHz) to Epiphany
    
    /*****************************/
    /*MAILBOX (interrupts)       */
@@ -184,17 +184,12 @@ module axi_elink(/*AUTOARG*/
    /*#############################################*/
    
    /*AUTOINPUT*/
-
+  
   
    // End of automatics
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			elink_en;		// From elink of elink.v
-   wire			elink_reset;		// From eclocks of eclocks.v
-   wire			rx_lclk;		// From eclocks of eclocks.v
-   wire			rx_lclk_div4;		// From eclocks of eclocks.v
-   wire			rx_lclk_pll;		// From elink of elink.v
    wire			rxrd_access;		// From elink of elink.v
    wire [PW-1:0]	rxrd_packet;		// From elink of elink.v
    wire			rxrd_wait;		// From emaxi of emaxi.v
@@ -205,9 +200,6 @@ module axi_elink(/*AUTOARG*/
    wire [PW-1:0]	rxwr_packet;		// From elink of elink.v
    wire			rxwr_wait;		// From emaxi of emaxi.v
    wire			timeout;		// From elink of elink.v
-   wire			tx_lclk;		// From eclocks of eclocks.v
-   wire			tx_lclk90;		// From eclocks of eclocks.v
-   wire			tx_lclk_div4;		// From eclocks of eclocks.v
    wire			txrd_access;		// From esaxi of esaxi.v
    wire [PW-1:0]	txrd_packet;		// From esaxi of esaxi.v
    wire			txrd_wait;		// From elink of elink.v
@@ -227,11 +219,9 @@ module axi_elink(/*AUTOARG*/
    defparam elink.IOSTD_ELINK = IOSTD_ELINK;
    defparam elink.ETYPE       = ETYPE;
 
-   elink elink(.reset			(elink_reset),
-	       .por_reset		(reset),       //por reset needed for elink_en
+   elink elink(.sys_reset		(reset),       //por reset needed for elink_en
 	       /*AUTOINST*/
 	       // Outputs
-	       .rx_lclk_pll		(rx_lclk_pll),
 	       .rxo_wr_wait_p		(rxo_wr_wait_p),
 	       .rxo_wr_wait_n		(rxo_wr_wait_n),
 	       .rxo_rd_wait_p		(rxo_rd_wait_p),
@@ -242,8 +232,10 @@ module axi_elink(/*AUTOARG*/
 	       .txo_frame_n		(txo_frame_n),
 	       .txo_data_p		(txo_data_p[7:0]),
 	       .txo_data_n		(txo_data_n[7:0]),
-	       .e_chipid		(e_chipid[11:0]),
-	       .elink_en		(elink_en),
+	       .chipid			(chipid[11:0]),
+	       .cclk_p			(cclk_p),
+	       .cclk_n			(cclk_n),
+	       .chip_resetb		(chip_resetb),
 	       .mailbox_not_empty	(mailbox_not_empty),
 	       .mailbox_full		(mailbox_full),
 	       .timeout			(timeout),
@@ -258,11 +250,6 @@ module axi_elink(/*AUTOARG*/
 	       .txrr_wait		(txrr_wait),
 	       // Inputs
 	       .sys_clk			(sys_clk),
-	       .tx_lclk			(tx_lclk),
-	       .tx_lclk90		(tx_lclk90),
-	       .tx_lclk_div4		(tx_lclk_div4),
-	       .rx_lclk			(rx_lclk),
-	       .rx_lclk_div4		(rx_lclk_div4),
 	       .rxi_lclk_p		(rxi_lclk_p),
 	       .rxi_lclk_n		(rxi_lclk_n),
 	       .rxi_frame_p		(rxi_frame_p),
@@ -283,28 +270,7 @@ module axi_elink(/*AUTOARG*/
 	       .txrr_access		(txrr_access),
 	       .txrr_packet		(txrr_packet[PW-1:0]));
 
-   //########################################################
-   //CLOCK AND RESET
-   //########################################################
-
-   eclocks eclocks (.rx_clkin		(rx_lclk_pll),
-		    /*AUTOINST*/
-		    // Outputs
-		    .tx_lclk		(tx_lclk),
-		    .tx_lclk90		(tx_lclk90),
-		    .tx_lclk_div4	(tx_lclk_div4),
-		    .rx_lclk		(rx_lclk),
-		    .rx_lclk_div4	(rx_lclk_div4),
-		    .e_cclk_p		(e_cclk_p),
-		    .e_cclk_n		(e_cclk_n),
-		    .elink_reset	(elink_reset),
-		    .e_resetb		(e_resetb),
-		    // Inputs
-		    .reset		(reset),
-		    .elink_en		(elink_en),
-		    .sys_clk		(sys_clk));
-   
-   
+    
    //########################################################
    //AXI SLAVE
    //########################################################
