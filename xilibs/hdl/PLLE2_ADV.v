@@ -91,11 +91,13 @@ module PLLE2_ADV #(
    //   
    integer 	j;   
    reg [2*phases-1:0] 	delay;
-   always @ (CLKIN1)
-     begin	
-	for(j=0; j<(2*phases); j=j+1)
-	  delay[j] <= #(CLKIN1_PERIOD*j/(2*phases)) CLKIN1;
-     end
+   always @ (CLKIN1 or reset)
+     if(reset)
+       for(j=0; j<(2*phases); j=j+1)
+	 delay[j] <= 1'b0;   
+     else
+       for(j=0; j<(2*phases); j=j+1)
+	 delay[j] <= #(CLKIN1_PERIOD*j/(2*phases)) CLKIN1;
    
    reg [(phases)-1:0] 	clk_comb;
     always @ (delay)
