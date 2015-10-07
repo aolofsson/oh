@@ -1,0 +1,108 @@
+2015.1:
+ * Version 12.0 (Rev. 4)
+ * Delivering  non encrypted behavioral models.
+ * Enabled out-of-context clock frequency setting by adding FREQ_HZ parameter to clock ports
+ * Enabling behavioral simulation for Built-in FIFO configurations changes the simulation file names and delivery structure.
+ * Supported devices and production status are now determined automatically, to simplify support for future devices
+
+2014.4.1:
+ * Version 12.0 (Rev. 3)
+ * No changes
+
+2014.4:
+ * Version 12.0 (Rev. 3)
+ * Reduced DRC warnings.
+ * Internal device family change, no functional changes
+ * Encrypted source files are concatenated together to reduce the number of files and to reduce simulator compile time
+
+2014.3:
+ * Version 12.0 (Rev. 2)
+ * Added support for Asynchronous AXI Stream Packet FIFO for UltraScale devices.
+ * Added support for write data count and read data count for Asynchronous AXI Stream Packet FIFO for UltraScale devices.
+ * Added support for write data count and read data count for Common Clock Block RAM FIFO when Asymmetric Port Width option is enabled for UltraScale devices.
+ * Added support for Low Latency Built-in FIFO for UltraScale devices.
+
+2014.2:
+ * Version 12.0 (Rev. 1)
+ * Repackaged to improve internal automation, no functional changes.
+
+2014.1:
+ * Version 12.0
+ * Asynchronous reset port (rst) for Built-in FIFO configurations is removed for UltraScale Built-in FIFO configurations. When upgrading from previously released core, 'rst' port will be replaced by 'srst' port.
+ * Synchronous reset (srst) mechanism is changed now for UltraScale devices. FIFO Generator will now provide wr_rst_busy and rd_rst_busy output ports. When wr_rst_busy is active low, the core is ready for write operation and when rd_rst_busy is active low, the core is ready for read operation.
+ * Added asymmetric port width support for Common Clock Block RAM FIFO, Common Clock Built-in FIFO and Independent Clocks Built-in FIFO configurations for UltraScale Devices
+ * Added 'sleep' input port for Common Clock Built-in FIFO and Independent Clocks Built-in FIFO configurations only for UltraScale Devices
+ * Internal device family name change, no functional changes
+
+2013.4:
+ * Version 11.0 (Rev. 1)
+ * Added support for Ultrascale devices
+ * Common Clock Builtin FIFO is set as default implementation type only for UltraScale devices
+ * Embedded Register option is always ON for Block RAM and Builtin FIFOs only for UltraScale devices
+ * Reset is sampled with respect to wr_clk/clk and then synchronized before the use in FIFO Generator only for UltraScale devices
+
+2013.3:
+ * Version 11.0
+ * AXI ID Tags (s_axi_wid and m_axi_wid) are now determined by AXI protocol type (AXI4, AXI3). When upgrading from previously released core, these signals will be removed when AXI_Type = AXI4_Full.
+ * AXI Lock signals (s_axi_awlock, m_axi_awlock, s_axi_arlock and m_axi_arlock) are now determined by AXI Protocol type (AXI4, AXI3). When upgrading from previously released core, these signals width will reduce from 2-bits to 1-bit when AXI_Type=AXI4_Full
+ * Removed restriction on packet size in AXI4 Stream FIFO mode. Now, the packet size can be up to FIFO depth
+ * Enhanced support for IP Integrator
+ * Reduced warnings in synthesis and simulation
+ * Added support for Cadence IES and Synopsys VCS simulators
+ * Improved GUI speed and responsiveness, no functional changes
+ * Increased the maximum number of synchronization stages from 4 to 8. The minimum FIFO depth is limited to 32 when number of synchronization stages is > 4
+
+2013.2:
+ * Version 10.0 (Rev. 1)
+ * Constraints processing order changed
+
+2013.1:
+ * Version 10.0
+ * Native Vivado Release
+ * There have been no functional or interface changes to this IP.  The version number has changed to support unique versioning in Vivado starting with 2013.1.
+
+(c) Copyright 2002 - 2015 Xilinx, Inc. All rights reserved.
+
+This file contains confidential and proprietary information
+of Xilinx, Inc. and is protected under U.S. and
+international copyright and other intellectual property
+laws.
+
+DISCLAIMER
+This disclaimer is not a license and does not grant any
+rights to the materials distributed herewith. Except as
+otherwise provided in a valid license issued to you by
+Xilinx, and to the maximum extent permitted by applicable
+law: (1) THESE MATERIALS ARE MADE AVAILABLE "AS IS" AND
+WITH ALL FAULTS, AND XILINX HEREBY DISCLAIMS ALL WARRANTIES
+AND CONDITIONS, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING
+BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, NON-
+INFRINGEMENT, OR FITNESS FOR ANY PARTICULAR PURPOSE; and
+(2) Xilinx shall not be liable (whether in contract or tort,
+including negligence, or under any other theory of
+liability) for any loss or damage of any kind or nature
+related to, arising under or in connection with these
+materials, including for any direct, or any indirect,
+special, incidental, or consequential loss or damage
+(including loss of data, profits, goodwill, or any type of
+loss or damage suffered as a result of any action brought
+by a third party) even if such damage or loss was
+reasonably foreseeable or Xilinx had been advised of the
+possibility of the same.
+
+CRITICAL APPLICATIONS
+Xilinx products are not designed or intended to be fail-
+safe, or for use in any application requiring fail-safe
+performance, such as life-support or safety devices or
+systems, Class III medical devices, nuclear facilities,
+applications related to the deployment of airbags, or any
+other applications that could lead to death, personal
+injury, or severe property or environmental damage
+(individually and collectively, "Critical
+Applications"). Customer assumes the sole risk and
+liability of any use of Xilinx products in Critical
+Applications, subject only to applicable laws and
+regulations governing limitations on product liability.
+
+THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
+PART OF THIS FILE AT ALL TIMES.
