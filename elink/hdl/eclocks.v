@@ -37,8 +37,8 @@ module eclocks (/*AUTOARG*/
    parameter FREQ_TXCLK      = 300;
    parameter FREQ_IDELAY     = 200;   
    parameter FREQ_CCLK       = 600;  
-   parameter TXCLK_PHASE     = 90;  //txclk phase shift
-   parameter RXCLK_PHASE     = 0;   //rxclk phase shift
+   parameter TXCLK_PHASE     = 90;   //txclk phase shift
+   parameter RXCLK_PHASE     = 0;    //270;  //-90 deg rxclk phase shift
    
    //VCO multiplers
    parameter MMCM_VCO_MULT   = 12;  //TX + CCLK
@@ -314,8 +314,8 @@ module eclocks (/*AUTOARG*/
        .CLKOUT1_PHASE(0.0),
        .CLKOUT2_PHASE(0.0),
        .CLKOUT3_PHASE(0.0),
-       .CLKOUT4_PHASE(0.0),
-       .CLKOUT5_PHASE(0.0),
+       .CLKOUT4_PHASE(RXCLK_PHASE),
+       .CLKOUT5_PHASE(RXCLK_PHASE/4),
        .DIVCLK_DIVIDE(1.0), 
        .REF_JITTER1(0.01), 
        .STARTUP_WAIT("FALSE") 
