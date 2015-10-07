@@ -125,7 +125,7 @@ module emmu (/*AUTOARG*/
    //assumes one cycle memory access!     
 
 
-    always @ (posedge  rd_clk)     
+    always @ (posedge  rd_clk or posedge reset)     
      if (reset)
        begin
 	  emesh_access_out         <= 1'b0;	  
