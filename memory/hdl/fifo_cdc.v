@@ -13,7 +13,7 @@ module fifo_cdc (/*AUTOARG*/
    );
 
    parameter DW    = 104;
-   parameter DEPTH     = 16;
+   parameter DEPTH = 32;
 
    /********************************/
    /*Incoming Packet               */
@@ -46,15 +46,15 @@ module fifo_cdc (/*AUTOARG*/
    assign wait_out =  full;
 
    //Keep access high until "acknowledge"
-   always @ (posedge clk_out)
+   always @ (posedge clk_out or posedge reset_out)
      if(reset_out)
        access_out <=1'b0;   
      else if(~wait_in)
        access_out <=rd_en;
 
    //Read response fifo (from master)
-   defparam fifo.DW=DW;
-   defparam fifo.DEPTH=DEPTH;
+   defparam fifo.DW    = DW;
+   defparam fifo.DEPTH = DEPTH;
 
    fifo_async  fifo (.prog_full		(full),//stay safe for now
 		     .full		(),

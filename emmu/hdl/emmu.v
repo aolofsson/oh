@@ -34,7 +34,7 @@ module emmu (/*AUTOARG*/
    /*****************************/
    /*DATAPATH CLOCk             */
    /*****************************/  
-   input 	     reset;
+   input 	     reset;               //async reset
    input 	     rd_clk;
    input 	     wr_clk;
 

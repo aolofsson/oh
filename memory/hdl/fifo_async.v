@@ -1,4 +1,4 @@
-`include "../../elink/hdl/elink_constants.v"
+//`include "../../elink/hdl/elink_constants.v"
 module fifo_async 
    (/*AUTOARG*/
    // Outputs
@@ -8,7 +8,7 @@ module fifo_async
    );
    
    parameter DW    = 104;        //FIFO width
-   parameter DEPTH = 16;          //FIFO depth
+   parameter DEPTH = 32;          //FIFO depth
      
    //##########
    //# RESET/CLOCK
@@ -22,7 +22,7 @@ module fifo_async
    //# FIFO WRITE
    //##########
    input             wr_en;   
-   input [DW-1:0] din;
+   input [DW-1:0]    din;
    output            full;
    output            prog_full;
 
@@ -56,26 +56,7 @@ module fifo_async
    
 `elsif TARGET_XILINX   
    generate
-      if((DW==104) & (DEPTH==16))
-	begin
-	   fifo_async_104x16 fifo_async_104x16 (.full		(),
-						.prog_full	(prog_full),
-						.almost_full	(full),
-						/*AUTOINST*/
-						// Outputs
-						.dout		(dout[DW-1:0]),
-						.empty		(empty),
-						.valid		(valid),
-						// Inputs
-						.wr_rst		(wr_rst),
-						.rd_rst		(rd_rst),
-						.wr_clk		(wr_clk),
-						.rd_clk		(rd_clk),
-						.wr_en		(wr_en),
-						.din		(din[DW-1:0]),
-						.rd_en		(rd_en));	   
-	end
-      else if((DW==104) & (DEPTH==32))
+      if((DW==104) & (DEPTH==32))
 	begin
 	   fifo_async_104x32 fifo_async_104x32 (.full		(),
 						.prog_full	(prog_full),
@@ -94,7 +75,9 @@ module fifo_async
 						.din		(din[DW-1:0]),
 						.rd_en		(rd_en));
 	   
-	end   
+	end 
+
+      
 	      
    endgenerate
    
