@@ -14,7 +14,7 @@ module dv_elink_tb();
 /* verilator lint_off UNOPTFLAT */
    //REGS
    reg           clk;
-   reg 		 reset;   
+   reg 		 reset=1'b0;   
    reg 		 go;
    reg [1:0] 	 datamode;
    reg 		 ext_access;
@@ -58,7 +58,7 @@ module dv_elink_tb();
    //Reset
    initial
      begin
-	#0
+	#10
 	  reset    = 1'b1;    // reset is active
           start    = 1'b0;
 	  clk      = 1'b0;
@@ -74,7 +74,7 @@ module dv_elink_tb();
 `endif
 	  reset    = 1'b0;    // at time 100 release reset
 	#4000
-	  start       = 1'b1;	
+	  start     = 1'b1;	
 	#10000	  
 	  $finish;
      end
