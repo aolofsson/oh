@@ -79,9 +79,9 @@ module PLLE2_ADV #(
 	POR=1'b0;	
      end
 
-   reg reset;
-   always @ (posedge CLKIN1)
-     reset <= POR | RST;
+   //async reset
+   wire reset;
+   assign reset = POR | RST;
    
    //########################################################################
    //# CLOCK MULTIPLIER
