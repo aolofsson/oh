@@ -17,7 +17,7 @@ module esaxi (/*autoarg*/
    );
    
    parameter [11:0]  ID                  = 12'h810;
-   parameter         IDW                 = 12;
+   parameter         S_IDW               = 12;
    parameter         PW                  = 104;
    parameter [15:0]  RETURN_ADDR         = {ID,`EGROUP_RR};
    parameter         AW                  = 32;
@@ -52,7 +52,7 @@ module esaxi (/*autoarg*/
    input 	  s_axi_aresetn;
    
    //Read address channel
-   input [IDW-1:0] s_axi_arid;    //write address ID
+   input [S_IDW-1:0] s_axi_arid;    //write address ID
    input [31:0]    s_axi_araddr;
    input [1:0] 	   s_axi_arburst;
    input [3:0] 	   s_axi_arcache;
@@ -65,7 +65,7 @@ module esaxi (/*autoarg*/
    input 	   s_axi_arvalid;
    
    //Write address channel
-   input [IDW-1:0] s_axi_awid;    //write address ID
+   input [S_IDW-1:0] s_axi_awid;    //write address ID
    input [31:0]    s_axi_awaddr;
    input [1:0] 	   s_axi_awburst;
    input [3:0] 	   s_axi_awcache;
@@ -78,13 +78,13 @@ module esaxi (/*autoarg*/
    output 	   s_axi_awready;
    
    //Buffered write response channel
-   output [IDW-1:0] s_axi_bid;    //write address ID
+   output [S_IDW-1:0] s_axi_bid;    //write address ID
    output [1:0]     s_axi_bresp;
    output 	    s_axi_bvalid;
    input 	    s_axi_bready;
    
    //Read channel
-   output [IDW-1:0] s_axi_rid;    //write address ID
+   output [S_IDW-1:0] s_axi_rid;    //write address ID
    output [31:0]    s_axi_rdata;
    output 	    s_axi_rlast;   
    output [1:0]     s_axi_rresp;
@@ -92,7 +92,7 @@ module esaxi (/*autoarg*/
    input 	    s_axi_rready;
 
    //Write channel
-   input [IDW-1:0]  s_axi_wid;    //write address ID
+   input [S_IDW-1:0]  s_axi_wid;    //write address ID
    input [31:0]     s_axi_wdata;
    input 	    s_axi_wlast;   
    input [3:0] 	    s_axi_wstrb;
@@ -112,7 +112,7 @@ module esaxi (/*autoarg*/
    reg [31:0] 	      axi_awaddr;  // 32b for epiphany addr
    reg [1:0] 	      axi_awburst;
    reg [2:0] 	      axi_awsize;
-   reg [IDW-1:0]      axi_bid;     //what to do with this?
+   reg [S_IDW-1:0]      axi_bid;     //what to do with this?
  
    reg [31:0] 	      axi_araddr;
    reg [7:0] 	      axi_arlen;
@@ -123,7 +123,7 @@ module esaxi (/*autoarg*/
    reg [1:0] 	      s_axi_rresp;
    reg 		      s_axi_rlast;
    reg 		      s_axi_rvalid;
-   reg [IDW-1:0]      s_axi_rid;
+   reg [S_IDW-1:0]      s_axi_rid;
    
    reg 		      read_active;
    reg [31:0] 	      read_addr;
@@ -239,7 +239,7 @@ module esaxi (/*autoarg*/
    always @( posedge s_axi_aclk ) 
      if (~s_axi_aresetn)  
        begin
-          axi_bid[IDW-1:0]   <= 'd0;  // capture for write response
+          axi_bid[S_IDW-1:0]   <= 'd0;  // capture for write response
           axi_awaddr[31:0]   <= 32'd0;
           axi_awsize[2:0]    <= 3'd0;
           axi_awburst[1:0]   <= 2'd0;         
@@ -248,7 +248,7 @@ module esaxi (/*autoarg*/
        begin	  
           if( s_axi_awready & s_axi_awvalid ) 
 	    begin	     
-	       axi_bid[IDW-1:0] <= s_axi_awid[IDW-1:0];
+	       axi_bid[S_IDW-1:0] <= s_axi_awid[S_IDW-1:0];
                axi_awaddr[31:0] <= s_axi_awaddr[31:0];
                axi_awsize[2:0]  <= s_axi_awsize[2:0];  // 0=byte, 1=16b, 2=32b
                axi_awburst[1:0] <= s_axi_awburst[1:0]; // type, 0=fixed, 1=incr, 2=wrap
@@ -338,7 +338,7 @@ module esaxi (/*autoarg*/
            axi_arburst        <= 2'd0;
            axi_arsize[2:0]    <= 3'b0;
            s_axi_rlast        <= 1'b0;
-           s_axi_rid[IDW-1:0] <= 'd0;         
+           s_axi_rid[S_IDW-1:0] <= 'd0;         
 	end
       else 
 	begin         
@@ -349,7 +349,7 @@ module esaxi (/*autoarg*/
               axi_arburst        <= s_axi_arburst;
               axi_arsize         <= s_axi_arsize;
               s_axi_rlast        <= ~(|s_axi_arlen[7:0]);
-              s_axi_rid[IDW-1:0] <= s_axi_arid[IDW-1:0];              
+              s_axi_rid[S_IDW-1:0] <= s_axi_arid[S_IDW-1:0];              
          end 
 	 else if( s_axi_rvalid & s_axi_rready) 
 	   begin	      

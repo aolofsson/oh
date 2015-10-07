@@ -228,6 +228,7 @@ module axi_elink(/*AUTOARG*/
    defparam elink.ETYPE       = ETYPE;
 
    elink elink(.reset			(elink_reset),
+	       .por_reset		(reset),       //por reset needed for elink_en
 	       /*AUTOINST*/
 	       // Outputs
 	       .rx_lclk_pll		(rx_lclk_pll),
@@ -243,6 +244,9 @@ module axi_elink(/*AUTOARG*/
 	       .txo_data_n		(txo_data_n[7:0]),
 	       .e_chipid		(e_chipid[11:0]),
 	       .elink_en		(elink_en),
+	       .mailbox_not_empty	(mailbox_not_empty),
+	       .mailbox_full		(mailbox_full),
+	       .timeout			(timeout),
 	       .rxwr_access		(rxwr_access),
 	       .rxwr_packet		(rxwr_packet[PW-1:0]),
 	       .rxrd_access		(rxrd_access),
@@ -252,9 +256,6 @@ module axi_elink(/*AUTOARG*/
 	       .txwr_wait		(txwr_wait),
 	       .txrd_wait		(txrd_wait),
 	       .txrr_wait		(txrr_wait),
-	       .mailbox_not_empty	(mailbox_not_empty),
-	       .mailbox_full		(mailbox_full),
-	       .timeout			(timeout),
 	       // Inputs
 	       .sys_clk			(sys_clk),
 	       .tx_lclk			(tx_lclk),
@@ -308,7 +309,7 @@ module axi_elink(/*AUTOARG*/
    //AXI SLAVE
    //########################################################
    
-   defparam esaxi.IDW=S_IDW;
+   defparam esaxi.S_IDW=S_IDW;
    esaxi esaxi (.s_axi_aclk		(sys_clk),
 		/*AUTOINST*/
 		// Outputs
@@ -366,7 +367,7 @@ module axi_elink(/*AUTOARG*/
    //AXI MASTER INTERFACE
    //########################################################
 
-   defparam emaxi.IDW=M_IDW;
+   defparam emaxi.M_IDW=M_IDW;
    emaxi emaxi (.m_axi_aclk		(sys_clk),
 		/*AUTOINST*/
 		// Outputs

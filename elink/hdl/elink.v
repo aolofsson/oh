@@ -2,13 +2,13 @@ module elink(/*AUTOARG*/
    // Outputs
    rx_lclk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n,
-   txo_data_p, txo_data_n, e_chipid, elink_en, rxwr_access,
-   rxwr_packet, rxrd_access, rxrd_packet, rxrr_access, rxrr_packet,
-   txwr_wait, txrd_wait, txrr_wait, mailbox_not_empty, mailbox_full,
-   timeout,
+   txo_data_p, txo_data_n, e_chipid, elink_en, mailbox_not_empty,
+   mailbox_full, timeout, rxwr_access, rxwr_packet, rxrd_access,
+   rxrd_packet, rxrr_access, rxrr_packet, txwr_wait, txrd_wait,
+   txrr_wait,
    // Inputs
-   reset, sys_clk, tx_lclk, tx_lclk90, tx_lclk_div4, rx_lclk,
-   rx_lclk_div4, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
+   por_reset, reset, sys_clk, tx_lclk, tx_lclk90, tx_lclk_div4,
+   rx_lclk, rx_lclk_div4, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
    rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
    txi_rd_wait_p, txi_rd_wait_n, rxwr_wait, rxrd_wait, rxrr_wait,
    txwr_access, txwr_packet, txrd_access, txrd_packet, txrr_access,
@@ -25,6 +25,7 @@ module elink(/*AUTOARG*/
    /****************************/
    /*CLOCK AND RESET           */
    /****************************/
+   input        por_reset;     // por reset for elink en
    input        reset;         // hardware reset
    input 	sys_clk;       // a single system clock for master/slave FIFOs
    input 	tx_lclk;       // fast tx clock for IO
@@ -136,6 +137,7 @@ module elink(/*AUTOARG*/
    defparam ecfg_elink.ID=ID;
    
    ecfg_elink ecfg_elink (.clk		        (sys_clk),
+			  .reset		(por_reset),          
 			  /*AUTOINST*/
 			  // Outputs
 			  .txwr_gated_access	(txwr_gated_access),
@@ -144,8 +146,7 @@ module elink(/*AUTOARG*/
 			  .e_chipid		(e_chipid[11:0]),
 			  // Inputs
 			  .txwr_access		(txwr_access),
-			  .txwr_packet		(txwr_packet[PW-1:0]),
-			  .reset		(reset));
+			  .txwr_packet		(txwr_packet[PW-1:0]));
 
    /***********************************************************/
    /*RESET CIRCUITRY                                          */

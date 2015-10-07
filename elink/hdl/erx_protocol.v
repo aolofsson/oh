@@ -64,8 +64,11 @@ module erx_protocol (/*AUTOARG*/
       
    
    //Pipeline stage and decode  
-   always @ (posedge clk)
-     begin
+   always @ (posedge clk or posedge reset)
+     if (reset)
+       erx_rr_access       <= 1'b0;   
+     else
+       begin
 	//Write/read request
 	erx_rdwr_access     <= rx_access & ~read_response;      
 	//Read response

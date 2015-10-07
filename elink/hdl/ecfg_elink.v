@@ -98,19 +98,20 @@ module ecfg_elink (/*AUTOARG*/
                                                    ecfg_chipid_write);
    
    //###########################
-   //# RESET REG
+   //# RESET REG (ASYNC)
    //###########################
-    always @ (posedge clk)
+    always @ (posedge clk or posedge reset)
       if(reset)
 	ecfg_reset_reg <= 1'b0;         
       else if (ecfg_reset_write)
 	ecfg_reset_reg <= mi_din[0];  
 
-   assign elink_en    = ~ecfg_reset_reg;
+   assign elink_en    =~ecfg_reset_reg; //always on, TODO: fix!
      
    //###########################
    //# CCLK/LCLK (PLL)
    //###########################
+   //TODO: implement!
     always @ (posedge clk)
      if(reset)
        ecfg_clk_reg[15:0] <= 16'h573;//all clocks on at lowest speed   

@@ -83,14 +83,15 @@ module erx_io (/*AUTOARG*/
    always @ (posedge rx_lclk)
      reset_sync <= reset;
    
-
     //#####################
    //#CREATE 112 BIT PACKET 
    //#####################
    
    //write Pointer   
-   always @ (posedge rx_lclk)
-     if (~rx_frame)
+   always @ (posedge rx_lclk or posedge reset)
+     if(reset)
+       rx_pointer[6:0] <= 7'b0;   
+     else if (~rx_frame)
        rx_pointer[6:0] <= 7'b0000001; //new frame
      else if (rx_pointer[6])
        rx_pointer[6:0] <= 7'b0001000; //anticipate burst
@@ -122,15 +123,23 @@ module erx_io (/*AUTOARG*/
    //####################
 
 
-   always @ (posedge rx_lclk)
-     begin     
-	access       <= rx_pointer[6];
-	valid_packet <= access;//data pipeline
-     end
+   always @ (posedge rx_lclk or posedge reset)
+     if(reset)
+       begin
+	  access       <= 1'b0;
+	  valid_packet <= 1'b0;	  
+       end
+     else
+       begin     
+	  access       <= rx_pointer[6];
+	  valid_packet <= access;//data pipeline
+       end
 
    reg burst_detect;   
-   always @ (posedge rx_lclk)
-     if(access & rx_frame)
+   always @ (posedge rx_lclk or posedge reset)
+     if(reset)
+       burst_detect <= 1'b0;   
+     else if(access & rx_frame)
        burst_detect <= 1'b1;
      else if(~rx_frame)
        burst_detect <= 1'b0;
@@ -187,12 +196,15 @@ module erx_io (/*AUTOARG*/
 	.out(access_wide),
 	.in(valid_packet),
 	.clk(rx_lclk),
-	.reset(reset_sync));
+	.reset(reset));
 
    
-   always @ (posedge rx_lclk_div4)
-     rx_access <= access_wide;
-   
+   always @ (posedge rx_lclk_div4 or posedge reset)
+     if(reset)
+       rx_access <= 1'b0;   
+     else
+       rx_access <= access_wide;
+      
    always @ (posedge rx_lclk_div4)
      if(access_wide)
        begin
@@ -319,7 +331,7 @@ module erx_io (/*AUTOARG*/
 		   .C  (rx_lclk),//rx_lclk_iddr
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[i]),
-		   .R  (reset_sync),
+		   .R  (reset),
 		   .S  (1'b0)
 		   );
      end
@@ -333,7 +345,7 @@ module erx_io (/*AUTOARG*/
 		   .C  (rx_lclk),//rx_lclk_iddr
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[8]),
-		   .R  (reset_sync),
+		   .R  (reset),
 		   .S  (1'b0)
 		   );
    

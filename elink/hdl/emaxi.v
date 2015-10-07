@@ -49,7 +49,7 @@ module emaxi(/*autoarg*/
    m_axi_rresp, m_axi_rlast, m_axi_rvalid
    );
 
-   parameter IDW    = 12;
+   parameter M_IDW  = 12;
    parameter PW     = 104;
    parameter AW     = 32;
    parameter DW     = 32;
@@ -82,7 +82,7 @@ module emaxi(/*autoarg*/
    input  	       m_axi_aresetn; // global reset singal.
 
    //Write address channel
-   output [IDW-1:0]    m_axi_awid;    // write address ID
+   output [M_IDW-1:0]    m_axi_awid;    // write address ID
    output [31 : 0]     m_axi_awaddr;  // master interface write address   
    output [7 : 0]      m_axi_awlen;   // burst length.
    output [2 : 0]      m_axi_awsize;  // burst size.
@@ -95,7 +95,7 @@ module emaxi(/*autoarg*/
    input 	       m_axi_awready; // write address ready
 
    //Write data channel
-   output [IDW-1:0]    m_axi_wid;     
+   output [M_IDW-1:0]    m_axi_wid;     
    output [63 : 0]     m_axi_wdata;   // master interface write data.
    output [7 : 0]      m_axi_wstrb;   // byte write strobes
    output 	       m_axi_wlast;   // indicates last transfer in a write burst.
@@ -103,13 +103,13 @@ module emaxi(/*autoarg*/
    input 	       m_axi_wready;  // indicates that the slave is ready for data
 
    //Write response channel
-   input [IDW-1:0]     m_axi_bid;
+   input [M_IDW-1:0]     m_axi_bid;
    input [1 : 0]       m_axi_bresp;   // status of the write transaction.
    input 	       m_axi_bvalid;  // channel is signaling a valid write response
    output 	       m_axi_bready;  // master can accept write response.
 
    //Read address channel
-   output [IDW-1:0]    m_axi_arid;    // read address ID
+   output [M_IDW-1:0]    m_axi_arid;    // read address ID
    output [31 : 0]     m_axi_araddr;  // initial address of a read burst
    output [7 : 0]      m_axi_arlen;   // burst length
    output [2 : 0]      m_axi_arsize;  // burst size
@@ -122,7 +122,7 @@ module emaxi(/*autoarg*/
    input 	       m_axi_arready; // slave is ready to accept an address
 
    //Read data channel   
-   input [IDW-1:0]     m_axi_rid; 
+   input [M_IDW-1:0]     m_axi_rid; 
    input [63 : 0]      m_axi_rdata;   // master read data
    input [1 : 0]       m_axi_rresp;   // status of the read transfer
    input 	       m_axi_rlast;   // signals last transfer in a read burst

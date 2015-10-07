@@ -122,12 +122,11 @@ module eclocks (/*AUTOARG*/
   
    reg [RCW:0] reset_counter = 'b0; //works b/c of free running counter!
    reg 	       heartbeat;   
-   reg 	       reset_in;
+   wire	       reset_in;
    reg 	       reset_sync;
 
    reg [2:0]   reset_state;
 
-   
    //wrap around counter that generates a 1 cycle heartbeat       
    //free running counter...
    always @ (posedge sys_clk)
@@ -141,12 +140,12 @@ module eclocks (/*AUTOARG*/
      begin
 	//TODO: Does rx_lclk always run when cclk does? Restb ?
         rx_locked_reg     <= lclk_locked;	
-        rx_locked_sync    <=  rx_locked_reg;	
-	cclk_locked_reg    <= cclk_locked; // & clk_locked 
-	cclk_locked_sync   <= cclk_locked_reg;	
-	reset_sync        <= (reset | ~elink_en);
-	reset_in          <= reset_sync;
+        rx_locked_sync    <= rx_locked_reg;	
+	cclk_locked_reg   <= cclk_locked; // & clk_locked 
+	cclk_locked_sync  <= cclk_locked_reg;	
      end
+
+  
    
 `define RESET_ALL        3'b000
 `define START_CCLK       3'b001
@@ -158,13 +157,13 @@ module eclocks (/*AUTOARG*/
 
    //Reset sequence state machine
    
-   always @ (posedge sys_clk)
-     if(reset_in)
-       reset_state[2:0]          <= `RESET_ALL;   
+   always @ (posedge sys_clk or posedge reset)
+     if(reset)
+       reset_state[2:0]        <= `RESET_ALL;   
      else if(heartbeat)
        case(reset_state[2:0])
 	 `RESET_ALL :
-	   reset_state[2:0]      <= `START_CCLK;	 
+	   reset_state[2:0]    <= `START_CCLK;	 
 	 `START_CCLK :
 	   if(cclk_locked_sync)
 	     reset_state[2:0]  <= `STOP_CCLK; 
@@ -178,7 +177,8 @@ module eclocks (/*AUTOARG*/
 	 `TX_ACTIVE :
 	   reset_state[2:0]    <= `ACTIVE;
 	 `ACTIVE:
-	   reset_state[2:0]    <= `ACTIVE; //stay there until nex reset
+	   if(~elink_en)
+	     reset_state[2:0]    <= `RESET_ALL; //stay there until nex reset
 
        endcase // case (reset_state[2:0])
 
@@ -188,21 +188,26 @@ module eclocks (/*AUTOARG*/
    //TODO: this is a bug if the RX gets a clock that is not a turnaround from TX
    assign pll_reset   =  (reset_state[2:0] != `ACTIVE);
     
-   assign idelay_reset =  (reset_state[2:0]==`RESET_ALL) |
-			  (reset_state[2:0]==`START_CCLK);
+   assign idelay_reset =  (reset_state[2:0]==`RESET_ALL)  |
+			  (reset_state[2:0]==`START_CCLK) |
+			  reset;
    
-   assign cclk_reset =  (reset_state[2:0]==`RESET_ALL) |
-			(reset_state[2:0]==`STOP_CCLK) | 
-			(reset_state[2:0]==`START_EPIPHANY);
+   assign cclk_reset =  (reset_state[2:0]==`RESET_ALL)      |
+			(reset_state[2:0]==`STOP_CCLK)      |  
+			(reset_state[2:0]==`START_EPIPHANY) |
+			reset
+			;
    
    assign e_resetb    =  (reset_state[2:0]==`START_EPIPHANY) |
-		         (reset_state[2:0]==`HOLD_IT) |
-		         (reset_state[2:0]==`ACTIVE) |
-   		         (reset_state[2:0]==`TX_ACTIVE);
+		         (reset_state[2:0]==`HOLD_IT)        |
+		         (reset_state[2:0]==`ACTIVE)         |
+   		         (reset_state[2:0]==`TX_ACTIVE)
+			 ;
    
 
-   assign elink_reset  =  (reset_state[2:0] != `TX_ACTIVE) &
-			  (reset_state[2:0] != `ACTIVE);
+   assign elink_reset  =  reset |
+			  ~((reset_state[2:0] == `TX_ACTIVE) |
+			    (reset_state[2:0] == `ACTIVE));
    
 			     
 `ifdef TARGET_XILINX	
