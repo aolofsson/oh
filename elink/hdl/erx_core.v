@@ -1,8 +1,8 @@
 module erx_core (/*AUTOARG*/
    // Outputs
-   rx_rd_wait, rx_wr_wait, rxrd_access, rxrd_packet, rxrr_access,
-   rxrr_packet, rxwr_access, rxwr_packet, erx_cfg_wait, mailbox_full,
-   mailbox_not_empty,
+   rx_rd_wait, rx_wr_wait, idelay_value, load_taps, rxrd_access,
+   rxrd_packet, rxrr_access, rxrr_packet, rxwr_access, rxwr_packet,
+   erx_cfg_wait, mailbox_full, mailbox_not_empty,
    // Inputs
    reset, clk, rx_packet, rx_access, rx_burst, rxrd_wait, rxrr_wait,
    rxwr_wait, erx_cfg_access, erx_cfg_packet
@@ -25,6 +25,8 @@ module erx_core (/*AUTOARG*/
    input 		rx_burst;
    output 		rx_rd_wait;
    output 		rx_wr_wait;
+   output [39:0] 	idelay_value;
+   output 		load_taps;
    
    //FIFO Access
    output		rxrd_access;
@@ -289,6 +291,7 @@ module erx_core (/*AUTOARG*/
 		    .remap_base		(remap_base[31:0]),
 		    .remap_pattern	(remap_pattern[11:0]),
 		    .remap_sel		(remap_sel[11:0]),
+		    .idelay_value	(idelay_value[39:0]),
 		    // Inputs
 		    .reset		(reset),
 		    .clk		(clk),

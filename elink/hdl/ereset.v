@@ -24,12 +24,15 @@ module ereset (/*AUTOARG*/
    
    
    //erx reset synchronizer
-   synchronizer sync_erx (.out	 (erx_resetb),
+   /*
+    
+    synchronizer sync_erx (.out	 (erx_resetb),
 			  .in	 (1'b1),
 			  .clk	 (rx_lclk_div4),
 			  .reset (reset)
 			  );
-
+    */
+    
    //etx reset synchronizer
    synchronizer sync_etx (.out	 (etx_resetb),
 			  .in	 (1'b1),
@@ -45,8 +48,8 @@ module ereset (/*AUTOARG*/
 			   );
 
    assign etx_reset =~etx_resetb;
-   assign erx_reset =~erx_resetb;
    assign sys_reset =~sys_resetb;
+   assign erx_reset = reset;     //async reset! can't guarantee rx clock
    
 endmodule // ereset
 // Local Variables:

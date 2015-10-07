@@ -8,30 +8,14 @@ module erx_io (/*AUTOARG*/
    rx_lclk_pll, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, rx_access, rx_burst, rx_packet,
    // Inputs
-   reset, rx_lclk, rx_lclk_div4, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
-   rxi_frame_n, rxi_data_p, rxi_data_n, rx_wr_wait, rx_rd_wait
+   reset, rx_lclk, rx_lclk_div4, idelay_value, load_taps, rxi_lclk_p,
+   rxi_lclk_n, rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n,
+   rx_wr_wait, rx_rd_wait
    );
    parameter IOSTD_ELINK = "LVDS_25";  
    parameter PW          = 104;
    parameter ETYPE       = 1;//0=parallella
                              //1=ephycard     
-   
-   // Can we do this in a better way?
-   //parameter [3:0] RX_TAP_DELAY [8:0]=;
-   //parameter  RX_TAP_DELAY = 1;
-
-   parameter [5*10:0] RX_TAP_DELAY ={5'd0,  //clk
-				     5'd12, //frame
-				     5'd12, //d7
-				     5'd12, //d6
-				     5'd12, //d5
-				     5'd12, //d4
-				     5'd12, //d3
-				     5'd12, //d2
-				     5'd12, //d1
-				     5'd12  //d0
-				   };
-   
    
    //#########################
    //# reset, clocks
@@ -40,7 +24,13 @@ module erx_io (/*AUTOARG*/
    input       rx_lclk;                     // fast I/O clock
    input       rx_lclk_div4;                // slow clock
    output      rx_lclk_pll;                 // clock output for pll
-   
+
+   //#########################
+   //# idelays
+   //#########################
+   input [39:0] idelay_value;
+   input 	load_taps;
+
    //##########################
    //# elink pins
    //##########################
@@ -292,27 +282,27 @@ module erx_io (/*AUTOARG*/
 	IDELAYE2 #(.CINVCTRL_SEL("FALSE"),
 		   .DELAY_SRC("IDATAIN"), 
 		   .HIGH_PERFORMANCE_MODE("FALSE"),
-		   .IDELAY_TYPE("FIXED"),
-		   .IDELAY_VALUE(RX_TAP_DELAY[(j+1)*5-1:j*5]),
+		   .IDELAY_TYPE("VAR_LOAD"),
+		   .IDELAY_VALUE(5'b0),
 		   .PIPE_SEL("FALSE"),
 		   .REFCLK_FREQUENCY(200.0),
 		   .SIGNAL_PATTERN("DATA"))
-	idelay_inst (.CNTVALUEOUT(),                   
-		     .DATAOUT(rxi_delay_out[j]),
-		     .C(1'b0),
-		     .CE(1'b0),
-		     .CINVCTRL(1'b0),
-		     .CNTVALUEIN(5'b0),
-		     .DATAIN(1'b0),
-		     .IDATAIN(rxi_delay_in[j]),
-		     .INC(1'b0),
-		     .LD(1'b0),
-		     .LDPIPEEN(1'b0),
-		     .REGRST(1'b0)
+
+	idelay_inst (.CNTVALUEOUT(),             // monitoring value       
+		     .DATAOUT(rxi_delay_out[j]), // delayed data
+		     .C(rx_lclk_div4),           // variable tap delay clock 
+		     .CE(1'b0),                  // inc/dec tap value
+		     .CINVCTRL(1'b0),            // inverts clock polarity 
+		     .CNTVALUEIN(idelay_value[(j+1)*5-1:j*5]), //variable tap
+		     .DATAIN(1'b0),              // data from FPGA
+		     .IDATAIN(rxi_delay_in[j]),  // data from ibuf
+		     .INC(1'b0),                 // increment tap
+		     .LD(load_taps),             // load new  
+		     .LDPIPEEN(1'b0),            // only for pipeline mode
+		     .REGRST(1'b0)               // only for pipeline mode
 		     );
      end // block: gen_idelay
    endgenerate
-
    
    //#############################
    //# IDDR SAMPLERS

@@ -9,7 +9,7 @@
 module erx_cfg (/*AUTOARG*/
    // Outputs
    mi_dout, rx_enable, mmu_enable, remap_mode, remap_base,
-   remap_pattern, remap_sel, timer_cfg,
+   remap_pattern, remap_sel, timer_cfg, idelay_value, load_taps,
    // Inputs
    reset, clk, mi_en, mi_we, mi_addr, mi_din, gpio_datain, rx_status
    );
@@ -25,6 +25,7 @@ module erx_cfg (/*AUTOARG*/
    /******************************/
    input 	reset;       // ecfg registers reset only by "hard reset"
    input 	clk;
+
    /*****************************/
    /*SIMPLE MEMORY INTERFACE    */
    /*****************************/    
@@ -47,6 +48,8 @@ module erx_cfg (/*AUTOARG*/
    output [11:0] remap_pattern;  // patter for static remap (static)
    output [11:0] remap_sel;      // selects for static remap (static)
    output [1:0]  timer_cfg;      // timeout config (00=off) (static)
+   output [39:0] idelay_value;   // tap values for erx idelay
+   output        load_taps;      // loads the idelay_value into IDELAY prim
    
    /*------------------------CODE BODY---------------------------------------*/
    
@@ -54,15 +57,19 @@ module erx_cfg (/*AUTOARG*/
    reg [31:0] 	ecfg_rx_reg;
    reg [31:0] 	ecfg_offset_reg;
    reg [8:0] 	ecfg_gpio_reg;
-   reg [2:0] 	ecfg_rx_status_reg;
+   reg [2:0] 	ecfg_rx_status_reg;   
+   reg [63:0] 	ecfg_idelay_reg;
+   reg 		load_taps;   
    reg [31:0] 	mi_dout;
    
    //wires
    wire 	ecfg_read;
    wire 	ecfg_write;
    wire 	ecfg_rx_write;
-   wire  	ecfg_base_write;
+   wire  	ecfg_offset_write;
    wire  	ecfg_remap_write;
+   wire  	ecfg_idelay0_write;
+   wire  	ecfg_idelay1_write;
    
    /*****************************/
    /*ADDRESS DECODE LOGIC       */
@@ -74,12 +81,14 @@ module erx_cfg (/*AUTOARG*/
 
    //Config write enables
    assign ecfg_rx_write      = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_CFG);
-   assign ecfg_base_write    = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_OFFSET);
-   
+   assign ecfg_offset_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_OFFSET);
+   assign ecfg_idelay0_write = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_IDELAY0);
+   assign ecfg_idelay1_write = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_IDELAY1);
+
    //###########################
    //# RXCFG
    //###########################
-   always @ (posedge clk)
+   always @ (posedge clk or posedge reset)
      if(reset)
        ecfg_rx_reg[31:0] <= 'b0;
      else if (ecfg_rx_write)
@@ -101,7 +110,7 @@ module erx_cfg (/*AUTOARG*/
    //###########################1
    //# DEBUG
    //###########################   
-   always @ (posedge clk)
+   always @ (posedge clk or posedge reset)
      if(reset)
        ecfg_rx_status_reg[2:0] <= 'b0;   
      else
@@ -111,11 +120,27 @@ module erx_cfg (/*AUTOARG*/
    //# DYNAMIC REMAP BASE
    //###########################
    always @ (posedge clk)   
-     if (ecfg_base_write)
+     if (ecfg_offset_write)
        ecfg_offset_reg[31:0] <= mi_din[31:0];
 
    assign remap_base[31:0] = ecfg_offset_reg[31:0];
-   
+
+   //###########################1
+   //# IDELAY TAP VALUES
+   //###########################
+   always @ (posedge clk or posedge reset) 
+     if(reset)
+       ecfg_idelay_reg[63:0]  <= 'b0;   
+     else if (ecfg_idelay0_write)
+       ecfg_idelay_reg[31:0]  <= mi_din[31:0];
+     else if(ecfg_idelay1_write)
+       ecfg_idelay_reg[63:32] <= mi_din[31:0];
+
+   assign idelay_value[39:0] = {ecfg_idelay_reg[41:32],ecfg_idelay_reg[29:0]};
+
+   always @ (posedge clk)
+     load_taps <= ecfg_idelay1_write;
+      
    //###############################
    //# DATA READBACK MUX
    //###############################

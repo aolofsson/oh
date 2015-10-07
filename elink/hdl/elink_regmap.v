@@ -4,9 +4,9 @@
 //MEMORY MAP
 
 //[31:20] = LINKID
-//[19:16] = GROUP SELECT
+//[19:16] = GROUP SELECT 
 //[15]    = MMU SELECT (for RX/TX)
-//[14:11]  = USED BY MMU ONLY
+//[14:11] = USED BY MMU ONLY
 //[10:8]  = register group
 //[7:2]   = REGISTER ADDRESS (0..63)
 //[1:0]   = IGNORED (no byte access)
@@ -32,6 +32,8 @@
 `define ERX_OFFSET     6'd3 //F030C-memory base for remap
 `define E_MAILBOXLO    6'd4 //F0314-reserved-->move?
 `define E_MAILBOXHI    6'd5 //F0318-reserved
+`define ERX_IDELAY0    6'd6 //F0320-tap delay for d[3:0]
+`define ERX_IDELAY1    6'd7 //F0324-tap delays for {frame,d[7:4]}
 
 //DMA (same numbering as in Epiphany, limit to 4 channels)
 `define DMACFG         5'd0 //F0500/F0520
