@@ -45,8 +45,21 @@ module IDELAYE2 (/*AUTOARG*/
 
    initial
      begin
-	$display("Delay %d %m",IDELAY_VALUE);	
+	//$display("Delay %d %m",IDELAY_VALUE);	
      end
+
+   reg [4:0] idelay_reg=5'b0;
+
+   
+
+   always @ (posedge C)
+     if(LD)   
+       begin
+	  idelay_reg[4:0] <= CNTVALUEIN[4:0];  
+	  $display("Delay %d",idelay_reg[4:0]);	
+	 end
+   
+			  
 endmodule // IDELAYE2
 
 
