@@ -60,8 +60,9 @@ module erx (/*AUTOARG*/
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire			erx_io_reset;		// From erx_clocks of erx_clocks.v
    wire			erx_reset;		// From erx_clocks of erx_clocks.v
-   wire [39:0]		idelay_value;		// From erx_core of erx_core.v
+   wire [44:0]		idelay_value;		// From erx_core of erx_core.v
    wire			load_taps;		// From erx_core of erx_core.v
    wire			rx_access;		// From erx_io of erx_io.v
    wire			rx_burst;		// From erx_io of erx_io.v
@@ -90,6 +91,7 @@ module erx (/*AUTOARG*/
 			 .rx_lclk		(rx_lclk),
 			 .rx_lclk_div4		(rx_lclk_div4),
 			 .erx_reset		(erx_reset),
+			 .erx_io_reset		(erx_io_reset),
 			 // Inputs
 			 .sys_reset		(sys_reset),
 			 .soft_reset		(soft_reset),
@@ -101,7 +103,7 @@ module erx (/*AUTOARG*/
    /***********************************************************/
    defparam erx_io.IOSTD_ELINK=IOSTD_ELINK;
    defparam erx_io.ETYPE=ETYPE;   
-   erx_io erx_io (.reset		(erx_reset),
+   erx_io erx_io (
 		  /*AUTOINST*/
 		  // Outputs
 		  .rx_clkin		(rx_clkin),
@@ -113,9 +115,11 @@ module erx (/*AUTOARG*/
 		  .rx_burst		(rx_burst),
 		  .rx_packet		(rx_packet[PW-1:0]),
 		  // Inputs
+		  .erx_io_reset		(erx_io_reset),
+		  .erx_reset		(erx_reset),
 		  .rx_lclk		(rx_lclk),
 		  .rx_lclk_div4		(rx_lclk_div4),
-		  .idelay_value		(idelay_value[39:0]),
+		  .idelay_value		(idelay_value[44:0]),
 		  .load_taps		(load_taps),
 		  .rxi_lclk_p		(rxi_lclk_p),
 		  .rxi_lclk_n		(rxi_lclk_n),
@@ -149,7 +153,7 @@ module erx (/*AUTOARG*/
 		      // Outputs
 		      .rx_rd_wait	(rx_rd_wait),		 // Templated
 		      .rx_wr_wait	(rx_wr_wait),		 // Templated
-		      .idelay_value	(idelay_value[39:0]),
+		      .idelay_value	(idelay_value[44:0]),
 		      .load_taps	(load_taps),
 		      .rxrd_access	(rxrd_fifo_access),	 // Templated
 		      .rxrd_packet	(rxrd_fifo_packet[PW-1:0]), // Templated

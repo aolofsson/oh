@@ -1,7 +1,7 @@
 `include "elink_constants.v"
 module erx_clocks (/*AUTOARG*/
    // Outputs
-   rx_lclk, rx_lclk_div4, erx_reset,
+   rx_lclk, rx_lclk_div4, erx_reset, erx_io_reset,
    // Inputs
    sys_reset, soft_reset, sys_clk, rx_clkin
    );
@@ -33,8 +33,10 @@ module erx_clocks (/*AUTOARG*/
    output     rx_lclk;           // rx high speed clock for DDR IO
    output     rx_lclk_div4;      // rx slow clock for logic
 
-   output     erx_reset;         // async reset for logic
-    
+   //Reset
+   output     erx_reset;         // reset for rx core logic
+   output     erx_io_reset;      // io reset (synced to high speed clock)
+   
    //Don't touch these! (derived parameters)
    localparam real    RXCLK_PERIOD  = 1000.000000/FREQ_RXCLK; 
    localparam integer IREF_DIVIDE   = PLL_VCO_MULT*FREQ_RXCLK/FREQ_IDELAY;
@@ -69,7 +71,8 @@ module erx_clocks (/*AUTOARG*/
    reg 	       pll_locked_sync;     
    reg [2:0]   reset_state;
    wire        pll_reset;
-
+   reg [1:0]   reset_pipe_lclkb;    
+   reg [1:0]   reset_pipe_lclk_div4b;   
    
    //wrap around counter that generates a 1 cycle heartbeat       
    //free running counter...
@@ -114,8 +117,32 @@ module erx_clocks (/*AUTOARG*/
    assign idelay_reset =  (reset_state[2:0]==`RESET_ALL);
 
    //asynch rx reset
-   assign erx_reset    =  (reset_state[2:0]!=`ACTIVE);
+   assign rx_reset    =  (reset_state[2:0]!=`ACTIVE);
+
+   //#############################
+   //#RESET SYNC
+   //#############################
+   //async assert
+   //sync deassert
    
+   //lclk sync
+   always @ (posedge rx_lclk or posedge rx_reset)
+     if(rx_reset)
+       reset_pipe_lclkb[1:0] <= 2'b00;
+     else
+       reset_pipe_lclkb[1:0]  <= {reset_pipe_lclkb[0], 1'b1};   
+
+   assign erx_io_reset = ~reset_pipe_lclkb[1];
+
+   //lclkdiv4 sync
+   always @ (posedge rx_lclk_div4 or posedge rx_reset)
+      if(rx_reset)
+	reset_pipe_lclk_div4b[1:0] <= 2'b00;
+      else
+	reset_pipe_lclk_div4b[1:0]  <= {reset_pipe_lclk_div4b[0],1'b1};   
+
+   assign erx_reset  = ~reset_pipe_lclk_div4b[1];
+      
 `ifdef TARGET_XILINX	
 
    //###########################

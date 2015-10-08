@@ -48,7 +48,7 @@ module erx_cfg (/*AUTOARG*/
    output [11:0] remap_pattern;  // patter for static remap (static)
    output [11:0] remap_sel;      // selects for static remap (static)
    output [1:0]  timer_cfg;      // timeout config (00=off) (static)
-   output [39:0] idelay_value;   // tap values for erx idelay
+   output [44:0] idelay_value;   // tap values for erx idelay
    output        load_taps;      // loads the idelay_value into IDELAY prim
    
    /*------------------------CODE BODY---------------------------------------*/
@@ -136,7 +136,7 @@ module erx_cfg (/*AUTOARG*/
      else if(ecfg_idelay1_write)
        ecfg_idelay_reg[63:32] <= mi_din[31:0];
 
-   assign idelay_value[39:0] = {ecfg_idelay_reg[41:32],ecfg_idelay_reg[29:0]};
+   assign idelay_value[44:0] = {ecfg_idelay_reg[46:32],ecfg_idelay_reg[29:0]};
 
    always @ (posedge clk)
      load_taps <= ecfg_idelay1_write;

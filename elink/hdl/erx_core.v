@@ -25,7 +25,7 @@ module erx_core (/*AUTOARG*/
    input 		rx_burst;
    output 		rx_rd_wait;
    output 		rx_wr_wait;
-   output [39:0] 	idelay_value;
+   output [44:0] 	idelay_value;
    output 		load_taps;
    
    //FIFO Access
@@ -287,7 +287,7 @@ module erx_core (/*AUTOARG*/
 		    .remap_base		(remap_base[31:0]),
 		    .remap_pattern	(remap_pattern[11:0]),
 		    .remap_sel		(remap_sel[11:0]),
-		    .idelay_value	(idelay_value[39:0]),
+		    .idelay_value	(idelay_value[44:0]),
 		    .load_taps		(load_taps),
 		    // Inputs
 		    .reset		(reset),
