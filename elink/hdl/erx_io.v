@@ -321,7 +321,7 @@ module erx_io (/*AUTOARG*/
    genvar        i;
    generate for(i=0; i<8; i=i+1)
      begin : gen_iddr           
-	IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"), .SRTYPE("ASYNC"))
+	IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"), .SRTYPE("SYNC"))
 	iddr_data (
 		   .Q1 (rx_word[i]),
 		   .Q2 (rx_word[i+8]),
@@ -335,7 +335,7 @@ module erx_io (/*AUTOARG*/
      endgenerate
 
    //FRAME
-   IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"), .SRTYPE("ASYNC"))
+   IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"), .SRTYPE("SYNC"))
 	iddr_frame (
 		   .Q1 (rx_frame),
 		   .Q2 (),    
