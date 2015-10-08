@@ -19,9 +19,8 @@ module emmu (/*AUTOARG*/
    // Outputs
    mi_dout, emesh_access_out, emesh_packet_out, emesh_packet_hi_out,
    // Inputs
-   reset, rd_clk, wr_clk, mmu_en, mmu_bp, mi_en, mi_we, mi_addr,
-   mi_din, emesh_access_in, emesh_packet_in, emesh_rd_wait,
-   emesh_wr_wait
+   rd_clk, wr_clk, mmu_en, mmu_bp, mi_en, mi_we, mi_addr, mi_din,
+   emesh_access_in, emesh_packet_in, emesh_rd_wait, emesh_wr_wait
    );
    parameter DW     = 32;         //data width
    parameter AW     = 32;         //address width 
@@ -34,7 +33,6 @@ module emmu (/*AUTOARG*/
    /*****************************/
    /*DATAPATH CLOCk             */
    /*****************************/  
-   input 	     reset;               //async reset
    input 	     rd_clk;
    input 	     wr_clk;
 
@@ -125,16 +123,11 @@ module emmu (/*AUTOARG*/
    //assumes one cycle memory access!     
 
 
-    always @ (posedge  rd_clk or posedge reset)     
-     if (reset)
-       begin
-	  emesh_access_out         <= 1'b0;	  
-       end
-     else if((write_in & ~emesh_wr_wait) | (~write_in & ~emesh_rd_wait))
-       begin
-	  emesh_access_out         <= emesh_access_in;
+    always @ (posedge  rd_clk)          
+      begin
+	 emesh_access_out         <= emesh_access_in;
 	  emesh_packet_reg[PW-1:0] <= emesh_packet_in[PW-1:0];	  
-       end
+      end
      	 
    assign emesh_dstaddr_out[63:0] = (mmu_en & ~mmu_bp) ? {emmu_lookup_data[43:0], emesh_packet_reg[27:8]} :
 				                         {32'b0,emesh_packet_reg[39:8]}; 
