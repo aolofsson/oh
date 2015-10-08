@@ -81,6 +81,7 @@ module erx_core (/*AUTOARG*/
    wire [1:0]		remap_mode;		// From erx_cfg of erx_cfg.v
    wire [11:0]		remap_pattern;		// From erx_cfg of erx_cfg.v
    wire [11:0]		remap_sel;		// From erx_cfg of erx_cfg.v
+   wire			test_mode;		// From erx_cfg of erx_cfg.v
    // End of automatics
 
      
@@ -109,6 +110,7 @@ module erx_core (/*AUTOARG*/
 			      // Inputs
 			      .clk		(clk),
 			      .reset		(reset),
+			      .test_mode	(test_mode),
 			      .rx_packet	(rx_packet[PW-1:0]),
 			      .rx_burst		(rx_burst),
 			      .rx_access	(rx_access));
@@ -289,6 +291,7 @@ module erx_core (/*AUTOARG*/
 		    .remap_sel		(remap_sel[11:0]),
 		    .idelay_value	(idelay_value[44:0]),
 		    .load_taps		(load_taps),
+		    .test_mode		(test_mode),
 		    // Inputs
 		    .reset		(reset),
 		    .clk		(clk),

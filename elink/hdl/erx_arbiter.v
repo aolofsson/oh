@@ -22,6 +22,7 @@ module erx_arbiter (/*AUTOARG*/
    output          rx_rd_wait; //for IO
    output          rx_wr_wait; //for IO
 
+   
    //From EMMU (writes)  
    input           emmu_access;
    input [PW-1:0]  emmu_packet;

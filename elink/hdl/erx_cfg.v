@@ -10,8 +10,10 @@ module erx_cfg (/*AUTOARG*/
    // Outputs
    mi_dout, rx_enable, mmu_enable, remap_mode, remap_base,
    remap_pattern, remap_sel, timer_cfg, idelay_value, load_taps,
+   test_mode,
    // Inputs
-   reset, clk, mi_en, mi_we, mi_addr, mi_din, gpio_datain, rx_status
+   reset, clk, mi_en, mi_we, mi_addr, mi_din, erx_test_access,
+   erx_test_data, gpio_datain, rx_status
    );
 
    /******************************/
@@ -34,6 +36,10 @@ module erx_cfg (/*AUTOARG*/
    input [14:0]  mi_addr;          // complete physical address (no shifting!)
    input [31:0]  mi_din;
    output [31:0] mi_dout;   
+
+   //test interface
+   input 	 erx_test_access;
+   input [31:0]  erx_test_data;
    
    /*****************************/
    /*CONFIG SIGNALS             */
@@ -50,6 +56,7 @@ module erx_cfg (/*AUTOARG*/
    output [1:0]  timer_cfg;      // timeout config (00=off) (static)
    output [44:0] idelay_value;   // tap values for erx idelay
    output        load_taps;      // loads the idelay_value into IDELAY prim
+   output 	 test_mode;      // testmode blocks all rx ports to fifo
    
    /*------------------------CODE BODY---------------------------------------*/
    
@@ -61,6 +68,7 @@ module erx_cfg (/*AUTOARG*/
    reg [63:0] 	ecfg_idelay_reg;
    reg 		load_taps;   
    reg [31:0] 	mi_dout;
+   reg [31:0] 	ecfg_testdata_reg;
    
    //wires
    wire 	ecfg_read;
@@ -70,6 +78,7 @@ module erx_cfg (/*AUTOARG*/
    wire  	ecfg_remap_write;
    wire  	ecfg_idelay0_write;
    wire  	ecfg_idelay1_write;
+   wire         ecfg_testdata_write;
    
    /*****************************/
    /*ADDRESS DECODE LOGIC       */
@@ -80,11 +89,11 @@ module erx_cfg (/*AUTOARG*/
    assign ecfg_read   = mi_en & ~mi_we;   
 
    //Config write enables
-   assign ecfg_rx_write      = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_CFG);
-   assign ecfg_offset_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_OFFSET);
-   assign ecfg_idelay0_write = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_IDELAY0);
-   assign ecfg_idelay1_write = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_IDELAY1);
-
+   assign ecfg_rx_write       = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_CFG);
+   assign ecfg_offset_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_OFFSET);
+   assign ecfg_idelay0_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_IDELAY0);
+   assign ecfg_idelay1_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_IDELAY1);
+   assign ecfg_testdata_write = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_TESTDATA);
    //###########################
    //# RXCFG
    //###########################
@@ -94,7 +103,7 @@ module erx_cfg (/*AUTOARG*/
      else if (ecfg_rx_write)
        ecfg_rx_reg[31:0] <= mi_din[31:0];
 
-   assign rx_enable           = 1'b1;
+   assign test_mode           = ecfg_rx_reg[0];
    assign mmu_enable          = ecfg_rx_reg[1];
    assign remap_mode[1:0]     = ecfg_rx_reg[3:2];
    assign remap_sel[11:0]     = ecfg_rx_reg[15:4];
@@ -140,7 +149,17 @@ module erx_cfg (/*AUTOARG*/
 
    always @ (posedge clk)
      load_taps <= ecfg_idelay1_write;
-      
+
+   
+   //###############################
+   //# TESTMODE
+   //###############################  
+   always @ (posedge clk)
+     if(ecfg_testdata_write)
+       ecfg_testdata_reg[31:0] <= mi_din[31:0];
+     else if(erx_test_access)   
+       ecfg_testdata_reg[31:0] <= ecfg_testdata_reg[31:0] + erx_test_data[31:0];
+   
    //###############################
    //# DATA READBACK MUX
    //###############################
@@ -149,11 +168,12 @@ module erx_cfg (/*AUTOARG*/
    always @ (posedge clk)
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
-         `ERX_CFG:     mi_dout[31:0] <= {ecfg_rx_reg[31:0]};
-         `ERX_GPIO:    mi_dout[31:0] <= {23'b0, ecfg_gpio_reg[8:0]};
-	 `ERX_STATUS:  mi_dout[31:0] <= {16'b0, rx_status[15:3],ecfg_rx_status_reg[2:0]};
-	 `ERX_OFFSET:  mi_dout[31:0] <= {ecfg_offset_reg[31:0]};
-         default:      mi_dout[31:0] <= 32'd0;
+         `ERX_CFG:      mi_dout[31:0] <= {ecfg_rx_reg[31:0]};
+         `ERX_GPIO:     mi_dout[31:0] <= {23'b0, ecfg_gpio_reg[8:0]};
+	 `ERX_STATUS:   mi_dout[31:0] <= {16'b0, rx_status[15:3],ecfg_rx_status_reg[2:0]};
+	 `ERX_OFFSET:   mi_dout[31:0] <= {ecfg_offset_reg[31:0]};
+	 `ERX_TESTDATA: mi_dout[31:0] <= {ecfg_testdata_reg[31:0]};
+         default:       mi_dout[31:0] <= 32'd0;
        endcase // case (mi_addr[RFAW+1:2])
      else
        mi_dout[31:0] <= 32'd0;
