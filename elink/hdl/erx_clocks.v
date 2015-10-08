@@ -171,8 +171,8 @@ module erx_clocks (/*AUTOARG*/
        .CLKOUT1_PHASE(0.0),
        .CLKOUT2_PHASE(0.0),
        .CLKOUT3_PHASE(0.0),
-       .CLKOUT4_PHASE(RXCLK_PHASE),
-       .CLKOUT5_PHASE(RXCLK_PHASE/4),
+       .CLKOUT4_PHASE(0.0),//RXCLK_PHASE
+       .CLKOUT5_PHASE(0.0),//RXCLK_PHASE/4
        .DIVCLK_DIVIDE(1.0), 
        .REF_JITTER1(0.01), 
        .STARTUP_WAIT("FALSE") 
@@ -207,7 +207,9 @@ module erx_clocks (/*AUTOARG*/
    BUFG idelay_ref_bufg_i   (.I(idelay_ref_clk_pll), .O(idelay_ref_clk));//idelay ctrl clock
    
    //Feedback buffers
-   BUFG lclk_fb_bufg_i0(.I(rx_lclk_fb_in), .O(rx_lclk_fb_out));           //feedback
+   BUFG lclk_fb_bufg_i0(.I(rx_lclk_fb_out), 
+			.O(rx_lclk_fb_in)
+			);
    
    //###########################
    // Idelay controller
