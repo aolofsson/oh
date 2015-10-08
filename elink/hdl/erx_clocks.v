@@ -3,7 +3,7 @@ module erx_clocks (/*AUTOARG*/
    // Outputs
    rx_lclk, rx_lclk_div4, erx_reset, erx_io_reset,
    // Inputs
-   sys_reset, soft_reset, sys_clk, rx_clkin
+   sys_reset, soft_reset, tx_active, sys_clk, rx_clkin
    );
 
 `ifdef SIM
@@ -24,6 +24,7 @@ module erx_clocks (/*AUTOARG*/
    //Input clock, reset, config interface
    input      sys_reset;         // por reset (hw)
    input      soft_reset;        // rx enable signal (sw)
+   input      tx_active;         // tx active
    
    //Main input clocks
    input      sys_clk;            // always on input clk cclk/TX MMCM
@@ -96,8 +97,8 @@ module erx_clocks (/*AUTOARG*/
 
    //Reset sequence state machine
    
-   always @ (posedge sys_clk or posedge sys_reset)
-     if(sys_reset)
+   always @ (posedge sys_clk or posedge reset_in)
+     if(reset_in)
        reset_state[2:0]        <= `RESET_ALL;   
      else if(heartbeat)
        case(reset_state[2:0])
@@ -113,6 +114,7 @@ module erx_clocks (/*AUTOARG*/
        endcase // case (reset_state[2:0])
    
    //reset PLL during 'reset' and during quiet time around reset edge
+   assign reset_in     =  sys_reset | ~tx_active;   
    assign pll_reset    =  (reset_state[2:0]==`RESET_ALL);   
    assign idelay_reset =  (reset_state[2:0]==`RESET_ALL);
 

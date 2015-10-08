@@ -1,8 +1,9 @@
 module etx(/*AUTOARG*/
    // Outputs
-   txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
-   txo_data_n, cclk_p, cclk_n, chip_resetb, txrd_wait, txwr_wait,
-   txrr_wait, etx_cfg_access, etx_cfg_packet,
+   tx_active, txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n,
+   txo_data_p, txo_data_n, cclk_p, cclk_n, chip_resetb, txrd_wait,
+   txwr_wait, txrr_wait, etx_cfg_access, etx_cfg_packet, etx_reset,
+   tx_lclk_div4,
    // Inputs
    sys_reset, soft_reset, sys_clk, txi_wr_wait_p, txi_wr_wait_n,
    txi_rd_wait_p, txi_rd_wait_n, txrd_access, txrd_packet,
@@ -16,13 +17,17 @@ module etx(/*AUTOARG*/
    parameter IOSTD_ELINK = "LVDS_25";
    parameter ETYPE       = 1;   
 
-   //Synched resets
-   input 	  sys_reset;                   // reset for fifos   
-   input 	  soft_reset;		       // software controlled reset
-
+   //Reset and clocks
+   input 	  sys_reset;                    // reset for fifos   
+   input 	  soft_reset;		        // software controlled reset
+  
+   
    //Clocks
-   input 	  sys_clk;                     // clock for fifos   
-
+   input 	  sys_clk;                      // clock for fifos   
+   
+   //TX boot done
+   output 	  tx_active;		        // tx ready to transmit
+   
    //Transmit signals for IO
    output 	  txo_lclk_p,   txo_lclk_n;     // tx clock output
    output 	  txo_frame_p, txo_frame_n;     // tx frame signal
@@ -52,17 +57,17 @@ module etx(/*AUTOARG*/
    //Configuration Interface (for ERX)
    output 	   etx_cfg_access;
    output [PW-1:0] etx_cfg_packet;
+   output 	   etx_reset;
+   output 	   tx_lclk_div4;
    input 	   etx_cfg_wait;
-         
-   /*AUTOOUTPUT*/
+   
+   /*AUTOOUTPUT*/   
    /*AUTOINPUT*/
         
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			etx_reset;		// From etx_clocks of etx_clocks.v
    wire			tx_lclk;		// From etx_clocks of etx_clocks.v
    wire			tx_lclk90;		// From etx_clocks of etx_clocks.v
-   wire			tx_lclk_div4;		// From etx_clocks of etx_clocks.v
    // End of automatics
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			tx_access;		// From etx_core of etx_core.v
@@ -95,6 +100,7 @@ module etx(/*AUTOARG*/
 			  .cclk_n		(cclk_n),
 			  .etx_reset		(etx_reset),
 			  .chip_resetb		(chip_resetb),
+			  .tx_active		(tx_active),
 			  // Inputs
 			  .sys_reset		(sys_reset),
 			  .soft_reset		(soft_reset),

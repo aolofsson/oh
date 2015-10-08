@@ -153,7 +153,7 @@ module etx_arbiter (/*AUTOARG*/
     always @ (posedge clk)
       if (reset)
 	begin
-	   etx_access         <= 1'b0;   
+	   etx_access        <= 1'b0;   
 	   etx_rr            <= 1'b0;	   
 	end
       else if (access_in & (write_in & ~etx_wr_wait) | (~write_in & ~etx_rd_wait))

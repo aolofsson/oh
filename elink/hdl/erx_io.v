@@ -8,9 +8,9 @@ module erx_io (/*AUTOARG*/
    rx_clkin, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, rx_access, rx_burst, rx_packet,
    // Inputs
-   erx_io_reset, erx_reset, rx_lclk, rx_lclk_div4, idelay_value,
-   load_taps, rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n,
-   rxi_data_p, rxi_data_n, rx_wr_wait, rx_rd_wait
+   erx_io_reset, rx_lclk, rx_lclk_div4, idelay_value, load_taps,
+   rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n, rxi_data_p,
+   rxi_data_n, rx_wr_wait, rx_rd_wait
    );
    parameter IOSTD_ELINK = "LVDS_25";  
    parameter PW          = 104;
@@ -21,7 +21,6 @@ module erx_io (/*AUTOARG*/
    //# reset, clocks
    //#########################
    input       erx_io_reset;                // high sped reset
-   input       erx_reset;                   // low speed reset
    input       rx_lclk;                     // fast I/O clock
    input       rx_lclk_div4;                // slow clock
    output      rx_clkin;                    // clock output for pll
@@ -79,14 +78,15 @@ module erx_io (/*AUTOARG*/
    wire [8:0] 	 rxi_delay_in;
    wire [8:0] 	 rxi_delay_out;
    reg 		 reset_sync;
+   reg 		 burst_detect;
    
     //#####################
    //#CREATE 112 BIT PACKET 
    //#####################
    
    //write Pointer   
-   always @ (posedge rx_lclk or posedge exr_io_reset)
-     if(exr_io_reset)
+   always @ (posedge rx_lclk or posedge erx_io_reset)
+     if(erx_io_reset)
        rx_pointer[6:0] <= 7'b0;   
      else if (~rx_frame)
        rx_pointer[6:0] <= 7'b0000001; //new frame
@@ -118,23 +118,14 @@ module erx_io (/*AUTOARG*/
    //#####################  
    //#DATA VALID SIGNAL 
    //####################
-
-
-   always @ (posedge rx_lclk or posedge exr_io_reset)
-     if(exr_io_reset)
-       begin
-	  access       <= 1'b0;
-	  valid_packet <= 1'b0;	  
-       end
-     else
-       begin     
-	  access       <= rx_pointer[6];
-	  valid_packet <= access;//data pipeline
-       end
-
-   reg burst_detect;   
-   always @ (posedge rx_lclk or posedge exr_io_reset)
-     if(exr_io_reset)
+   always @ (posedge rx_lclk)
+     begin     
+	access       <= rx_pointer[6];
+	valid_packet <= access;//data pipeline
+     end
+ 
+   always @ (posedge rx_lclk or posedge erx_io_reset)
+     if(erx_io_reset)
        burst_detect <= 1'b0;   
      else if(access & rx_frame)
        burst_detect <= 1'b1;
@@ -192,15 +183,10 @@ module erx_io (/*AUTOARG*/
    ps0 (
 	.out(access_wide),
 	.in(valid_packet),
-	.clk(rx_lclk),
-	.reset(exr_io_reset));
-
-   
-   always @ (posedge rx_lclk_div4 or posedge erx_reset)
-     if(erx_reset)
-       rx_access <= 1'b0;   
-     else
-       rx_access <= access_wide;
+	.clk(rx_lclk));
+     
+   always @ (posedge rx_lclk_div4)
+     rx_access <= access_wide;
       
    always @ (posedge rx_lclk_div4)
      if(access_wide)
@@ -328,7 +314,7 @@ module erx_io (/*AUTOARG*/
 		   .C  (rx_lclk),//rx_lclk_iddr
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[i]),
-		   .R  (erx_io_reset),
+		   .R  (1'b0),
 		   .S  (1'b0)
 		   );
      end
@@ -342,7 +328,7 @@ module erx_io (/*AUTOARG*/
 		   .C  (rx_lclk),//rx_lclk_iddr
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[8]),
-		   .R  (erx_io_reset),
+		   .R  (1'b0),
 		   .S  (1'b0)
 		   );
    

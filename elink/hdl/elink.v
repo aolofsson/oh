@@ -115,10 +115,15 @@ module elink(/*AUTOARG*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			erx_cfg_wait;		// From erx of erx.v
+   wire			erx_reset;		// From erx of erx.v
    wire			erx_soft_reset;		// From ecfg_elink of ecfg_elink.v
    wire			etx_cfg_access;		// From etx of etx.v
    wire [PW-1:0]	etx_cfg_packet;		// From etx of etx.v
+   wire			etx_reset;		// From etx of etx.v
    wire			etx_soft_reset;		// From ecfg_elink of ecfg_elink.v
+   wire			rx_lclk_div4;		// From erx of erx.v
+   wire			tx_active;		// From etx of etx.v
+   wire			tx_lclk_div4;		// From etx of etx.v
    wire			txwr_gated_access;	// From ecfg_elink of ecfg_elink.v
    // End of automatics
    
@@ -168,6 +173,8 @@ module elink(/*AUTOARG*/
 	   .rxrr_access			(rxrr_access),
 	   .rxrr_packet			(rxrr_packet[PW-1:0]),
 	   .erx_cfg_wait		(erx_cfg_wait),
+	   .rx_lclk_div4		(rx_lclk_div4),
+	   .erx_reset			(erx_reset),
 	   .timeout			(timeout),
 	   .mailbox_full		(mailbox_full),
 	   .mailbox_not_empty		(mailbox_not_empty),
@@ -175,6 +182,7 @@ module elink(/*AUTOARG*/
 	   .soft_reset			(erx_soft_reset),	 // Templated
 	   .sys_reset			(sys_reset),
 	   .sys_clk			(sys_clk),
+	   .tx_active			(tx_active),
 	   .rxi_lclk_p			(rxi_lclk_p),
 	   .rxi_lclk_n			(rxi_lclk_n),
 	   .rxi_frame_p			(rxi_frame_p),
@@ -206,6 +214,7 @@ module elink(/*AUTOARG*/
    etx etx(
 	   /*AUTOINST*/
 	   // Outputs
+	   .tx_active			(tx_active),
 	   .txo_lclk_p			(txo_lclk_p),
 	   .txo_lclk_n			(txo_lclk_n),
 	   .txo_frame_p			(txo_frame_p),
@@ -220,6 +229,8 @@ module elink(/*AUTOARG*/
 	   .txrr_wait			(txrr_wait),
 	   .etx_cfg_access		(etx_cfg_access),
 	   .etx_cfg_packet		(etx_cfg_packet[PW-1:0]),
+	   .etx_reset			(etx_reset),
+	   .tx_lclk_div4		(tx_lclk_div4),
 	   // Inputs
 	   .sys_reset			(sys_reset),
 	   .soft_reset			(etx_soft_reset),	 // Templated
@@ -248,11 +259,11 @@ module elink(/*AUTOARG*/
 		      .packet_out	(erx_cfg_packet[PW-1:0]),
 		      // Inputs
 		      .clk_in		(tx_lclk_div4),	
-		      .reset_in		(sys_reset),   //Fix this??
+		      .reset_in		(etx_reset),
 		      .access_in	(etx_cfg_access),
 		      .packet_in	(etx_cfg_packet[PW-1:0]),
 		      .clk_out		(rx_lclk_div4),	
-		      .reset_out	(sys_reset),
+		      .reset_out	(erx_reset),
 		      .wait_in		(erx_cfg_wait)
 		      );
    

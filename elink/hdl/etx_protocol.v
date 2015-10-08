@@ -98,7 +98,7 @@ module etx_protocol (/*AUTOARG*/
      if(reset)
        tx_burst <= 1'b0;   
      else       
-       tx_burst          <= (etx_write                  & //write 
+       tx_burst          <= (etx_write                 & //write 
 	       	            (etx_datamode[1:0]==2'b11) & //double only
 			    burst_type_match           & //same types
 			    burst_addr_match);           //inc by 8

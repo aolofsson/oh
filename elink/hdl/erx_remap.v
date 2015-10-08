@@ -2,8 +2,8 @@ module erx_remap (/*AUTOARG*/
    // Outputs
    emesh_access_out, emesh_packet_out,
    // Inputs
-   clk, reset, emesh_access_in, emesh_packet_in, remap_mode,
-   remap_sel, remap_pattern, remap_base
+   clk, emesh_access_in, emesh_packet_in, remap_mode, remap_sel,
+   remap_pattern, remap_base
    );
 
    parameter AW = 32;
@@ -13,7 +13,6 @@ module erx_remap (/*AUTOARG*/
    
    //Clock/reset
    input          clk;
-   input          reset;        //async reset
    
    //Input from arbiter
    input          emesh_access_in;
@@ -68,14 +67,11 @@ module erx_remap (/*AUTOARG*/
 	  		                                dynamic_remap[31:0];
 
 
-   //Access
-   always @ (posedge clk or posedge reset)
-     if (reset)
-       emesh_access_out         <= 1'b0;
-     else
-       emesh_access_out         <= emesh_access_in;
+   //Access pipeline
+   always @ (posedge clk)
+       emesh_access_out <= emesh_access_in;
 
-   //Packet
+   //Packet Remapping
    always @ (posedge clk)    
        emesh_packet_out[PW-1:0] <= {emesh_packet_in[103:40],
                                     remap_mux[31:0],

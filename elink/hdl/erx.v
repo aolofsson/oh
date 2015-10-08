@@ -2,10 +2,10 @@ module erx (/*AUTOARG*/
    // Outputs
    rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n,
    rxwr_access, rxwr_packet, rxrd_access, rxrd_packet, rxrr_access,
-   rxrr_packet, erx_cfg_wait, timeout, mailbox_full,
-   mailbox_not_empty,
+   rxrr_packet, erx_cfg_wait, rx_lclk_div4, erx_reset, timeout,
+   mailbox_full, mailbox_not_empty,
    // Inputs
-   soft_reset, sys_reset, sys_clk, rxi_lclk_p, rxi_lclk_n,
+   soft_reset, sys_reset, sys_clk, tx_active, rxi_lclk_p, rxi_lclk_n,
    rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, rxwr_wait,
    rxrd_wait, rxrr_wait, erx_cfg_access, erx_cfg_packet
    );
@@ -19,9 +19,10 @@ module erx (/*AUTOARG*/
    parameter ETYPE       = 1;   
 
    //Synched resets, clock
-   input          soft_reset;                 // sw driven reset
-   input          sys_reset;                  // async reset
-   input 	  sys_clk;	              // system clock for fifo/clocks
+   input          soft_reset;                   // sw driven reset
+   input          sys_reset;                    // async reset
+   input 	  sys_clk;	                // system clock for fifo/clocks
+   input 	  tx_active;                    // holds rx in check until tx has booted 
    
    //FROM IO Pins
    input 	  rxi_lclk_p,   rxi_lclk_n;     // rx clock input
@@ -49,6 +50,8 @@ module erx (/*AUTOARG*/
    input 	   erx_cfg_access;
    input [PW-1:0]  erx_cfg_packet;
    output 	   erx_cfg_wait;
+   output 	   rx_lclk_div4;
+   output 	   erx_reset;
    
    //Readback timeout (synchronized to sys_c
    output 	   timeout;
@@ -61,14 +64,12 @@ module erx (/*AUTOARG*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			erx_io_reset;		// From erx_clocks of erx_clocks.v
-   wire			erx_reset;		// From erx_clocks of erx_clocks.v
    wire [44:0]		idelay_value;		// From erx_core of erx_core.v
    wire			load_taps;		// From erx_core of erx_core.v
    wire			rx_access;		// From erx_io of erx_io.v
    wire			rx_burst;		// From erx_io of erx_io.v
    wire			rx_clkin;		// From erx_io of erx_io.v
    wire			rx_lclk;		// From erx_clocks of erx_clocks.v
-   wire			rx_lclk_div4;		// From erx_clocks of erx_clocks.v
    wire [PW-1:0]	rx_packet;		// From erx_io of erx_io.v
    wire			rx_rd_wait;		// From erx_core of erx_core.v
    wire			rx_wr_wait;		// From erx_core of erx_core.v
@@ -95,6 +96,7 @@ module erx (/*AUTOARG*/
 			 // Inputs
 			 .sys_reset		(sys_reset),
 			 .soft_reset		(soft_reset),
+			 .tx_active		(tx_active),
 			 .sys_clk		(sys_clk),
 			 .rx_clkin		(rx_clkin));
    
@@ -116,7 +118,6 @@ module erx (/*AUTOARG*/
 		  .rx_packet		(rx_packet[PW-1:0]),
 		  // Inputs
 		  .erx_io_reset		(erx_io_reset),
-		  .erx_reset		(erx_reset),
 		  .rx_lclk		(rx_lclk),
 		  .rx_lclk_div4		(rx_lclk_div4),
 		  .idelay_value		(idelay_value[44:0]),

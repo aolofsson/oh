@@ -190,7 +190,7 @@ always @ (posedge tx_lclk)
 	      .CE (1'b1),
 	      .D1 (tx_frame),
 	      .D2 (tx_frame),
-	      .R  (reset), 
+	      .R  (1'b0), //reset
 	      .S  (1'b0)
 	      );
    
@@ -202,7 +202,7 @@ always @ (posedge tx_lclk)
 	      .CE (1'b1),
 	      .D1 (1'b1),
 	      .D2 (1'b0),
-	      .R  (reset),//should be no reason to reset clock, static input
+	      .R  (1'b0),//should be no reason to reset clock, static input
 	      .S  (1'b0)
 	      );
 		  

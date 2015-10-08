@@ -136,7 +136,6 @@ module etx_core(/*AUTOARG*/
 		      .packet_out	(etx_cfg_packet[PW-1:0]), // Templated
 		      // Inputs
 		      .clk		(clk),
-		      .reset		(reset),
 		      .access_in	(etx_access),		 // Templated
 		      .packet_in	(etx_packet[PW-1:0]),	 // Templated
 		      .mi_dout0		({32'b0,mi_cfg_dout[31:0]}), // Templated
@@ -248,7 +247,6 @@ module etx_core(/*AUTOARG*/
 		 .emesh_packet_out	(emmu_packet[PW-1:0]),	 // Templated
 		 .emesh_packet_hi_out	(),			 // Templated
 		 // Inputs
-		 .reset			(reset),
 		 .rd_clk		(clk),			 // Templated
 		 .wr_clk		(clk),			 // Templated
 		 .mmu_en		(mmu_enable),		 // Templated

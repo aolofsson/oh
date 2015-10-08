@@ -8,7 +8,7 @@ module erx_protocol (/*AUTOARG*/
    erx_test_access, erx_test_data, erx_rdwr_access, erx_rr_access,
    erx_packet,
    // Inputs
-   clk, reset, test_mode, rx_packet, rx_burst, rx_access
+   clk, test_mode, rx_packet, rx_burst, rx_access
    );
 
    parameter AW   = 32;
@@ -19,8 +19,6 @@ module erx_protocol (/*AUTOARG*/
    
    // System reset input
    input           clk;
-   input           reset;     //async reset
-
 
    //test mode
    input 	   test_mode; //block all traffic in test mode
@@ -71,15 +69,8 @@ module erx_protocol (/*AUTOARG*/
       
    
    //Pipeline stage and decode  
-   always @ (posedge clk or posedge reset)
-     if (reset)
-       begin
-	  erx_rr_access    <= 1'b0;   
-	  erx_rdwr_access  <= 1'b0;
-	  erx_test_access  <= 1'b0;
-       end
-     else
-       begin
+   always @ (posedge clk)
+     begin
 	  //Write/read request
 	  erx_rdwr_access     <= ~test_mode & rx_access & ~read_response;      
 	  //Read response

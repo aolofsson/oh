@@ -112,14 +112,10 @@ module etx_cfg (/*AUTOARG*/
    //# GPIO DATA
    //###########################
    always @ (posedge clk)
-     if(reset)
-       ecfg_tx_gpio_reg[8:0] <= 'd0;   
-     else if (ecfg_tx_gpio_write)
+     if (ecfg_tx_gpio_write)
        ecfg_tx_gpio_reg[8:0] <= mi_din[8:0];
 
    assign gpio_data[8:0] = ecfg_tx_gpio_reg[8:0];
-
-   
    
    //###########################
    //# VERSION
