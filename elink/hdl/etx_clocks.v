@@ -2,7 +2,7 @@
 module etx_clocks (/*AUTOARG*/
    // Outputs
    tx_lclk, tx_lclk90, tx_lclk_div4, cclk_p, cclk_n, etx_reset,
-   etx_io_reset, chip_resetb,
+   etx_io_reset, chip_resetb, tx_active,
    // Inputs
    sys_reset, soft_reset, sys_clk
    );
@@ -46,7 +46,8 @@ module etx_clocks (/*AUTOARG*/
    output     etx_reset;         // reset for tx core logic
    output     etx_io_reset;      // io reset (synced to high speed clock)
    output     chip_resetb;       // reset fpr Epiphany chip
-    
+   output     tx_active;         // enable for rx path (ensures active clock)
+   
    //############
    //# WIRES
    //############
@@ -104,9 +105,15 @@ module etx_clocks (/*AUTOARG*/
 `define HOLD_IT          3'b100 //???
 `define ACTIVE           3'b101
 
-   //Reset sequence state machine   
-   always @ (posedge sys_clk or posedge sys_reset)
-     if(sys_reset)
+
+   //pipeline reset to improve timing
+   reg por_reset;   
+   always @ (posedge sys_clk)
+     por_reset <= sys_reset;
+
+   //Reset sequence state machine      
+   always @ (posedge sys_clk or posedge por_reset)
+     if(por_reset)
        reset_state[2:0]        <= `RESET_ALL;   
      else if(heartbeat)
        case(reset_state[2:0])
@@ -132,8 +139,7 @@ module etx_clocks (/*AUTOARG*/
    //reset mmcm (async)
    assign mmcm_reset =  (reset_state[2:0]==`RESET_ALL)      |
 			(reset_state[2:0]==`STOP_CCLK)      |  
-			(reset_state[2:0]==`DEASSERT_RESET) |
-			sys_reset
+			(reset_state[2:0]==`DEASSERT_RESET)
 			;
    
    //reset chip (active low)
@@ -142,8 +148,10 @@ module etx_clocks (/*AUTOARG*/
 		         (reset_state[2:0]==`ACTIVE);   
       
    //reset the elink
-   wire tx_reset      =  sys_reset |
-	                 (reset_state[2:0] != `ACTIVE);
+   wire tx_reset      =  (reset_state[2:0] != `ACTIVE);
+
+
+   assign tx_active   =  (reset_state[2:0] == `ACTIVE);
 
    //#############################
    //#RESET SYNC
@@ -263,7 +271,7 @@ module etx_clocks (/*AUTOARG*/
               .CE (1'b1),
               .D1 (1'b1),
               .D2 (1'b0),
-              .R  (sys_reset),
+              .R  (1'b0),
               .S  (1'b0));
 	    
    //CCLK differential buffer
