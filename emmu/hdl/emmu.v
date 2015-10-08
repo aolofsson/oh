@@ -122,12 +122,12 @@ module emmu (/*AUTOARG*/
    //pipeline to compensate for table lookup pipeline 
    //assumes one cycle memory access!     
 
-
     always @ (posedge  rd_clk)          
-      begin
-	 emesh_access_out         <= emesh_access_in;
-	  emesh_packet_reg[PW-1:0] <= emesh_packet_in[PW-1:0];	  
-      end
+      if((write_in & ~emesh_wr_wait) | (~write_in & ~emesh_rd_wait))
+	begin
+	   emesh_access_out         <= emesh_access_in;
+	   emesh_packet_reg[PW-1:0] <= emesh_packet_in[PW-1:0];	  
+	end
      	 
    assign emesh_dstaddr_out[63:0] = (mmu_en & ~mmu_bp) ? {emmu_lookup_data[43:0], emesh_packet_reg[27:8]} :
 				                         {32'b0,emesh_packet_reg[39:8]}; 
