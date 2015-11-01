@@ -1,6 +1,6 @@
 dv_elink_tb.v
 elink_e16_model.v
- ../../emailbox/hdl/emailbox_regmap.v
+ ../hdl/elink_regmap.v
 -y .
 -y ../../elink/hdl
 -y ../../xilibs/hdl
