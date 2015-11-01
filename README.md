@@ -27,3 +27,8 @@ cd build
 ../configure
 make elink
 ```
+
+## License
+``
+This library is made available with a LGPL V3 copyleft license. By our interpretation, Verilog is software and chips/bitstreams are the hardware equivalent of a binary program. We will look into this issue further in the future, but in the meantime, please consider this a strict copyleft library. 
+```
