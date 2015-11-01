@@ -97,21 +97,21 @@ module erx_io (/*AUTOARG*/
       
    //convert to 112 bit packet
    always @ (posedge rx_lclk)
-     if(rx_frame)   
+     if(rx_frame | erx_io_reset)
        begin
-	  if(rx_pointer[0])
+	  if(rx_pointer[0] | erx_io_reset)
 	    rx_sample[15:0]    <= rx_word[15:0];
-	  if(rx_pointer[1])
+	  if(rx_pointer[1] | erx_io_reset)
 	    rx_sample[31:16]   <= rx_word[15:0];
-	  if(rx_pointer[2])
+	  if(rx_pointer[2] | erx_io_reset)
 	    rx_sample[47:32]   <= rx_word[15:0];
-	  if(rx_pointer[3])
+	  if(rx_pointer[3] | erx_io_reset)
 	    rx_sample[63:48]   <= rx_word[15:0];
-	  if(rx_pointer[4])
+	  if(rx_pointer[4] | erx_io_reset)
 	    rx_sample[79:64]   <= rx_word[15:0];
-	  if(rx_pointer[5])
+	  if(rx_pointer[5] | erx_io_reset)
 	    rx_sample[95:80]   <= rx_word[15:0];
-	  if(rx_pointer[6])
+	  if(rx_pointer[6] | erx_io_reset)
 	    rx_sample[111:96]  <= rx_word[15:0];	  
        end // if (rx_frame)
    
@@ -138,7 +138,7 @@ module erx_io (/*AUTOARG*/
 
    //(..and shuffle data for 104 bit packet)
    always @ (posedge rx_lclk)
-     if(access)   
+     if(access | erx_io_reset)
        begin
 	  //pipelin burst (delay by one frame)
 	  burst                 <= burst_detect;	  
@@ -189,7 +189,7 @@ module erx_io (/*AUTOARG*/
      rx_access <= access_wide;
       
    always @ (posedge rx_lclk_div4)
-     if(access_wide)
+     if(access_wide | erx_io_reset)
        begin
 	  rx_packet[PW-1:0] <= rx_packet_lclk[PW-1:0];
 	  rx_burst          <= burst;	  
