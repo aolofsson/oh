@@ -23,7 +23,7 @@ module emailbox (/*AUTOARG*/
    // Outputs
    mi_dout, mailbox_full, mailbox_not_empty,
    // Inputs
-   reset, wr_clk, rd_clk, emesh_access, emesh_packet, mi_en, mi_we,
+   wr_reset, wr_clk, rd_clk, rd_reset, emesh_access, emesh_packet, mi_en, mi_we,
    mi_addr, mi_din
    );
 
@@ -34,13 +34,14 @@ module emailbox (/*AUTOARG*/
    parameter ID     = 12'h000;   //link id
 
    parameter WIDTH  = 104;
-   parameter DEPTH  = 16;
+   parameter DEPTH  = 32;
    
    /*****************************/
    /*RESET                      */
    /*****************************/
-   input           reset;       //asynchronous reset
+   input           wr_reset;       //asynchronous reset
    input 	   wr_clk;      //write clock
+   input           rd_reset;       //asynchronous reset
    input 	   rd_clk;      //read clock
 
 
@@ -80,7 +81,7 @@ module emailbox (/*AUTOARG*/
    wire 	    mailbox_pop;
    wire [31:0] 	    emesh_addr;
    wire [63:0] 	    emesh_din;
-   wire 	    emesh__write;
+   wire 	    emesh_write;
    
    /*****************************/
    /*WRITE TO FIFO              */
@@ -140,8 +141,8 @@ module emailbox (/*AUTOARG*/
 		   .din      ({40'b0,emesh_din[63:0]}),
 		   .wr_en    (emesh_write),
 		   .wr_clk   (wr_clk),  			     
-		   .wr_rst   (reset),
-  		   .rd_rst   (reset)      
+		   .wr_rst   (wr_reset),
+  		   .rd_rst   (rd_reset)      
 		   ); 
    
 endmodule // emailbox
