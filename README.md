@@ -12,10 +12,10 @@ The library is written in vanilla Verilog. Pull requests accepted.
 | [edma](edma)        |        | A bare metal DMA module                     |
 | [elink](elink)      |        | The Epiphany point to point LVDS link       |
 | [emailbox](emailbox)|        | A simple mailnox with interrupt output      |
-| [emmu](elink)       |        | A simple memory map translation unit        |
+| [emmu](emmu)        |        | A simple memory map translation unit        |
 | [memory](memory)    |        | Various simple memory structures (RAM/FIFO) |
-| [emesh](edma)       |        | Epiphany emesh packet related circuits      |
-| [xilibs](edma)      |        | Simulation modules for Xilinx primitives    |
+| [emesh](emesh)      |        | Epiphany emesh packet related circuits      |
+| [xilibs](xilibs)    |        | Simulation modules for Xilinx primitives    |
 
 
 ## Building
