@@ -41,9 +41,9 @@ module fifo_cdc (/*AUTOARG*/
    wire 	      valid;   
    reg 		      access_out;
       
-   assign wr_en    = access_in;//&~full
+   assign wr_en    = access_in & ~full;
    assign rd_en    = ~empty & ~wait_in;
-   assign wait_out =  full;
+   assign wait_out = full;
 
    //Keep access high until "acknowledge"
    always @ (posedge clk_out or posedge reset_out)
@@ -58,19 +58,19 @@ module fifo_cdc (/*AUTOARG*/
 
    fifo_async  fifo (.prog_full		(full),//stay safe for now
 		     .full		(),
-		    // Outputs
-		    .dout		(packet_out[DW-1:0]),
-		    .empty		(empty),
-		    .valid		(valid), 
-		    // Inputs
-		    .wr_rst		(reset_in),
-		    .rd_rst		(reset_out),
-		    .wr_clk		(clk_in),
-		    .rd_clk		(clk_out),
-		    .wr_en		(wr_en),
-		    .din		(packet_in[DW-1:0]),
-		    .rd_en		(rd_en)
-		    );
+		     // Outputs
+		     .dout		(packet_out[DW-1:0]),
+		     .empty		(empty),
+		     .valid		(valid), 
+		     // Inputs
+		     .wr_rst		(reset_in),
+		     .rd_rst		(reset_out),
+		     .wr_clk		(clk_in),
+		     .rd_clk		(clk_out),
+		     .wr_en		(wr_en),
+		     .din		(packet_in[DW-1:0]),
+		     .rd_en		(rd_en)
+		     );
       
 endmodule // fifo_cdc
 
