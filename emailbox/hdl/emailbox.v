@@ -111,7 +111,7 @@ module emailbox (/*AUTOARG*/
    //#####################################################################
    
    always @ (posedge rd_clk)
-     if (reset)
+     if (rd_reset)
        mi_rdout <= 1'b0;
      else
        mi_rdout <= mi_rd;
