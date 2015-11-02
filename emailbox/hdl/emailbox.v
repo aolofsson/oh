@@ -23,8 +23,8 @@ module emailbox (/*AUTOARG*/
    // Outputs
    mi_dout, mailbox_full, mailbox_not_empty,
    // Inputs
-   wr_reset, wr_clk, rd_clk, rd_reset, emesh_access, emesh_packet, mi_en, mi_we,
-   mi_addr, mi_din
+   wr_reset, wr_clk, rd_clk, rd_reset, emesh_access, emesh_packet,
+   mi_en, mi_we, mi_addr, mi_din
    );
 
    parameter DW     = 32;        //data width of fifo
@@ -39,10 +39,10 @@ module emailbox (/*AUTOARG*/
    /*****************************/
    /*RESET                      */
    /*****************************/
-   input           wr_reset;       //asynchronous reset
+   input           wr_reset;    //asynchronous reset
    input 	   wr_clk;      //write clock
-   input           rd_reset;       //asynchronous reset
    input 	   rd_clk;      //read clock
+   input           rd_reset;    //asynchronous reset
 
 
    /*****************************/

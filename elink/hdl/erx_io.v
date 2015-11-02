@@ -187,7 +187,8 @@ module erx_io (/*AUTOARG*/
      
    always @ (posedge rx_lclk_div4)
      rx_access <= access_wide;
-      
+
+        
    always @ (posedge rx_lclk_div4)
      if(access_wide | erx_io_reset)
        begin

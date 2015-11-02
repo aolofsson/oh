@@ -232,8 +232,7 @@ module etx_core(/*AUTOARG*/
                           .emmu_access_out  (emmu_access),
                           .emmu_packet_out  (emmu_packet[PW-1:0]),
                           .mi_dout	    (mi_mmu_dout[DW-1:0]),
-                          .emesh_rd_wait    (etx_rd_wait),
-                          .emesh_wr_wait    (etx_wr_wait),
+                          .emesh_wait       (etx_wr_wait),
                           .emesh_packet_hi_out	(),
                           .mi_en	    (mi_mmu_en),
                          );
@@ -257,8 +256,7 @@ module etx_core(/*AUTOARG*/
 		 .mi_din		(mi_din[DW-1:0]),
 		 .emesh_access_in	(etx_remap_access),	 // Templated
 		 .emesh_packet_in	(etx_remap_packet[PW-1:0]), // Templated
-		 .emesh_rd_wait		(etx_rd_wait),		 // Templated
-		 .emesh_wr_wait		(etx_wr_wait));		 // Templated
+		 .emesh_wait		(etx_wr_wait));		 // Templated
    
 
    /************************************************************/

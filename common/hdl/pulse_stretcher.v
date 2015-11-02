@@ -20,11 +20,8 @@ module pulse_stretcher (/*AUTOARG*/
    reg [DW-1:0] wide_pulse;
    
    
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       wide_pulse[DW-1:0] <= 'b0;
-     else
-       wide_pulse[DW-1:0] <= {wide_pulse[DW-2:0],in};
+   always @ (posedge clk)
+     wide_pulse[DW-1:0] <= {wide_pulse[DW-2:0],in};
 
    assign out = (|{wide_pulse[DW-1:0],in});
    

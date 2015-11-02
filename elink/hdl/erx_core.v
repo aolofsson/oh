@@ -165,9 +165,8 @@ module erx_core (/*AUTOARG*/
                            );
    */
 
-   emmu erx_mmu (.mmu_bp		(1'b0),	
-		 .emesh_rd_wait		(1'b0), //absorbed by fifo
-		 .emesh_wr_wait		(1'b0),
+   emmu erx_mmu (.mmu_bp		(1'b0),	//why is this zero??
+		 .emesh_wait		(1'b0),
 		 /*AUTOINST*/
 		 // Outputs
 		 .mi_dout		(mi_mmu_dout[DW-1:0]),	 // Templated
