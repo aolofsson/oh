@@ -19,9 +19,8 @@ module emmu (/*AUTOARG*/
    // Outputs
    mi_dout, emesh_access_out, emesh_packet_out, emesh_packet_hi_out,
    // Inputs
-   reset, rd_clk, wr_clk, mmu_en, mmu_bp, mi_en, mi_we, mi_addr,
-   mi_din, emesh_access_in, emesh_packet_in, emesh_rd_wait,
-   emesh_wr_wait
+   rd_clk, wr_clk, mmu_en, mmu_bp, mi_en, mi_we, mi_addr, mi_din,
+   emesh_access_in, emesh_packet_in, emesh_wait
    );
    parameter DW     = 32;         //data width
    parameter AW     = 32;         //address width 
@@ -34,15 +33,14 @@ module emmu (/*AUTOARG*/
    /*****************************/
    /*DATAPATH CLOCk             */
    /*****************************/  
-   input 	     reset;               //async reset
    input 	     rd_clk;
    input 	     wr_clk;
-
+   
    /*****************************/
    /*MMU LOOKUP DATA            */
    /*****************************/
    input 	     mmu_en;              //enables mmu (static)
-   input 	     mmu_bp;              //bypass mmu on read response
+   input 	     mmu_bp;              //bypass mmu on read response (RX)
 
    /*****************************/
    /*Register Access Interface  */
@@ -58,8 +56,7 @@ module emmu (/*AUTOARG*/
    /*****************************/  
    input 	     emesh_access_in;
    input [PW-1:0]    emesh_packet_in;
-   input 	     emesh_rd_wait;
-   input 	     emesh_wr_wait;
+   input 	     emesh_wait;      //BUG?: separate wait fifos?   
 
    /*****************************/
    /*EMESH OUTPUTS              */
@@ -100,9 +97,7 @@ module emmu (/*AUTOARG*/
    /*****************************/
    /*MMU READ  LOGIC            */
    /*****************************/
-   //TODO: could we do with less entries?
-   
-   assign write_in              = emesh_packet_in[1];
+   assign write_in              = emesh_packet_in[1];     //TODO:  
    assign emmu_rd_addr[MAW-1:0] = emesh_packet_in[39:28];
    
    memory_dp #(.DW(MW),.AW(MAW)) memory_dp (
@@ -122,28 +117,24 @@ module emmu (/*AUTOARG*/
    /*EMESH OUTPUT TRANSACTION   */
    /*****************************/   
    //pipeline to compensate for table lookup pipeline 
-   //assumes one cycle memory access!     
+   //assumes one cycle memory access!
+   //the pushback is needed stall async transmit path      
 
-
-    always @ (posedge  rd_clk or posedge reset)     
-     if (reset)
-       begin
-	  emesh_access_out         <= 1'b0;	  
-       end
-     else if((write_in & ~emesh_wr_wait) | (~write_in & ~emesh_rd_wait))
-       begin
-	  emesh_access_out         <= emesh_access_in;
-	  emesh_packet_reg[PW-1:0] <= emesh_packet_in[PW-1:0];	  
-       end
+   always @ (posedge  rd_clk)
+     if(~emesh_wait)
+     begin
+	emesh_access_out         <= emesh_access_in;
+	emesh_packet_reg[PW-1:0] <= emesh_packet_in[PW-1:0];	  
+     end
      	 
    assign emesh_dstaddr_out[63:0] = (mmu_en & ~mmu_bp) ? {emmu_lookup_data[43:0], emesh_packet_reg[27:8]} :
 				                         {32'b0,emesh_packet_reg[39:8]}; 
       
    //Concatenating output packet
    assign emesh_packet_out[PW-1:0] = {emesh_packet_reg[PW-1:40],
-                                     emesh_dstaddr_out[31:0],
-                                     emesh_packet_reg[7:0]
-				    };
+                                      emesh_dstaddr_out[31:0],
+                                      emesh_packet_reg[7:0]
+				     };
    
 
    assign emesh_packet_hi_out[31:0] = emesh_dstaddr_out[63:32];
