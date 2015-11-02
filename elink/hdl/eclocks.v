@@ -25,7 +25,7 @@ module eclocks (/*AUTOARG*/
    );
 
 //TODO: change to parameter 
-`ifdef SIM
+`ifdef TARGET_SIMPLE
    parameter RCW                 = 4;          // reset counter width
 `else
    parameter RCW                 = 8;          // reset counter width

@@ -64,7 +64,6 @@ module ecfg_elink (/*AUTOARG*/
 
    packet2emesh pe2 (
 		     // Outputs
-		     .access_out	(),
 		     .write_out		(mi_we),
 		     .datamode_out	(),
 		     .ctrlmode_out	(),

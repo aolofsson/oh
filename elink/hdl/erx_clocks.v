@@ -1,12 +1,12 @@
 `include "elink_constants.v"
 module erx_clocks (/*AUTOARG*/
    // Outputs
-   rx_lclk, rx_lclk_div4, erx_reset, erx_io_reset,
+   rx_lclk, rx_lclk_div4, rx_active, erx_reset, erx_io_reset,
    // Inputs
    sys_reset, soft_reset, tx_active, sys_clk, rx_clkin
    );
 
-`ifdef SIM
+`ifdef TARGET_SIMPLE
    parameter RCW                 = 4;          // reset counter width
 `else
    parameter RCW                 = 8;          // reset counter width
@@ -16,15 +16,19 @@ module erx_clocks (/*AUTOARG*/
    parameter FREQ_SYSCLK     = 100;
    parameter FREQ_RXCLK      = 300;   
    parameter FREQ_IDELAY     = 200;   
-   parameter RXCLK_PHASE     = 0;    //270;  //-90 deg rxclk phase shift
-   
-   //VCO multiplers
+   parameter RXCLK_PHASE     = 0;    //270;  //-90 deg rxclk phase shift      
    parameter PLL_VCO_MULT    = 4;   //RX
+
+   //Don't touch these! (derived parameters)
+   localparam real    RXCLK_PERIOD  = 1000.000000/FREQ_RXCLK; 
+   localparam integer IREF_DIVIDE   = PLL_VCO_MULT * FREQ_RXCLK/FREQ_IDELAY;
+   localparam integer RXCLK_DIVIDE  = PLL_VCO_MULT; //1:1
       
    //Input clock, reset, config interface
    input      sys_reset;         // por reset (hw)
    input      soft_reset;        // rx enable signal (sw)
-   input      tx_active;         // tx active
+   input      tx_active;         // tx active input
+   
    
    //Main input clocks
    input      sys_clk;            // always on input clk cclk/TX MMCM
@@ -35,14 +39,11 @@ module erx_clocks (/*AUTOARG*/
    output     rx_lclk_div4;      // rx slow clock for logic
 
    //Reset
+   output     rx_active;         // rx active
    output     erx_reset;         // reset for rx core logic
    output     erx_io_reset;      // io reset (synced to high speed clock)
    
-   //Don't touch these! (derived parameters)
-   localparam real    RXCLK_PERIOD  = 1000.000000/FREQ_RXCLK; 
-   localparam integer IREF_DIVIDE   = PLL_VCO_MULT*FREQ_RXCLK/FREQ_IDELAY;
-   localparam integer RXCLK_DIVIDE  = PLL_VCO_MULT; //1:1
-   
+    
    //############
    //# WIRES
    //############
@@ -119,8 +120,11 @@ module erx_clocks (/*AUTOARG*/
    assign idelay_reset =  (reset_state[2:0]==`RESET_ALL);
 
    //asynch rx reset
-   assign rx_reset    =  (reset_state[2:0]!=`ACTIVE);
+   assign rx_reset    =  (reset_state[2:0] != `ACTIVE);
 
+   //active indicator
+   assign rx_active   =  (reset_state[2:0] == `ACTIVE);
+   
    //#############################
    //#RESET SYNC
    //#############################
@@ -144,7 +148,8 @@ module erx_clocks (/*AUTOARG*/
 	reset_pipe_lclk_div4b[1:0]  <= {reset_pipe_lclk_div4b[0],1'b1};   
 
    assign erx_reset  = ~reset_pipe_lclk_div4b[1];
-      
+   
+     
 `ifdef TARGET_XILINX	
 
    //###########################
