@@ -128,6 +128,13 @@ always @ (posedge tx_lclk)
 		      .srcaddr_out	(srcaddr[31:0]),
 		      .packet_in	(tx_packet_reg[PW-1:0]));
  
+
+   /*
+    * The following format is used by the Epiphany multicore ASIC.
+    * Don't change it if you want to communicate with Epiphany.
+    * 
+    */
+
    always @ (posedge tx_lclk)
      if (tx_new_frame)
        tx_double[63:0] <= {16'b0,//16

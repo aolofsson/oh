@@ -79,9 +79,9 @@ module erx_arbiter (/*AUTOARG*/
    assign ecfg_wait           = erx_rr_access;
 
    //####################################
-   //Write Path (direct)
+   //Write Path (through MMU)
    //####################################
-   assign emmu_write          = emmu_packet[1];
+   assign emmu_write          = emmu_packet[0];
 
    assign rxwr_access         = emmu_access & emmu_write;
    

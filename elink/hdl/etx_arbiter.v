@@ -81,18 +81,17 @@ module etx_arbiter (/*AUTOARG*/
    wire            write_in;
 
    //##########################################################################
-   //# Insert special control mode
+   //# Insert special control mode in packet
    //##########################################################################
    assign txrd_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
-				                   txrd_packet[7:4];
+				                   txrd_packet[6:3];
+     
+   assign txwr_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
+				                   txwr_packet[6:3];
 
    assign txrd_data[PW-1:0] = {txrd_packet[PW-1:8],   
                                txrd_ctrlmode[3:0], 
 			       txrd_packet[3:0]};
- 
-   
-   assign txwr_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
-				                   txwr_packet[7:4];
 
    assign txwr_data[PW-1:0] = {txwr_packet[PW-1:8],   
                                txwr_ctrlmode[3:0], 
@@ -169,7 +168,7 @@ module etx_arbiter (/*AUTOARG*/
    
 endmodule // etx_arbiter
 // Local Variables:
-// verilog-library-directories:("." "../../common/hdl")
+// verilog-library-directories:("." "../../emesh/hdl")
 // End:
 
 
