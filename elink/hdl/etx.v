@@ -63,6 +63,7 @@ module etx(/*AUTOARG*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			tx_lclk;		// From etx_clocks of etx_clocks.v
    wire			tx_lclk90;		// From etx_clocks of etx_clocks.v
+   wire			tx_lclk_io;		// From etx_clocks of etx_clocks.v
    // End of automatics
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			tx_access;		// From etx_core of etx_core.v
@@ -89,6 +90,7 @@ module etx(/*AUTOARG*/
 			  /*AUTOINST*/
 			  // Outputs
 			  .tx_lclk		(tx_lclk),
+			  .tx_lclk_io		(tx_lclk_io),
 			  .tx_lclk90		(tx_lclk90),
 			  .tx_lclk_div4		(tx_lclk_div4),
 			  .cclk_p		(cclk_p),
@@ -198,6 +200,7 @@ module etx(/*AUTOARG*/
 		  .tx_rd_wait		(tx_rd_wait),
 		  // Inputs
 		  .tx_lclk		(tx_lclk),
+		  .tx_lclk_io		(tx_lclk_io),
 		  .tx_lclk90		(tx_lclk90),
 		  .txi_wr_wait_p	(txi_wr_wait_p),
 		  .txi_wr_wait_n	(txi_wr_wait_n),

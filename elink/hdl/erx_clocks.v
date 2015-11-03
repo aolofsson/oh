@@ -16,7 +16,7 @@ module erx_clocks (/*AUTOARG*/
    parameter FREQ_SYSCLK     = 100;
    parameter FREQ_RXCLK      = 300;   
    parameter FREQ_IDELAY     = 200;   
-   parameter RXCLK_PHASE     = 0;    //270;  //-90 deg rxclk phase shift      
+   parameter RXCLK_PHASE     = 0;   //270;  //-90 deg rxclk phase shift      
    parameter PLL_VCO_MULT    = 4;   //RX
 
    //Don't touch these! (derived parameters)
@@ -209,14 +209,10 @@ module erx_clocks (/*AUTOARG*/
         );
    
    //Clock network
-   BUFG rx_lclk_bufg_i      (.I(rx_lclk_pll),      .O(rx_lclk));       //300Mhz
-   BUFG rx_lclk_div4_bufg_i (.I(rx_lclk_div4_pll), .O(rx_lclk_div4));  //75 MHz (300/4)
-   BUFG idelay_ref_bufg_i   (.I(idelay_ref_clk_pll), .O(idelay_ref_clk));//idelay ctrl clock
-   
-   //Feedback buffers
-   BUFG lclk_fb_bufg_i0(.I(rx_lclk_fb_out), 
-			.O(rx_lclk_fb_in)
-			);
+   BUFG i_lclk_bufg      (.I(rx_lclk_pll),       .O(rx_lclk));       //300Mhz
+   BUFG i_lclk_div4_bufg (.I(rx_lclk_div4_pll),  .O(rx_lclk_div4));  //75 MHz (300/4)
+   BUFG i_idelay__bufg   (.I(idelay_ref_clk_pll),.O(idelay_ref_clk));//idelay ctrl clock
+   BUFG i_lclk_fb_bufg   (.I(rx_lclk_fb_out),    .O(rx_lclk_fb_in)); //feedback buffer
    
    //###########################
    // Idelay controller
