@@ -3,8 +3,9 @@ module etx_io (/*AUTOARG*/
    txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
    txo_data_n, tx_io_wait, tx_wr_wait, tx_rd_wait,
    // Inputs
-   reset, tx_lclk, tx_lclk90, txi_wr_wait_p, txi_wr_wait_n,
-   txi_rd_wait_p, txi_rd_wait_n, tx_packet, tx_access, tx_burst
+   reset, tx_lclk, tx_lclk_io, tx_lclk90, txi_wr_wait_p,
+   txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n, tx_packet, tx_access,
+   tx_burst
    );
    
    parameter IOSTD_ELINK = "LVDS_25";
@@ -15,7 +16,8 @@ module etx_io (/*AUTOARG*/
    //# reset, clocks
    //##########
    input        reset;               //sync reset for io  
-   input 	tx_lclk;	     //fast clock for io
+   input 	tx_lclk;	     //fast clock for io state machine
+   input 	tx_lclk_io;	     //fast ODDR
    input 	tx_lclk90;           //fast 90deg shifted lclk   
    
    //###########
@@ -167,6 +169,12 @@ always @ (posedge tx_lclk)
      endcase // case (tx_state[2:0])
                        
    //#############################
+   //# CLOCK DRIVERS
+   //#############################  
+   BUFIO i_lclk    (.I(tx_lclk_io), .O(tx_lclk_ddr));
+   BUFIO i_lclk90  (.I(tx_lclk90), .O(tx_lclk90_ddr));
+
+   //#############################
    //# ODDR DRIVERS
    //#############################  
 
@@ -177,7 +185,7 @@ always @ (posedge tx_lclk)
 	ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
 	oddr_data (
 		   .Q  (txo_data[i]),
-		   .C  (tx_lclk),
+		   .C  (tx_lclk_ddr),
 		   .CE (1'b1),
 		   .D1 (tx_data16[i+8]),
 		   .D2 (tx_data16[i]),
@@ -188,10 +196,10 @@ always @ (posedge tx_lclk)
      endgenerate
 
    //FRAME
-   ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"), .SRTYPE ("SYNC"))
+   ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
    oddr_frame (
 	      .Q  (txo_frame),
-	      .C  (tx_lclk),
+	      .C  (tx_lclk_ddr),
 	      .CE (1'b1),
 	      .D1 (tx_frame),
 	      .D2 (tx_frame),
@@ -203,7 +211,7 @@ always @ (posedge tx_lclk)
    ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
    oddr_lclk (
 	      .Q  (txo_lclk90),
-	      .C  (tx_lclk90),
+	      .C  (tx_lclk90_ddr),
 	      .CE (1'b1),
 	      .D1 (1'b1),
 	      .D2 (1'b0),
