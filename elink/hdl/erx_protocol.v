@@ -3,6 +3,7 @@
  read responses
  */
 `include "elink_regmap.v"
+
 module erx_protocol (/*AUTOARG*/
    // Outputs
    erx_test_access, erx_test_data, erx_rdwr_access, erx_rr_access,
@@ -15,7 +16,6 @@ module erx_protocol (/*AUTOARG*/
    parameter DW   = 32;
    parameter PW   = 104;
    parameter ID   = 12'h800; //link id
-
    
    // System reset input
    input           clk;
@@ -69,6 +69,7 @@ module erx_protocol (/*AUTOARG*/
       
    
    //Pipeline stage and decode  
+   
    always @ (posedge clk)
      begin
 	  //Write/read request
@@ -80,8 +81,8 @@ module erx_protocol (/*AUTOARG*/
 	  //Common packet
 	  erx_packet[PW-1:0]  <= {rx_packet[PW-1:40],
 				  dstaddr_mux[31:0],
-				  rx_packet[7:0]
-				  };
+				  {1'b0,rx_packet[7:1]} //NOTE: remvoing redundant access packet bit
+				  };                    //This is to conform to new format	 
      end
 
    //Testdata to write

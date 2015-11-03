@@ -1,5 +1,3 @@
-`include "elink_constants.v"
-
 module etx_io (/*AUTOARG*/
    // Outputs
    txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
@@ -121,7 +119,7 @@ always @ (posedge tx_lclk)
      if (tx_access)
        tx_packet_reg[PW-1:0] <= tx_packet[PW-1:0];
 
-    packet2emesh p2e (.access_out	(access),
+    packet2emesh p2e (
 		      .write_out	(write),
 		      .datamode_out	(datamode[1:0]),
 		      .ctrlmode_out	(ctrlmode[3:0]),
@@ -130,11 +128,18 @@ always @ (posedge tx_lclk)
 		      .srcaddr_out	(srcaddr[31:0]),
 		      .packet_in	(tx_packet_reg[PW-1:0]));
  
+
+   /*
+    * The following format is used by the Epiphany multicore ASIC.
+    * Don't change it if you want to communicate with Epiphany.
+    * 
+    */
+
    always @ (posedge tx_lclk)
      if (tx_new_frame)
        tx_double[63:0] <= {16'b0,//16
 			   ~write,7'b0,ctrlmode[3:0],//12
-			   dstaddr[31:0],datamode[1:0],write,access};//36
+			   dstaddr[31:0],datamode[1:0],write,tx_access};//36
      else if(tx_state[2:0]==`CYCLE4)
        tx_double[63:0] <= {data[31:0],srcaddr[31:0]};
   

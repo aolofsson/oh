@@ -7,7 +7,7 @@ module etx_clocks (/*AUTOARG*/
    sys_reset, soft_reset, sys_clk
    );
 
-`ifdef SIM
+`ifdef TARGET_SIMPLE
    parameter RCW                 = 4;          // reset counter width
 `else
    parameter RCW                 = 8;          // reset counter width
@@ -105,15 +105,9 @@ module etx_clocks (/*AUTOARG*/
 `define HOLD_IT          3'b100 //???
 `define ACTIVE           3'b101
 
-
-   //pipeline reset to improve timing
-   reg por_reset;   
-   always @ (posedge sys_clk)
-     por_reset <= sys_reset;
-
    //Reset sequence state machine      
-   always @ (posedge sys_clk or posedge por_reset)
-     if(por_reset)
+   always @ (posedge sys_clk or posedge sys_reset)
+     if(sys_reset)
        reset_state[2:0]        <= `RESET_ALL;   
      else if(heartbeat)
        case(reset_state[2:0])

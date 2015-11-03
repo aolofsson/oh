@@ -64,7 +64,7 @@ module etx_protocol (/*AUTOARG*/
    wire 	 burst_addr_match;
     
    //packet to emesh bundle
-   packet2emesh p2m0 (.access_out	(),
+   packet2emesh p2m0 (
 		      .write_out	(etx_write),
 		      .datamode_out	(etx_datamode[1:0]),
 		      .ctrlmode_out	(etx_ctrlmode[3:0]),
@@ -107,7 +107,7 @@ module etx_protocol (/*AUTOARG*/
    //# Burst Detection
    //#############################
 
-   packet2emesh p2m1 (.access_out	(last_access),
+   packet2emesh p2m1 (
 		     .write_out		(last_write),
 		      .datamode_out	(last_datamode[1:0]),
 		     .ctrlmode_out	(last_ctrlmode[3:0]),
