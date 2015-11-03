@@ -9,7 +9,8 @@ The "elink" is a low-latency/high-speed interface for communicating between FPGA
 $ sudo apt-get install gtkwave iverilog   
 $ git clone https://github.com/parallella/oh.git  
 $ cd oh/elink/dv  
-$ ./run.sh  
+$ ./build.sh
+$ ./run.sh test/test_basic.memh
 $ gtkwave test.vcd
 
 ```
@@ -273,7 +274,7 @@ FIELD    | DESCRIPTION
  [5:2]   | Column chip  ID for Epiphany chip
  [11:8]  | Row chip ID for Epiphany chip
 
-###E_VERSION
+###E_VERSION (0xF020C)
 Platform and revision number.
 
 FIELD    | DESCRIPTION 
