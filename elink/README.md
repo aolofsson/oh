@@ -9,7 +9,8 @@ The "elink" is a low-latency/high-speed interface for communicating between FPGA
 $ sudo apt-get install gtkwave iverilog   
 $ git clone https://github.com/parallella/oh.git  
 $ cd oh/elink/dv  
-$ ./run.sh  
+$ ./build.sh
+$ ./run.sh test/test_basic.memh
 $ gtkwave test.vcd
 
 ```
@@ -130,7 +131,8 @@ The elink has the following clock domains:
 SIGNAL             | DIR| DESCRIPTION 
 -------------------|----|--------------
 m_*                | IO | AXI master interface
-s_*                | IO | AXI slave interface 
+s_*                | IO | AXI slave interface
+*******************|****|***********************************
 txo_frame_{p/n}    | O  | TX packet framing signal
 txo_lclk_{p/n}     | O  | TX clock aligned in the center of the data eye
 txo_data_{p/n}[7:0]| O  | TX dual data rate (DDR) that transmits packet
@@ -141,6 +143,7 @@ rxi_lclk_{p/n}     | I  | RX clock aligned in the center of the data eye
 rxi_data_{p/n}[7:0]| I  | RX dual data rate (DDR) that transmits packet
 rxo_rd_wait_{p/n}  | O  | RX push back (output) for read transactions
 rxo_wr_wait_{p/n}  | O  | RX push back (output) for write transactions
+*******************|****|***********************************
 reset              | I  | Reset input  
 pll_clk            | I  | Clock input for CCLK/LCLK PLL  
 sys_clk            | I  | System clock for FIFOs
@@ -191,35 +194,30 @@ Instance             |Module                   | FPGA Cells
  
 The full 32 bit physical address of an elink register is the address seen below added to the 12 bit elink ID that maps to address bits 31:20.  As an example, if the elink ID is 0x810, then writing to the E_RESET register would be done to address 0x810F0200. Readback is done through the txrd channel with the source address sub field set to 810Dxxxx;
  
-REGISTER       | AC | ADDRESS | DESCRIPTION 
----------------|----|---------|------------------
-E_RESET        | -W | 0xF0200 | Soft reset
-E_CLK          | -W | 0xF0204 | Clock configuration
-E_CHIPID       | RW | 0xF0208 | Chip ID for Epiphany pins  
-E_VERSION      | RW | 0xF020C | Version number (static)  
-E_MAILBOXLO    | RW | 0xF0310 | RX mailbox (lower 32 bit)  
-E_MAILBOXHI    | RW | 0xF0314 | RX mailbox (upper 32 bits)  
-***************|****|*********|**************************
-ETX_CFG        | RW | 0xF0210 | TX configuration
-ETX_STATUS     | R- | 0xF0214 | TX status
-ETX_GPIO       | RW | 0xF0218 | TX data in GPIO mode
-***************|****|*********|********************
-ETX_MMU        | -W | 0xE0000 | TX MMU table 
-***************|****|*********|********************
-ERX_CFG        | RW | 0xF0300 | RX configuration
-ERX_STATUS     | R- | 0xF0304 | RX status register
-ERX_GPIO       | R  | 0xF0308 | RX data in GPIO mode
-ERX_OFFSET     | RW | 0xF030C | RX mem offset in remap mode
-ERX_DMACFG     | RW | 0xF0520 | RX DMA configuration
-ERX_DMACOUNT   | RW | 0xF0524 | RX DMA count
-ERX_DMASTRIDE  | RW | 0xF0528 | RX DMA stride
-ERX_DMASRCADDR | RW | 0xF052c | RX DMA source addres
-ERX_DMADSTADDR | RW | 0xF0530 | RX DMA destination address
-ERX_DMAAUTO0   | RW | 0xF0534 | RX DMA slave buffer (lo)
-ERX_DMAAUTO1   | RW | 0xF0538 | RX DMA slERXave buffer (hi)
-ERX_DMASTATUS  | RW | 0xF053c | RX DMA status      
-***************|****|*********|********************
-ERX_MMU        | -W | 0xE8000 | RX MMU table 
+REGISTER       | ACCESS | ADDRESS | DESCRIPTION 
+---------------|--------|---------|------------------
+E_RESET        | -W     | 0xF0200 | Soft reset
+E_CLK          | -W     | 0xF0204 | Clock configuration
+E_CHIPID       | RW     | 0xF0208 | Chip ID for Epiphany pins  
+E_VERSION      | RW     | 0xF020C | Version number (static)  
+***************|********|*********|**************************
+ETX_CFG        | RW     | 0xF0210 | TX configuration
+ETX_STATUS     | R-     | 0xF0214 | TX status
+ETX_GPIO       | RW     | 0xF0218 | TX data in GPIO mode
+***************|********|*********|********************
+ETX_MMU        | -W     | 0xE0000 | TX MMU table 
+***************|******* |*********|********************
+ERX_CFG        | RW     | 0xF0300 | RX configuration
+ERX_STATUS     | R-     | 0xF0304 | RX status register
+ERX_GPIO       | R      | 0xF0308 | RX data in GPIO mode
+ERX_OFFSET     | RW     | 0xF030C | RX mem offset in remap mode
+E_MAILBOXLO    | RW     | 0xF0310 | RX mailbox (lower 32 bit)
+E_MAILBOXHI    | RW     | 0xF0314 | RX mailbox (upper 32 bits)
+ERX_IDELAY0    | RW     | 0xF0318 | RX idelays 4 bit values d[7:0]
+ERX_IDELAY1    | RW     | 0xF031C | RX idelay msbs and frametap lsbs
+ERX_TESTDATA   | RW     | 0xF0320 | RX sampled data
+***************|********|*********|********************
+ERX_MMU        | -W     | 0xE8000 | RX MMU table 
 
 REGISTER DESCRIPTIONS
 ===========================================
@@ -231,6 +229,8 @@ FIELD    | DESCRIPTION
 -------- | --------------------------------------------------
  [0]     | 0: active
          | 1: resets elink and Epiphany chip 
+
+-------------------------------
 
 ###E_CLK (0xF0204) (NOT IMPLEMENTED) 
 Transmit and Epiphany clock settings.
@@ -265,6 +265,8 @@ FIELD    | DESCRIPTION
          | 1xxx: RESERVED        
  [15:12] | PLL frequency (TBD)
 
+-------------------------------
+
 ###E_CHIPID (0xF0208)
 Column and row chip id pins to the Epiphany chip.
 
@@ -273,13 +275,17 @@ FIELD    | DESCRIPTION
  [5:2]   | Column chip  ID for Epiphany chip
  [11:8]  | Row chip ID for Epiphany chip
 
-###E_VERSION
+-------------------------------
+
+###E_VERSION (0xF020C)
 Platform and revision number.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [7:0]   | Platform version
  [15:8]  | Revision number
+
+-------------------------------
 
 ###ETX_CFG (0xF0210)
 TX configuration settings
@@ -306,12 +312,16 @@ FIELD    | DESCRIPTION
  [11:9]  | 00: Normal transmit mode
          | 01: GPIO direct drive mode
 
+-------------------------------
+
 ###ETX_STATUS (0xF0214)
 TX status register
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
- [15:0]  | TBD
+[15:0]  | TBD
+
+-------------------------------
 
 ###ETX_GPIO (0xF0218)
 Data to drive on txo_data and txo_frame pins in gpio mode
@@ -321,6 +331,7 @@ FIELD    | DESCRIPTION
  [7:0]   | Data for txo_data pins
  [8]     | Data for txo_frame pin
 
+-------------------------------
 
 ###ERX_CFG (0xF0300)
 RX configuration register
@@ -350,6 +361,8 @@ FIELD    | DESCRIPTION
          | 10: Timeout value set to 0000FFFF
          | 11: Timeout value set to FFFFFFFF
 
+-------------------------------
+
 ###ERX_STATUS (0xF0304)
 RX status register
 
@@ -372,12 +385,9 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [31:0]  | Memory offset
 
-###E_MAILBOXLO (0xF0310)
-Lower 32 bit word of current entry of RX 64-bit wide mailbox FIFO. This register should be read before the E_MAILBOXHI. 
 
-FIELD    | DESCRIPTION 
--------- |---------------------------------------------------
- [31:0]  | Lower data of RX FIFO
+
+-------------------------------
 
 ###E_MAILBOXHI (0xF0314)
 Upper 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Reading this register causes the RX FIFO read pointer to increment by one.
@@ -385,6 +395,52 @@ Upper 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Reading this 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | Upper data of RX FIFO
+
+-------------------------------
+
+###E_MAILBOXHI (0xF0314)
+Upper 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Reading this register causes the RX FIFO read pointer to increment by one.
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | Upper data of RX FIFO
+
+-------------------------------
+
+###ERX_IDELAY0O (0xF0318)
+Four bit LSB fields for the RX IDELAY of data bits [7:0]
+
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+[3:0]    | d[0] delay value lsb's
+[7:4]    | d[1] delay value lsb's
+[11:8]   | d[2] delay value lsb's
+[15:12]  | d[3] delay value lsb's
+[19:16]  | d[4] delay value lsb's
+[23:20]  | d[5] delay value lsb's
+[27:24]  | d[6] delay value lsb's
+[31:28]  | d[7] delay value lsb's
+ 
+-------------------------------
+
+###ERX_IDELAY01 (0xF031c)
+MSB field for all RX IDELAY values and lsbs for frame signal
+
+FIELD   | DESCRIPTION 
+--------|---------------------------------------------------
+[35:32] | frame signal delay value lsb's
+[36]    | d[0] delay value msb
+[37]    | d[1] delay value msb
+[38]    | d[2] delay value msb
+[39]    | d[3] delay value msb
+[40]    | d[4] delay value msb
+[41]    | d[5] delay value msb
+[42]    | d[6] delay value msb
+[43]    | d[7] delay value msb
+[44]    | frame delay value msb
+ 
+-------------------------------
+
 
 ###ERX_DMACFG (0xF0500)
 Configuration register for DMA.
@@ -405,13 +461,17 @@ FIELD    | DESCRIPTION
          | 1: Left shifts stride by 16 bits
  [12]    | 0: Destination address shift disabled
          | 1: Left shifts stride by 16 bits
-         
+
+-------------------------------
+
 ###ERX_DMACOUNT (0xF0504)
 The number of DMA left to complete The DMA transfer is complete when the DMACOUNT register reaches zero.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | The number of transfers remaining
+
+-------------------------------
 
 ###ERX_DMASTRIDE (0xF0508)
 Two signed 16-bit values specifying the stride, in bytes, used to update the DMASRCADDR and DMADSTADDR after each completed transfer. 
@@ -421,12 +481,16 @@ FIELD    | DESCRIPTION
  [15:0]  | Value to add to DMASRCADDR after each transaction
  [31:16] | Value to add to DMADSTADDR after each transaction
 
+-------------------------------
+
 ###ERX_DMASRCADDR (0xF050C)
 The current 32-bit address being read from in master mode.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | Current transaction destination address to write to
+
+-------------------------------
 
 ###ERX_DMADSTADDR (0xF0510)
 The current 32-bit address being transferred.
@@ -435,6 +499,7 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [31:0]  | Current transaction destination address to write to
 
+-------------------------------
 
 ###ERX_DMAAUTO0 (0xF0514)
 Auto DMA register
@@ -443,6 +508,7 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [31:0]  | TBD
 
+-------------------------------
 
 ###ERX_DMAAUTO1 (0xF0518)
 Auto DMA register
@@ -451,6 +517,8 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [31:0]  | TBD
 
+-------------------------------
+
 ###DMASTATUS (0xF051c/0xF053c)
 DMA status register
 
@@ -458,8 +526,9 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [31:0]  | TBD
 
+-------------------------------
 
-###ETX_MMU (0xE0000)  
+###ETX_MMU (0xE0000)
 A table of N entries for translating incoming 12 bit address to a new value. Entries are aligned on 8 byte boundaries
  
 FIELD    | DESCRIPTION 
@@ -467,6 +536,7 @@ FIELD    | DESCRIPTION
  [11:0]  | Output address bits 31:20
  [43:12] | Output address bits 63:32 (TBD)
 
+-------------------------------
 
 ###ERX_MMU (0xE8000)
 A table of N entries for translating incoming 12 bit address to a new value. Entries are aligned on 8 byte boundaries.
@@ -476,6 +546,7 @@ FIELD    | DESCRIPTION
  [11:0]  | Output address bits 31:20
  [43:12] | Output address bits 63:32 (TBD)
 
+-------------------------------
 
 ###ERX_READBACK (0xDxxxx)
 Source address to specify for slave (host) read requests

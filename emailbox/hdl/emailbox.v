@@ -18,7 +18,7 @@
  #
  ###########################################################################
  */
-//`include "emailbox_regmap.v" // is there a better way?
+`include "emailbox_regmap.v" // is there a better way?
 module emailbox (/*AUTOARG*/
    // Outputs
    mi_dout, mailbox_full, mailbox_not_empty,

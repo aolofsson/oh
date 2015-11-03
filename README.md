@@ -1,34 +1,24 @@
 =======
 # OH!
 
-An Open Hardware Modle Library for Chip and FPGA Designers
+An Open Hardware Model Library for Chip and FPGA Designers
 
 The library is written in vanilla Verilog. Pull requests accepted.
 
 | Spec                | Status | Description                                 |
 |---------------------|--------|---------------------------------------------|
-| [axi](axi)          |        | AXI network interface stuff                 |
-| [common](common)    |        | Common moini modules (syncrhonziers etc)    |
-| [edma](edma)        |        | A bare metal DMA module                     |
-| [elink](elink)      |        | The Epiphany point to point LVDS link       |
-| [emailbox](emailbox)|        | A simple mailnox with interrupt output      |
-| [emmu](emmu)        |        | A simple memory map translation unit        |
+| [eaxi](eaxi)        |        | AXI network interface stuff                 |
+| [common](common)    |        | Common modules (synchronizer etc)          |
+| [edma](edma)        |        | Basic DMA module                            |
+| [emesh](emesh)      |        | Epiphany emesh related circuits             |
+| [elink](elink)      |        | Epiphany point to point LVDS link           |
+| [emailbox](emailbox)|        | Simple mailbox with interrupt output        |
+| [emmu](emmu)        |        | Simple memory transaction translation unit  |
 | [memory](memory)    |        | Various simple memory structures (RAM/FIFO) |
-| [emesh](emesh)      |        | Epiphany emesh packet related circuits      |
+| [rand](rand)        |        | Random number generators                    |
 | [xilibs](xilibs)    |        | Simulation modules for Xilinx primitives    |
 
+## LICENSE
 
-## Building
-```
-git clone https://github.com/parallella/oh.git
-cd oh
-mkdir build
-cd build
-../configure
-make elink
-```
+This library is made available with a GPL V3 copyleft license with the added condition that the Verilog code herein is to be considered software and physical chips and FPGA bitstreams are the hardware equivalent of a binary program.
 
-## License
-``
-This library is made available with a LGPL V3 copyleft license. By our interpretation, Verilog is software and chips/bitstreams are the hardware equivalent of a binary program. We will look into this issue further in the future, but in the meantime, please consider this a strict copyleft library. 
-```

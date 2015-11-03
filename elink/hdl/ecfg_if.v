@@ -79,7 +79,7 @@ module ecfg_if (/*AUTOARG*/
    assign 	 rxsel = RX;   
 
    //splicing packet
-   packet2emesh p2e (.access_out   (),
+   packet2emesh p2e (
 		     .write_out	   (write),
 		     .datamode_out (datamode[1:0] ),
 		     .ctrlmode_out (ctrlmode[3:0]),
@@ -160,9 +160,8 @@ module ecfg_if (/*AUTOARG*/
    
    //Create packet
    emesh2packet e2p (.packet_out	(packet_out[PW-1:0]),
-		     .access_in		(1'b1),
 		     .write_in		(write_reg),
-		     .datamode_in        (datamode_reg[1:0]),
+		     .datamode_in       (datamode_reg[1:0]),
 		     .ctrlmode_in   	(ctrlmode_reg[3:0]),
 		     .dstaddr_in   	(dstaddr_reg[AW-1:0]),
 		     .data_in		(data_out[31:0]),

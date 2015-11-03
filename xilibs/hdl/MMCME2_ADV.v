@@ -1,3 +1,4 @@
+`timescale 1ns/10ps
 module MMCME2_ADV # (
 		     parameter BANDWIDTH = "OPTIMIZED",
 		     parameter real CLKFBOUT_MULT_F = 5.000,
@@ -95,6 +96,11 @@ module MMCME2_ADV # (
    localparam CLK6_DELAY = VCO_PERIOD * CLKOUT6_DIVIDE * (CLKOUT6_PHASE/360);
 
    localparam phases = CLKFBOUT_MULT_F / DIVCLK_DIVIDE;
+   
+
+
+   wire 	reset;
+     
    //########################################################################
    //# CLOCK MULTIPLIER
    //########################################################################
@@ -146,6 +152,7 @@ module MMCME2_ADV # (
 	#1
 	POR=1'b0;	
      end
+   assign 	 reset = POR | RST;   
 
    //BUG! This only supports divide by 2,4,8, etc for now
    //TODO: This clearly won't work, need general purpose clock divider
@@ -153,13 +160,12 @@ module MMCME2_ADV # (
    genvar i;
    generate for(i=0; i<7; i=i+1)
      begin : gen_clkdiv
-	clock_divider clkdiv (/*AUTOINST*/
-			      // Outputs
+	clock_divider clkdiv (// Outputs
 			      .clkout		(CLKOUT_DIV[i]),
 			      // Inputs
 			      .clkin		(vco_clk),
 			      .divcfg		(DIVCFG[i]),
-			      .reset		(RST | POR));		
+			      .reset		(reset));		
      end      
    endgenerate
 
@@ -195,7 +201,7 @@ module MMCME2_ADV # (
    //############################
    parameter LCW=4;   
    reg [LCW-1:0] lock_counter;
-   wire 	 reset = POR | RST;   
+ 
    
    always @ (posedge CLKIN1 or posedge reset)
      if(reset)

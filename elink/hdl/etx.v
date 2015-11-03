@@ -5,7 +5,7 @@ module etx(/*AUTOARG*/
    txwr_wait, txrr_wait, etx_cfg_access, etx_cfg_packet, etx_reset,
    tx_lclk_div4,
    // Inputs
-   sys_reset, soft_reset, sys_clk, txi_wr_wait_p, txi_wr_wait_n,
+   sys_clk, sys_reset, soft_reset, txi_wr_wait_p, txi_wr_wait_n,
    txi_rd_wait_p, txi_rd_wait_n, txrd_access, txrd_packet,
    txwr_access, txwr_packet, txrr_access, txrr_packet, etx_cfg_wait
    );
@@ -18,14 +18,9 @@ module etx(/*AUTOARG*/
    parameter ETYPE       = 1;   
 
    //Reset and clocks
+   input 	  sys_clk;                      // clock for fifos      
    input 	  sys_reset;                    // reset for fifos   
    input 	  soft_reset;		        // software controlled reset
-  
-   
-   //Clocks
-   input 	  sys_clk;                      // clock for fifos   
-   
-   //TX boot done
    output 	  tx_active;		        // tx ready to transmit
    
    //Transmit signals for IO
@@ -57,7 +52,7 @@ module etx(/*AUTOARG*/
    //Configuration Interface (for ERX)
    output 	   etx_cfg_access;
    output [PW-1:0] etx_cfg_packet;
-   output 	   etx_reset;
+   output 	   etx_reset;      
    output 	   tx_lclk_div4;
    input 	   etx_cfg_wait;
    

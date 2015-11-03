@@ -1,11 +1,8 @@
-/*
- ########################################################################
- ELINK CONFIGURATION REGISTER FILE
- ########################################################################
- 
- */
-`include "elink_regmap.v"
+// ########################################################################
+// ELINK CONFIGURATION REGISTER FILE
+// ######################################################################## 
 
+`include "elink_regmap.v"
 module erx_cfg (/*AUTOARG*/
    // Outputs
    mi_dout, rx_enable, mmu_enable, remap_mode, remap_base,
@@ -65,7 +62,7 @@ module erx_cfg (/*AUTOARG*/
    reg [31:0] 	ecfg_offset_reg;
    reg [8:0] 	ecfg_gpio_reg;
    reg [2:0] 	ecfg_rx_status_reg;   
-   reg [63:0] 	ecfg_idelay_reg;
+   reg [63:0] 	idelay_reg;
    reg 		load_taps;   
    reg [31:0] 	mi_dout;
    reg [31:0] 	ecfg_testdata_reg;
@@ -139,27 +136,40 @@ module erx_cfg (/*AUTOARG*/
    //###########################
    always @ (posedge clk or posedge reset) 
      if(reset)
-       ecfg_idelay_reg[63:0]  <= 'b0;   
+       idelay_reg[63:0]  <= 'b0;   
      else if (ecfg_idelay0_write)
-       ecfg_idelay_reg[31:0]  <= mi_din[31:0];
+       idelay_reg[31:0]  <= mi_din[31:0];
      else if(ecfg_idelay1_write)
-       ecfg_idelay_reg[63:32] <= mi_din[31:0];
+       idelay_reg[63:32] <= mi_din[31:0];
 
-   assign idelay_value[44:0] = {ecfg_idelay_reg[46:32],ecfg_idelay_reg[29:0]};
 
+   //Construct delay for io (5*9 bits)   
+   assign idelay_value[44:0] = {idelay_reg[44],idelay_reg[35:32],//frame
+				idelay_reg[43],idelay_reg[31:28],//d7
+				idelay_reg[42],idelay_reg[27:24],//d6
+				idelay_reg[41],idelay_reg[23:20],//d5
+				idelay_reg[40],idelay_reg[19:16],//d4
+				idelay_reg[39],idelay_reg[15:12],//d3
+				idelay_reg[38],idelay_reg[11:8], //d2
+				idelay_reg[37],idelay_reg[7:4],  //d1
+				idelay_reg[36],idelay_reg[3:0]   //d0
+				};
    always @ (posedge clk)
      load_taps <= ecfg_idelay1_write;
 
    
    //###############################
-   //# TESTMODE
+   //# TESTMODE (ADD OR LFSR
    //###############################  
+   wire 	testmode_add;
+   wire 	testmode_lfsr;
+   
    always @ (posedge clk)
      if(ecfg_testdata_write)
        ecfg_testdata_reg[31:0] <= mi_din[31:0];
      else if(erx_test_access)   
        ecfg_testdata_reg[31:0] <= ecfg_testdata_reg[31:0] + erx_test_data[31:0];
-   
+   				                    
    //###############################
    //# DATA READBACK MUX
    //###############################

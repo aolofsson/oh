@@ -1,20 +1,22 @@
-/*64 bit wide byte addressable memory*/
+
 module ememory(/*AUTOARG*/
    // Outputs
    wait_out, access_out, packet_out,
    // Inputs
-   clk, reset, access_in, packet_in, wait_in
+   clk, nreset, coreid, access_in, packet_in, wait_in
    );
-
-   parameter DW  = 32;   
-   parameter AW  = 32;   
-   parameter MAW = 10;
-   parameter PW  = 104;
-   
+   parameter PW    = 104;
+   parameter IDW   = 12;
+   parameter DW    = 32;   
+   parameter AW    = 32;   
+   parameter MAW   = 16; //=64K words
+   parameter NAME  = "emem";
+  
    //Basic Interface
    input            clk;
-   input 	    reset;  
-
+   input 	    nreset;  
+   input [IDW-1:0]  coreid;
+   
    //incoming read/write
    input 	    access_in;
    input [PW-1:0]   packet_in;      
@@ -37,7 +39,7 @@ module ememory(/*AUTOARG*/
    reg 		    access_out;   
    reg 		    write_out;   
    reg [1:0] 	    datamode_out;
-   reg [3:0] 	    ctrlmode_out;   
+   reg [4:0] 	    ctrlmode_out;   
    reg [AW-1:0]     dstaddr_out;   
 
    wire [AW-1:0]    srcaddr_out;
@@ -51,18 +53,18 @@ module ememory(/*AUTOARG*/
    wire [DW-1:0]    data_in;   
    wire [AW-1:0]    srcaddr_in;   
 
-   packet2emesh p2e (
-		     .access_out	(),
-		     .write_out		(write_in),
-		     .datamode_out	(datamode_in[1:0]),
-		     .ctrlmode_out	(ctrlmode_in[3:0]),
-		     .dstaddr_out	(dstaddr_in[AW-1:0]),
-		     .data_out		(data_in[DW-1:0]),
-		     .srcaddr_out	(srcaddr_in[AW-1:0]),
-		     .packet_in		(packet_in[PW-1:0])
-		     );
    
-   
+   packet2emesh #(.PW(PW))
+   p2e (
+	.write_out	(write_in),
+	.datamode_out	(datamode_in[1:0]),
+	.ctrlmode_out	(ctrlmode_in[3:0]),
+	.dstaddr_out	(dstaddr_in[AW-1:0]),
+	.data_out	(data_in[DW-1:0]),
+	.srcaddr_out	(srcaddr_in[AW-1:0]),
+	.packet_in	(packet_in[PW-1:0])
+	);
+      
    //Access-in
    assign mem_rd = (access_in & ~write_in & ~wait_in);
    assign mem_wr = (access_in & write_in );
@@ -117,17 +119,20 @@ module ememory(/*AUTOARG*/
 		 );
 
    //Outgoing transaction     
-   always @ (posedge  clk)
-     access_out                    <= mem_rd;
+   always @ (posedge  clk or negedge nreset)
+     if(!nreset)
+       access_out <=1'b0;   
+     else if(~wait_in)
+       access_out                    <= mem_rd;
                  
    //Other emesh signals "dataload"
    always @ (posedge clk)
-     if(mem_rd)   
+     if(mem_rd & ~wait_in)   
        begin
 	  write_out           <= 1'b1;
           hilo_sel            <= dstaddr_in[2];
 	  datamode_out[1:0]   <= datamode_in[1:0];
-	  ctrlmode_out[3:0]   <= ctrlmode_in[3:0];                  
+	  ctrlmode_out[4:0]   <= ctrlmode_in[3:0];                  
           dstaddr_out[AW-1:0] <= srcaddr_in[AW-1:0];
        end
 
@@ -138,40 +143,54 @@ module ememory(/*AUTOARG*/
 				            dout[31:0]; 
    
    //Concatenate
-   emesh2packet e2p (.packet_out	(packet_out[PW-1:0]),
-		     .access_in		(access_out),
-		     .write_in		(write_out),
-		     .datamode_in	(datamode_out[1:0]),
-		     .ctrlmode_in	(ctrlmode_out[3:0]),
-		     .dstaddr_in	(dstaddr_out[AW-1:0]),
-		     .data_in		(data_out[DW-1:0]),
-		     .srcaddr_in	(srcaddr_out[AW-1:0])
-		     );
+   emesh2packet #(.PW(PW)) 
+   e2p (.packet_out	(packet_out[PW-1:0]),
+	.write_in	(write_out),
+	.datamode_in	(datamode_out[1:0]),
+	.ctrlmode_in	(ctrlmode_out[3:0]),
+	.dstaddr_in	(dstaddr_out[AW-1:0]),
+	.data_in	(data_out[DW-1:0]),
+	.srcaddr_in	(srcaddr_out[AW-1:0])
+	);
+      
+   //Write monitor   
+   emesh_monitor 
+     #(.PW(PW), 
+     .INDEX(1), 
+     .NAME(NAME)
+       )
+   emesh_monitor (.dut_access	(access_in & write_in),
+		  .dut_packet	(packet_in[PW-1:0]),
+		  .wait_in		(1'b0),
+		  /*AUTOINST*/
+		  // Inputs
+		  .clk			(clk),
+		  .nreset		(nreset),
+		  .coreid		(coreid[IDW-1:0]));
    
-		    
 endmodule // emesh_memory
 // Local Variables:
-// verilog-library-directories:("." "../../common/hdl")
+// verilog-library-directories:("." "../dv" )
 // End:
 
 
-/*
- Copyright (C) 2014 Adapteva, Inc.
- Contributed by Andreas Olofsson <andreas@adapteva.com>
- 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with this program (see the file COPYING).  If not, see
- <http://www.gnu.org/licenses/>.
- */
 
+/*
+ Copyright (C) 2015 Adapteva, Inc.
+  Contributed by Andreas Olofsson <support@adapteva.com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program (see the file COPYING).  If not, see
+  <http://www.gnu.org/licenses/>.
+*/
 

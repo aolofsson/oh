@@ -1,19 +1,18 @@
-module elink(/*AUTOARG*/
+module elink (/*AUTOARG*/
    // Outputs
-   rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n,
-   txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
-   txo_data_n, chipid, cclk_p, cclk_n, chip_resetb, mailbox_not_empty,
-   mailbox_full, timeout, rxwr_access, rxwr_packet, rxrd_access,
-   rxrd_packet, rxrr_access, rxrr_packet, txwr_wait, txrd_wait,
-   txrr_wait,
+   elink_active, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
+   rxo_rd_wait_n, txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n,
+   txo_data_p, txo_data_n, chipid, cclk_p, cclk_n, chip_resetb,
+   mailbox_not_empty, mailbox_full, timeout, rxwr_access, rxwr_packet,
+   rxrd_access, rxrd_packet, rxrr_access, rxrr_packet, txwr_wait,
+   txrd_wait, txrr_wait,
    // Inputs
    sys_reset, sys_clk, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
    rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
    txi_rd_wait_p, txi_rd_wait_n, rxwr_wait, rxrd_wait, rxrr_wait,
    txwr_access, txwr_packet, txrd_access, txrd_packet, txrr_access,
    txrr_packet
-   );
-   
+   );   
    parameter AW          = 32;       //native address width
    parameter DW          = 32;       //native data width
    parameter PW          = 104;      //packet width   
@@ -25,8 +24,9 @@ module elink(/*AUTOARG*/
    /*CLOCK AND RESET           */
    /****************************/
    input        sys_reset;     // reset for 
-   input 	sys_clk;       // a single system clock for master/slave FIFOs
-   
+   input 	sys_clk;       // single system clock for master/slave FIFOs
+   output 	elink_active;  // rx and tx are both active
+      
    /********************************/
    /*ELINK RECEIVER                */
    /********************************/          
@@ -59,7 +59,7 @@ module elink(/*AUTOARG*/
    output       mailbox_full;
 
    /*****************************/
-   /*     */
+   /*TIMEOUT                    */
    /*****************************/
    output 	timeout;
    
@@ -72,7 +72,7 @@ module elink(/*AUTOARG*/
    output [PW-1:0] rxwr_packet;
    input 	   rxwr_wait;
       
-   //Master Read Request (from RX)
+  //Master Read Request (from RX)
    output 	   rxrd_access;
    output [PW-1:0] rxrd_packet;
    input 	   rxrd_wait;
@@ -159,7 +159,7 @@ module elink(/*AUTOARG*/
    defparam erx.IOSTD_ELINK = IOSTD_ELINK;
    defparam erx.ETYPE       = ETYPE;
    
-   erx erx(
+   erx erx(.rx_active			(elink_active),
 	   /*AUTOINST*/
 	   // Outputs
 	   .rxo_wr_wait_p		(rxo_wr_wait_p),
@@ -232,9 +232,9 @@ module elink(/*AUTOARG*/
 	   .etx_reset			(etx_reset),
 	   .tx_lclk_div4		(tx_lclk_div4),
 	   // Inputs
+	   .sys_clk			(sys_clk),
 	   .sys_reset			(sys_reset),
 	   .soft_reset			(etx_soft_reset),	 // Templated
-	   .sys_clk			(sys_clk),
 	   .txi_wr_wait_p		(txi_wr_wait_p),
 	   .txi_wr_wait_n		(txi_wr_wait_n),
 	   .txi_rd_wait_p		(txi_rd_wait_p),
@@ -253,25 +253,22 @@ module elink(/*AUTOARG*/
    defparam ecfg_cdc.DW=104;
    defparam ecfg_cdc.DEPTH=32;
    
-   fifo_cdc ecfg_cdc (// Outputs
+   fifo_cdc ecfg_cdc (.reset_in		(etx_reset),
+		      .reset_out	(erx_reset),
+		      // Outputs
 		      .wait_out		(etx_cfg_wait),	
 		      .access_out	(erx_cfg_access),	
 		      .packet_out	(erx_cfg_packet[PW-1:0]),
 		      // Inputs
 		      .clk_in		(tx_lclk_div4),	
-		      .reset_in		(etx_reset),
 		      .access_in	(etx_cfg_access),
 		      .packet_in	(etx_cfg_packet[PW-1:0]),
 		      .clk_out		(rx_lclk_div4),	
-		      .reset_out	(erx_reset),
 		      .wait_in		(erx_cfg_wait)
 		      );
    
-   
-endmodule // elink
-// Local Variables:
-// verilog-library-directories:("." "../../erx/hdl" "../../etx/hdl"  "../../memory/hdl")
-// End:
+endmodule
+
 
 /*
  Copyright (C) 2015 Adapteva, Inc.
@@ -282,7 +279,7 @@ endmodule // elink
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.This program is distributed in the hope 
- that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
+ that it will be useful,but WITHOUT ANY WARRANTY without even the implied 
  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. You should have received a copy 
  of the GNU General Public License along with this program (see the file 

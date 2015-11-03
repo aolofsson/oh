@@ -1,9 +1,9 @@
 module erx (/*AUTOARG*/
    // Outputs
-   rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p, rxo_rd_wait_n,
-   rxwr_access, rxwr_packet, rxrd_access, rxrd_packet, rxrr_access,
-   rxrr_packet, erx_cfg_wait, rx_lclk_div4, erx_reset, timeout,
-   mailbox_full, mailbox_not_empty,
+   rx_active, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
+   rxo_rd_wait_n, rxwr_access, rxwr_packet, rxrd_access, rxrd_packet,
+   rxrr_access, rxrr_packet, erx_cfg_wait, rx_lclk_div4, erx_reset,
+   timeout, mailbox_full, mailbox_not_empty,
    // Inputs
    soft_reset, sys_reset, sys_clk, tx_active, rxi_lclk_p, rxi_lclk_n,
    rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, rxwr_wait,
@@ -23,6 +23,7 @@ module erx (/*AUTOARG*/
    input          sys_reset;                    // async reset
    input 	  sys_clk;	                // system clock for fifo/clocks
    input 	  tx_active;                    // holds rx in check until tx has booted 
+   output 	  rx_active;                    // indicates RX and TX are active
    
    //FROM IO Pins
    input 	  rxi_lclk_p,   rxi_lclk_n;     // rx clock input
@@ -52,6 +53,7 @@ module erx (/*AUTOARG*/
    output 	   erx_cfg_wait;
    output 	   rx_lclk_div4;
    output 	   erx_reset;
+  
    
    //Readback timeout (synchronized to sys_c
    output 	   timeout;
@@ -91,6 +93,7 @@ module erx (/*AUTOARG*/
 			 // Outputs
 			 .rx_lclk		(rx_lclk),
 			 .rx_lclk_div4		(rx_lclk_div4),
+			 .rx_active		(rx_active),
 			 .erx_reset		(erx_reset),
 			 .erx_io_reset		(erx_io_reset),
 			 // Inputs

@@ -2,7 +2,6 @@
  This block receives the IO transaction and converts to a 104 bit packet. 
  */
 
-`include "elink_constants.v"
 module erx_io (/*AUTOARG*/
    // Outputs
    rx_clkin, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,

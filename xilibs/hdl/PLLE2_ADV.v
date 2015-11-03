@@ -1,3 +1,5 @@
+`timescale 1ns/10ps
+
 module PLLE2_ADV #(
  
   parameter BANDWIDTH = "OPTIMIZED",
@@ -131,8 +133,7 @@ module PLLE2_ADV #(
    genvar i;
    generate for(i=0; i<6; i=i+1)
      begin : gen_clkdiv
-	clock_divider clkdiv (/*AUTOINST*/
-			      // Outputs
+	clock_divider clkdiv (// Outputs
 			      .clkout		(CLKOUT_DIV[i]),
 			      // Inputs
 			      .clkin		(vco_clk),
@@ -142,7 +143,7 @@ module PLLE2_ADV #(
    endgenerate
 
    reg [5:0] CLKOUT_DIV_LOCK;   
-   always @ (posedge (CLKIN1&vco_clk) or negedge (CLKIN1&~vco_clk))
+   always @ (posedge (CLKIN1 & vco_clk) or negedge (CLKIN1&~vco_clk))
      begin
 	CLKOUT_DIV_LOCK[5:0] <= CLKOUT_DIV[5:0];	
      end
