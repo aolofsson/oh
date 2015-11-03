@@ -216,7 +216,7 @@ module erx_io (/*AUTOARG*/
    IBUFGDS #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTD_ELINK))
    ibuf_lclk (.I     (rxi_lclk_p),
 	      .IB    (rxi_lclk_n),
-	      .O     (rxi_lclk)
+	      .O     (rx_clkin)
 	      );
  
    generate
@@ -257,12 +257,10 @@ module erx_io (/*AUTOARG*/
    endgenerate
    
    //###################################
-   //#RX CLOCK
-   //###################################   
-   BUFG rxi_lclk_bufg_i(.I(rxi_lclk), .O(rx_clkin));  //for mmcm
+   //#RX CLOCK for IDDR
+   //###################################      
+   BUFIO i_rx_lclk_iddr (.I(rx_clkin), .O(rx_lclk_iddr));//for iddr
    
-   BUFIO rx_lclk_bufio_i(.I(rxi_delay_out[9]), .O(rx_lclk_iddr));//for iddr (NOT USED!)
-
    //###################################
    //#IDELAY CIRCUIT
    //###################################
@@ -311,7 +309,7 @@ module erx_io (/*AUTOARG*/
 	iddr_data (
 		   .Q1 (rx_word[i]),
 		   .Q2 (rx_word[i+8]),
-		   .C  (rx_lclk),//rx_lclk_iddr
+		   .C  (rx_lclk_iddr),
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[i]),
 		   .R  (1'b0),
@@ -325,7 +323,7 @@ module erx_io (/*AUTOARG*/
 	iddr_frame (
 		   .Q1 (rx_frame),
 		   .Q2 (),    
-		   .C  (rx_lclk),//rx_lclk_iddr
+		   .C  (rx_lclk_iddr),
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[8]),
 		   .R  (1'b0),

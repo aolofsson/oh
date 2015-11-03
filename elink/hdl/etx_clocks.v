@@ -1,8 +1,8 @@
 `include "elink_constants.v"
 module etx_clocks (/*AUTOARG*/
    // Outputs
-   tx_lclk, tx_lclk90, tx_lclk_div4, cclk_p, cclk_n, etx_reset,
-   etx_io_reset, chip_resetb, tx_active,
+   tx_lclk, tx_lclk_io, tx_lclk90, tx_lclk_div4, cclk_p, cclk_n,
+   etx_reset, etx_io_reset, chip_resetb, tx_active,
    // Inputs
    sys_reset, soft_reset, sys_clk
    );
@@ -35,7 +35,8 @@ module etx_clocks (/*AUTOARG*/
    input      sys_clk;            // always on input clk cclk/TX MMCM
     
    //TX Clocks
-   output     tx_lclk;           // tx clock for DDR IO
+   output     tx_lclk;           // tx clock for IO state machine
+   output     tx_lclk_io;        // tx clock for DDR IO
    output     tx_lclk90;         // tx output clock shifted by 90 degrees
    output     tx_lclk_div4;      // tx slow clock for logic
      
@@ -210,9 +211,9 @@ module etx_clocks (/*AUTOARG*/
        (
         .CLKOUT0(cclk_mmcm),
 	.CLKOUT0B(),
-        .CLKOUT1(tx_lclk_mmcm),
+        .CLKOUT1(tx_lclk_io),
 	.CLKOUT1B(),
-        .CLKOUT2(tx_lclk90_mmcm),
+        .CLKOUT2(tx_lclk90),
 	.CLKOUT2B(),
         .CLKOUT3(tx_lclk_div4_mmcm),
 	.CLKOUT3B(),
@@ -242,14 +243,12 @@ module etx_clocks (/*AUTOARG*/
 	.CLKINSTOPPED()
         );
         
-   //Feedback buffer
-   BUFG cclk_fb_bufg_i(.I(cclk_fb_out), .O(cclk_fb_in));
 
    //Tx clock buffers
-   BUFG tx_lclk_bufg_i      (.I(tx_lclk_mmcm),      .O(tx_lclk));
-   BUFG tx_lclk_div4_bufg_i (.I(tx_lclk_div4_mmcm), .O(tx_lclk_div4));
-   BUFG tx_lclk90_bufg_i    (.I(tx_lclk90_mmcm),    .O(tx_lclk90));
-  
+   BUFG i_lclk_bufg_i      (.I(tx_lclk_io),        .O(tx_lclk));     //300MHz
+   BUFG i_lclk_div4_bufg_i (.I(tx_lclk_div4_mmcm), .O(tx_lclk_div4));//75MHz
+   BUFG i_fb_buf           (.I(cclk_fb_out), .O(cclk_fb_in));        //FB
+
    //###########################
    // CCLK
    //###########################
@@ -279,7 +278,7 @@ module etx_clocks (/*AUTOARG*/
    assign tx_lclk      = sys_clk;
    assign tx_lclk_div4 = sys_clk;
    assign tx_lclk90    = sys_clk;
-   x
+
 `endif //  `ifdef TARGET_XILINX
 
 endmodule // eclocks
