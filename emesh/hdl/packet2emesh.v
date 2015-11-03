@@ -21,9 +21,9 @@ module packet2emesh(/*AUTOARG*/
    output [AW-1:0]      dstaddr_out;
    output [AW-1:0]      srcaddr_out;
       
-   assign write_out             = packet_in[1];   
-   assign datamode_out[1:0]     = packet_in[3:2];   
-   assign ctrlmode_out[3:0]     = packet_in[7:4];   
+   assign write_out             = packet_in[0];   
+   assign datamode_out[1:0]     = packet_in[2:1];   
+   assign ctrlmode_out[3:0]     = packet_in[6:3];   
    assign dstaddr_out[31:0]     = packet_in[39:8]; 	 
    assign srcaddr_out[31:0]     = packet_in[103:72];  
    assign data_out[31:0]        = packet_in[71:40];  
