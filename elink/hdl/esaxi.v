@@ -164,7 +164,6 @@ module esaxi (/*autoarg*/
 		     // Outputs
 		     .packet_out	(txwr_packet[PW-1:0]),
 		     // Inputs
-		     .access_in		(txwr_access),
 		     .write_in		(1'b1),
 		     .datamode_in	(txwr_datamode[1:0]),
 		     .ctrlmode_in	(4'b0),
@@ -178,7 +177,6 @@ module esaxi (/*autoarg*/
 		     // Outputs
 		     .packet_out	(txrd_packet[PW-1:0]),
 		     // Inputs
-		     .access_in		(txrd_access),
 		     .write_in		(txrd_write),
 		     .datamode_in	(txrd_datamode[1:0]),
 		     .ctrlmode_in	(4'b0),
@@ -189,7 +187,6 @@ module esaxi (/*autoarg*/
    //RXRR
    packet2emesh p2e_rxrr (
 			  // Outputs
-			  .access_out		(),
 			  .write_out		(),
 			  .datamode_out		(),
 			  .ctrlmode_out		(),
