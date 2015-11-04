@@ -248,6 +248,7 @@ module dut(/*AUTOARG*/
    emaxi #(.M_IDW(M_IDW))
    emaxi (.m_axi_aclk		(clk),
 	  .m_axi_aresetn	(nreset),
+	  .m_axi_rdata		({m_axi_rdata[31:0],m_axi_rdata[31:0]}),
 	  /*AUTOINST*/
 	  // Outputs
 	  .rxwr_wait			(elink0_txwr_wait),	 // Templated
@@ -294,10 +295,10 @@ module dut(/*AUTOARG*/
 	  .m_axi_bvalid			(m_axi_bvalid),
 	  .m_axi_arready		(m_axi_arready),
 	  .m_axi_rid			(m_axi_rid[M_IDW-1:0]),
-	  .m_axi_rdata			(m_axi_rdata[63:0]),
 	  .m_axi_rresp			(m_axi_rresp[1:0]),
 	  .m_axi_rlast			(m_axi_rlast),
 	  .m_axi_rvalid			(m_axi_rvalid));
+   
    
    
    //######################################################################
