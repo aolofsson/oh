@@ -13,6 +13,7 @@ read_verilog $top_srcdir/elink/hdl/ereset.v
 read_verilog $top_srcdir/elink/hdl/ecfg_elink.v
 read_verilog $top_srcdir/elink/hdl/ecfg_if.v
 read_verilog $top_srcdir/elink/hdl/erx.v
+read_verilog $top_srcdir/elink/hdl/erx_clocks.v
 read_verilog $top_srcdir/elink/hdl/erx_core.v
 read_verilog $top_srcdir/elink/hdl/erx_fifo.v
 read_verilog $top_srcdir/elink/hdl/erx_cfg.v
@@ -22,6 +23,7 @@ read_verilog $top_srcdir/elink/hdl/erx_remap.v
 read_verilog $top_srcdir/elink/hdl/erx_io.v
 read_verilog $top_srcdir/elink/hdl/etx.v
 read_verilog $top_srcdir/elink/hdl/etx_core.v
+read_verilog $top_srcdir/elink/hdl/etx_clocks.v
 read_verilog $top_srcdir/elink/hdl/etx_fifo.v
 read_verilog $top_srcdir/elink/hdl/etx_cfg.v
 read_verilog $top_srcdir/elink/hdl/etx_arbiter.v
