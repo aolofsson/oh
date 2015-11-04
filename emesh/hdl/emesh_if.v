@@ -98,18 +98,16 @@ module emesh_if (/*AUTOARG*/
 					                       c2e_xmesh_packet_in[PW-1:0];
    
 				
-   //Wait pushback
-   assign c2e_cmesh_wait_out = (c2e_cmesh_access_in & c2e_emesh_wait_in);
+   //Wait pushback (for all, don't want loopback paths)
+
+   assign c2e_cmesh_wait_out = c2e_emesh_wait_in;
    
 
-   assign c2e_rmesh_wait_out = c2e_rmesh_access_in & 
-			       (c2e_emesh_wait_in | c2e_cmesh_access_in);
+   assign c2e_rmesh_wait_out = c2e_emesh_wait_in;
 				
 
-   assign c2e_xmesh_wait_out = c2e_xmesh_access_in & 
-			       (c2e_emesh_wait_in | 
-				c2e_cmesh_access_in | 
-				c2e_rmesh_access_in);
+   assign c2e_xmesh_wait_out = c2e_emesh_wait_in;
+   
    				     
 endmodule // emesh_if
 /*
