@@ -1,9 +1,3 @@
-`define CFG_FAKECLK   1      /*stupid verilator doesn't get clock gating*/
-`define CFG_MDW       32     /*Width of mesh network*/
-`define CFG_DW        32     /*Width of datapath*/
-`define CFG_AW        32     /*Width of address space*/
-`define CFG_LW        8      /*Link port width*/
-
 module dut(/*AUTOARG*/
    // Outputs
    dut_active, wait_out, access_out, packet_out,
