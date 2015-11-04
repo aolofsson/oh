@@ -14,9 +14,9 @@ set elink_src_files [list \
     "$top_srcdir/emailbox/hdl/emailbox.v" \
     "$top_srcdir/elink/hdl" ]
 set elink_constr_files [list \
-    "$top_srcdir/elink/scripts/xilinx/elink_clocks.xdc" \
-    "$top_srcdir/elink/scripts/xilinx/elink_pins.xdc" \
-    "$top_srcdir/elink/scripts/xilinx/elink_timing.xdc" ]
+    "$top_srcdir/elink/projects/xilinx/elink_clocks.xdc" \
+    "$top_srcdir/elink/projects/xilinx/elink_pins.xdc" \
+    "$top_srcdir/elink/projects/xilinx/elink_timing.xdc" ]
 set elink_ip_files [concat $elink_src_files $elink_constr_files]
 
 oh::ip::add_files axi_elink $elink_ip_files
