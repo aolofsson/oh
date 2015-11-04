@@ -4,8 +4,6 @@
 *.o
 *.e
 *.d
-*.out
-*.trace
 ######################
 # Emacs/vim/gedit backup files
 *~
@@ -15,8 +13,11 @@
 *.bak
 
 #######################
-# Log files
-
+# Simulation files
+*.vvp
+*.vcd
+*.out
+*.trace
 
 #######################
 # XILINX crud
