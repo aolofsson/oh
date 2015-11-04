@@ -20,9 +20,17 @@
 *.trace
 
 #######################
-# XILINX crud
+# XILINX crap
 *.log
 *.jou
 *.runs
 *.sim
 *.rpt
+*.str
+*.xml
+*.hw
+*.cache
+xgui/
+*.zip
+
+
