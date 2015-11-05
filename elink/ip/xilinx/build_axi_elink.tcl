@@ -67,24 +67,20 @@ foreach file $ip_files {
     generate_target all [get_files $file]
     set obj  [create_ip_run -force [get_files $file]]
     launch_run -jobs 2 $obj
+    wait_on_run $obj
 }
-
 
 ###########################################################
 # SYNTHESIZE (FOR SANITY)
 ###########################################################
 set_property top $design [current_fileset]
 launch_runs synth_1 -jobs 2
+wait_on_run synth_1
+
 
 ###########################################################
 # Package
 ###########################################################
-
-ipx::create_xgui_files [ipx::current_core]
-ipx::update_checksums [ipx::current_core]
-ipx::save_core [ipx::current_core]
-ipx::check_integrity -quiet [ipx::current_core]
-
 
 ::ipx::package_project -force -root_dir $design
 ::set_property vendor              {www.parallella.org}    [ipx::current_core]
@@ -92,25 +88,23 @@ ipx::check_integrity -quiet [ipx::current_core]
 ::set_property taxonomy            {{/AXI_Infrastructure}} [ipx::current_core]
 ::set_property vendor_display_name {OH!}                   [ipx::current_core]
 ::set_property company_url         {www.parallella.org}    [ipx::current_core]
+::set_property supported_families  {{kintexu}    {Pre-Production} \
+				{virtexu}    {Pre-Production} \
+				{virtex7}    {Production} \
+				{qvirtex7}   {Production} \
+				{kintex7}    {Production} \
+				{kintex7l}   {Production} \
+				{qkintex7}   {Production} \
+				{qkintex7l}  {Production} \
+				{artix7}     {Production} \
+				{artix7l}    {Production} \
+				{aartix7}    {Production} \
+				{qartix7}    {Production} \
+				{zynq}       {Production} \
+				{qzynq}      {Production} \
+				{azynq}      {Production}}   [ipx::current_core]
 
-::set_property supported_families \
-    {{kintexu}    {Pre-Production} \
-     {virtexu}    {Pre-Production} \
-     {virtex7}    {Production} \
-     {qvirtex7}   {Production} \
-     {kintex7}    {Production} \
-     {kintex7l}   {Production} \
-     {qkintex7}   {Production} \
-     {qkintex7l}  {Production} \
-     {artix7}     {Production} \
-     {artix7l}    {Production} \
-     {aartix7}    {Production} \
-     {qartix7}    {Production} \
-     {zynq}       {Production} \
-     {qzynq}      {Production} \
-     {azynq}      {Production}}   [ipx::current_core]
-
-### Write ZIP file
+### Write ZIP archive
 ipx::archive_core $archive [ipx::current_core]
 
 ###########################################################
