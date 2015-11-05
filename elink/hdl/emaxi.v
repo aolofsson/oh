@@ -82,7 +82,7 @@ module emaxi(/*autoarg*/
    input  	       m_axi_aresetn; // global reset singal.
 
    //Write address channel
-   output [M_IDW-1:0]    m_axi_awid;    // write address ID
+   output [M_IDW-1:0]  m_axi_awid;    // write address ID
    output [31 : 0]     m_axi_awaddr;  // master interface write address   
    output [7 : 0]      m_axi_awlen;   // burst length.
    output [2 : 0]      m_axi_awsize;  // burst size.
@@ -188,7 +188,6 @@ module emaxi(/*autoarg*/
    //RXWR
    packet2emesh p2e_rxwr (
 			  // Outputs
-			  .access_out		(),
 			  .write_out		(),
 			  .datamode_out		(rxwr_datamode[1:0]),
 			  .ctrlmode_out		(),
@@ -202,7 +201,6 @@ module emaxi(/*autoarg*/
    //RXRD
    packet2emesh p2e_rxrd (
 			  // Outputs
-			  .access_out		(),
 			  .write_out		(),
 			  .datamode_out		(rxrd_datamode[1:0]),
 			  .ctrlmode_out		(rxrd_ctrlmode[3:0]),
@@ -218,7 +216,6 @@ module emaxi(/*autoarg*/
 		     // Outputs
 		     .packet_out	(txrr_packet[PW-1:0]),
 		     // Inputs
-		     .access_in		(txrr_access),
 		     .write_in		(1'b1),
 		     .datamode_in	(txrr_datamode[1:0]),
 		     .ctrlmode_in	(txrr_ctrlmode[3:0]),
@@ -255,7 +252,7 @@ module emaxi(/*autoarg*/
    
    // generate write-address signals
    always @( posedge m_axi_aclk )     
-     if(~m_axi_aresetn) 
+     if(!m_axi_aresetn) 
        begin
           m_axi_awvalid      <= 1'b0;
           m_axi_awaddr[31:0] <= 32'd0;
@@ -399,7 +396,7 @@ module emaxi(/*autoarg*/
 		7'b0,
                 rxrd_srcaddr[31:0],//40:9
                 rxrd_dstaddr[2:0], //8:6
-                rxrd_ctrlmode[3:0], //5:2
+                rxrd_ctrlmode[3:0],//5:2
                 rxrd_datamode[1:0]
                 };
    
@@ -434,7 +431,7 @@ module emaxi(/*autoarg*/
    assign    m_axi_arsize[2:0]    = {1'b0, rxrd_datamode[1:0]};
    assign    m_axi_arlen[7:0]     = 8'd0;
    assign    m_axi_arvalid        = rxrd_access & ~readinfo_full;
-   assign    rxrd_wait            = m_axi_arvalid & ~m_axi_arready;
+   assign    rxrd_wait            = readinfo_full | ~m_axi_arready;
    
    //#########################################################################
    //Read response channel

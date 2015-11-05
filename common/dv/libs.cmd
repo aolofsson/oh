@@ -4,6 +4,7 @@
 #DV
 -y ../../common/dv
 -y ../../emesh/dv
+-y ../../memory/dv
 
 #HDL
 -y .

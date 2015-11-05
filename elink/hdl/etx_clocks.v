@@ -65,8 +65,8 @@ module etx_clocks (/*AUTOARG*/
    wire       tx_lckl_div4_mmcm;
 
    //MMCM & PLL
-   wire       cclk_fb_in;
-   wire       cclk_fb_out;
+   wire       cclk_fb;
+   //wire       cclk_fb_out;
    wire       lclk_fb_i;
    wire       pll_reset;
    wire       mmcm_locked;
@@ -222,8 +222,8 @@ module etx_clocks (/*AUTOARG*/
 	.CLKOUT6(),
 	.PWRDWN(1'b0),
         .RST(mmcm_reset),     //reset
-        .CLKFBIN(cclk_fb_in),
-        .CLKFBOUT(cclk_fb_out),  //feedback clock     
+        .CLKFBIN(cclk_fb),
+        .CLKFBOUT(cclk_fb),  //feedback clock     
         .CLKIN1(sys_clk),    //input clock
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
@@ -247,7 +247,7 @@ module etx_clocks (/*AUTOARG*/
    //Tx clock buffers
    BUFG i_lclk_bufg_i      (.I(tx_lclk_io),        .O(tx_lclk));     //300MHz
    BUFG i_lclk_div4_bufg_i (.I(tx_lclk_div4_mmcm), .O(tx_lclk_div4));//75MHz
-   BUFG i_fb_buf           (.I(cclk_fb_out), .O(cclk_fb_in));        //FB
+//   BUFG i_fb_buf           (.I(cclk_fb_out), .O(cclk_fb_in));      //FB
 
    //###########################
    // CCLK

@@ -121,6 +121,7 @@ module MMCME2_ADV # (
 	   clk_comb[j] <= delay[2*j] & ~delay[2*j+1];	 
       end
    
+   //UGLY: Fix this! Doesn't simulate well
    reg vco_clk;   
    integer k;   
    always @*
