@@ -129,14 +129,13 @@ module etx_arbiter (/*AUTOARG*/
 		      etx_cfg_wait;
    
    //Host read request (self throttling, one read at a time)
-   assign txrd_wait = etx_rd_wait | 
+   assign txrd_wait = etx_rd_wait  | 
 		      etx_cfg_wait | 
 		      txrd_arb_wait;
    //Read response
-   assign txrr_wait = etx_wr_wait | 
-		      etx_cfg_wait | 
+   assign txrr_wait = etx_wr_wait  | 
+		      etx_cfg_wait |
 		      txrr_arb_wait;
-
  
    //#####################################################################
    //# Pipeline stage (arbiter+mux takes time..)

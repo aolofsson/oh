@@ -85,19 +85,19 @@ module esaxi (/*autoarg*/
    
    //Read channel
    output [S_IDW-1:0] s_axi_rid;    //write address ID
-   output [31:0]    s_axi_rdata;
-   output 	    s_axi_rlast;   
-   output [1:0]     s_axi_rresp;
-   output 	    s_axi_rvalid;
-   input 	    s_axi_rready;
+   output [31:0]      s_axi_rdata;
+   output 	      s_axi_rlast;   
+   output [1:0]       s_axi_rresp;
+   output 	      s_axi_rvalid;
+   input 	      s_axi_rready;
 
    //Write channel
    input [S_IDW-1:0]  s_axi_wid;    //write address ID
-   input [31:0]     s_axi_wdata;
-   input 	    s_axi_wlast;   
-   input [3:0] 	    s_axi_wstrb;
-   input 	    s_axi_wvalid;
-   output 	    s_axi_wready;
+   input [31:0]       s_axi_wdata;
+   input 	      s_axi_wlast;   
+   input [3:0] 	      s_axi_wstrb;
+   input 	      s_axi_wvalid;
+   output 	      s_axi_wready;
 
    //###################################################
    //#WIRE/REG DECLARATIONS
@@ -112,7 +112,7 @@ module esaxi (/*autoarg*/
    reg [31:0] 	      axi_awaddr;  // 32b for epiphany addr
    reg [1:0] 	      axi_awburst;
    reg [2:0] 	      axi_awsize;
-   reg [S_IDW-1:0]      axi_bid;     //what to do with this?
+   reg [S_IDW-1:0]    axi_bid;     //what to do with this?
  
    reg [31:0] 	      axi_araddr;
    reg [7:0] 	      axi_arlen;
@@ -461,7 +461,7 @@ module esaxi (/*autoarg*/
    assign rxrr_wait = 1'b0;
    
    always @( posedge s_axi_aclk ) 
-      if (~s_axi_aresetn) 
+      if (!s_axi_aresetn) 
 	begin
            s_axi_rvalid       <= 1'b0;
            s_axi_rdata[31:0]  <= 32'd0;

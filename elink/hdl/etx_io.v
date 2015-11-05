@@ -104,7 +104,7 @@ always @ (posedge tx_lclk)
        tx_io_wait <= 1'b0;
      else if ((tx_state[2:0] ==`CYCLE4) & ~tx_burst)
        tx_io_wait <= 1'b1;
-     else if (tx_state[2:0]==`CYCLE7)
+     else if (tx_state[2:0]==`IDLE)
        tx_io_wait <= 1'b0;
   
    //Create frame signal for output
