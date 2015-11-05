@@ -28,7 +28,6 @@ set constraints_files []
 ###########################################################
 # Create Managed IP Project
 ###########################################################
-close_project
 create_project -force $design -part $partname 
 set_property target_language Verilog [current_project]
 
@@ -52,23 +51,27 @@ if {[llength $constraints_files] != 0} {
 }
 
 #ADDING IP
-if {[string equal [get_filesets -quiet ip_1] ""]} {
-  create_fileset -srcset ip_1
-}
 if {[llength $ip_files] != 0} {
-    add_files -norecurse -fileset [get_filesets ip_1] $ip_files
+    add_files -norecurse -fileset [get_filesets sources_1] $ip_files
 }
-
+foreach file $ip_files {
+    #TODO: is this needed?
+    set file_obj [get_files -of_objects [get_filesets sources_1] $file]
+    set_property "synth_checkpoint_mode" "Singular" $file_obj
+}
 #RERUN/UPGRADE IP
-upgrade_ip -srcset ip_1  [get_ips]
+upgrade_ip [get_ips]
+
+#TODO: How to check for this status of previous command?
 foreach file $ip_files {
     generate_target all [get_files $file]
     set obj  [create_ip_run -force [get_files $file]]
     launch_run -jobs 2 $obj
 }
 
+
 ###########################################################
-# SYNTHESIZE
+# SYNTHESIZE (FOR SANITY)
 ###########################################################
 set_property top $design [current_fileset]
 launch_runs synth_1 -jobs 2
@@ -77,7 +80,6 @@ launch_runs synth_1 -jobs 2
 # Package
 ###########################################################
 
-
 ipx::create_xgui_files [ipx::current_core]
 ipx::update_checksums [ipx::current_core]
 ipx::save_core [ipx::current_core]
@@ -85,14 +87,31 @@ ipx::check_integrity -quiet [ipx::current_core]
 
 
 ::ipx::package_project -force -root_dir $design
-set c ::ipx::current_core
-::set_property vendor              {www.parallella.org}    [$c]
-::set_property library             {user}                  [$c]
-::set_property taxonomy            {{/AXI_Infrastructure}} [$c]
-::set_property vendor_display_name {OH!}                   [$c]
-::set_property company_url         {www.parallella.org}    [$c]
-ipx::archive_core $archive [ipx::current_core]
+::set_property vendor              {www.parallella.org}    [ipx::current_core]
+::set_property library             {user}                  [ipx::current_core]
+::set_property taxonomy            {{/AXI_Infrastructure}} [ipx::current_core]
+::set_property vendor_display_name {OH!}                   [ipx::current_core]
+::set_property company_url         {www.parallella.org}    [ipx::current_core]
 
+::set_property supported_families \
+    {{kintexu}    {Pre-Production} \
+     {virtexu}    {Pre-Production} \
+     {virtex7}    {Production} \
+     {qvirtex7}   {Production} \
+     {kintex7}    {Production} \
+     {kintex7l}   {Production} \
+     {qkintex7}   {Production} \
+     {qkintex7l}  {Production} \
+     {artix7}     {Production} \
+     {artix7l}    {Production} \
+     {aartix7}    {Production} \
+     {qartix7}    {Production} \
+     {zynq}       {Production} \
+     {qzynq}      {Production} \
+     {azynq}      {Production}}   [ipx::current_core]
+
+### Write ZIP file
+ipx::archive_core $archive [ipx::current_core]
 
 ###########################################################
 # Exit
