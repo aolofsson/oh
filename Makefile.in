@@ -22,11 +22,11 @@ parallella-z7020: builddeps
 
 # Temporary
 package_axi_elink: builddeps
-	vivado -mode batch -source $(top_srcdir)/elink/scripts/xilinx/package_axi_elink.tcl
+	vivado -mode batch -source $(top_srcdir)/elink/projects/xilinx/package_axi_elink.tcl
 
 # Temporary
 elink: builddeps
-	vivado -mode batch -source $(top_srcdir)/elink/scripts/xilinx/run.tcl
+	vivado -mode batch -source $(top_srcdir)/elink/projects/xilinx/run.tcl
 
 clean:
 	find . \( -name "vivado*.log" -or -name "vivado*.jou" \) -delete
