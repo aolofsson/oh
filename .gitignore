@@ -4,8 +4,6 @@
 *.o
 *.e
 *.d
-*.out
-*.trace
 ######################
 # Emacs/vim/gedit backup files
 *~
@@ -15,7 +13,27 @@
 *.bak
 
 #######################
-# Log files
+# Simulation files
+*.vvp
+*.vcd
+*.out
+*.trace
+
+#######################
+# XILINX crap
 *.log
 *.jou
+*.runs
+*.sim
+*.rpt
+*.str
+*.xml
+*.hw
+*.cache
+xgui/
+*.zip
+*_stub.vhdl
+*.upgrade_log
+*_stub.v
+*_changelog.txt
 

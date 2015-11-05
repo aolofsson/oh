@@ -80,6 +80,13 @@ module etx_protocol (/*AUTOARG*/
 		      ((etx_write & ~tx_wr_wait_sync) | (~etx_write & ~tx_rd_wait_sync))
 		       );
    
+
+   reg 		 tx_io_wait_reg;
+   
+   //Pipeline the io wait to improve timing
+   always @ (posedge clk)
+     tx_io_wait_reg <= tx_io_wait;
+
    //Prepare transaction / with burst
    always @ (posedge clk)
      if(reset)

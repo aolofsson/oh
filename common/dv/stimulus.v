@@ -61,9 +61,6 @@ module stimulus (/*AUTOARG*/
 	   $display("could not open the file %0s\n", testfile);
 	   $finish;
 	end
-      //Initialize stimulus array
-      for(i=0;i<MD;i=i+1)
-	stimarray[i]='d0;	
       //Read stimulus from file      
       j=0;      
       while ($fgets(str, fd)) begin 
@@ -76,15 +73,16 @@ module stimulus (/*AUTOARG*/
       stim_end[31:0]=j;      
    end
 
+   
 `define IDLE  2'b00
 `define DONE  2'b10
 `define GO    2'b01
    
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       begin
+       begin	  	
 	  state[1:0]          <= `IDLE;
-	  mem_access         <= 1'b0;	  
+	  mem_access          <= 1'b0;	  
 	  mem_data            <= 'd0;
 	  stim_count          <= 0;
 	  stim_addr[MAW-1:0]  <= 'b0;	   	  
@@ -102,11 +100,10 @@ module stimulus (/*AUTOARG*/
 	  stim_addr[MAW-1:0]   <= stim_addr[MAW-1:0] + 1'b1; 
 	  stim_count           <= stim_count + 1'b1; 
        end         
-     else if((state[1:0]==`GO) & ~dut_wait & (wait_counter[15:0]==0)) //not waiting and done
+     else if((wait_counter[15:0]==0) & (stim_count == stim_end) & (state[1:0]==`GO) & ~dut_wait) //not waiting and done
        begin
 	  state[1:0]          <= `DONE;//gone
 	  mem_access          <= 1'b0;	  
-	  mem_data            <= 'b0;	  
        end
      else if(wait_counter>0)
        begin
@@ -115,12 +112,17 @@ module stimulus (/*AUTOARG*/
        end  
 
    //Use to finish simulation
-   assign stim_done           = (state[1:0]==`DONE);
-
+   assign stim_done           = ~dut_wait & (state[1:0]==`DONE);
+   
    //Removing delay value
    //assign stim_packet[PW-1:0] = mem_data[PW+16-1:  
-   always @ (posedge clk)
-     if(~dut_wait)
+   always @ (posedge clk or negedge nreset)
+     if(~nreset)
+       begin
+	  stim_packet_reg <= 'b0;	  
+	  stim_access_reg <= 'b0;	  
+       end
+     else if(~dut_wait)
        begin
 	  stim_packet_reg <= mem_data[PW+16-1:16];
 	  stim_access_reg <= mem_access;	  

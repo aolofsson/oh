@@ -59,8 +59,8 @@ module erx_clocks (/*AUTOARG*/
    wire       idelay_ref_clk_pll;
    
    //PLL
-   wire       rx_lclk_fb_in;
-   wire       rx_lclk_fb_out;   
+   wire       rx_lclk_fb;
+//   wire       rx_lclk_fb_out;   
  
    
    //###########################
@@ -193,8 +193,8 @@ module erx_clocks (/*AUTOARG*/
         .CLKOUT5(rx_lclk_div4_pll),
 	.PWRDWN(1'b0),
         .RST(pll_reset),
-        .CLKFBIN(rx_lclk_fb_in),    
-        .CLKFBOUT(rx_lclk_fb_out),       
+        .CLKFBIN(rx_lclk_fb),    
+        .CLKFBOUT(rx_lclk_fb),       
         .CLKIN1(rx_clkin),
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      
@@ -212,7 +212,7 @@ module erx_clocks (/*AUTOARG*/
    BUFG i_lclk_bufg      (.I(rx_lclk_pll),       .O(rx_lclk));       //300Mhz
    BUFG i_lclk_div4_bufg (.I(rx_lclk_div4_pll),  .O(rx_lclk_div4));  //75 MHz (300/4)
    BUFG i_idelay__bufg   (.I(idelay_ref_clk_pll),.O(idelay_ref_clk));//idelay ctrl clock
-   BUFG i_lclk_fb_bufg   (.I(rx_lclk_fb_out),    .O(rx_lclk_fb_in)); //feedback buffer
+//   BUFG i_lclk_fb_bufg   (.I(rx_lclk_fb_out),    .O(rx_lclk_fb_in)); //feedback buffer
    
    //###########################
    // Idelay controller

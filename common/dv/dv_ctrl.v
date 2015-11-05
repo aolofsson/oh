@@ -21,9 +21,8 @@ module dv_ctrl(/*AUTOARG*/
    //signal declarations
    reg 	  nreset = 1'b0;
    reg 	  clk    = 1'b0;
-
-
-   reg 	  start;   
+   reg 	  start;
+   
    //init
    initial
      begin	
@@ -37,12 +36,10 @@ module dv_ctrl(/*AUTOARG*/
      else if(dut_active)       
        start = 1'b1;
 
-   //finish circuitry
-   always @*
-     if(stim_done & test_done)
-       begin
-	  #(TIMEOUT) $finish;	  
-       end
+   always @ (posedge clk)
+     if(stim_done & test_done)       
+       #(TIMEOUT) $finish;	  
+   
 	   
    //Clock generator
    always
@@ -58,26 +55,9 @@ module dv_ctrl(/*AUTOARG*/
         $dumpvars(0, dv_top);
      end
 `endif
+               
+endmodule // dv_ctrl
 
-   parameter REFCLK_FREQUENCY = 200.00;   
-   parameter real tap = 1 / (32 * 2 * (REFCLK_FREQUENCY/1000));
-
-
-   reg [3:0] 	  myreg=4'b0101;
-   
-   reg [7:0] 	  clkdel;
-
-   always @ (clk)
-     begin
-	clkdel[0] <= #(tap*5) clk;
-	clkdel[1] <= #(tap*myreg) clk;
-	clkdel[2] <= #(tap*15) clk;
-	clkdel[3] <= #(tap*20) clk;
-	clkdel[4] <= #(tap*25) clk;
-	clkdel[5] <= #(tap*30) clk;	
-     end
-              
-endmodule // dv_init
 
 /*
   Copyright (C) 2014 Adapteva, Inc.
