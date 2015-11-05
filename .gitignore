@@ -32,5 +32,8 @@
 *.cache
 xgui/
 *.zip
-
+*_stub.vhdl
+*.upgrade_log
+*_stub.v
+*_changelog.txt
 
