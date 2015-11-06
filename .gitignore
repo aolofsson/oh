@@ -42,3 +42,6 @@ xgui/
 *_changelog.txt
 src/
 *.vhdl
+*.dcp
+*.veo
+*_ooc.*
