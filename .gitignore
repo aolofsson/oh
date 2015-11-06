@@ -38,5 +38,7 @@ xgui/
 *_stub.vhdl
 *.upgrade_log
 *_stub.v
+*_funcsim.v
 *_changelog.txt
-
+src/
+*.vhdl

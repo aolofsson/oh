@@ -21,7 +21,7 @@ set hdl_files [list \
 		  ]
 
 set ip_files   [list \
-		    $root/memory/ip/xilinx/fifo_async_104x32.xci \
+		    $root/memory/fpga/fifo_async_104x32.xci \
 		   ]
 
 set constraints_files []
@@ -75,16 +75,16 @@ foreach file $ip_files {
 ###########################################################
 # SYNTHESIZE (FOR SANITY)
 ###########################################################
-set_property top $design [current_fileset]
-launch_runs synth_1 -jobs 2
-wait_on_run synth_1
+#set_property top $design [current_fileset]
+#launch_runs synth_1 -jobs 2
+#wait_on_run synth_1
 
 
 ###########################################################
 # Package
 ###########################################################
 
-::ipx::package_project -import_files -force -root_dir $design
+::ipx::package_project -import_files -force -root_dir $projdir
 ::set_property vendor              {www.parallella.org}    [ipx::current_core]
 ::set_property library             {user}                  [ipx::current_core]
 ::set_property taxonomy            {{/AXI_Infrastructure}} [ipx::current_core]
