@@ -1,13 +1,13 @@
 # Contributing to "OH"
 
-If you are interested in contributing to the Open Hardware librarya, here are some instructions to get you started. Thank you!
+If you are interested in contributing to OH!, here are some instructions to get you started. Thank you!
 
 ### Coding Guidelines
-* Language: Verilog, VHDL, Chisel or any other open source language
+* Language: Verilog
 * Style: A coding manual to be published soon (stay tuned)
 
 ### Contribution advice
-* Keep changes small (especially if you are a new contributor)  
+* Keep changes small (especially if you are a new contributor)
 * You are responsible for not breaking something with your PR
 * Include examples/test code for pull request
 
