@@ -1,6 +1,69 @@
 Copyright 1986-2015 Xilinx, Inc. All Rights Reserved.
 ------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2015.1 (lin64) Build 1215546 Mon Apr 27 19:07:21 MDT 2015
+| Date         : Tue Nov  3 22:34:33 2015
+| Host         : parallella running 64-bit Ubuntu 14.04.3 LTS
+| Command      : upgrade_ip
+| Device       : xc7z015clg485-1
+------------------------------------------------------------------------------------
+
+Upgrade Log for IP 'fifo_async_104x32'
+
+1. Summary
+----------
+
+SUCCESS in the update of fifo_async_104x32 (xilinx.com:ip:fifo_generator:12.0 (Rev. 4)) to current project options.
+
+
+
+
+
+
+Copyright 1986-2015 Xilinx, Inc. All Rights Reserved.
+------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2015.1 (lin64) Build 1215546 Mon Apr 27 19:07:21 MDT 2015
+| Date         : Tue Nov  3 22:22:06 2015
+| Host         : parallella running 64-bit Ubuntu 14.04.3 LTS
+| Command      : upgrade_ip
+| Device       : xc7z020clg400-1
+------------------------------------------------------------------------------------
+
+Upgrade Log for IP 'fifo_async_104x32'
+
+1. Summary
+----------
+
+SUCCESS in the update of fifo_async_104x32 (xilinx.com:ip:fifo_generator:12.0 (Rev. 4)) to current project options.
+
+
+
+
+
+
+Copyright 1986-2015 Xilinx, Inc. All Rights Reserved.
+------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2015.1 (lin64) Build 1215546 Mon Apr 27 19:07:21 MDT 2015
+| Date         : Tue Nov  3 22:05:29 2015
+| Host         : parallella running 64-bit Ubuntu 14.04.3 LTS
+| Command      : upgrade_ip
+| Device       : xc7z030sbg485-1
+------------------------------------------------------------------------------------
+
+Upgrade Log for IP 'fifo_async_104x32'
+
+1. Summary
+----------
+
+SUCCESS in the update of fifo_async_104x32 (xilinx.com:ip:fifo_generator:12.0 (Rev. 4)) to current project options.
+
+
+
+
+
+
+Copyright 1986-2015 Xilinx, Inc. All Rights Reserved.
+------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2015.1 (lin64) Build 1215546 Mon Apr 27 19:07:21 MDT 2015
 | Date         : Fri Sep 18 12:14:21 2015
 | Host         : parallella running 64-bit Ubuntu 14.04.3 LTS
 | Command      : upgrade_ip

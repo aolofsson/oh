@@ -1,7 +1,7 @@
 -- Copyright 1986-2015 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2015.2 (lin64) Build 1266856 Fri Jun 26 16:35:25 MDT 2015
--- Date        : Wed Nov  4 19:31:31 2015
+-- Date        : Wed Nov  4 22:10:19 2015
 -- Host        : parallella running 64-bit Ubuntu 14.04.3 LTS
 -- Command     : write_vhdl -force -mode funcsim
 --               /home/aolofsson/Work_all/oh/memory/ip/xilinx/fifo_async_104x32_funcsim.vhdl

@@ -1,21 +1,21 @@
-set oh_path "../../../.."
-# Set the reference directory for source file relative paths (by default the value is script directory path)
-set origin_dir "."
+#########################################
+# VARIABLES
+#########################################
+set design axi_elink
 
-# Set the directory path for the original project from where this script was exported
-set orig_proj_dir "[file normalize "$origin_dir"]"
+# Set the reference directory for source file relative paths
+set oh_root "../../../.."
+
+#########################################
+# FLOW
+#########################################
 
 # Create project
-create_project axi_elink_v1_0 .
-
-# Set the directory path for the new project
-set proj_dir [get_property directory [current_project]]
+create_project $design .
 
 # Set project properties
-set obj [get_projects axi_elink_v1_0]
-set_property "default_lib" "xil_defaultlib" $obj
-set_property "part" "xc7z030sbg485-1" $obj
-set_property "simulator_language" "Mixed" $obj
+set_property "default_lib" "xil_defaultlib" [current_project]
+set_property "simulator_language" "Mixed" [current_project]]
 
 # Create 'sources_1' fileset (if not found)
 if {[string equal [get_filesets -quiet sources_1] ""]} {
@@ -23,8 +23,7 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 }
 
 # Set IP repository paths
-set obj [get_filesets sources_1]
-set_property "ip_repo_paths" "[file normalize "$origin_dir"] [file normalize "$origin_dir"]" $obj
+set_property "ip_repo_paths" "[file normalize "$origin_dir"] [file normalize "$origin_dir"]" [get_filesets sources_1]
 
 # Rebuild user ip_repo's index before adding any source files
 update_ip_catalog -rebuild

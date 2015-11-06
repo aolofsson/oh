@@ -129,7 +129,6 @@ module emmu (/*AUTOARG*/
      	 
    assign emesh_dstaddr_out[63:0] = (mmu_en & ~mmu_bp) ? {emmu_lookup_data[43:0], emesh_packet_reg[27:8]} :
 				                         {32'b0,emesh_packet_reg[39:8]}; 
-      
    //Concatenating output packet
    assign emesh_packet_out[PW-1:0] = {emesh_packet_reg[PW-1:40],
                                       emesh_dstaddr_out[31:0],
