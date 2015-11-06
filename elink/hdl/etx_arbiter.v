@@ -18,7 +18,7 @@ module etx_arbiter (/*AUTOARG*/
    // Outputs
    txwr_wait, txrd_wait, txrr_wait, etx_access, etx_packet, etx_rr,
    // Inputs
-   clk, reset, txwr_access, txwr_packet, txrd_access, txrd_packet,
+   clk, nreset, txwr_access, txwr_packet, txrd_access, txrd_packet,
    txrr_access, txrr_packet, etx_rd_wait, etx_wr_wait, etx_cfg_wait,
    ctrlmode_bypass, ctrlmode
    );
@@ -28,7 +28,7 @@ module etx_arbiter (/*AUTOARG*/
    
    //tx clock and reset
    input          clk;
-   input          reset;
+   input          nreset;
 
    //Write Request (from slave)
    input 	   txwr_access;
@@ -149,7 +149,7 @@ module etx_arbiter (/*AUTOARG*/
 
    //access
     always @ (posedge clk)
-      if (reset)
+      if (!nreset)
 	begin
 	   etx_access        <= 1'b0;   
 	   etx_rr            <= 1'b0;	   

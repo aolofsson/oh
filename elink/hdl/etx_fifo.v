@@ -4,7 +4,7 @@ module etx_fifo(/*AUTOARG*/
    txrd_fifo_access, txrd_fifo_packet, txrr_fifo_access,
    txrr_fifo_packet, txwr_fifo_access, txwr_fifo_packet,
    // Inputs
-   etx_reset, sys_reset, sys_clk, tx_lclk_div4, txrd_access,
+   etx_nreset, sys_nreset, sys_clk, tx_lclk_div4, txrd_access,
    txrd_packet, txwr_access, txwr_packet, txrr_access, txrr_packet,
    etx_cfg_wait, txrd_fifo_wait, txrr_fifo_wait, txwr_fifo_wait
    );
@@ -16,8 +16,8 @@ module etx_fifo(/*AUTOARG*/
    parameter ID      = 12'h000;
    
    //Clocks,reset,config
-   input          etx_reset;
-   input          sys_reset;
+   input          etx_nreset;
+   input          sys_nreset;
    input 	  sys_clk;   
    input 	  tx_lclk_div4;	  // slow speed parallel clock
       
@@ -75,8 +75,8 @@ module etx_fifo(/*AUTOARG*/
                                .clk_in	   (sys_clk),
                                .access_in  (@"(substring vl-cell-name  0 4)"_access),
                                .rd_en      (@"(substring vl-cell-name  0 4)"_fifo_read),
-			       .reset_in   (sys_reset),
-                               .reset_out  (etx_reset),
+			       .nreset_in   (sys_nreset),
+                               .nreset_out  (etx_nreset),
                                .packet_in  (@"(substring vl-cell-name  0 4)"_packet[PW-1:0]),
     );
     */
@@ -84,34 +84,34 @@ module etx_fifo(/*AUTOARG*/
    //Write fifo (from slave)
    fifo_cdc #(.DW(104), .DEPTH(32)) txwr_fifo(
 			                  /*AUTOINST*/
-						 // Outputs
-						 .wait_out		(txwr_wait),	 // Templated
-						 .access_out		(txwr_fifo_access), // Templated
-						 .packet_out		(txwr_fifo_packet[PW-1:0]), // Templated
-						 // Inputs
-						 .clk_in		(sys_clk),	 // Templated
-						 .reset_in		(sys_reset),	 // Templated
-						 .access_in		(txwr_access),	 // Templated
-						 .packet_in		(txwr_packet[PW-1:0]), // Templated
-						 .clk_out		(tx_lclk_div4),	 // Templated
-						 .reset_out		(etx_reset),	 // Templated
-						 .wait_in		(txwr_fifo_wait)); // Templated
+					      // Outputs
+					      .wait_out		(txwr_wait),	 // Templated
+					      .access_out	(txwr_fifo_access), // Templated
+					      .packet_out	(txwr_fifo_packet[PW-1:0]), // Templated
+					      // Inputs
+					      .clk_in		(sys_clk),	 // Templated
+					      .nreset_in	(sys_nreset),	 // Templated
+					      .access_in	(txwr_access),	 // Templated
+					      .packet_in	(txwr_packet[PW-1:0]), // Templated
+					      .clk_out		(tx_lclk_div4),	 // Templated
+					      .nreset_out	(etx_nreset),	 // Templated
+					      .wait_in		(txwr_fifo_wait)); // Templated
    
    //Read request fifo (from slave)
    fifo_cdc  #(.DW(104), .DEPTH(32)) txrd_fifo(
 				             /*AUTOINST*/
-						  // Outputs
-						  .wait_out		(txrd_wait),	 // Templated
-						  .access_out		(txrd_fifo_access), // Templated
-						  .packet_out		(txrd_fifo_packet[PW-1:0]), // Templated
-						  // Inputs
-						  .clk_in		(sys_clk),	 // Templated
-						  .reset_in		(sys_reset),	 // Templated
-						  .access_in		(txrd_access),	 // Templated
-						  .packet_in		(txrd_packet[PW-1:0]), // Templated
-						  .clk_out		(tx_lclk_div4),	 // Templated
-						  .reset_out		(etx_reset),	 // Templated
-						  .wait_in		(txrd_fifo_wait)); // Templated
+					       // Outputs
+					       .wait_out	(txrd_wait),	 // Templated
+					       .access_out	(txrd_fifo_access), // Templated
+					       .packet_out	(txrd_fifo_packet[PW-1:0]), // Templated
+					       // Inputs
+					       .clk_in		(sys_clk),	 // Templated
+					       .nreset_in	(sys_nreset),	 // Templated
+					       .access_in	(txrd_access),	 // Templated
+					       .packet_in	(txrd_packet[PW-1:0]), // Templated
+					       .clk_out		(tx_lclk_div4),	 // Templated
+					       .nreset_out	(etx_nreset),	 // Templated
+					       .wait_in		(txrd_fifo_wait)); // Templated
    
 
   
@@ -119,18 +119,18 @@ module etx_fifo(/*AUTOARG*/
    fifo_cdc  #(.DW(104), .DEPTH(32)) txrr_fifo(
 					    
 					     /*AUTOINST*/
-						 // Outputs
-						 .wait_out		(txrr_wait),	 // Templated
-						 .access_out		(txrr_fifo_access), // Templated
-						 .packet_out		(txrr_fifo_packet[PW-1:0]), // Templated
-						 // Inputs
-						 .clk_in		(sys_clk),	 // Templated
-						 .reset_in		(sys_reset),	 // Templated
-						 .access_in		(txrr_access),	 // Templated
-						 .packet_in		(txrr_packet[PW-1:0]), // Templated
-						 .clk_out		(tx_lclk_div4),	 // Templated
-						 .reset_out		(etx_reset),	 // Templated
-						 .wait_in		(txrr_fifo_wait)); // Templated
+					       // Outputs
+					       .wait_out	(txrr_wait),	 // Templated
+					       .access_out	(txrr_fifo_access), // Templated
+					       .packet_out	(txrr_fifo_packet[PW-1:0]), // Templated
+					       // Inputs
+					       .clk_in		(sys_clk),	 // Templated
+					       .nreset_in	(sys_nreset),	 // Templated
+					       .access_in	(txrr_access),	 // Templated
+					       .packet_in	(txrr_packet[PW-1:0]), // Templated
+					       .clk_out		(tx_lclk_div4),	 // Templated
+					       .nreset_out	(etx_nreset),	 // Templated
+					       .wait_in		(txrr_fifo_wait)); // Templated
   
 
    

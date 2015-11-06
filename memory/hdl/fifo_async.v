@@ -61,7 +61,7 @@ else if (TYPE=="XILINX") begin : xilinx
    if((DW==104) & (DEPTH==32))
      begin
 	fifo_async_104x32 fifo_async_104x32 (.full		(),
-					     .prog_full	(prog_full),
+					     .prog_full	        (prog_full),
 					     .almost_full	(full),
 					     /*AUTOINST*/
 					     // Outputs
@@ -83,5 +83,5 @@ endgenerate
    
 endmodule // fifo_async
 // Local Variables:
-// verilog-library-directories:("." "../ip/xilinx/" "../dv")
+// verilog-library-directories:("." "../fpga/" "../dv")
 // End:

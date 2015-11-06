@@ -7,7 +7,7 @@ module erx_io (/*AUTOARG*/
    rx_clkin, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, rx_access, rx_burst, rx_packet,
    // Inputs
-   erx_io_reset, rx_lclk, rx_lclk_div4, idelay_value, load_taps,
+   erx_io_nreset, rx_lclk, rx_lclk_div4, idelay_value, load_taps,
    rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n, rxi_data_p,
    rxi_data_n, rx_wr_wait, rx_rd_wait
    );
@@ -19,7 +19,7 @@ module erx_io (/*AUTOARG*/
    //#########################
    //# reset, clocks
    //#########################
-   input       erx_io_reset;                // high sped reset
+   input       erx_io_nreset;               // high sped reset
    input       rx_lclk;                     // fast I/O clock
    input       rx_lclk_div4;                // slow clock
    output      rx_clkin;                    // clock output for pll
@@ -62,8 +62,6 @@ module erx_io (/*AUTOARG*/
    //############
    //# REGS
    //############
-   reg [7:0] 	 data_even_reg;   
-   reg [7:0] 	 data_odd_reg;
    wire  	 rx_frame;
    reg [111:0]   rx_sample; 
    reg [6:0] 	 rx_pointer;
@@ -76,7 +74,6 @@ module erx_io (/*AUTOARG*/
    wire 	 rx_lclk_iddr;
    wire [8:0] 	 rxi_delay_in;
    wire [8:0] 	 rxi_delay_out;
-   reg 		 reset_sync;
    reg 		 burst_detect;
    
     //#####################
@@ -84,8 +81,8 @@ module erx_io (/*AUTOARG*/
    //#####################
    
    //write Pointer   
-   always @ (posedge rx_lclk or posedge erx_io_reset)
-     if(erx_io_reset)
+   always @ (posedge rx_lclk or negedge erx_io_nreset)
+     if(!erx_io_nreset)
        rx_pointer[6:0] <= 7'b0;   
      else if (~rx_frame)
        rx_pointer[6:0] <= 7'b0000001; //new frame
@@ -123,8 +120,8 @@ module erx_io (/*AUTOARG*/
 	valid_packet <= access;//data pipeline
      end
  
-   always @ (posedge rx_lclk or posedge erx_io_reset)
-     if(erx_io_reset)
+   always @ (posedge rx_lclk or negedge erx_io_nreset)
+     if(!erx_io_nreset)
        burst_detect <= 1'b0;   
      else if(access & rx_frame)
        burst_detect <= 1'b1;

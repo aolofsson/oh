@@ -1,32 +1,3 @@
-# NOTE: See UG1118 for more information
-
-#########################################
-# VARIABLES
-#########################################
-set design parallella_base
-set projdir ./
-set root "../../.."
-set partname "xc7z020clg400-1"
-
-set hdl_files [list \
-		   $root/common/hdl \
-		   $root/memory/hdl \
-		   $root/emesh/hdl \
-		   $root/emmu/hdl \
-		   $root/emailbox/hdl \
-		   $root/edma/hdl \
-	           $root/elink/hdl \
-	           $root/parallella/hdl \
-		   $root/parallella/hdl/parallella_base.v \
-		  ]
-
-set ip_files   [list \
-		    $root/memory/fpga/fifo_async_104x32.xci \
-		   ]
-
-set constraints_files []
-
-
 ###########################################################
 # Create Managed IP Project
 ###########################################################
@@ -90,21 +61,21 @@ foreach file $ip_files {
 ::set_property taxonomy            {{/AXI_Infrastructure}} [ipx::current_core]
 ::set_property vendor_display_name {ADAPTEVA}              [ipx::current_core]
 ::set_property company_url         {www.parallella.org}    [ipx::current_core]
-::set_property supported_families  {{kintexu}    {Pre-Production} \
-				{virtexu}    {Pre-Production} \
-				{virtex7}    {Production} \
-				{qvirtex7}   {Production} \
-				{kintex7}    {Production} \
-				{kintex7l}   {Production} \
-				{qkintex7}   {Production} \
-				{qkintex7l}  {Production} \
-				{artix7}     {Production} \
-				{artix7l}    {Production} \
-				{aartix7}    {Production} \
-				{qartix7}    {Production} \
-				{zynq}       {Production} \
-				{qzynq}      {Production} \
-				{azynq}      {Production}}   [ipx::current_core]
+::set_property supported_families  { \
+					 {virtex7}    {Production} \
+					 {qvirtex7}   {Production} \
+					 {kintex7}    {Production} \
+					 {kintex7l}   {Production} \
+					 {qkintex7}   {Production} \
+					 {qkintex7l}  {Production} \
+					 {artix7}     {Production} \
+					 {artix7l}    {Production} \
+					 {aartix7}    {Production} \
+					 {qartix7}    {Production} \
+					 {zynq}       {Production} \
+					 {qzynq}      {Production} \
+					 {azynq}      {Production} \
+				     }   [ipx::current_core]
 
 ### Write ZIP archive
 ipx::archive_core [concat $design.zip] [ipx::current_core]

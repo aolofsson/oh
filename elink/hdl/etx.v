@@ -1,11 +1,11 @@
 module etx(/*AUTOARG*/
    // Outputs
    tx_active, txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n,
-   txo_data_p, txo_data_n, cclk_p, cclk_n, chip_resetb, txrd_wait,
-   txwr_wait, txrr_wait, etx_cfg_access, etx_cfg_packet, etx_reset,
+   txo_data_p, txo_data_n, cclk_p, cclk_n, chip_nreset, txrd_wait,
+   txwr_wait, txrr_wait, etx_cfg_access, etx_cfg_packet, etx_nreset,
    tx_lclk_div4,
    // Inputs
-   sys_clk, sys_reset, soft_reset, txi_wr_wait_p, txi_wr_wait_n,
+   sys_clk, sys_nreset, soft_reset, txi_wr_wait_p, txi_wr_wait_n,
    txi_rd_wait_p, txi_rd_wait_n, txrd_access, txrd_packet,
    txwr_access, txwr_packet, txrr_access, txrr_packet, etx_cfg_wait
    );
@@ -19,7 +19,7 @@ module etx(/*AUTOARG*/
 
    //Reset and clocks
    input 	  sys_clk;                      // clock for fifos      
-   input 	  sys_reset;                    // reset for fifos   
+   input 	  sys_nreset;                   // reset for fifos   
    input 	  soft_reset;		        // software controlled reset
    output 	  tx_active;		        // tx ready to transmit
    
@@ -32,7 +32,7 @@ module etx(/*AUTOARG*/
    
    //Epiphany Chip Signals
    output 	  cclk_p,cclk_n;   
-   output 	  chip_resetb;
+   output 	  chip_nreset;
          
    //Read Request Channel Input
    input 	  txrd_access;
@@ -52,13 +52,12 @@ module etx(/*AUTOARG*/
    //Configuration Interface (for ERX)
    output 	   etx_cfg_access;
    output [PW-1:0] etx_cfg_packet;
-   output 	   etx_reset;      
+   output 	   etx_nreset;      
    output 	   tx_lclk_div4;
    input 	   etx_cfg_wait;
    
    /*AUTOOUTPUT*/   
-   /*AUTOINPUT*/
-        
+   /*AUTOINPUT*/        
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			tx_lclk;		// From etx_clocks of etx_clocks.v
@@ -85,8 +84,7 @@ module etx(/*AUTOARG*/
    /************************************************************/
    /*Clocks                                                    */
    /************************************************************/
-   etx_clocks etx_clocks (
-			  .etx_io_reset		(etx_io_reset),
+   etx_clocks etx_clocks (.etx_io_nreset	(etx_io_nreset),
 			  /*AUTOINST*/
 			  // Outputs
 			  .tx_lclk		(tx_lclk),
@@ -95,11 +93,11 @@ module etx(/*AUTOARG*/
 			  .tx_lclk_div4		(tx_lclk_div4),
 			  .cclk_p		(cclk_p),
 			  .cclk_n		(cclk_n),
-			  .etx_reset		(etx_reset),
-			  .chip_resetb		(chip_resetb),
+			  .etx_nreset		(etx_nreset),
+			  .chip_nreset		(chip_nreset),
 			  .tx_active		(tx_active),
 			  // Inputs
-			  .sys_reset		(sys_reset),
+			  .sys_nreset		(sys_nreset),
 			  .soft_reset		(soft_reset),
 			  .sys_clk		(sys_clk));
    
@@ -121,8 +119,8 @@ module etx(/*AUTOARG*/
 		      .txwr_fifo_access	(txwr_fifo_access),
 		      .txwr_fifo_packet	(txwr_fifo_packet[PW-1:0]),
 		      // Inputs
-		      .etx_reset	(etx_reset),
-		      .sys_reset	(sys_reset),
+		      .etx_nreset	(etx_nreset),
+		      .sys_nreset	(sys_nreset),
 		      .sys_clk		(sys_clk),
 		      .tx_lclk_div4	(tx_lclk_div4),
 		      .txrd_access	(txrd_access),
@@ -157,7 +155,7 @@ module etx(/*AUTOARG*/
    
    defparam etx_core.ID=ID;   
    etx_core etx_core (.clk		(tx_lclk_div4),
-		      .reset		(etx_reset),
+		      .nreset		(etx_nreset),
 		      /*AUTOINST*/
 		      // Outputs
 		      .tx_access	(tx_access),		 // Templated
@@ -185,8 +183,10 @@ module etx(/*AUTOARG*/
    /*TRANSMIT I/O LOGIC                                       */
    /***********************************************************/
 
+   
+   
    defparam etx_io.IOSTD_ELINK=IOSTD_ELINK;
-   etx_io etx_io (.reset		(etx_io_reset),
+   etx_io etx_io (.nreset		(etx_io_nreset),
 		  /*AUTOINST*/
 		  // Outputs
 		  .txo_lclk_p		(txo_lclk_p),

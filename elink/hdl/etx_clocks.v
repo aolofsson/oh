@@ -2,9 +2,9 @@
 module etx_clocks (/*AUTOARG*/
    // Outputs
    tx_lclk, tx_lclk_io, tx_lclk90, tx_lclk_div4, cclk_p, cclk_n,
-   etx_reset, etx_io_reset, chip_resetb, tx_active,
+   etx_nreset, etx_io_nreset, chip_nreset, tx_active,
    // Inputs
-   sys_reset, soft_reset, sys_clk
+   sys_nreset, soft_reset, sys_clk
    );
 
 `ifdef TARGET_SIMPLE
@@ -28,7 +28,7 @@ module etx_clocks (/*AUTOARG*/
    parameter MMCM_VCO_MULT   = 12;  //TX + CCLK
       
    //Input clock, reset, config interface
-   input      sys_reset;         // por reset (hw)
+   input      sys_nreset;        // por reset (hw)
    input      soft_reset;        // rx enable signal (sw)
    
    //Main input clocks
@@ -44,9 +44,9 @@ module etx_clocks (/*AUTOARG*/
    output     cclk_p, cclk_n;
 
    //Reset
-   output     etx_reset;         // reset for tx core logic
-   output     etx_io_reset;      // io reset (synced to high speed clock)
-   output     chip_resetb;       // reset fpr Epiphany chip
+   output     etx_nreset;        // reset for tx core logic
+   output     etx_io_nreset;     // io reset (synced to high speed clock)
+   output     chip_nreset;       // reset fpr Epiphany chip
    output     tx_active;         // enable for rx path (ensures active clock)
    
    //############
@@ -73,6 +73,7 @@ module etx_clocks (/*AUTOARG*/
    reg 	      mmcm_locked_reg;
    reg 	      mmcm_locked_sync;
    wire       lclk_locked;   
+   wire       tx_nreset;
    
    //###########################
    // RESET STATE MACHINE
@@ -107,8 +108,8 @@ module etx_clocks (/*AUTOARG*/
 `define ACTIVE           3'b101
 
    //Reset sequence state machine      
-   always @ (posedge sys_clk or posedge sys_reset)
-     if(sys_reset)
+   always @ (posedge sys_clk or negedge sys_nreset)
+     if(!sys_nreset)
        reset_state[2:0]        <= `RESET_ALL;   
      else if(heartbeat)
        case(reset_state[2:0])
@@ -138,40 +139,32 @@ module etx_clocks (/*AUTOARG*/
 			;
    
    //reset chip (active low)
-   assign chip_resetb  = (reset_state[2:0]==`DEASSERT_RESET) |
+   assign chip_nreset  = (reset_state[2:0]==`DEASSERT_RESET) |
 		         (reset_state[2:0]==`HOLD_IT)        |
 		         (reset_state[2:0]==`ACTIVE);   
       
    //reset the elink
-   wire tx_reset      =  (reset_state[2:0] != `ACTIVE);
+   assign tx_nreset      =  ~(reset_state[2:0] != `ACTIVE);
 
 
    assign tx_active   =  (reset_state[2:0] == `ACTIVE);
 
    //#############################
-   //#RESET SYNC
+   //#RESET SYNCING
    //#############################
-   //async assert
-   //sync deassert
    
-   //lclk sync
-   always @ (posedge tx_lclk or posedge tx_reset)
-     if(tx_reset)
-       reset_pipe_lclkb[1:0] <= 2'b00;
-     else
-       reset_pipe_lclkb[1:0]  <= {reset_pipe_lclkb[0], 1'b1};   
-
-   assign etx_io_reset = ~reset_pipe_lclkb[1];
-
-   //lclkdiv4 sync
-   always @ (posedge tx_lclk_div4 or posedge tx_reset)
-      if(tx_reset)
-	reset_pipe_lclk_div4b[1:0] <= 2'b00;
-      else
-	reset_pipe_lclk_div4b[1:0]  <= {reset_pipe_lclk_div4b[0],1'b1};   
-
-   assign etx_reset  = ~reset_pipe_lclk_div4b[1];
-   			     
+   rsync rsync_io (// Outputs
+		   .nrst_out		(etx_io_nreset),
+		   // Inputs
+		   .clk			(tx_lclk),
+		   .nrst_in		(tx_nreset));
+   
+   rsync rsync_core (// Outputs
+		     .nrst_out		(etx_nreset),
+		     // Inputs
+		     .clk		(tx_lclk_div4),
+		     .nrst_in		(tx_nreset));
+  			     
 `ifdef TARGET_XILINX	
 
    //###########################

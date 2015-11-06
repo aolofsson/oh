@@ -4,7 +4,7 @@ module etx_protocol (/*AUTOARG*/
    // Outputs
    etx_rd_wait, etx_wr_wait, tx_packet, tx_access, tx_burst,
    // Inputs
-   reset, clk, etx_access, etx_packet, tx_enable, gpio_data,
+   nreset, clk, etx_access, etx_packet, tx_enable, gpio_data,
    gpio_enable, tx_io_wait, tx_rd_wait, tx_wr_wait
    );
 
@@ -14,7 +14,7 @@ module etx_protocol (/*AUTOARG*/
    parameter ID = 12'h000;
    
    //Clock/reset
-   input 	  reset;
+   input 	  nreset;
    input          clk;
 
    //System side
@@ -89,7 +89,7 @@ module etx_protocol (/*AUTOARG*/
 
    //Prepare transaction / with burst
    always @ (posedge clk)
-     if(reset)
+     if(!nreset)
        begin
 	  tx_packet[PW-1:0] <= 'b0;
 	  tx_access         <= 1'b0;
@@ -102,7 +102,7 @@ module etx_protocol (/*AUTOARG*/
 
    
    always @ (posedge clk)
-     if(reset)
+     if(!nreset)
        tx_burst <= 1'b0;   
      else       
        tx_burst          <= (etx_write                 & //write 
@@ -136,22 +136,20 @@ module etx_protocol (/*AUTOARG*/
    //# Wait signals (async)
    //#############################
 
-   synchronizer #(.DW(1)) rd_sync (// Outputs
-				   .out		(tx_rd_wait_sync),
-				   // Inputs
-				   .in		(tx_rd_wait),
-				   .clk		(clk),
-				   .reset	(reset)
-				   );
+   dsync dsync_rd (
+		// Outputs
+		.dout			(tx_rd_wait_sync),
+		// Inputs
+		.clk			(clk),
+		.din			(tx_rd_wait));
    
-   synchronizer #(.DW(1)) wr_sync (// Outputs
-				   .out		(tx_wr_wait_sync),
-				   // Inputs
-				   .in		(tx_wr_wait),
-				   .clk		(clk),
-				   .reset	(reset)
-				   );
-
+   dsync dsync_wr (
+		// Outputs
+		.dout			(tx_wr_wait_sync),
+		// Inputs
+		.clk			(clk),
+		.din			(tx_wr_wait));
+          
    //Stall for all etx pipeline
    assign etx_wr_wait = tx_wr_wait_sync | tx_io_wait;
    assign etx_rd_wait = tx_rd_wait_sync | tx_io_wait;

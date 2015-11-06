@@ -3,7 +3,7 @@ module etx_core(/*AUTOARG*/
    tx_access, tx_burst, tx_packet, txrd_wait, txrr_wait, txwr_wait,
    etx_cfg_access, etx_cfg_packet,
    // Inputs
-   reset, clk, tx_io_wait, tx_rd_wait, tx_wr_wait, txrd_access,
+   nreset, clk, tx_io_wait, tx_rd_wait, tx_wr_wait, txrd_access,
    txrd_packet, txrr_access, txrr_packet, txwr_access, txwr_packet,
    etx_cfg_wait
    );
@@ -14,7 +14,7 @@ module etx_core(/*AUTOARG*/
    parameter ID      = 12'h000;
    
    //Clocks,reset,config
-   input           reset;
+   input           nreset;
    input 	   clk;   
   
    //IO interface
@@ -95,7 +95,7 @@ module etx_core(/*AUTOARG*/
 			    .etx_rr		(etx_rr),
 			    // Inputs
 			    .clk		(clk),
-			    .reset		(reset),
+			    .nreset		(nreset),
 			    .txwr_access	(txwr_access),
 			    .txwr_packet	(txwr_packet[PW-1:0]),
 			    .txrd_access	(txrd_access),
@@ -184,7 +184,7 @@ module etx_core(/*AUTOARG*/
 		    .ctrlmode		(ctrlmode[3:0]),
 		    .ctrlmode_bypass	(ctrlmode_bypass),
 		    // Inputs
-		    .reset		(reset),
+		    .nreset		(nreset),
 		    .clk		(clk),
 		    .mi_en		(mi_cfg_en),		 // Templated
 		    .mi_we		(mi_we),
@@ -210,7 +210,6 @@ module etx_core(/*AUTOARG*/
 			.emesh_packet_out(etx_remap_packet[PW-1:0]), // Templated
 			// Inputs
 			.clk		(clk),
-			.reset		(reset),
 			.emesh_access_in(etx_access),		 // Templated
 			.emesh_packet_in(etx_packet[PW-1:0]),	 // Templated
 			.remap_en	(remap_enable),		 // Templated
@@ -280,7 +279,7 @@ module etx_core(/*AUTOARG*/
 			      .tx_access	(tx_access),
 			      .tx_burst		(tx_burst),
 			      // Inputs
-			      .reset		(reset),
+			      .nreset		(nreset),
 			      .clk		(clk),
 			      .etx_access	(emmu_access),	 // Templated
 			      .etx_packet	(emmu_packet[PW-1:0]), // Templated

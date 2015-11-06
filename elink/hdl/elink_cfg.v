@@ -6,12 +6,12 @@
 
 `include "elink_regmap.v"
 
-module ecfg_elink (/*AUTOARG*/
+module elink_cfg (/*AUTOARG*/
    // Outputs
    txwr_gated_access, etx_soft_reset, erx_soft_reset, clk_config,
    chipid,
    // Inputs
-   clk, por_reset, txwr_access, txwr_packet
+   clk, nreset, txwr_access, txwr_packet
    );
 
    parameter RFAW             = 6;     // 32 registers for now
@@ -23,7 +23,7 @@ module ecfg_elink (/*AUTOARG*/
    /*Clock/reset                 */
    /******************************/
    input 	  clk;   
-   input 	  por_reset;       // POR "hard reset"
+   input 	  nreset;      // POR "hard reset"
 
    /******************************/
    /*REGISTER ACCESS             */
@@ -101,8 +101,8 @@ module ecfg_elink (/*AUTOARG*/
    //###########################
    //# RESET REG (ASYNC)
    //###########################
-    always @ (posedge clk or posedge por_reset)
-      if(por_reset)
+    always @ (posedge clk or negedge nreset)
+      if(!nreset)
 	ecfg_reset_reg[1:0] <= 'b0;         
       else if (ecfg_reset_write)
 	ecfg_reset_reg[1:0] <= mi_din[1:0];  
@@ -114,8 +114,8 @@ module ecfg_elink (/*AUTOARG*/
    //# CCLK/LCLK (PLL)
    //###########################
    //TODO: implement!
-    always @ (posedge clk or posedge por_reset)
-     if(por_reset)
+    always @ (posedge clk or negedge nreset)
+     if(!nreset)
        ecfg_clk_reg[15:0] <= 16'h573;//all clocks on at lowest speed   
      else if (ecfg_clk_write)
        ecfg_clk_reg[15:0] <= mi_din[15:0];
@@ -125,8 +125,8 @@ module ecfg_elink (/*AUTOARG*/
    //###########################
    //# CHIPID
    //###########################
-   always @ (posedge clk or posedge por_reset)
-     if(por_reset)
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
        ecfg_chipid_reg[11:0] <= DEFAULT_CHIPID;
      else if (ecfg_chipid_write)
        ecfg_chipid_reg[11:0] <= mi_din[11:0];   

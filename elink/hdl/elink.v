@@ -2,12 +2,12 @@ module elink (/*AUTOARG*/
    // Outputs
    elink_active, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n,
-   txo_data_p, txo_data_n, chipid, cclk_p, cclk_n, chip_resetb,
+   txo_data_p, txo_data_n, chipid, cclk_p, cclk_n, chip_nreset,
    mailbox_not_empty, mailbox_full, timeout, rxwr_access, rxwr_packet,
    rxrd_access, rxrd_packet, rxrr_access, rxrr_packet, txwr_wait,
    txrd_wait, txrr_wait,
    // Inputs
-   sys_reset, sys_clk, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
+   sys_nreset, sys_clk, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
    rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
    txi_rd_wait_p, txi_rd_wait_n, rxwr_wait, rxrd_wait, rxrr_wait,
    txwr_access, txwr_packet, txrd_access, txrd_packet, txrr_access,
@@ -21,9 +21,9 @@ module elink (/*AUTOARG*/
    parameter ETYPE       = 1;
    
    /****************************/
-   /*CLOCK AND RESET           */
+   /*MAIN CLOCK AND RESET      */
    /****************************/
-   input        sys_reset;     // reset for 
+   input        sys_nreset;    // reset for axi facing logic (active low)
    input 	sys_clk;       // single system clock for master/slave FIFOs
    output 	elink_active;  // rx and tx are both active
       
@@ -50,7 +50,7 @@ module elink (/*AUTOARG*/
    /*************************************/          
    output [11:0]   chipid;	   // chip id strap pins for epiphany
    output 	   cclk_p, cclk_n; //chip clock
-   output 	   chip_resetb;	   // From etx of etx.v
+   output 	   chip_nreset;	  // From etx of etx.v
 
    /*****************************/
    /*MAILBOX INTERRUPTS         */
@@ -103,7 +103,6 @@ module elink (/*AUTOARG*/
    
    /*AUTOINPUT*/
   
-
    //wire
    wire 		erx_cfg_access;		// To erx of erx.v
    wire [PW-1:0] 	erx_cfg_packet;		// To erx of erx.v
@@ -115,36 +114,34 @@ module elink (/*AUTOARG*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			erx_cfg_wait;		// From erx of erx.v
-   wire			erx_reset;		// From erx of erx.v
-   wire			erx_soft_reset;		// From ecfg_elink of ecfg_elink.v
+   wire			erx_soft_reset;		// From elink_cfg of elink_cfg.v
    wire			etx_cfg_access;		// From etx of etx.v
    wire [PW-1:0]	etx_cfg_packet;		// From etx of etx.v
-   wire			etx_reset;		// From etx of etx.v
-   wire			etx_soft_reset;		// From ecfg_elink of ecfg_elink.v
+   wire			etx_soft_reset;		// From elink_cfg of elink_cfg.v
    wire			rx_lclk_div4;		// From erx of erx.v
    wire			tx_active;		// From etx of etx.v
    wire			tx_lclk_div4;		// From etx of etx.v
-   wire			txwr_gated_access;	// From ecfg_elink of ecfg_elink.v
+   wire			txwr_gated_access;	// From elink_cfg of elink_cfg.v
    // End of automatics
    
    /***********************************************************/
    /*CLOCK AND RESET CONFIG                                   */
    /***********************************************************/
-
-   defparam ecfg_elink.ID=ID;
    
-   ecfg_elink ecfg_elink (.clk		        (sys_clk),
-			  .por_reset		(sys_reset),
-			  .clk_config		(),
+   elink_cfg #(.ID(ID)) 
+
+   elink_cfg (.clk		(sys_clk),
+	      .nreset	   	(sys_nreset),
+	      .clk_config	(),
 			  /*AUTOINST*/
-			  // Outputs
-			  .txwr_gated_access	(txwr_gated_access),
-			  .etx_soft_reset	(etx_soft_reset),
-			  .erx_soft_reset	(erx_soft_reset),
-			  .chipid		(chipid[11:0]),
-			  // Inputs
-			  .txwr_access		(txwr_access),
-			  .txwr_packet		(txwr_packet[PW-1:0]));
+	      // Outputs
+	      .txwr_gated_access	(txwr_gated_access),
+	      .etx_soft_reset		(etx_soft_reset),
+	      .erx_soft_reset		(erx_soft_reset),
+	      .chipid			(chipid[11:0]),
+	      // Inputs
+	      .txwr_access		(txwr_access),
+	      .txwr_packet		(txwr_packet[PW-1:0]));
 
    /***********************************************************/
    /*RECEIVER                                                 */
@@ -160,6 +157,7 @@ module elink (/*AUTOARG*/
    defparam erx.ETYPE       = ETYPE;
    
    erx erx(.rx_active			(elink_active),
+	   .erx_nreset			(erx_nreset),
 	   /*AUTOINST*/
 	   // Outputs
 	   .rxo_wr_wait_p		(rxo_wr_wait_p),
@@ -174,13 +172,12 @@ module elink (/*AUTOARG*/
 	   .rxrr_packet			(rxrr_packet[PW-1:0]),
 	   .erx_cfg_wait		(erx_cfg_wait),
 	   .rx_lclk_div4		(rx_lclk_div4),
-	   .erx_reset			(erx_reset),
 	   .timeout			(timeout),
 	   .mailbox_full		(mailbox_full),
 	   .mailbox_not_empty		(mailbox_not_empty),
 	   // Inputs
 	   .soft_reset			(erx_soft_reset),	 // Templated
-	   .sys_reset			(sys_reset),
+	   .sys_nreset			(sys_nreset),
 	   .sys_clk			(sys_clk),
 	   .tx_active			(tx_active),
 	   .rxi_lclk_p			(rxi_lclk_p),
@@ -211,7 +208,7 @@ module elink (/*AUTOARG*/
    defparam etx.IOSTD_ELINK = IOSTD_ELINK;
    defparam etx.ETYPE       = ETYPE;
 
-   etx etx(
+   etx etx(.etx_nreset			(etx_nreset),
 	   /*AUTOINST*/
 	   // Outputs
 	   .tx_active			(tx_active),
@@ -223,17 +220,16 @@ module elink (/*AUTOARG*/
 	   .txo_data_n			(txo_data_n[7:0]),
 	   .cclk_p			(cclk_p),
 	   .cclk_n			(cclk_n),
-	   .chip_resetb			(chip_resetb),
+	   .chip_nreset			(chip_nreset),
 	   .txrd_wait			(txrd_wait),
 	   .txwr_wait			(txwr_wait),
 	   .txrr_wait			(txrr_wait),
 	   .etx_cfg_access		(etx_cfg_access),
 	   .etx_cfg_packet		(etx_cfg_packet[PW-1:0]),
-	   .etx_reset			(etx_reset),
 	   .tx_lclk_div4		(tx_lclk_div4),
 	   // Inputs
 	   .sys_clk			(sys_clk),
-	   .sys_reset			(sys_reset),
+	   .sys_nreset			(sys_nreset),
 	   .soft_reset			(etx_soft_reset),	 // Templated
 	   .txi_wr_wait_p		(txi_wr_wait_p),
 	   .txi_wr_wait_n		(txi_wr_wait_n),
@@ -253,8 +249,8 @@ module elink (/*AUTOARG*/
    defparam ecfg_cdc.DW=104;
    defparam ecfg_cdc.DEPTH=32;
    
-   fifo_cdc ecfg_cdc (.reset_in		(etx_reset),
-		      .reset_out	(erx_reset),
+   fifo_cdc ecfg_cdc (.nreset_in	(etx_nreset),
+		      .nreset_out	(erx_nreset),
 		      // Outputs
 		      .wait_out		(etx_cfg_wait),	
 		      .access_out	(erx_cfg_access),	

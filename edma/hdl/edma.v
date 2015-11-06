@@ -2,7 +2,7 @@ module edma (/*AUTOARG*/
    // Outputs
    mi_dout, edma_access, edma_packet,
    // Inputs
-   reset, clk, mi_en, mi_we, mi_addr, mi_din, edma_wait
+   nreset, clk, mi_en, mi_we, mi_addr, mi_din, edma_wait
    );
 
    /******************************/
@@ -16,7 +16,7 @@ module edma (/*AUTOARG*/
    /******************************/
    /*HARDWARE RESET (EXTERNAL)   */
    /******************************/
-   input 	     reset; //async reset
+   input 	     nreset; //async reset
    input 	     clk;
 
    /*****************************/
@@ -35,175 +35,11 @@ module edma (/*AUTOARG*/
    output [PW-1:0]   edma_packet;
    input 	     edma_wait;
 
-   assign edma_access=1'b0;
-   assign edma_packet='d0;
-   assign  mi_dout='d0;
-
-   /*   
-
-    //registers
-   reg [AW-1:0]  edma_srcaddr_reg;
-   reg [AW-1:0]  edma_dstaddr_reg;
-   reg [AW-1:0]  edma_count_reg;
-   reg [AW-1:0]  edma_stride_reg;
-   reg [8:0]     edma_cfg_reg;
-   reg [1:0]     edma_status_reg;
-   reg [31:0] 	 mi_dout;
+   //Tieoffs for now
+   assign edma_access = 'b0;
+   assign edma_packet = 'd0;
+   assign mi_dout     = 'd0;
    
-   //wires
-   wire 	 edma_write;
-   wire 	 edma_read;
-   wire 	 edma_cfg_write ;
-   wire 	 edma_srcaddr_write;
-   wire 	 edma_dstaddr_write;
-   wire 	 edma_stride_write;
-   wire 	 edma_count_write;
-   wire 	 edma_message;
-   wire 	 edma_expired;
-   wire          edma_last_tran;
-   wire 	 edma_error;
-   wire          edma_enable;
-    
-    
-   //read/write decode
-   assign edma_write  = mi_en &  mi_we;
-   assign edma_read   = mi_en & ~mi_we;   
-
-   //DMA configuration
-   assign edma_cfg_write      = edma_write & (mi_addr[RFAW+1:2]==`EDMACFG);
-   assign edma_srcaddr_write  = edma_write & (mi_addr[RFAW+1:2]==`EDMASRCADDR);
-   assign edma_dstaddr_write  = edma_write & (mi_addr[RFAW+1:2]==`EDMADSTADDR);
-   assign edma_count_write    = edma_write & (mi_addr[RFAW+1:2]==`EDMACOUNT);
-   assign edma_stride_write   = edma_write & (mi_addr[RFAW+1:2]==`EDMASTRIDE);
-   
-   //###########################
-   //# DMACFG
-   //###########################
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       edma_cfg_reg[8:0] <= 'd0;   
-     else if (edma_cfg_write)
-       edma_cfg_reg[8:0] <= mi_din[8:0];
-
-   assign edma_enable         = edma_cfg_reg[0];  //should be zero     
-   assign edma_message        = edma_cfg_reg[8];
-
-   assign edma_access         = edma_enable & ~edma_expired;   
-   assign edma_write          = edma_cfg_reg[1];  //only 1 for test pattern   
-   assign edma_datamode[1:0]  = edma_cfg_reg[3:2];
-   assign edma_ctrlmode[3:0]  = (edma_message & edma_last_tran) ? 4'b1100 : edma_cfg_reg[7:4];
-
-   //###########################
-   //# DMASTATUS
-   //###########################
-   //Misalignment
-   assign edma_error = ((edma_srcaddr_reg[0] | edma_dstaddr_reg[0]) & (edma_datamode[1:0]!=2'b00)) | //16/32/64
-                       ((edma_srcaddr_reg[1] | edma_dstaddr_reg[1]) & (edma_datamode[1]))          | //32/64
-                       ((edma_srcaddr_reg[2] | edma_dstaddr_reg[2]) & (edma_datamode[1:0]==2'b11));  //64
-
-
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       edma_status_reg[1:0] <= 'd0;   
-     else if (edma_cfg_write)
-       edma_status_reg[1:0] <= mi_din[1:0];
-     else if (edma_enable)
-       begin
-	  edma_status_reg[0] <= edma_enable & ~edma_expired;//dma busy
-	  edma_status_reg[1] <= edma_status_reg[1]  | (edma_enable & edma_error);
-       end
-        
-   //###########################
-   //# EDMASRCADDR
-   //###########################
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       edma_srcaddr_reg[AW-1:0] <= 'd0;   
-     else if (edma_srcaddr_write)
-       edma_srcaddr_reg[AW-1:0] <= mi_din[AW-1:0];
-     else if (edma_enable & ~edma_wait)
-       edma_srcaddr_reg[AW-1:0] <= edma_srcaddr_reg[AW-1:0] + (1<<edma_datamode[1:0]);
-
-   assign edma_srcaddr[31:0]  = edma_srcaddr_reg[31:0];
-   //###########################
-   //# EDMADSTADR
-   //###########################
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       edma_dstaddr_reg[AW-1:0] <= 'd0;   
-     else if (edma_dstaddr_write)
-       edma_dstaddr_reg[AW-1:0] <= mi_din[AW-1:0];
-     else if (edma_enable & ~edma_wait)
-       edma_dstaddr_reg[AW-1:0] <= edma_dstaddr_reg[AW-1:0] + (1<<edma_datamode[1:0]);
-   
-   assign edma_dstaddr[31:0]  = edma_dstaddr_reg[31:0];
-
-   //###########################
-   //# EDMACOUNT
-   //###########################
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       edma_count_reg[AW-1:0] <= 'd0;   
-     else if (edma_count_write)
-       edma_count_reg[AW-1:0] <= mi_din[AW-1:0];
-     else if (edma_enable & ~edma_wait)
-       edma_count_reg[AW-1:0] <= edma_count_reg[AW-1:0] - 1'b1;
-   
-   assign edma_last_tran = (edma_count_reg[AW-1:0]==32'b1);   
-   assign edma_expired   = (edma_count_reg[AW-1:0]==32'b0);   
-
-   //###########################
-   //# EDMASTRIDE
-   //###########################
-   //NOTE: not supported yet, need to think about feature...
-   always @ (posedge clk or posedge reset)
-     if(reset)
-       edma_stride_reg[AW-1:0] <= 'd0;   
-     else if (edma_stride_write)
-       edma_stride_reg[AW-1:0] <= mi_din[AW-1:0];
-        
-   //###########################
-   //# DUMMY DATA
-   //###########################
-   assign edma_data[31:0]     = TEST_PATTERN;   
-     
-   
-   //###########################
-   //# PACKET CREATION
-   //###########################
-   emesh2packet e2p (
-		     // Outputs
-		     .packet_out	(edma_packet[PW-1:0]),
-		     // Inputs
-		     .access_in		(edma_access),
-		     .write_in		(edma_write),
-		     .datamode_in	(edma_datamode[1:0]),
-		     .ctrlmode_in	(edma_ctrlmode[3:0]),
-		     .dstaddr_in	(edma_dstaddr[AW-1:0]),
-		     .data_in		(edma_data[DW-1:0]),
-		     .srcaddr_in	(edma_srcaddr_in[AW-1:0]));
-   
-   
-   //###############################
-   //# DATA READBACK MUX
-   //###############################
-
-   //Pipelineing readback
-   always @ (posedge clk)
-     if(edma_read)
-       case(mi_addr[RFAW+1:2])
-         `EDMACFG:    mi_dout[31:0] <= {23'b0, edma_cfg_reg[8:0]};
-	 `EDMASTATUS: mi_dout[31:0] <= {30'b0, edma_status_reg[1:0]};
-	 `EDMASRCADDR:mi_dout[31:0] <= {edma_srcaddr_reg[31:0]};
-	 `EDMADSTADDR:mi_dout[31:0] <= {edma_dstaddr_reg[31:0]};
-	 `EDMACOUNT:  mi_dout[31:0] <= {edma_count_reg[31:0]};	         
-         default:    mi_dout[31:0] <= 32'd0;
-       endcase // case (mi_addr[RFAW+1:2])
-     else
-       begin
-	  default:    mi_dout[31:0] <= 32'd0;
-       end
-*/
 endmodule // edma
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")

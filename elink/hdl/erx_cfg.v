@@ -9,7 +9,7 @@ module erx_cfg (/*AUTOARG*/
    remap_pattern, remap_sel, timer_cfg, idelay_value, load_taps,
    test_mode,
    // Inputs
-   reset, clk, mi_en, mi_we, mi_addr, mi_din, erx_test_access,
+   nreset, clk, mi_en, mi_we, mi_addr, mi_din, erx_test_access,
    erx_test_data, gpio_datain, rx_status
    );
 
@@ -22,7 +22,7 @@ module erx_cfg (/*AUTOARG*/
    /******************************/
    /*HARDWARE RESET (EXTERNAL)   */
    /******************************/
-   input 	reset;       // ecfg registers reset only by "hard reset"
+   input 	nreset;
    input 	clk;
 
    /*****************************/
@@ -94,8 +94,8 @@ module erx_cfg (/*AUTOARG*/
    //###########################
    //# RXCFG
    //###########################
-   always @ (posedge clk or posedge reset)
-     if(reset)
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
        ecfg_rx_reg[31:0] <= 'b0;
      else if (ecfg_rx_write)
        ecfg_rx_reg[31:0] <= mi_din[31:0];
@@ -116,8 +116,8 @@ module erx_cfg (/*AUTOARG*/
    //###########################1
    //# DEBUG
    //###########################   
-   always @ (posedge clk or posedge reset)
-     if(reset)
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
        ecfg_rx_status_reg[2:0] <= 'b0;   
      else
        ecfg_rx_status_reg[2:0] <= ecfg_rx_status_reg[2:0] | rx_status[2:0];
@@ -134,8 +134,8 @@ module erx_cfg (/*AUTOARG*/
    //###########################1
    //# IDELAY TAP VALUES
    //###########################
-   always @ (posedge clk or posedge reset) 
-     if(reset)
+   always @ (posedge clk or negedge nreset) 
+     if(!nreset)
        idelay_reg[63:0]  <= 'b0;   
      else if (ecfg_idelay0_write)
        idelay_reg[31:0]  <= mi_din[31:0];
