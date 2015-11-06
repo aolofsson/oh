@@ -19,6 +19,5 @@ This library is written in vanilla Verilog. Pull requests accepted.
 | [xilibs](xilibs)    |        | Simulation modules for Xilinx primitives    |
 
 ## LICENSE
-
-This library is made available with a GPL V3 copyleft license with the added condition that the Verilog code herein is to be considered software and physical chips and FPGA bitstreams are the hardware equivalent of a binary program.
+The OH! repository source code is licensed under the MIT license unless otherwise specified. See [LICENSE](LICENSE) for full copyright terms.
 
