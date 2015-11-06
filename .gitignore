@@ -21,6 +21,7 @@
 
 #######################
 # XILINX crap
+*.xpr
 *.log
 *.jou
 *.runs
@@ -30,7 +31,9 @@
 *.xml
 *.hw
 *.cache
+*.srcs
 xgui/
+.Xil
 *.zip
 *_stub.vhdl
 *.upgrade_log
