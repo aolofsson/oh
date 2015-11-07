@@ -35,20 +35,27 @@ set_property PACKAGE_PIN P20 [get_ports hdmi_int]
 #####################
 # I2C
 #####################
+set_property IOSTANDARD LVCMOS25 [get_ports {i2c_*}]
 set_property PACKAGE_PIN N18 [get_ports i2c_scl]
-set_property IOSTANDARD LVCMOS25 [get_ports i2c_scl]
 set_property PACKAGE_PIN N17 [get_ports i2c_sda]
-set_property IOSTANDARD LVCMOS25 [get_ports i2c_sda]
 
 #####################
-# Epiphany Interface
+# Epiphany Reset
 #####################
-set_property PACKAGE_PIN G14 [get_ports {chip_nreset}]
 set_property IOSTANDARD LVCMOS25 [get_ports {chip_nreset}]
-set_property DRIVE 4 [get_ports {chip_nreset}]
+set_property PACKAGE_PIN G14 [get_ports {chip_nreset}]
 
+#####################
+# Epiphany Clock
+#####################
+set_property IOSTANDARD LVDS_25 [get_ports {cclk*}]
 set_property PACKAGE_PIN H17 [get_ports cclk_n]
-set_property PACKAGE_PIN F17 [get_ports tx_lclk_n]
+
+#####################
+# Epiphany TX
+#####################
+set_property IOSTANDARD LVDS_25 [get_ports {txo*}]
+set_property PACKAGE_PIN F17 [get_ports txo_lclk_n]
 set_property PACKAGE_PIN A20 [get_ports {txo_data_n[0]}]
 set_property PACKAGE_PIN B20 [get_ports {txo_data_n[1]}]
 set_property PACKAGE_PIN D20 [get_ports {txo_data_n[2]}]
@@ -58,10 +65,20 @@ set_property PACKAGE_PIN F20 [get_ports {txo_data_n[5]}]
 set_property PACKAGE_PIN G18 [get_ports {txo_data_n[6]}]
 set_property PACKAGE_PIN G20 [get_ports {txo_data_n[7]}]
 set_property PACKAGE_PIN G15 [get_ports txo_frame_n]
+set_property PACKAGE_PIN H18 [get_ports txi_wr_wait_n]
+
+#####################
+# Wait signals
+#####################
+set_property IOSTANDARD LVCMOS25 [get_ports {txi_rd_wait_*}]
 set_property PACKAGE_PIN J15 [get_ports txi_rd_wait_p]
 
-set_property PACKAGE_PIN H18 [get_ports tx_wr_wait_n]
-set_property PACKAGE_PIN K18 [get_ports rx_lclk_n]
+
+#####################
+# Epiphany RX 
+#####################
+set_property IOSTANDARD LVDS_25 [get_ports {rx*}]
+set_property PACKAGE_PIN K18 [get_ports rxi_lclk_n]
 set_property PACKAGE_PIN J19 [get_ports {rxi_data_n[0]}]
 set_property PACKAGE_PIN L15 [get_ports {rxi_data_n[1]}]
 set_property PACKAGE_PIN L17 [get_ports {rxi_data_n[2]}]
@@ -78,6 +95,7 @@ set_property PACKAGE_PIN J16 [get_ports rxo_wr_wait_n]
 # GPIO
 #  First 12 pairs are present on all parts, next 12 on 7020 only
 #######################
+set_property IOSTANDARD LVCMOS25 [get_ports {gpio*}]
 set_property PACKAGE_PIN T16 [get_ports {gpio_p[0]}] 
 set_property PACKAGE_PIN U17 [get_ports {gpio_n[0]}]
 set_property PACKAGE_PIN V16 [get_ports {gpio_p[1]}]
