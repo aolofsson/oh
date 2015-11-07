@@ -1,6 +1,7 @@
 ###########################################################
 # Save any gui changes
 ###########################################################
+validate_bd_design
 write_bd_tcl -force ./system_bd.tcl
 make_wrapper -files [get_files $projdir/${design}.srcs/sources_1/bd/system/system.bd] -top
 
