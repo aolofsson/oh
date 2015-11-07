@@ -129,7 +129,6 @@ module emmu (/*AUTOARG*/
      	 
    assign emesh_dstaddr_out[63:0] = (mmu_en & ~mmu_bp) ? {emmu_lookup_data[43:0], emesh_packet_reg[27:8]} :
 				                         {32'b0,emesh_packet_reg[39:8]}; 
-      
    //Concatenating output packet
    assign emesh_packet_out[PW-1:0] = {emesh_packet_reg[PW-1:40],
                                       emesh_dstaddr_out[31:0],
@@ -143,21 +142,6 @@ endmodule // emmu
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl" "../../memory/hdl")
 // End:
-
-/*
-  Copyright (C) 2015 Adapteva, Inc.
-  Contributed by Andreas Olofsson <andreas@adapteva.com>
- 
-   This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.This program is distributed in the hope 
-  that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
-  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details. You should have received a copy 
-  of the GNU General Public License along with this program (see the file 
-  COPYING).  If not, see <http://www.gnu.org/licenses/>.
-*/
 
 
 

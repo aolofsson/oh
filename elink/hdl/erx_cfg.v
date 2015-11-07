@@ -5,11 +5,10 @@
 `include "elink_regmap.v"
 module erx_cfg (/*AUTOARG*/
    // Outputs
-   mi_dout, rx_enable, mmu_enable, remap_mode, remap_base,
-   remap_pattern, remap_sel, timer_cfg, idelay_value, load_taps,
-   test_mode,
+   mi_dout, mmu_enable, remap_mode, remap_base, remap_pattern,
+   remap_sel, timer_cfg, idelay_value, load_taps, test_mode,
    // Inputs
-   reset, clk, mi_en, mi_we, mi_addr, mi_din, erx_test_access,
+   nreset, clk, mi_en, mi_we, mi_addr, mi_din, erx_test_access,
    erx_test_data, gpio_datain, rx_status
    );
 
@@ -22,7 +21,7 @@ module erx_cfg (/*AUTOARG*/
    /******************************/
    /*HARDWARE RESET (EXTERNAL)   */
    /******************************/
-   input 	reset;       // ecfg registers reset only by "hard reset"
+   input 	nreset;
    input 	clk;
 
    /*****************************/
@@ -42,7 +41,6 @@ module erx_cfg (/*AUTOARG*/
    /*CONFIG SIGNALS             */
    /*****************************/
    //rx
-   output 	 rx_enable;      // enable signal for rx  
    output 	 mmu_enable;     // enables MMU on rx path (static)  
    input [8:0] 	 gpio_datain;    // frame and data inputs (static)        
    input [15:0]  rx_status;      // etx status signals
@@ -94,8 +92,8 @@ module erx_cfg (/*AUTOARG*/
    //###########################
    //# RXCFG
    //###########################
-   always @ (posedge clk or posedge reset)
-     if(reset)
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
        ecfg_rx_reg[31:0] <= 'b0;
      else if (ecfg_rx_write)
        ecfg_rx_reg[31:0] <= mi_din[31:0];
@@ -116,8 +114,8 @@ module erx_cfg (/*AUTOARG*/
    //###########################1
    //# DEBUG
    //###########################   
-   always @ (posedge clk or posedge reset)
-     if(reset)
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
        ecfg_rx_status_reg[2:0] <= 'b0;   
      else
        ecfg_rx_status_reg[2:0] <= ecfg_rx_status_reg[2:0] | rx_status[2:0];
@@ -134,8 +132,8 @@ module erx_cfg (/*AUTOARG*/
    //###########################1
    //# IDELAY TAP VALUES
    //###########################
-   always @ (posedge clk or posedge reset) 
-     if(reset)
+   always @ (posedge clk or negedge nreset) 
+     if(!nreset)
        idelay_reg[63:0]  <= 'b0;   
      else if (ecfg_idelay0_write)
        idelay_reg[31:0]  <= mi_din[31:0];
@@ -190,17 +188,4 @@ module erx_cfg (/*AUTOARG*/
    
 endmodule // ecfg_rx
 
-/*
-  Copyright (C) 2015 Adapteva, Inc.
-  Contributed by Andreas Olofsson <andreas@adapteva.com>
- 
-   This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.This program is distributed in the hope 
-  that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
-  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details. You should have received a copy 
-  of the GNU General Public License along with this program (see the file 
-  COPYING).  If not, see <http://www.gnu.org/licenses/>.
-*/
+

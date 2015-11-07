@@ -9,7 +9,7 @@ module etx_cfg (/*AUTOARG*/
    mi_dout, tx_enable, mmu_enable, gpio_enable, remap_enable,
    gpio_data, ctrlmode, ctrlmode_bypass,
    // Inputs
-   reset, clk, mi_en, mi_we, mi_addr, mi_din, tx_status
+   nreset, clk, mi_en, mi_we, mi_addr, mi_din, tx_status
    );
 
    /******************************/
@@ -22,7 +22,7 @@ module etx_cfg (/*AUTOARG*/
    /******************************/
    /*HARDWARE RESET (EXTERNAL)   */
    /******************************/
-   input 	 reset;             
+   input 	 nreset;             
    input 	 clk;
 
    /*****************************/
@@ -87,7 +87,7 @@ module etx_cfg (/*AUTOARG*/
    //# TX CONFIG
    //###########################
    always @ (posedge clk)
-     if(reset)
+     if(!nreset)
        ecfg_tx_config_reg[10:0] <= 11'b0;
      else if (ecfg_tx_config_write)
        ecfg_tx_config_reg[10:0] <= mi_din[10:0];
@@ -103,7 +103,7 @@ module etx_cfg (/*AUTOARG*/
    //# STATUS REGISTER
    //###########################   
    always @ (posedge clk)
-     if(reset)
+     if(!nreset)
        ecfg_tx_status_reg[2:0] <= 'd0;
      else
        ecfg_tx_status_reg[2:0]<= ecfg_tx_status_reg[2:0] | tx_status[2:0];
@@ -121,7 +121,7 @@ module etx_cfg (/*AUTOARG*/
    //# VERSION
    //###########################
    always @ (posedge clk)
-     if(reset)
+     if(!nreset)
        ecfg_version_reg[15:0] <= DEFAULT_VERSION;
      else if (ecfg_version_write)
        ecfg_version_reg[15:0] <= mi_din[15:0];       
@@ -145,17 +145,3 @@ module etx_cfg (/*AUTOARG*/
 endmodule // ecfg_tx
 
 
-/*
-  Copyright (C) 2015 Adapteva, Inc.
-  Contributed by Andreas Olofsson <andreas@adapteva.com>
- 
-   This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.This program is distributed in the hope 
-  that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
-  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details. You should have received a copy 
-  of the GNU General Public License along with this program (see the file 
-  COPYING).  If not, see <http://www.gnu.org/licenses/>.
-*/

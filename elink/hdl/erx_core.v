@@ -4,7 +4,7 @@ module erx_core (/*AUTOARG*/
    rxrd_packet, rxrr_access, rxrr_packet, rxwr_access, rxwr_packet,
    erx_cfg_wait, mailbox_full, mailbox_not_empty,
    // Inputs
-   reset, clk, rx_packet, rx_access, rx_burst, rxrd_wait, rxrr_wait,
+   nreset, clk, rx_packet, rx_access, rx_burst, rxrd_wait, rxrr_wait,
    rxwr_wait, erx_cfg_access, erx_cfg_packet
    );
 
@@ -16,7 +16,7 @@ module erx_core (/*AUTOARG*/
 
 
    //clock and reset
-   input		reset;  //synced to clk
+   input		nreset;  //synced to clk
    input		clk;
 
    //IO Interface
@@ -49,7 +49,6 @@ module erx_core (/*AUTOARG*/
    //mailbox outputs
    output		mailbox_full;           //need to sync to sys_clk
    output		mailbox_not_empty;      //need to sync to sys_clk
-
    
    /*AUTOINPUT*/
    /*AUTOOUTPUT*/
@@ -195,8 +194,8 @@ module erx_core (/*AUTOARG*/
     .rd_clk		(clk),
     .emesh_access	(emmu_access),
     .emesh_packet	(emmu_packet[PW-1:0]),
-    .rd_reset	        (reset),
-    .wr_reset	        (reset),
+    .rd_nreset	        (nreset),
+    .wr_nreset	        (nreset),
     );
         */
 
@@ -208,10 +207,10 @@ module erx_core (/*AUTOARG*/
 			.mailbox_full	(mailbox_full),
 			.mailbox_not_empty(mailbox_not_empty),
 			// Inputs
-			.wr_reset	(reset),		 // Templated
+			.wr_nreset	(nreset),		 // Templated
 			.wr_clk		(clk),			 // Templated
 			.rd_clk		(clk),			 // Templated
-			.rd_reset	(reset),		 // Templated
+			.rd_nreset	(nreset),		 // Templated
 			.emesh_access	(emmu_access),		 // Templated
 			.emesh_packet	(emmu_packet[PW-1:0]),	 // Templated
 			.mi_en		(mi_cfg_en),		 // Templated
@@ -282,7 +281,6 @@ module erx_core (/*AUTOARG*/
    
    erx_cfg erx_cfg (.rx_status    	(rx_status[15:0]),
 		    .timer_cfg		(),
-		    .rx_enable		(),//TODO:what to do with this??
 		     /*AUTOINST*/
 		    // Outputs
 		    .mi_dout		(mi_cfg_dout[DW-1:0]),	 // Templated
@@ -295,7 +293,7 @@ module erx_core (/*AUTOARG*/
 		    .load_taps		(load_taps),
 		    .test_mode		(test_mode),
 		    // Inputs
-		    .reset		(reset),
+		    .nreset		(nreset),
 		    .clk		(clk),
 		    .mi_en		(mi_cfg_en),		 // Templated
 		    .mi_we		(mi_we),
@@ -322,7 +320,7 @@ module erx_core (/*AUTOARG*/
 		.edma_access		(edma_access),		 // Templated
 		.edma_packet		(edma_packet[PW-1:0]),
 		// Inputs
-		.reset			(reset),
+		.nreset			(nreset),
 		.clk			(clk),
 		.mi_en			(mi_dma_en),		 // Templated
 		.mi_we			(mi_we),
@@ -374,20 +372,4 @@ endmodule // erx_core
 // Local Variables:
 // verilog-library-directories:("." "../../emmu/hdl" "../../edma/hdl" "../../memory/hdl" "../../emailbox/hdl")
 // End:
-
-/*
- Copyright (C) 2014 Adapteva, Inc.
-  
- Contributed by Andreas Olofsson <andreas@adapteva.com>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.This program is distributed in the hope 
- that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. You should have received a copy 
- of the GNU General Public License along with this program (see the file 
- COPYING).  If not, see <http://www.gnu.org/licenses/>.
- */
 

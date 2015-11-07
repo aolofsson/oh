@@ -23,7 +23,7 @@ module emailbox (/*AUTOARG*/
    // Outputs
    mi_dout, mailbox_full, mailbox_not_empty,
    // Inputs
-   wr_reset, wr_clk, rd_clk, rd_reset, emesh_access, emesh_packet,
+   wr_nreset, wr_clk, rd_clk, rd_nreset, emesh_access, emesh_packet,
    mi_en, mi_we, mi_addr, mi_din
    );
 
@@ -39,10 +39,10 @@ module emailbox (/*AUTOARG*/
    /*****************************/
    /*RESET                      */
    /*****************************/
-   input           wr_reset;    //asynchronous reset
+   input           wr_nreset;   //asynchronous active low reset
    input 	   wr_clk;      //write clock
    input 	   rd_clk;      //read clock
-   input           rd_reset;    //asynchronous reset
+   input           rd_nreset;   //asynchronous active low reset
 
 
    /*****************************/
@@ -140,7 +140,9 @@ module emailbox (/*AUTOARG*/
    defparam fifo.DW    = WIDTH;
    defparam fifo.DEPTH = DEPTH;
    
-   fifo_async fifo(// Outputs
+   fifo_async fifo(.wr_rst   (~wr_nreset),
+  		   .rd_rst   (~rd_nreset),  
+		    // Outputs
 		   .dout      (mailbox_fifo_data[WIDTH-1:0]),
 		   .empty     (mailbox_empty),
 		   .full      (mailbox_full),
@@ -152,24 +154,7 @@ module emailbox (/*AUTOARG*/
 		   //Write Port 
 		   .din      ({40'b0,emesh_din[63:0]}),
 		   .wr_en    (emesh_write),
-		   .wr_clk   (wr_clk),  			     
-		   .wr_rst   (wr_reset),
-  		   .rd_rst   (rd_reset)      
+		   .wr_clk   (wr_clk)  			     
 		   ); 
    
 endmodule // emailbox
-
-/*
-  Copyright (C) 2014 Adapteva, Inc.
-  Contributed by Andreas Olofsson <andreas@adapteva.com>
- 
-   This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.This program is distributed in the hope 
-  that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
-  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details. You should have received a copy 
-  of the GNU General Public License along with this program (see the file 
-  COPYING).  If not, see <http://www.gnu.org/licenses/>.
-*/

@@ -16,6 +16,7 @@
 -y ../../emailbox/hdl
 -y ../../memory/hdl
 -y ../../xilibs/hdl
+-y ../../parallella/hdl
 
 #INCLUDE PATHS (FOR CONSTANTS)
 +incdir+../../emesh/hdl

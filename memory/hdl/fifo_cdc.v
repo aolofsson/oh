@@ -8,7 +8,7 @@ module fifo_cdc (/*AUTOARG*/
    // Outputs
    wait_out, access_out, packet_out,
    // Inputs
-   clk_in, reset_in, access_in, packet_in, clk_out, reset_out,
+   clk_in, nreset_in, access_in, packet_in, clk_out, nreset_out,
    wait_in
    );
 
@@ -19,7 +19,7 @@ module fifo_cdc (/*AUTOARG*/
    /*Incoming Packet               */
    /********************************/
    input              clk_in;   
-   input              reset_in;
+   input              nreset_in;
    input 	      access_in;   
    input [DW-1:0]     packet_in;   
    output 	      wait_out;   
@@ -28,7 +28,7 @@ module fifo_cdc (/*AUTOARG*/
    /*Outgoing Packet               */
    /********************************/  
    input              clk_out;   
-   input              reset_out;
+   input              nreset_out;
    output 	      access_out;   
    output [DW-1:0]    packet_out;   
    input 	      wait_in;   
@@ -46,8 +46,8 @@ module fifo_cdc (/*AUTOARG*/
    assign wait_out = full;
 
    //Keep access high until "acknowledge"
-   always @ (posedge clk_out or posedge reset_out)
-     if(reset_out)
+   always @ (posedge clk_out or negedge nreset_out)
+     if(!nreset_out)
        access_out <=1'b0;   
      else if(~wait_in)
        access_out <=rd_en;
@@ -58,13 +58,13 @@ module fifo_cdc (/*AUTOARG*/
 
    fifo_async  fifo (.prog_full		(full),//stay safe for now
 		     .full		(),
+		     .wr_rst		(~nreset_in),
+		     .rd_rst		(~nreset_out),
 		     // Outputs
 		     .dout		(packet_out[DW-1:0]),
 		     .empty		(empty),
 		     .valid		(valid), 
 		     // Inputs
-		     .wr_rst		(reset_in),
-		     .rd_rst		(reset_out),
 		     .wr_clk		(clk_in),
 		     .rd_clk		(clk_out),
 		     .wr_en		(wr_en),
@@ -73,18 +73,3 @@ module fifo_cdc (/*AUTOARG*/
 		     );
       
 endmodule // fifo_cdc
-
-/*
-  Copyright (C) 2013 Adapteva, Inc.
-  Contributed by Andreas Olofsson <andreas@adapteva.com>
- 
-   This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.This program is distributed in the hope 
-  that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
-  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details. You should have received a copy 
-  of the GNU General Public License along with this program (see the file 
-  COPYING).  If not, see <http://www.gnu.org/licenses/>.
-*/

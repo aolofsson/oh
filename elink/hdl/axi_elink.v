@@ -2,7 +2,7 @@ module axi_elink(/*AUTOARG*/
    // Outputs
    timeout, elink_active, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n,
-   txo_data_p, txo_data_n, chipid, chip_resetb, cclk_p, cclk_n,
+   txo_data_p, txo_data_n, chipid, chip_nreset, cclk_p, cclk_n,
    mailbox_not_empty, mailbox_full, m_axi_awid, m_axi_awaddr,
    m_axi_awlen, m_axi_awsize, m_axi_awburst, m_axi_awlock,
    m_axi_awcache, m_axi_awprot, m_axi_awqos, m_axi_awvalid, m_axi_wid,
@@ -13,8 +13,8 @@ module axi_elink(/*AUTOARG*/
    s_axi_bid, s_axi_bresp, s_axi_bvalid, s_axi_rid, s_axi_rdata,
    s_axi_rlast, s_axi_rresp, s_axi_rvalid, s_axi_wready,
    // Inputs
-   reset, sys_clk, rxi_lclk_p, rxi_lclk_n, rxi_frame_p, rxi_frame_n,
-   rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
+   sys_nreset, sys_clk, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
+   rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
    txi_rd_wait_p, txi_rd_wait_n, m_axi_aresetn, m_axi_awready,
    m_axi_wready, m_axi_bid, m_axi_bresp, m_axi_bvalid, m_axi_arready,
    m_axi_rid, m_axi_rdata, m_axi_rresp, m_axi_rlast, m_axi_rvalid,
@@ -34,12 +34,12 @@ module axi_elink(/*AUTOARG*/
    parameter S_IDW       = 12;       //ID width for S_AXI
    parameter M_IDW       = 6;        //ID width for M_AXI
    parameter IOSTD_ELINK = "LVDS_25";
-   parameter ETYPE       = 1;
+   parameter ETYPE       = 0;
    
    /****************************/
    /*CLK AND RESET             */
    /****************************/
-   input        reset;            // active high async reset
+   input        sys_nreset;       // active low async reset
    input 	sys_clk;          // system clock for AXI
    output 	elink_active;     // link is active and ready
    
@@ -64,7 +64,7 @@ module axi_elink(/*AUTOARG*/
    /*EPIPHANY INTERFACE (I/O PINS) */
    /********************************/          
    output [11:0] chipid;	            //chip id strap pins for Epiphany
-   output 	 chip_resetb;               //chip reset for Epiphany (active low)
+   output 	 chip_nreset;               //chip reset for Epiphany (active low)
    output 	 cclk_p,cclk_n;             //high speed clock (up to 1GHz) to Epiphany
    
    /*****************************/
@@ -222,7 +222,7 @@ module axi_elink(/*AUTOARG*/
    defparam elink.IOSTD_ELINK = IOSTD_ELINK;
    defparam elink.ETYPE       = ETYPE;
 
-   elink elink(.sys_reset		(reset),       //por reset needed for elink_en
+   elink elink(
 	       /*AUTOINST*/
 	       // Outputs
 	       .elink_active		(elink_active),
@@ -239,7 +239,7 @@ module axi_elink(/*AUTOARG*/
 	       .chipid			(chipid[11:0]),
 	       .cclk_p			(cclk_p),
 	       .cclk_n			(cclk_n),
-	       .chip_resetb		(chip_resetb),
+	       .chip_nreset		(chip_nreset),
 	       .mailbox_not_empty	(mailbox_not_empty),
 	       .mailbox_full		(mailbox_full),
 	       .timeout			(timeout),
@@ -253,6 +253,7 @@ module axi_elink(/*AUTOARG*/
 	       .txrd_wait		(txrd_wait),
 	       .txrr_wait		(txrr_wait),
 	       // Inputs
+	       .sys_nreset		(sys_nreset),
 	       .sys_clk			(sys_clk),
 	       .rxi_lclk_p		(rxi_lclk_p),
 	       .rxi_lclk_n		(rxi_lclk_n),
@@ -397,18 +398,3 @@ endmodule // elink
 // verilog-library-directories:("." "../../erx/hdl" "../../etx/hdl"  "../../memory/hdl")
 // End:
 
-/*
- Copyright (C) 2015 Adapteva, Inc.
- 
- Contributed by Andreas Olofsson <andreas@adapteva.com>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.This program is distributed in the hope 
- that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. You should have received a copy 
- of the GNU General Public License along with this program (see the file 
- COPYING).  If not, see <http://www.gnu.org/licenses/>.
- */
