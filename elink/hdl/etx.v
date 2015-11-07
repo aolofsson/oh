@@ -14,8 +14,7 @@ module etx(/*AUTOARG*/
    parameter PW          = 104;
    parameter RFAW        = 6;
    parameter ID          = 12'h000;
-   parameter IOSTD_ELINK = "LVDS_25";
-   parameter ETYPE       = 1;   
+   parameter ETYPE       = 0;   
 
    //Reset and clocks
    input 	  sys_clk;                      // clock for fifos      
@@ -183,9 +182,6 @@ module etx(/*AUTOARG*/
    /*TRANSMIT I/O LOGIC                                       */
    /***********************************************************/
 
-   
-   
-   defparam etx_io.IOSTD_ELINK=IOSTD_ELINK;
    etx_io etx_io (.nreset		(etx_io_nreset),
 		  /*AUTOINST*/
 		  // Outputs

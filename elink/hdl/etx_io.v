@@ -10,8 +10,8 @@ module etx_io (/*AUTOARG*/
    
    parameter IOSTD_ELINK = "LVDS_25";
    parameter PW          = 104;
-   parameter ETYPE       = 1;//0=parallella
-                             //1=ephycard     
+   parameter ETYPE       = 0; // 0 = parallella
+                              // 1 = ephycard     
    //###########
    //# reset, clocks
    //##########
