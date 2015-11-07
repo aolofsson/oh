@@ -3,19 +3,19 @@ module etx_io (/*AUTOARG*/
    txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
    txo_data_n, tx_io_wait, tx_wr_wait, tx_rd_wait,
    // Inputs
-   reset, tx_lclk, tx_lclk_io, tx_lclk90, txi_wr_wait_p,
+   nreset, tx_lclk, tx_lclk_io, tx_lclk90, txi_wr_wait_p,
    txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n, tx_packet, tx_access,
    tx_burst
    );
    
    parameter IOSTD_ELINK = "LVDS_25";
    parameter PW          = 104;
-   parameter ETYPE       = 1;//0=parallella
-                             //1=ephycard     
+   parameter ETYPE       = 0; // 0 = parallella
+                              // 1 = ephycard     
    //###########
    //# reset, clocks
    //##########
-   input        reset;               //sync reset for io  
+   input        nreset;              //sync reset for io  
    input 	tx_lclk;	     //fast clock for io state machine
    input 	tx_lclk_io;	     //fast ODDR
    input 	tx_lclk90;           //fast 90deg shifted lclk   
@@ -81,7 +81,7 @@ module etx_io (/*AUTOARG*/
 `define CYCLE7  3'b111
      
 always @ (posedge tx_lclk)
-  if(reset)
+  if(!nreset)
     tx_state[2:0] <= `IDLE;
   else
     case (tx_state[2:0])
@@ -100,7 +100,7 @@ always @ (posedge tx_lclk)
  
    //Creating wait pulse for slow clock domain
    always @ (posedge tx_lclk)
-     if(reset | ~tx_access)
+     if(!nreset | !tx_access)
        tx_io_wait <= 1'b0;
      else if ((tx_state[2:0] ==`CYCLE4) & ~tx_burst)
        tx_io_wait <= 1'b1;
@@ -281,23 +281,3 @@ endmodule // etx_io
 // verilog-library-directories:("." "../../emesh/hdl")
 // End:
 
-
-/*
-  Copyright (C) 2014 Adapteva, Inc.
-  Contributed by Andreas Olofsson <andreas@adapteva.com>
-  Contributed by Gunnar Hillerstrom
- 
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program (see the file COPYING).  If not, see
-  <http://www.gnu.org/licenses/>.
-*/

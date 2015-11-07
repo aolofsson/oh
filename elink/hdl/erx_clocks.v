@@ -1,9 +1,9 @@
 `include "elink_constants.v"
 module erx_clocks (/*AUTOARG*/
    // Outputs
-   rx_lclk, rx_lclk_div4, rx_active, erx_reset, erx_io_reset,
+   rx_lclk, rx_lclk_div4, rx_active, erx_nreset, erx_io_nreset,
    // Inputs
-   sys_reset, soft_reset, tx_active, sys_clk, rx_clkin
+   sys_nreset, soft_reset, tx_active, sys_clk, rx_clkin
    );
 
 `ifdef TARGET_SIMPLE
@@ -25,7 +25,7 @@ module erx_clocks (/*AUTOARG*/
    localparam integer RXCLK_DIVIDE  = PLL_VCO_MULT; //1:1
       
    //Input clock, reset, config interface
-   input      sys_reset;         // por reset (hw)
+   input      sys_nreset;        // active low system reset (hw)
    input      soft_reset;        // rx enable signal (sw)
    input      tx_active;         // tx active input
    
@@ -40,8 +40,8 @@ module erx_clocks (/*AUTOARG*/
 
    //Reset
    output     rx_active;         // rx active
-   output     erx_reset;         // reset for rx core logic
-   output     erx_io_reset;      // io reset (synced to high speed clock)
+   output     erx_nreset;         // reset for rx core logic
+   output     erx_io_nreset;      // io reset (synced to high speed clock)
    
     
    //############
@@ -60,8 +60,8 @@ module erx_clocks (/*AUTOARG*/
    
    //PLL
    wire       rx_lclk_fb;
-//   wire       rx_lclk_fb_out;   
- 
+   wire       rx_nreset_in;
+   wire       rx_nreset;
    
    //###########################
    // RESET STATE MACHINE
@@ -75,9 +75,11 @@ module erx_clocks (/*AUTOARG*/
    wire        pll_reset;
    reg [1:0]   reset_pipe_lclkb;    
    reg [1:0]   reset_pipe_lclk_div4b;   
+
+   //Reset 
+   assign rx_nreset_in  =  sys_nreset & tx_active;   
    
    //wrap around counter that generates a 1 cycle heartbeat       
-   //free running counter...
    always @ (posedge sys_clk)
      begin
 	reset_counter[RCW-1:0] <= reset_counter[RCW-1:0]+1'b1;
@@ -92,64 +94,55 @@ module erx_clocks (/*AUTOARG*/
      end
 
    
-`define RESET_ALL        3'b000
-`define START_PLL        3'b001
-`define ACTIVE           3'b010
+`define RX_RESET_ALL        3'b000
+`define RX_START_PLL        3'b001
+`define RX_ACTIVE           3'b010
 
    //Reset sequence state machine
-   
-   always @ (posedge sys_clk or posedge reset_in)
-     if(reset_in)
-       reset_state[2:0]        <= `RESET_ALL;   
+
+
+   always @ (posedge sys_clk or negedge rx_nreset_in)
+     if(!rx_nreset_in)
+       reset_state[2:0]        <= `RX_RESET_ALL;   
      else if(heartbeat)
        case(reset_state[2:0])
-	 `RESET_ALL :
+	 `RX_RESET_ALL :
 	   if(~soft_reset)
-	     reset_state[2:0]  <= `START_PLL;	 
-	 `START_PLL :
+	     reset_state[2:0]  <= `RX_START_PLL;	 
+	 `RX_START_PLL :
 	   if(pll_locked_sync & idelay_ready)
-	     reset_state[2:0]  <= `ACTIVE; 
-	 `ACTIVE:
+	     reset_state[2:0]  <= `RX_ACTIVE; 
+	 `RX_ACTIVE:
 	   if(soft_reset)
-	     reset_state[2:0]  <= `RESET_ALL; //stay there until next reset
+	     reset_state[2:0]  <= `RX_RESET_ALL; //stay there until next reset
        endcase // case (reset_state[2:0])
    
-   //reset PLL during 'reset' and during quiet time around reset edge
-   assign reset_in     =  sys_reset | ~tx_active;   
-   assign pll_reset    =  (reset_state[2:0]==`RESET_ALL);   
-   assign idelay_reset =  (reset_state[2:0]==`RESET_ALL);
+   assign pll_reset    =  (reset_state[2:0]==`RX_RESET_ALL);   
+   assign idelay_reset =  (reset_state[2:0]==`RX_RESET_ALL);
 
-   //asynch rx reset
-   assign rx_reset    =  (reset_state[2:0] != `ACTIVE);
+   //asynch rx block reset
+   assign rx_nreset    =  ~(reset_state[2:0] != `RX_ACTIVE);
 
    //active indicator
-   assign rx_active   =  (reset_state[2:0] == `ACTIVE);
+   assign rx_active   =  (reset_state[2:0] == `RX_ACTIVE);
    
    //#############################
-   //#RESET SYNC
+   //#RESET SYNCING
    //#############################
-   //async assert
-   //sync deassert
+   rsync rsync_io (// Outputs
+		   .nrst_out		(erx_io_nreset),
+		   // Inputs
+		   .clk			(rx_lclk),
+		   .nrst_in		(rx_nreset)
+		   );
    
-   //lclk sync
-   always @ (posedge rx_lclk or posedge rx_reset)
-     if(rx_reset)
-       reset_pipe_lclkb[1:0] <= 2'b00;
-     else
-       reset_pipe_lclkb[1:0]  <= {reset_pipe_lclkb[0], 1'b1};   
-
-   assign erx_io_reset = ~reset_pipe_lclkb[1];
-
-   //lclkdiv4 sync
-   always @ (posedge rx_lclk_div4 or posedge rx_reset)
-      if(rx_reset)
-	reset_pipe_lclk_div4b[1:0] <= 2'b00;
-      else
-	reset_pipe_lclk_div4b[1:0]  <= {reset_pipe_lclk_div4b[0],1'b1};   
-
-   assign erx_reset  = ~reset_pipe_lclk_div4b[1];
-   
-     
+   rsync rsync_core (// Outputs
+		     .nrst_out		(erx_nreset),
+		     // Inputs
+		     .clk		(rx_lclk_div4),
+		     .nrst_in		(rx_nreset)
+		     );
+      	   
 `ifdef TARGET_XILINX	
 
    //###########################
@@ -233,17 +226,3 @@ endmodule // eclocks
 // verilog-library-directories:("." "../../common/hdl")
 // End:
 
-/*
-  Copyright (C) 2015 Adapteva, Inc.
-  Contributed by Andreas Olofsson <andreas@adapteva.com>
- 
-   This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.This program is distributed in the hope 
-  that it will be useful,but WITHOUT ANY WARRANTY without even the implied 
-  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details. You should have received a copy 
-  of the GNU General Public License along with this program (see the file 
-  COPYING).  If not, see <http://www.gnu.org/licenses/>.
-*/

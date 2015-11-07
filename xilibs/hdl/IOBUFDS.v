@@ -15,5 +15,9 @@ module IOBUFDS (O, IO, IOB, I, T);
     output O;
     inout  IO, IOB;
     input  I, T;
+
+   assign O = IO & ~IOB;
+   assign IO = T ? 1'bz : I;
+   assign IOB = T ? 1'bz : ~I;
    
 endmodule

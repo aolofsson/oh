@@ -30,11 +30,18 @@
 `define ERX_STATUS     6'd1 //F0304-status register
 `define ERX_GPIO       6'd2 //F0308-sampled data
 `define ERX_OFFSET     6'd3 //F030C-memory base for remap
-`define E_MAILBOXLO    6'd4 //F0310-reserved-->move?
-`define E_MAILBOXHI    6'd5 //F0314-reserved
+
 `define ERX_IDELAY0    6'd6 //F0318-tap delay for d[5:0]
 `define ERX_IDELAY1    6'd7 //F031c-tap delays for {frame,d[7:6]}
 `define ERX_TESTDATA   6'd8 //F0320-
+
+//MAILBOX 
+`ifndef E_MAILBOXLO	
+ `define E_MAILBOXLO    6'd4 //F0310-reserved
+`endif
+`ifndef E_MAILBOXHI	
+ `define E_MAILBOXHI    6'd5 //F0314-reserved
+`endif
 
 //DMA (same numbering as in Epiphany, limit to 4 channels)
 `define DMACFG         5'd0 //F0500/F0520

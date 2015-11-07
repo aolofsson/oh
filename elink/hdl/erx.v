@@ -2,10 +2,10 @@ module erx (/*AUTOARG*/
    // Outputs
    rx_active, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, rxwr_access, rxwr_packet, rxrd_access, rxrd_packet,
-   rxrr_access, rxrr_packet, erx_cfg_wait, rx_lclk_div4, erx_reset,
+   rxrr_access, rxrr_packet, erx_cfg_wait, rx_lclk_div4, erx_nreset,
    timeout, mailbox_full, mailbox_not_empty,
    // Inputs
-   soft_reset, sys_reset, sys_clk, tx_active, rxi_lclk_p, rxi_lclk_n,
+   soft_reset, sys_nreset, sys_clk, tx_active, rxi_lclk_p, rxi_lclk_n,
    rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, rxwr_wait,
    rxrd_wait, rxrr_wait, erx_cfg_access, erx_cfg_packet
    );
@@ -20,7 +20,7 @@ module erx (/*AUTOARG*/
 
    //Synched resets, clock
    input          soft_reset;                   // sw driven reset
-   input          sys_reset;                    // async reset
+   input          sys_nreset;                    // async reset
    input 	  sys_clk;	                // system clock for fifo/clocks
    input 	  tx_active;                    // holds rx in check until tx has booted 
    output 	  rx_active;                    // indicates RX and TX are active
@@ -52,7 +52,7 @@ module erx (/*AUTOARG*/
    input [PW-1:0]  erx_cfg_packet;
    output 	   erx_cfg_wait;
    output 	   rx_lclk_div4;
-   output 	   erx_reset;
+   output 	   erx_nreset;
   
    
    //Readback timeout (synchronized to sys_c
@@ -65,7 +65,7 @@ module erx (/*AUTOARG*/
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			erx_io_reset;		// From erx_clocks of erx_clocks.v
+   wire			erx_io_nreset;		// From erx_clocks of erx_clocks.v
    wire [44:0]		idelay_value;		// From erx_core of erx_core.v
    wire			load_taps;		// From erx_core of erx_core.v
    wire			rx_access;		// From erx_io of erx_io.v
@@ -94,10 +94,10 @@ module erx (/*AUTOARG*/
 			 .rx_lclk		(rx_lclk),
 			 .rx_lclk_div4		(rx_lclk_div4),
 			 .rx_active		(rx_active),
-			 .erx_reset		(erx_reset),
-			 .erx_io_reset		(erx_io_reset),
+			 .erx_nreset		(erx_nreset),
+			 .erx_io_nreset		(erx_io_nreset),
 			 // Inputs
-			 .sys_reset		(sys_reset),
+			 .sys_nreset		(sys_nreset),
 			 .soft_reset		(soft_reset),
 			 .tx_active		(tx_active),
 			 .sys_clk		(sys_clk),
@@ -106,33 +106,32 @@ module erx (/*AUTOARG*/
    /***********************************************************/
    /*RECEIVER  I/O LOGIC                                      */
    /***********************************************************/
-   defparam erx_io.IOSTD_ELINK=IOSTD_ELINK;
-   defparam erx_io.ETYPE=ETYPE;   
-   erx_io erx_io (
+   erx_io #(.ETYPE(ETYPE))
+   erx_io (
 		  /*AUTOINST*/
-		  // Outputs
-		  .rx_clkin		(rx_clkin),
-		  .rxo_wr_wait_p	(rxo_wr_wait_p),
-		  .rxo_wr_wait_n	(rxo_wr_wait_n),
-		  .rxo_rd_wait_p	(rxo_rd_wait_p),
-		  .rxo_rd_wait_n	(rxo_rd_wait_n),
-		  .rx_access		(rx_access),
-		  .rx_burst		(rx_burst),
-		  .rx_packet		(rx_packet[PW-1:0]),
-		  // Inputs
-		  .erx_io_reset		(erx_io_reset),
-		  .rx_lclk		(rx_lclk),
-		  .rx_lclk_div4		(rx_lclk_div4),
-		  .idelay_value		(idelay_value[44:0]),
-		  .load_taps		(load_taps),
-		  .rxi_lclk_p		(rxi_lclk_p),
-		  .rxi_lclk_n		(rxi_lclk_n),
-		  .rxi_frame_p		(rxi_frame_p),
-		  .rxi_frame_n		(rxi_frame_n),
-		  .rxi_data_p		(rxi_data_p[7:0]),
-		  .rxi_data_n		(rxi_data_n[7:0]),
-		  .rx_wr_wait		(rx_wr_wait),
-		  .rx_rd_wait		(rx_rd_wait));
+	   // Outputs
+	   .rx_clkin			(rx_clkin),
+	   .rxo_wr_wait_p		(rxo_wr_wait_p),
+	   .rxo_wr_wait_n		(rxo_wr_wait_n),
+	   .rxo_rd_wait_p		(rxo_rd_wait_p),
+	   .rxo_rd_wait_n		(rxo_rd_wait_n),
+	   .rx_access			(rx_access),
+	   .rx_burst			(rx_burst),
+	   .rx_packet			(rx_packet[PW-1:0]),
+	   // Inputs
+	   .erx_io_nreset		(erx_io_nreset),
+	   .rx_lclk			(rx_lclk),
+	   .rx_lclk_div4		(rx_lclk_div4),
+	   .idelay_value		(idelay_value[44:0]),
+	   .load_taps			(load_taps),
+	   .rxi_lclk_p			(rxi_lclk_p),
+	   .rxi_lclk_n			(rxi_lclk_n),
+	   .rxi_frame_p			(rxi_frame_p),
+	   .rxi_frame_n			(rxi_frame_n),
+	   .rxi_data_p			(rxi_data_p[7:0]),
+	   .rxi_data_n			(rxi_data_n[7:0]),
+	   .rx_wr_wait			(rx_wr_wait),
+	   .rx_rd_wait			(rx_rd_wait));
    
    /**************************************************************/
    /*ELINK CORE LOGIC                                            */
@@ -152,7 +151,7 @@ module erx (/*AUTOARG*/
    
    defparam erx_core.ID=ID;   
    erx_core erx_core ( .clk		(rx_lclk_div4),
-		       .reset           (erx_reset),
+		       .nreset           (erx_nreset),
 		      /*AUTOINST*/
 		      // Outputs
 		      .rx_rd_wait	(rx_rd_wait),		 // Templated
@@ -194,8 +193,8 @@ module erx (/*AUTOARG*/
 			.rxrr_fifo_wait	(rxrr_fifo_wait),
 			.rxwr_fifo_wait	(rxwr_fifo_wait),
 			// Inputs
-			.erx_reset	(erx_reset),
-			.sys_reset	(sys_reset),
+			.erx_nreset	(erx_nreset),
+			.sys_nreset	(sys_nreset),
 			.rx_lclk_div4	(rx_lclk_div4),
 			.sys_clk	(sys_clk),
 			.rxwr_wait	(rxwr_wait),
@@ -213,19 +212,5 @@ endmodule // erx
 // verilog-library-directories:(".")
 // End:
 
-/*
- Copyright (C) 2014 Adapteva, Inc.
-  
- Contributed by Andreas Olofsson <andreas@adapteva.com>
 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.This program is distributed in the hope 
- that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. You should have received a copy 
- of the GNU General Public License along with this program (see the file 
- COPYING).  If not, see <http://www.gnu.org/licenses/>.
- */
 

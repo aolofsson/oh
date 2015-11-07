@@ -18,7 +18,7 @@ module etx_arbiter (/*AUTOARG*/
    // Outputs
    txwr_wait, txrd_wait, txrr_wait, etx_access, etx_packet, etx_rr,
    // Inputs
-   clk, reset, txwr_access, txwr_packet, txrd_access, txrd_packet,
+   clk, nreset, txwr_access, txwr_packet, txrd_access, txrd_packet,
    txrr_access, txrr_packet, etx_rd_wait, etx_wr_wait, etx_cfg_wait,
    ctrlmode_bypass, ctrlmode
    );
@@ -28,7 +28,7 @@ module etx_arbiter (/*AUTOARG*/
    
    //tx clock and reset
    input          clk;
-   input          reset;
+   input          nreset;
 
    //Write Request (from slave)
    input 	   txwr_access;
@@ -149,7 +149,7 @@ module etx_arbiter (/*AUTOARG*/
 
    //access
     always @ (posedge clk)
-      if (reset)
+      if (!nreset)
 	begin
 	   etx_access        <= 1'b0;   
 	   etx_rr            <= 1'b0;	   
@@ -171,21 +171,3 @@ endmodule // etx_arbiter
 // End:
 
 
-/*
-  Copyright (C) 2015 Adapteva, Inc.
-  Contributed by Andreas Olofsson <andreas@adapteva.com>
-
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program (see the file COPYING).  If not, see
-  <http://www.gnu.org/licenses/>.
-*/

@@ -2,8 +2,8 @@ module etx_remap (/*AUTOARG*/
    // Outputs
    emesh_access_out, emesh_packet_out,
    // Inputs
-   clk, reset, emesh_access_in, emesh_packet_in, remap_en,
-   remap_bypass, etx_rd_wait, etx_wr_wait
+   clk, emesh_access_in, emesh_packet_in, remap_en, remap_bypass,
+   etx_rd_wait, etx_wr_wait
    );
 
    parameter AW = 32;
@@ -11,9 +11,8 @@ module etx_remap (/*AUTOARG*/
    parameter PW = 104;
    parameter ID = 12'h808;
    
-   //Clock/reset
-   input clk;
-   input reset;
+   //Clock
+   input          clk;
 
    //Input from arbiter
    input          emesh_access_in;

@@ -2,9 +2,9 @@
 module etx_clocks (/*AUTOARG*/
    // Outputs
    tx_lclk, tx_lclk_io, tx_lclk90, tx_lclk_div4, cclk_p, cclk_n,
-   etx_reset, etx_io_reset, chip_resetb, tx_active,
+   etx_nreset, etx_io_nreset, chip_nreset, tx_active,
    // Inputs
-   sys_reset, soft_reset, sys_clk
+   sys_nreset, soft_reset, sys_clk
    );
 
 `ifdef TARGET_SIMPLE
@@ -28,7 +28,7 @@ module etx_clocks (/*AUTOARG*/
    parameter MMCM_VCO_MULT   = 12;  //TX + CCLK
       
    //Input clock, reset, config interface
-   input      sys_reset;         // por reset (hw)
+   input      sys_nreset;        // por reset (hw)
    input      soft_reset;        // rx enable signal (sw)
    
    //Main input clocks
@@ -44,9 +44,9 @@ module etx_clocks (/*AUTOARG*/
    output     cclk_p, cclk_n;
 
    //Reset
-   output     etx_reset;         // reset for tx core logic
-   output     etx_io_reset;      // io reset (synced to high speed clock)
-   output     chip_resetb;       // reset fpr Epiphany chip
+   output     etx_nreset;        // reset for tx core logic
+   output     etx_io_nreset;     // io reset (synced to high speed clock)
+   output     chip_nreset;       // reset fpr Epiphany chip
    output     tx_active;         // enable for rx path (ensures active clock)
    
    //############
@@ -73,6 +73,7 @@ module etx_clocks (/*AUTOARG*/
    reg 	      mmcm_locked_reg;
    reg 	      mmcm_locked_sync;
    wire       lclk_locked;   
+   wire       tx_nreset;
    
    //###########################
    // RESET STATE MACHINE
@@ -99,79 +100,71 @@ module etx_clocks (/*AUTOARG*/
 	mmcm_locked_sync  <= mmcm_locked_reg;	
      end
      
-`define RESET_ALL        3'b000
-`define START_CCLK       3'b001
-`define STOP_CCLK        3'b010
-`define DEASSERT_RESET   3'b011
-`define HOLD_IT          3'b100 //???
-`define ACTIVE           3'b101
+`define TX_RESET_ALL        3'b000
+`define TX_START_CCLK       3'b001
+`define TX_STOP_CCLK        3'b010
+`define TX_DEASSERT_RESET   3'b011
+`define TX_HOLD_IT          3'b100 //???
+`define TX_ACTIVE           3'b101
 
    //Reset sequence state machine      
-   always @ (posedge sys_clk or posedge sys_reset)
-     if(sys_reset)
-       reset_state[2:0]        <= `RESET_ALL;   
+   always @ (posedge sys_clk or negedge sys_nreset)
+     if(!sys_nreset)
+       reset_state[2:0]        <= `TX_RESET_ALL;   
      else if(heartbeat)
        case(reset_state[2:0])
-	 `RESET_ALL :
+	 `TX_RESET_ALL :
 	   if(~soft_reset)
-	     reset_state[2:0]  <= `START_CCLK;	 
-	 `START_CCLK :
+	     reset_state[2:0]  <= `TX_START_CCLK;	 
+	 `TX_START_CCLK :
 	   if(mmcm_locked_sync)
-	     reset_state[2:0]  <= `STOP_CCLK; 
-	 `STOP_CCLK :
-	   reset_state[2:0]    <= `DEASSERT_RESET;
-	 `DEASSERT_RESET :
-	   reset_state[2:0]    <= `HOLD_IT;
-	 `HOLD_IT :
+	     reset_state[2:0]  <= `TX_STOP_CCLK; 
+	 `TX_STOP_CCLK :
+	   reset_state[2:0]    <= `TX_DEASSERT_RESET;
+	 `TX_DEASSERT_RESET :
+	   reset_state[2:0]    <= `TX_HOLD_IT;
+	 `TX_HOLD_IT :
 	   if(mmcm_locked_sync)
-	     reset_state[2:0]  <= `ACTIVE;
-	 `ACTIVE:
+	     reset_state[2:0]  <= `TX_ACTIVE;
+	 `TX_ACTIVE:
 	   if(soft_reset)
-	     reset_state[2:0]    <= `RESET_ALL; //stay there until nex reset
+	     reset_state[2:0]    <= `TX_RESET_ALL; //stay there until nex reset
 
        endcase // case (reset_state[2:0])
    
    //reset mmcm (async)
-   assign mmcm_reset =  (reset_state[2:0]==`RESET_ALL)      |
-			(reset_state[2:0]==`STOP_CCLK)      |  
-			(reset_state[2:0]==`DEASSERT_RESET)
+   assign mmcm_reset =  (reset_state[2:0]==`TX_RESET_ALL)      |
+			(reset_state[2:0]==`TX_STOP_CCLK)      |  
+			(reset_state[2:0]==`TX_DEASSERT_RESET)
 			;
    
    //reset chip (active low)
-   assign chip_resetb  = (reset_state[2:0]==`DEASSERT_RESET) |
-		         (reset_state[2:0]==`HOLD_IT)        |
-		         (reset_state[2:0]==`ACTIVE);   
+   assign chip_nreset  = (reset_state[2:0]==`TX_DEASSERT_RESET) |
+		         (reset_state[2:0]==`TX_HOLD_IT)        |
+		         (reset_state[2:0]==`TX_ACTIVE);   
       
    //reset the elink
-   wire tx_reset      =  (reset_state[2:0] != `ACTIVE);
+   assign tx_nreset      =  ~(reset_state[2:0] != `TX_ACTIVE);
 
 
-   assign tx_active   =  (reset_state[2:0] == `ACTIVE);
+   assign tx_active   =  (reset_state[2:0] == `TX_ACTIVE);
 
    //#############################
-   //#RESET SYNC
+   //#RESET SYNCING
    //#############################
-   //async assert
-   //sync deassert
    
-   //lclk sync
-   always @ (posedge tx_lclk or posedge tx_reset)
-     if(tx_reset)
-       reset_pipe_lclkb[1:0] <= 2'b00;
-     else
-       reset_pipe_lclkb[1:0]  <= {reset_pipe_lclkb[0], 1'b1};   
-
-   assign etx_io_reset = ~reset_pipe_lclkb[1];
-
-   //lclkdiv4 sync
-   always @ (posedge tx_lclk_div4 or posedge tx_reset)
-      if(tx_reset)
-	reset_pipe_lclk_div4b[1:0] <= 2'b00;
-      else
-	reset_pipe_lclk_div4b[1:0]  <= {reset_pipe_lclk_div4b[0],1'b1};   
-
-   assign etx_reset  = ~reset_pipe_lclk_div4b[1];
-   			     
+   rsync rsync_io (// Outputs
+		   .nrst_out		(etx_io_nreset),
+		   // Inputs
+		   .clk			(tx_lclk),
+		   .nrst_in		(tx_nreset));
+   
+   rsync rsync_core (// Outputs
+		     .nrst_out		(etx_nreset),
+		     // Inputs
+		     .clk		(tx_lclk_div4),
+		     .nrst_in		(tx_nreset));
+  			     
 `ifdef TARGET_XILINX	
 
    //###########################
@@ -286,17 +279,3 @@ endmodule // eclocks
 // verilog-library-directories:("." "../../common/hdl")
 // End:
 
-/*
-  Copyright (C) 2015 Adapteva, Inc.
-  Contributed by Andreas Olofsson <andreas@adapteva.com>
- 
-   This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.This program is distributed in the hope 
-  that it will be useful,but WITHOUT ANY WARRANTY without even the implied 
-  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details. You should have received a copy 
-  of the GNU General Public License along with this program (see the file 
-  COPYING).  If not, see <http://www.gnu.org/licenses/>.
-*/

@@ -78,6 +78,7 @@ module dut(/*AUTOARG*/
   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire			elink0_chip_nreset;	// From elink0 of elink.v
    wire			elink0_rxo_rd_wait_n;	// From elink0 of elink.v
    wire			elink0_rxo_rd_wait_p;	// From elink0 of elink.v
    wire			elink0_rxo_wr_wait_n;	// From elink0 of elink.v
@@ -96,6 +97,7 @@ module dut(/*AUTOARG*/
    wire			elink0_txwr_access;	// From emesh_if of emesh_if.v
    wire [PW-1:0]	elink0_txwr_packet;	// From emesh_if of emesh_if.v
    wire			elink0_txwr_wait;	// From elink0 of elink.v
+   wire			elink1_chip_nreset;	// From elink1 of elink.v
    wire			elink1_elink_active;	// From elink1 of elink.v
    wire			elink1_rxo_rd_wait_n;	// From elink1 of elink.v
    wire			elink1_rxo_rd_wait_p;	// From elink1 of elink.v
@@ -170,7 +172,7 @@ module dut(/*AUTOARG*/
    /*elink AUTO_TEMPLATE (
                           // Outputs                        
                           .sys_clk            (clk),
-                          .sys_reset          (~nreset),
+                          .sys_nreset         (nreset),
                           .rxi_\(.*\)         (elink1_txo_\1[]),
                           .txi_\(.*\)         (elink1_rxo_\1[]),
                           .\(.*\)             (@"(substring vl-cell-name  0 6)"_\1[]),
@@ -205,7 +207,7 @@ module dut(/*AUTOARG*/
 		 .chipid		(elink0_chipid[11:0]),	 // Templated
 		 .cclk_p		(elink0_cclk_p),	 // Templated
 		 .cclk_n		(elink0_cclk_n),	 // Templated
-		 .chip_resetb		(elink0_chip_resetb),	 // Templated
+		 .chip_nreset		(elink0_chip_nreset),	 // Templated
 		 .mailbox_not_empty	(elink0_mailbox_not_empty), // Templated
 		 .mailbox_full		(elink0_mailbox_full),	 // Templated
 		 .timeout		(elink0_timeout),	 // Templated
@@ -214,7 +216,7 @@ module dut(/*AUTOARG*/
 		 .txwr_wait		(elink0_txwr_wait),	 // Templated
 		 .txrd_wait		(elink0_txrd_wait),	 // Templated
 		 // Inputs
-		 .sys_reset		(~nreset),		 // Templated
+		 .sys_nreset		(nreset),		 // Templated
 		 .sys_clk		(clk),			 // Templated
 		 .rxi_lclk_p		(elink1_txo_lclk_p),	 // Templated
 		 .rxi_lclk_n		(elink1_txo_lclk_n),	 // Templated
@@ -238,7 +240,7 @@ module dut(/*AUTOARG*/
    /*elink AUTO_TEMPLATE (
                           // Outputs                        
                           .sys_clk            (clk),
-                          .sys_reset          (~nreset),
+                          .sys_nreset         (nreset),
                           .rxi_\(.*\)         (elink0_txo_\1[]),
                           .txi_\(.*\)         (elink0_rxo_\1[]),
                           .\(.*\)             (@"(substring vl-cell-name  0 6)"_\1[]),
@@ -278,7 +280,7 @@ module dut(/*AUTOARG*/
 		 .chipid		(elink1_chipid[11:0]),	 // Templated
 		 .cclk_p		(elink1_cclk_p),	 // Templated
 		 .cclk_n		(elink1_cclk_n),	 // Templated
-		 .chip_resetb		(elink1_chip_resetb),	 // Templated
+		 .chip_nreset		(elink1_chip_nreset),	 // Templated
 		 .mailbox_not_empty	(elink1_mailbox_not_empty), // Templated
 		 .mailbox_full		(elink1_mailbox_full),	 // Templated
 		 .timeout		(elink1_timeout),	 // Templated
@@ -292,7 +294,7 @@ module dut(/*AUTOARG*/
 		 .txrd_wait		(elink1_txrd_wait),	 // Templated
 		 .txrr_wait		(elink1_txrr_wait),	 // Templated
 		 // Inputs
-		 .sys_reset		(~nreset),		 // Templated
+		 .sys_nreset		(nreset),		 // Templated
 		 .sys_clk		(clk),			 // Templated
 		 .rxi_lclk_p		(elink0_txo_lclk_p),	 // Templated
 		 .rxi_lclk_n		(elink0_txo_lclk_n),	 // Templated
@@ -322,7 +324,6 @@ module dut(/*AUTOARG*/
                         .\(.*\)_out       (elink1_txrr_\1[]),
                         .\(.*\)_in        (emem_\1[]),
                         .wait_out	  (emem_wait),
-                        .reset            (~nreset),
                              );
    */
 
@@ -342,21 +343,6 @@ module dut(/*AUTOARG*/
         
 endmodule // dv_elink
 // Local Variables:
-// verilog-library-directories:("." "../hdl" "../../memory/hdl" "../../emesh/hdl")
+// verilog-library-directories:("." "../hdl" "../../emesh/dv" "../../emesh/hdl")
 // End:
-
-/*
- Copyright (C) 2014 Adapteva, Inc. 
- Contributed by Andreas Olofsson <andreas@adapteva.com>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.This program is distributed in the hope 
- that it will be useful,but WITHOUT ANY WARRANTY; without even the implied 
- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. You should have received a copy 
- of the GNU General Public License along with this program (see the file 
- COPYING).  If not, see <http://www.gnu.org/licenses/>.
- */
 
