@@ -100,12 +100,12 @@ module etx_clocks (/*AUTOARG*/
 	mmcm_locked_sync  <= mmcm_locked_reg;	
      end
      
-`define RESET_ALL        3'b000
-`define START_CCLK       3'b001
-`define STOP_CCLK        3'b010
-`define DEASSERT_RESET   3'b011
-`define HOLD_IT          3'b100 //???
-`define ACTIVE           3'b101
+`define TX_RESET_ALL        3'b000
+`define TX_START_CCLK       3'b001
+`define TX_STOP_CCLK        3'b010
+`define TX_DEASSERT_RESET   3'b011
+`define TX_HOLD_IT          3'b100 //???
+`define TX_ACTIVE           3'b101
 
    //Reset sequence state machine      
    always @ (posedge sys_clk or negedge sys_nreset)

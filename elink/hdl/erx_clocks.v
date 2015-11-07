@@ -94,9 +94,9 @@ module erx_clocks (/*AUTOARG*/
      end
 
    
-`define RESET_ALL        3'b000
-`define START_PLL        3'b001
-`define ACTIVE           3'b010
+`define RX_RESET_ALL        3'b000
+`define RX_START_PLL        3'b001
+`define RX_ACTIVE           3'b010
 
    //Reset sequence state machine
 
