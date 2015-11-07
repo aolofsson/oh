@@ -9,29 +9,19 @@ parallella_headless.tcl --product number as argument
 parallella_display.tcl
 parallella_sdr.tcl
 
----
-proc adi_add_bus {bus_name bus_type mode port_maps} {
-        set bus [ipx::add_bus_interface $bus_name [ipx::current_core]]
-        if { $bus_type == "axis" } {
-                set abst_type "axis_rtl"
-        } elseif { $bus_type == "aximm" } {
-                set abst_type "aximm_rtl"
-        } else {
-                set abst_type $bus_type
-        }
+----
+## EDITING SYSTEM>BD IN GUI (ONE TIME..)
+1. create ports
+2. connect wires
+3. run connection automation
+4. create memory map
+5. validate_bd_design
+6. write_bd_tcl ./system_bd.tcl
 
-        set_property "ABSTRACTION_TYPE_LIBRARY" "interface" $bus
-        set_property "ABSTRACTION_TYPE_NAME" $abst_type $bus
-        set_property "ABSTRACTION_TYPE_VENDOR" "xilinx.com" $bus
-        set_property "ABSTRACTION_TYPE_VERSION" "1.0" $bus
-        set_property "BUS_TYPE_LIBRARY" "interface" $bus
-        set_property "BUS_TYPE_NAME" $bus_type $bus
-        set_property "BUS_TYPE_VENDOR" "xilinx.com" $bus
-        set_property "BUS_TYPE_VERSION" "1.0" $bus
-        set_property "CLASS" "bus_interface" $bus
-        set_property "INTERFACE_MODE" $mode $bus
+----
+## DESIGN LOOP
+1. Make verilog change..
+2. cd parallella_base; ./build.sh
+3. cd ../headless;; ./build.sh
+4. profit
 
-        foreach port_map $port_maps {
-                adi_add_port_map $bus {*}$port_map
-        }
-}

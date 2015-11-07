@@ -173,6 +173,10 @@ proc create_root_design { parentCell } {
   set txo_lclk_n [ create_bd_port -dir O txo_lclk_n ]
   set txo_lclk_p [ create_bd_port -dir O txo_lclk_p ]
 
+  # Create instance: axi_mem_intercon, and set properties
+  set axi_mem_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_mem_intercon ]
+  set_property -dict [ list CONFIG.NUM_MI {1}  ] $axi_mem_intercon
+
   # Create instance: parallella_base_0, and set properties
   set parallella_base_0 [ create_bd_cell -type ip -vlnv www.parallella.org:user:parallella_base:1.0 parallella_base_0 ]
 
@@ -206,6 +210,16 @@ CONFIG.PCW_USB0_PERIPHERAL_ENABLE {1} CONFIG.PCW_USB0_RESET_ENABLE {0} \
 CONFIG.PCW_USB1_PERIPHERAL_ENABLE {1} CONFIG.PCW_USE_M_AXI_GP1 {1} \
 CONFIG.PCW_USE_S_AXI_HP1 {1}  ] $processing_system7_0
 
+  # Create instance: processing_system7_0_axi_periph, and set properties
+  set processing_system7_0_axi_periph [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 processing_system7_0_axi_periph ]
+  set_property -dict [ list CONFIG.NUM_MI {1}  ] $processing_system7_0_axi_periph
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net axi_mem_intercon_M00_AXI [get_bd_intf_pins axi_mem_intercon/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP1]
+  connect_bd_intf_net -intf_net parallella_base_0_m_axi [get_bd_intf_pins axi_mem_intercon/S00_AXI] [get_bd_intf_pins parallella_base_0/m_axi]
+  connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP1 [get_bd_intf_pins processing_system7_0/M_AXI_GP1] [get_bd_intf_pins processing_system7_0_axi_periph/S00_AXI]
+  connect_bd_intf_net -intf_net processing_system7_0_axi_periph_M00_AXI [get_bd_intf_pins parallella_base_0/s_axi] [get_bd_intf_pins processing_system7_0_axi_periph/M00_AXI]
+
   # Create port connections
   connect_bd_net -net Net [get_bd_ports gpio_n] [get_bd_pins parallella_base_0/gpio_n]
   connect_bd_net -net Net1 [get_bd_ports gpio_p] [get_bd_pins parallella_base_0/gpio_p]
@@ -227,8 +241,9 @@ CONFIG.PCW_USE_S_AXI_HP1 {1}  ] $processing_system7_0
   connect_bd_net -net parallella_base_0_txo_frame_p [get_bd_ports txo_frame_p] [get_bd_pins parallella_base_0/txo_frame_p]
   connect_bd_net -net parallella_base_0_txo_lclk_n [get_bd_ports txo_lclk_n] [get_bd_pins parallella_base_0/txo_lclk_n]
   connect_bd_net -net parallella_base_0_txo_lclk_p [get_bd_ports txo_lclk_p] [get_bd_pins parallella_base_0/txo_lclk_p]
-  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins parallella_base_0/m_axi_aresetn] [get_bd_pins parallella_base_0/s_axi_aresetn] [get_bd_pins parallella_base_0/sys_nreset] [get_bd_pins proc_sys_reset_0/peripheral_aresetn]
-  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins parallella_base_0/sys_clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins processing_system7_0/M_AXI_GP1_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP1_ACLK]
+  connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins axi_mem_intercon/ARESETN] [get_bd_pins proc_sys_reset_0/interconnect_aresetn] [get_bd_pins processing_system7_0_axi_periph/ARESETN]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins axi_mem_intercon/M00_ARESETN] [get_bd_pins axi_mem_intercon/S00_ARESETN] [get_bd_pins parallella_base_0/m_axi_aresetn] [get_bd_pins parallella_base_0/s_axi_aresetn] [get_bd_pins parallella_base_0/sys_nreset] [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins processing_system7_0_axi_periph/M00_ARESETN] [get_bd_pins processing_system7_0_axi_periph/S00_ARESETN]
+  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins axi_mem_intercon/ACLK] [get_bd_pins axi_mem_intercon/M00_ACLK] [get_bd_pins axi_mem_intercon/S00_ACLK] [get_bd_pins parallella_base_0/sys_clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins processing_system7_0/M_AXI_GP1_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP1_ACLK] [get_bd_pins processing_system7_0_axi_periph/ACLK] [get_bd_pins processing_system7_0_axi_periph/M00_ACLK] [get_bd_pins processing_system7_0_axi_periph/S00_ACLK]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins proc_sys_reset_0/ext_reset_in] [get_bd_pins processing_system7_0/FCLK_RESET0_N]
   connect_bd_net -net processing_system7_0_GPIO_O [get_bd_pins parallella_base_0/ps_gpio_o] [get_bd_pins processing_system7_0/GPIO_O]
   connect_bd_net -net processing_system7_0_GPIO_T [get_bd_pins parallella_base_0/ps_gpio_t] [get_bd_pins processing_system7_0/GPIO_T]
@@ -248,6 +263,8 @@ CONFIG.PCW_USE_S_AXI_HP1 {1}  ] $processing_system7_0
   connect_bd_net -net txi_wr_wait_p_1 [get_bd_ports txi_wr_wait_p] [get_bd_pins parallella_base_0/txi_wr_wait_p]
 
   # Create address segments
+  create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces parallella_base_0/m_axi] [get_bd_addr_segs processing_system7_0/S_AXI_HP1/HP1_DDR_LOWOCM] SEG_processing_system7_0_HP1_DDR_LOWOCM
+  create_bd_addr_seg -range 0x40000000 -offset 0x80000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs parallella_base_0/s_axi/axi_lite] SEG_parallella_base_0_axi_lite
   
 
   # Restore current instance
@@ -264,6 +281,4 @@ CONFIG.PCW_USE_S_AXI_HP1 {1}  ] $processing_system7_0
 
 create_root_design ""
 
-
-puts "\n\nWARNING: This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
 
