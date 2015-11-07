@@ -2,35 +2,35 @@
 //Many verilog versions to one block design...
 module parallella_base(/*AUTOARG*/
    // Outputs
-   cclk_n, cclk_p, chip_nreset, chipid, elink_active,
-   mailbox_not_empty, timeout, i2c_scl_i, i2c_sda_i, ps_gpio_i,
-   txo_data_n, txo_data_p, txo_frame_n, txo_frame_p, txo_lclk_n,
-   txo_lclk_p, rxo_rd_wait_n, rxo_rd_wait_p, rxo_wr_wait_n,
-   rxo_wr_wait_p, m_axi_araddr, m_axi_arburst, m_axi_arcache,
-   m_axi_arid, m_axi_arlen, m_axi_arlock, m_axi_arprot, m_axi_arqos,
-   m_axi_arsize, m_axi_arvalid, m_axi_awaddr, m_axi_awburst,
-   m_axi_awcache, m_axi_awid, m_axi_awlen, m_axi_awlock, m_axi_awprot,
-   m_axi_awqos, m_axi_awsize, m_axi_awvalid, m_axi_bready,
-   m_axi_rready, m_axi_wdata, m_axi_wid, m_axi_wlast, m_axi_wstrb,
-   m_axi_wvalid, s_axi_arready, s_axi_awready, s_axi_bid, s_axi_bresp,
-   s_axi_bvalid, s_axi_rdata, s_axi_rid, s_axi_rlast, s_axi_rresp,
-   s_axi_rvalid, s_axi_wready,
+   s_axi_wready, s_axi_rvalid, s_axi_rresp, s_axi_rlast, s_axi_rid,
+   s_axi_rdata, s_axi_bvalid, s_axi_bresp, s_axi_bid, s_axi_awready,
+   s_axi_arready, m_axi_wvalid, m_axi_wstrb, m_axi_wlast, m_axi_wid,
+   m_axi_wdata, m_axi_rready, m_axi_bready, m_axi_awvalid,
+   m_axi_awsize, m_axi_awqos, m_axi_awprot, m_axi_awlock, m_axi_awlen,
+   m_axi_awid, m_axi_awcache, m_axi_awburst, m_axi_awaddr,
+   m_axi_arvalid, m_axi_arsize, m_axi_arqos, m_axi_arprot,
+   m_axi_arlock, m_axi_arlen, m_axi_arid, m_axi_arcache,
+   m_axi_arburst, m_axi_araddr, cclk_n, cclk_p, chip_nreset, chipid,
+   elink_active, mailbox_not_empty, timeout, i2c_scl_i, i2c_sda_i,
+   ps_gpio_i, txo_data_n, txo_data_p, txo_frame_n, txo_frame_p,
+   txo_lclk_n, txo_lclk_p, rxo_rd_wait_n, rxo_rd_wait_p,
+   rxo_wr_wait_n, rxo_wr_wait_p,
    // Inouts
    i2c_scl, i2c_sda, gpio_n, gpio_p,
    // Inputs
-   sys_clk, sys_nreset, i2c_scl_o, i2c_scl_t, i2c_sda_o, i2c_sda_t,
-   ps_gpio_o, ps_gpio_t, txi_rd_wait_n, txi_rd_wait_p, txi_wr_wait_n,
-   txi_wr_wait_p, rxi_data_n, rxi_data_p, rxi_frame_n, rxi_frame_p,
-   rxi_lclk_n, rxi_lclk_p, m_axi_aresetn, m_axi_arready,
-   m_axi_awready, m_axi_bid, m_axi_bresp, m_axi_bvalid, m_axi_rdata,
-   m_axi_rid, m_axi_rlast, m_axi_rresp, m_axi_rvalid, m_axi_wready,
-   s_axi_araddr, s_axi_arburst, s_axi_arcache, s_axi_aresetn,
-   s_axi_arid, s_axi_arlen, s_axi_arlock, s_axi_arprot, s_axi_arqos,
-   s_axi_arsize, s_axi_arvalid, s_axi_awaddr, s_axi_awburst,
-   s_axi_awcache, s_axi_awid, s_axi_awlen, s_axi_awlock, s_axi_awprot,
-   s_axi_awqos, s_axi_awsize, s_axi_awvalid, s_axi_bready,
-   s_axi_rready, s_axi_wdata, s_axi_wid, s_axi_wlast, s_axi_wstrb,
-   s_axi_wvalid
+   s_axi_wvalid, s_axi_wstrb, s_axi_wlast, s_axi_wid, s_axi_wdata,
+   s_axi_rready, s_axi_bready, s_axi_awvalid, s_axi_awsize,
+   s_axi_awqos, s_axi_awprot, s_axi_awlock, s_axi_awlen, s_axi_awid,
+   s_axi_awcache, s_axi_awburst, s_axi_awaddr, s_axi_arvalid,
+   s_axi_arsize, s_axi_arqos, s_axi_arprot, s_axi_arlock, s_axi_arlen,
+   s_axi_arid, s_axi_aresetn, s_axi_arcache, s_axi_arburst,
+   s_axi_araddr, m_axi_wready, m_axi_rvalid, m_axi_rresp, m_axi_rlast,
+   m_axi_rid, m_axi_rdata, m_axi_bvalid, m_axi_bresp, m_axi_bid,
+   m_axi_awready, m_axi_arready, m_axi_aresetn, sys_clk, sys_nreset,
+   i2c_scl_o, i2c_scl_t, i2c_sda_o, i2c_sda_t, ps_gpio_o, ps_gpio_t,
+   txi_rd_wait_n, txi_rd_wait_p, txi_wr_wait_n, txi_wr_wait_p,
+   rxi_data_n, rxi_data_p, rxi_frame_n, rxi_frame_p, rxi_lclk_n,
+   rxi_lclk_p
    );
 
    parameter AW          = 32;
@@ -87,19 +87,21 @@ module parallella_base(/*AUTOARG*/
    input		txi_wr_wait_p;		// To axe_elink of axi_elink.v
 
    //RX
-   output		rxo_rd_wait_n;		// From axe_elink of axi_elink.v
-   output		rxo_rd_wait_p;		// From axe_elink of axi_elink.v
-   output		rxo_wr_wait_n;		// From axe_elink of axi_elink.v
-   output		rxo_wr_wait_p;		// From axe_elink of axi_elink.v
    input [7:0] 		rxi_data_n;		// To axe_elink of axi_elink.v
    input [7:0]		rxi_data_p;		// To axe_elink of axi_elink.v
    input		rxi_frame_n;		// To axe_elink of axi_elink.v
    input		rxi_frame_p;		// To axe_elink of axi_elink.v
    input		rxi_lclk_n;		// To axe_elink of axi_elink.v
    input		rxi_lclk_p;		// To axe_elink of axi_elink.v
-
-   //AXI MASTER
-   output [31:0] 	m_axi_araddr;		// From axe_elink of axi_elink.v
+   output		rxo_rd_wait_n;		// From axe_elink of axi_elink.v
+   output		rxo_rd_wait_p;		// From axe_elink of axi_elink.v
+   output		rxo_wr_wait_n;		// From axe_elink of axi_elink.v
+   output		rxo_wr_wait_p;		// From axe_elink of axi_elink.v
+   
+   /*AUTOINOUT*/
+   /*AUTOOUTPUT*/
+   // Beginning of automatic outputs (from unused autoinst outputs)
+   output [31:0]	m_axi_araddr;		// From axe_elink of axi_elink.v
    output [1:0]		m_axi_arburst;		// From axe_elink of axi_elink.v
    output [3:0]		m_axi_arcache;		// From axe_elink of axi_elink.v
    output [M_IDW-1:0]	m_axi_arid;		// From axe_elink of axi_elink.v
@@ -126,6 +128,20 @@ module parallella_base(/*AUTOARG*/
    output		m_axi_wlast;		// From axe_elink of axi_elink.v
    output [7:0]		m_axi_wstrb;		// From axe_elink of axi_elink.v
    output		m_axi_wvalid;		// From axe_elink of axi_elink.v
+   output		s_axi_arready;		// From axe_elink of axi_elink.v
+   output		s_axi_awready;		// From axe_elink of axi_elink.v
+   output [S_IDW-1:0]	s_axi_bid;		// From axe_elink of axi_elink.v
+   output [1:0]		s_axi_bresp;		// From axe_elink of axi_elink.v
+   output		s_axi_bvalid;		// From axe_elink of axi_elink.v
+   output [31:0]	s_axi_rdata;		// From axe_elink of axi_elink.v
+   output [S_IDW-1:0]	s_axi_rid;		// From axe_elink of axi_elink.v
+   output		s_axi_rlast;		// From axe_elink of axi_elink.v
+   output [1:0]		s_axi_rresp;		// From axe_elink of axi_elink.v
+   output		s_axi_rvalid;		// From axe_elink of axi_elink.v
+   output		s_axi_wready;		// From axe_elink of axi_elink.v
+   // End of automatics
+   /*AUTOINPUT*/   
+   // Beginning of automatic inputs (from unused autoinst inputs)
    input		m_axi_aresetn;		// To axe_elink of axi_elink.v
    input		m_axi_arready;		// To axe_elink of axi_elink.v
    input		m_axi_awready;		// To axe_elink of axi_elink.v
@@ -138,20 +154,7 @@ module parallella_base(/*AUTOARG*/
    input [1:0]		m_axi_rresp;		// To axe_elink of axi_elink.v
    input		m_axi_rvalid;		// To axe_elink of axi_elink.v
    input		m_axi_wready;		// To axe_elink of axi_elink.v
-   
-   //AXI SLAVE
-   output		s_axi_arready;		// From axe_elink of axi_elink.v
-   output		s_axi_awready;		// From axe_elink of axi_elink.v
-   output [S_IDW-1:0]	s_axi_bid;		// From axe_elink of axi_elink.v
-   output [1:0]		s_axi_bresp;		// From axe_elink of axi_elink.v
-   output		s_axi_bvalid;		// From axe_elink of axi_elink.v
-   output [31:0]	s_axi_rdata;		// From axe_elink of axi_elink.v
-   output [S_IDW-1:0]	s_axi_rid;		// From axe_elink of axi_elink.v
-   output		s_axi_rlast;		// From axe_elink of axi_elink.v
-   output [1:0]		s_axi_rresp;		// From axe_elink of axi_elink.v
-   output		s_axi_rvalid;		// From axe_elink of axi_elink.v
-   output		s_axi_wready;		// From axe_elink of axi_elink.v
-  input [31:0]		s_axi_araddr;		// To axe_elink of axi_elink.v
+   input [31:0]		s_axi_araddr;		// To axe_elink of axi_elink.v
    input [1:0]		s_axi_arburst;		// To axe_elink of axi_elink.v
    input [3:0]		s_axi_arcache;		// To axe_elink of axi_elink.v
    input		s_axi_aresetn;		// To axe_elink of axi_elink.v
@@ -179,13 +182,15 @@ module parallella_base(/*AUTOARG*/
    input		s_axi_wlast;		// To axe_elink of axi_elink.v
    input [3:0]		s_axi_wstrb;		// To axe_elink of axi_elink.v
    input		s_axi_wvalid;		// To axe_elink of axi_elink.v
+   // End of automatics
+   /*AUTOWIRE*/
    
 
-   /*AUTOINOUT*/
-   /*AUTOOUTPUT*/
-   /*AUTOINPUT*/
-
-   /*AUTOWIRE*/
+   /*axi_elink AUTO_TEMPLATE ( 
+	                .m_axi_\(.*\) (m_axi_\1[]),
+                        .s_axi_\(.*\) (s_axi_\1[]),
+                       );
+   */
    axi_elink axe_elink (.mailbox_full	(),
 			/*AUTOINST*/
 			// Outputs
@@ -205,44 +210,44 @@ module parallella_base(/*AUTOARG*/
 			.cclk_p		(cclk_p),
 			.cclk_n		(cclk_n),
 			.mailbox_not_empty(mailbox_not_empty),
-			.m_axi_awid	(m_axi_awid[M_IDW-1:0]),
-			.m_axi_awaddr	(m_axi_awaddr[31:0]),
-			.m_axi_awlen	(m_axi_awlen[7:0]),
-			.m_axi_awsize	(m_axi_awsize[2:0]),
-			.m_axi_awburst	(m_axi_awburst[1:0]),
-			.m_axi_awlock	(m_axi_awlock[1:0]),
-			.m_axi_awcache	(m_axi_awcache[3:0]),
-			.m_axi_awprot	(m_axi_awprot[2:0]),
-			.m_axi_awqos	(m_axi_awqos[3:0]),
-			.m_axi_awvalid	(m_axi_awvalid),
-			.m_axi_wid	(m_axi_wid[M_IDW-1:0]),
-			.m_axi_wdata	(m_axi_wdata[63:0]),
-			.m_axi_wstrb	(m_axi_wstrb[7:0]),
-			.m_axi_wlast	(m_axi_wlast),
-			.m_axi_wvalid	(m_axi_wvalid),
-			.m_axi_bready	(m_axi_bready),
-			.m_axi_arid	(m_axi_arid[M_IDW-1:0]),
-			.m_axi_araddr	(m_axi_araddr[31:0]),
-			.m_axi_arlen	(m_axi_arlen[7:0]),
-			.m_axi_arsize	(m_axi_arsize[2:0]),
-			.m_axi_arburst	(m_axi_arburst[1:0]),
-			.m_axi_arlock	(m_axi_arlock[1:0]),
-			.m_axi_arcache	(m_axi_arcache[3:0]),
-			.m_axi_arprot	(m_axi_arprot[2:0]),
-			.m_axi_arqos	(m_axi_arqos[3:0]),
-			.m_axi_arvalid	(m_axi_arvalid),
-			.m_axi_rready	(m_axi_rready),
-			.s_axi_arready	(s_axi_arready),
-			.s_axi_awready	(s_axi_awready),
-			.s_axi_bid	(s_axi_bid[S_IDW-1:0]),
-			.s_axi_bresp	(s_axi_bresp[1:0]),
-			.s_axi_bvalid	(s_axi_bvalid),
-			.s_axi_rid	(s_axi_rid[S_IDW-1:0]),
-			.s_axi_rdata	(s_axi_rdata[31:0]),
-			.s_axi_rlast	(s_axi_rlast),
-			.s_axi_rresp	(s_axi_rresp[1:0]),
-			.s_axi_rvalid	(s_axi_rvalid),
-			.s_axi_wready	(s_axi_wready),
+			.m_axi_awid	(m_axi_awid[M_IDW-1:0]), // Templated
+			.m_axi_awaddr	(m_axi_awaddr[31:0]),	 // Templated
+			.m_axi_awlen	(m_axi_awlen[7:0]),	 // Templated
+			.m_axi_awsize	(m_axi_awsize[2:0]),	 // Templated
+			.m_axi_awburst	(m_axi_awburst[1:0]),	 // Templated
+			.m_axi_awlock	(m_axi_awlock[1:0]),	 // Templated
+			.m_axi_awcache	(m_axi_awcache[3:0]),	 // Templated
+			.m_axi_awprot	(m_axi_awprot[2:0]),	 // Templated
+			.m_axi_awqos	(m_axi_awqos[3:0]),	 // Templated
+			.m_axi_awvalid	(m_axi_awvalid),	 // Templated
+			.m_axi_wid	(m_axi_wid[M_IDW-1:0]),	 // Templated
+			.m_axi_wdata	(m_axi_wdata[63:0]),	 // Templated
+			.m_axi_wstrb	(m_axi_wstrb[7:0]),	 // Templated
+			.m_axi_wlast	(m_axi_wlast),		 // Templated
+			.m_axi_wvalid	(m_axi_wvalid),		 // Templated
+			.m_axi_bready	(m_axi_bready),		 // Templated
+			.m_axi_arid	(m_axi_arid[M_IDW-1:0]), // Templated
+			.m_axi_araddr	(m_axi_araddr[31:0]),	 // Templated
+			.m_axi_arlen	(m_axi_arlen[7:0]),	 // Templated
+			.m_axi_arsize	(m_axi_arsize[2:0]),	 // Templated
+			.m_axi_arburst	(m_axi_arburst[1:0]),	 // Templated
+			.m_axi_arlock	(m_axi_arlock[1:0]),	 // Templated
+			.m_axi_arcache	(m_axi_arcache[3:0]),	 // Templated
+			.m_axi_arprot	(m_axi_arprot[2:0]),	 // Templated
+			.m_axi_arqos	(m_axi_arqos[3:0]),	 // Templated
+			.m_axi_arvalid	(m_axi_arvalid),	 // Templated
+			.m_axi_rready	(m_axi_rready),		 // Templated
+			.s_axi_arready	(s_axi_arready),	 // Templated
+			.s_axi_awready	(s_axi_awready),	 // Templated
+			.s_axi_bid	(s_axi_bid[S_IDW-1:0]),	 // Templated
+			.s_axi_bresp	(s_axi_bresp[1:0]),	 // Templated
+			.s_axi_bvalid	(s_axi_bvalid),		 // Templated
+			.s_axi_rid	(s_axi_rid[S_IDW-1:0]),	 // Templated
+			.s_axi_rdata	(s_axi_rdata[31:0]),	 // Templated
+			.s_axi_rlast	(s_axi_rlast),		 // Templated
+			.s_axi_rresp	(s_axi_rresp[1:0]),	 // Templated
+			.s_axi_rvalid	(s_axi_rvalid),		 // Templated
+			.s_axi_wready	(s_axi_wready),		 // Templated
 			.timeout	(timeout),
 			// Inputs
 			.sys_nreset	(sys_nreset),
@@ -257,46 +262,46 @@ module parallella_base(/*AUTOARG*/
 			.txi_wr_wait_n	(txi_wr_wait_n),
 			.txi_rd_wait_p	(txi_rd_wait_p),
 			.txi_rd_wait_n	(txi_rd_wait_n),
-			.m_axi_aresetn	(m_axi_aresetn),
-			.m_axi_awready	(m_axi_awready),
-			.m_axi_wready	(m_axi_wready),
-			.m_axi_bid	(m_axi_bid[M_IDW-1:0]),
-			.m_axi_bresp	(m_axi_bresp[1:0]),
-			.m_axi_bvalid	(m_axi_bvalid),
-			.m_axi_arready	(m_axi_arready),
-			.m_axi_rid	(m_axi_rid[M_IDW-1:0]),
-			.m_axi_rdata	(m_axi_rdata[63:0]),
-			.m_axi_rresp	(m_axi_rresp[1:0]),
-			.m_axi_rlast	(m_axi_rlast),
-			.m_axi_rvalid	(m_axi_rvalid),
-			.s_axi_aresetn	(s_axi_aresetn),
-			.s_axi_arid	(s_axi_arid[S_IDW-1:0]),
-			.s_axi_araddr	(s_axi_araddr[31:0]),
-			.s_axi_arburst	(s_axi_arburst[1:0]),
-			.s_axi_arcache	(s_axi_arcache[3:0]),
-			.s_axi_arlock	(s_axi_arlock[1:0]),
-			.s_axi_arlen	(s_axi_arlen[7:0]),
-			.s_axi_arprot	(s_axi_arprot[2:0]),
-			.s_axi_arqos	(s_axi_arqos[3:0]),
-			.s_axi_arsize	(s_axi_arsize[2:0]),
-			.s_axi_arvalid	(s_axi_arvalid),
-			.s_axi_awid	(s_axi_awid[S_IDW-1:0]),
-			.s_axi_awaddr	(s_axi_awaddr[31:0]),
-			.s_axi_awburst	(s_axi_awburst[1:0]),
-			.s_axi_awcache	(s_axi_awcache[3:0]),
-			.s_axi_awlock	(s_axi_awlock[1:0]),
-			.s_axi_awlen	(s_axi_awlen[7:0]),
-			.s_axi_awprot	(s_axi_awprot[2:0]),
-			.s_axi_awqos	(s_axi_awqos[3:0]),
-			.s_axi_awsize	(s_axi_awsize[2:0]),
-			.s_axi_awvalid	(s_axi_awvalid),
-			.s_axi_bready	(s_axi_bready),
-			.s_axi_rready	(s_axi_rready),
-			.s_axi_wid	(s_axi_wid[S_IDW-1:0]),
-			.s_axi_wdata	(s_axi_wdata[31:0]),
-			.s_axi_wlast	(s_axi_wlast),
-			.s_axi_wstrb	(s_axi_wstrb[3:0]),
-			.s_axi_wvalid	(s_axi_wvalid));
+			.m_axi_aresetn	(m_axi_aresetn),	 // Templated
+			.m_axi_awready	(m_axi_awready),	 // Templated
+			.m_axi_wready	(m_axi_wready),		 // Templated
+			.m_axi_bid	(m_axi_bid[M_IDW-1:0]),	 // Templated
+			.m_axi_bresp	(m_axi_bresp[1:0]),	 // Templated
+			.m_axi_bvalid	(m_axi_bvalid),		 // Templated
+			.m_axi_arready	(m_axi_arready),	 // Templated
+			.m_axi_rid	(m_axi_rid[M_IDW-1:0]),	 // Templated
+			.m_axi_rdata	(m_axi_rdata[63:0]),	 // Templated
+			.m_axi_rresp	(m_axi_rresp[1:0]),	 // Templated
+			.m_axi_rlast	(m_axi_rlast),		 // Templated
+			.m_axi_rvalid	(m_axi_rvalid),		 // Templated
+			.s_axi_aresetn	(s_axi_aresetn),	 // Templated
+			.s_axi_arid	(s_axi_arid[S_IDW-1:0]), // Templated
+			.s_axi_araddr	(s_axi_araddr[31:0]),	 // Templated
+			.s_axi_arburst	(s_axi_arburst[1:0]),	 // Templated
+			.s_axi_arcache	(s_axi_arcache[3:0]),	 // Templated
+			.s_axi_arlock	(s_axi_arlock[1:0]),	 // Templated
+			.s_axi_arlen	(s_axi_arlen[7:0]),	 // Templated
+			.s_axi_arprot	(s_axi_arprot[2:0]),	 // Templated
+			.s_axi_arqos	(s_axi_arqos[3:0]),	 // Templated
+			.s_axi_arsize	(s_axi_arsize[2:0]),	 // Templated
+			.s_axi_arvalid	(s_axi_arvalid),	 // Templated
+			.s_axi_awid	(s_axi_awid[S_IDW-1:0]), // Templated
+			.s_axi_awaddr	(s_axi_awaddr[31:0]),	 // Templated
+			.s_axi_awburst	(s_axi_awburst[1:0]),	 // Templated
+			.s_axi_awcache	(s_axi_awcache[3:0]),	 // Templated
+			.s_axi_awlock	(s_axi_awlock[1:0]),	 // Templated
+			.s_axi_awlen	(s_axi_awlen[7:0]),	 // Templated
+			.s_axi_awprot	(s_axi_awprot[2:0]),	 // Templated
+			.s_axi_awqos	(s_axi_awqos[3:0]),	 // Templated
+			.s_axi_awsize	(s_axi_awsize[2:0]),	 // Templated
+			.s_axi_awvalid	(s_axi_awvalid),	 // Templated
+			.s_axi_bready	(s_axi_bready),		 // Templated
+			.s_axi_rready	(s_axi_rready),		 // Templated
+			.s_axi_wid	(s_axi_wid[S_IDW-1:0]),	 // Templated
+			.s_axi_wdata	(s_axi_wdata[31:0]),	 // Templated
+			.s_axi_wlast	(s_axi_wlast),		 // Templated
+			.s_axi_wstrb	(s_axi_wstrb[3:0]),	 // Templated
+			.s_axi_wvalid	(s_axi_wvalid));		 // Templated
 
    pgpio pgpio (/*AUTOINST*/
 		// Outputs
