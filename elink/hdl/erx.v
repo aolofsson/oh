@@ -106,33 +106,32 @@ module erx (/*AUTOARG*/
    /***********************************************************/
    /*RECEIVER  I/O LOGIC                                      */
    /***********************************************************/
-   defparam erx_io.IOSTD_ELINK=IOSTD_ELINK;
-   defparam erx_io.ETYPE=ETYPE;   
-   erx_io erx_io (
+   erx_io #(.ETYPE(ETYPE))
+   erx_io (
 		  /*AUTOINST*/
-		  // Outputs
-		  .rx_clkin		(rx_clkin),
-		  .rxo_wr_wait_p	(rxo_wr_wait_p),
-		  .rxo_wr_wait_n	(rxo_wr_wait_n),
-		  .rxo_rd_wait_p	(rxo_rd_wait_p),
-		  .rxo_rd_wait_n	(rxo_rd_wait_n),
-		  .rx_access		(rx_access),
-		  .rx_burst		(rx_burst),
-		  .rx_packet		(rx_packet[PW-1:0]),
-		  // Inputs
-		  .erx_io_nreset	(erx_io_nreset),
-		  .rx_lclk		(rx_lclk),
-		  .rx_lclk_div4		(rx_lclk_div4),
-		  .idelay_value		(idelay_value[44:0]),
-		  .load_taps		(load_taps),
-		  .rxi_lclk_p		(rxi_lclk_p),
-		  .rxi_lclk_n		(rxi_lclk_n),
-		  .rxi_frame_p		(rxi_frame_p),
-		  .rxi_frame_n		(rxi_frame_n),
-		  .rxi_data_p		(rxi_data_p[7:0]),
-		  .rxi_data_n		(rxi_data_n[7:0]),
-		  .rx_wr_wait		(rx_wr_wait),
-		  .rx_rd_wait		(rx_rd_wait));
+	   // Outputs
+	   .rx_clkin			(rx_clkin),
+	   .rxo_wr_wait_p		(rxo_wr_wait_p),
+	   .rxo_wr_wait_n		(rxo_wr_wait_n),
+	   .rxo_rd_wait_p		(rxo_rd_wait_p),
+	   .rxo_rd_wait_n		(rxo_rd_wait_n),
+	   .rx_access			(rx_access),
+	   .rx_burst			(rx_burst),
+	   .rx_packet			(rx_packet[PW-1:0]),
+	   // Inputs
+	   .erx_io_nreset		(erx_io_nreset),
+	   .rx_lclk			(rx_lclk),
+	   .rx_lclk_div4		(rx_lclk_div4),
+	   .idelay_value		(idelay_value[44:0]),
+	   .load_taps			(load_taps),
+	   .rxi_lclk_p			(rxi_lclk_p),
+	   .rxi_lclk_n			(rxi_lclk_n),
+	   .rxi_frame_p			(rxi_frame_p),
+	   .rxi_frame_n			(rxi_frame_n),
+	   .rxi_data_p			(rxi_data_p[7:0]),
+	   .rxi_data_n			(rxi_data_n[7:0]),
+	   .rx_wr_wait			(rx_wr_wait),
+	   .rx_rd_wait			(rx_rd_wait));
    
    /**************************************************************/
    /*ELINK CORE LOGIC                                            */

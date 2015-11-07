@@ -153,7 +153,6 @@ module elink (/*AUTOARG*/
    */
    
    defparam erx.ID          = ID;
-   defparam erx.IOSTD_ELINK = IOSTD_ELINK;
    defparam erx.ETYPE       = ETYPE;
    
    erx erx(.rx_active			(elink_active),
@@ -205,7 +204,6 @@ module elink (/*AUTOARG*/
    */
 
    defparam etx.ID          = ID;
-   defparam etx.IOSTD_ELINK = IOSTD_ELINK;
    defparam etx.ETYPE       = ETYPE;
 
    etx etx(.etx_nreset			(etx_nreset),

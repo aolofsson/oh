@@ -182,29 +182,30 @@ module etx(/*AUTOARG*/
    /*TRANSMIT I/O LOGIC                                       */
    /***********************************************************/
 
-   etx_io etx_io (.nreset		(etx_io_nreset),
+   etx_io #(.ETYPE(ETYPE))
+   etx_io (.nreset		(etx_io_nreset),
 		  /*AUTOINST*/
-		  // Outputs
-		  .txo_lclk_p		(txo_lclk_p),
-		  .txo_lclk_n		(txo_lclk_n),
-		  .txo_frame_p		(txo_frame_p),
-		  .txo_frame_n		(txo_frame_n),
-		  .txo_data_p		(txo_data_p[7:0]),
-		  .txo_data_n		(txo_data_n[7:0]),
-		  .tx_io_wait		(tx_io_wait),
-		  .tx_wr_wait		(tx_wr_wait),
-		  .tx_rd_wait		(tx_rd_wait),
-		  // Inputs
-		  .tx_lclk		(tx_lclk),
-		  .tx_lclk_io		(tx_lclk_io),
-		  .tx_lclk90		(tx_lclk90),
-		  .txi_wr_wait_p	(txi_wr_wait_p),
-		  .txi_wr_wait_n	(txi_wr_wait_n),
-		  .txi_rd_wait_p	(txi_rd_wait_p),
-		  .txi_rd_wait_n	(txi_rd_wait_n),
-		  .tx_packet		(tx_packet[PW-1:0]),
-		  .tx_access		(tx_access),
-		  .tx_burst		(tx_burst));
+	   // Outputs
+	   .txo_lclk_p			(txo_lclk_p),
+	   .txo_lclk_n			(txo_lclk_n),
+	   .txo_frame_p			(txo_frame_p),
+	   .txo_frame_n			(txo_frame_n),
+	   .txo_data_p			(txo_data_p[7:0]),
+	   .txo_data_n			(txo_data_n[7:0]),
+	   .tx_io_wait			(tx_io_wait),
+	   .tx_wr_wait			(tx_wr_wait),
+	   .tx_rd_wait			(tx_rd_wait),
+	   // Inputs
+	   .tx_lclk			(tx_lclk),
+	   .tx_lclk_io			(tx_lclk_io),
+	   .tx_lclk90			(tx_lclk90),
+	   .txi_wr_wait_p		(txi_wr_wait_p),
+	   .txi_wr_wait_n		(txi_wr_wait_n),
+	   .txi_rd_wait_p		(txi_rd_wait_p),
+	   .txi_rd_wait_n		(txi_rd_wait_n),
+	   .tx_packet			(tx_packet[PW-1:0]),
+	   .tx_access			(tx_access),
+	   .tx_burst			(tx_burst));
    
    
 endmodule // elink

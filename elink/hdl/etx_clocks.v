@@ -110,44 +110,44 @@ module etx_clocks (/*AUTOARG*/
    //Reset sequence state machine      
    always @ (posedge sys_clk or negedge sys_nreset)
      if(!sys_nreset)
-       reset_state[2:0]        <= `RESET_ALL;   
+       reset_state[2:0]        <= `TX_RESET_ALL;   
      else if(heartbeat)
        case(reset_state[2:0])
-	 `RESET_ALL :
+	 `TX_RESET_ALL :
 	   if(~soft_reset)
-	     reset_state[2:0]  <= `START_CCLK;	 
-	 `START_CCLK :
+	     reset_state[2:0]  <= `TX_START_CCLK;	 
+	 `TX_START_CCLK :
 	   if(mmcm_locked_sync)
-	     reset_state[2:0]  <= `STOP_CCLK; 
-	 `STOP_CCLK :
-	   reset_state[2:0]    <= `DEASSERT_RESET;
-	 `DEASSERT_RESET :
-	   reset_state[2:0]    <= `HOLD_IT;
-	 `HOLD_IT :
+	     reset_state[2:0]  <= `TX_STOP_CCLK; 
+	 `TX_STOP_CCLK :
+	   reset_state[2:0]    <= `TX_DEASSERT_RESET;
+	 `TX_DEASSERT_RESET :
+	   reset_state[2:0]    <= `TX_HOLD_IT;
+	 `TX_HOLD_IT :
 	   if(mmcm_locked_sync)
-	     reset_state[2:0]  <= `ACTIVE;
-	 `ACTIVE:
+	     reset_state[2:0]  <= `TX_ACTIVE;
+	 `TX_ACTIVE:
 	   if(soft_reset)
-	     reset_state[2:0]    <= `RESET_ALL; //stay there until nex reset
+	     reset_state[2:0]    <= `TX_RESET_ALL; //stay there until nex reset
 
        endcase // case (reset_state[2:0])
    
    //reset mmcm (async)
-   assign mmcm_reset =  (reset_state[2:0]==`RESET_ALL)      |
-			(reset_state[2:0]==`STOP_CCLK)      |  
-			(reset_state[2:0]==`DEASSERT_RESET)
+   assign mmcm_reset =  (reset_state[2:0]==`TX_RESET_ALL)      |
+			(reset_state[2:0]==`TX_STOP_CCLK)      |  
+			(reset_state[2:0]==`TX_DEASSERT_RESET)
 			;
    
    //reset chip (active low)
-   assign chip_nreset  = (reset_state[2:0]==`DEASSERT_RESET) |
-		         (reset_state[2:0]==`HOLD_IT)        |
-		         (reset_state[2:0]==`ACTIVE);   
+   assign chip_nreset  = (reset_state[2:0]==`TX_DEASSERT_RESET) |
+		         (reset_state[2:0]==`TX_HOLD_IT)        |
+		         (reset_state[2:0]==`TX_ACTIVE);   
       
    //reset the elink
-   assign tx_nreset      =  ~(reset_state[2:0] != `ACTIVE);
+   assign tx_nreset      =  ~(reset_state[2:0] != `TX_ACTIVE);
 
 
-   assign tx_active   =  (reset_state[2:0] == `ACTIVE);
+   assign tx_active   =  (reset_state[2:0] == `TX_ACTIVE);
 
    //#############################
    //#RESET SYNCING

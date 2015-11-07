@@ -103,28 +103,28 @@ module erx_clocks (/*AUTOARG*/
 
    always @ (posedge sys_clk or negedge rx_nreset_in)
      if(!rx_nreset_in)
-       reset_state[2:0]        <= `RESET_ALL;   
+       reset_state[2:0]        <= `RX_RESET_ALL;   
      else if(heartbeat)
        case(reset_state[2:0])
-	 `RESET_ALL :
+	 `RX_RESET_ALL :
 	   if(~soft_reset)
-	     reset_state[2:0]  <= `START_PLL;	 
-	 `START_PLL :
+	     reset_state[2:0]  <= `RX_START_PLL;	 
+	 `RX_START_PLL :
 	   if(pll_locked_sync & idelay_ready)
-	     reset_state[2:0]  <= `ACTIVE; 
-	 `ACTIVE:
+	     reset_state[2:0]  <= `RX_ACTIVE; 
+	 `RX_ACTIVE:
 	   if(soft_reset)
-	     reset_state[2:0]  <= `RESET_ALL; //stay there until next reset
+	     reset_state[2:0]  <= `RX_RESET_ALL; //stay there until next reset
        endcase // case (reset_state[2:0])
    
-   assign pll_reset    =  (reset_state[2:0]==`RESET_ALL);   
-   assign idelay_reset =  (reset_state[2:0]==`RESET_ALL);
+   assign pll_reset    =  (reset_state[2:0]==`RX_RESET_ALL);   
+   assign idelay_reset =  (reset_state[2:0]==`RX_RESET_ALL);
 
    //asynch rx block reset
-   assign rx_nreset    =  ~(reset_state[2:0] != `ACTIVE);
+   assign rx_nreset    =  ~(reset_state[2:0] != `RX_ACTIVE);
 
    //active indicator
-   assign rx_active   =  (reset_state[2:0] == `ACTIVE);
+   assign rx_active   =  (reset_state[2:0] == `RX_ACTIVE);
    
    //#############################
    //#RESET SYNCING
@@ -133,13 +133,15 @@ module erx_clocks (/*AUTOARG*/
 		   .nrst_out		(erx_io_nreset),
 		   // Inputs
 		   .clk			(rx_lclk),
-		   .nrst_in		(rx_nreset));
+		   .nrst_in		(rx_nreset)
+		   );
    
    rsync rsync_core (// Outputs
 		     .nrst_out		(erx_nreset),
 		     // Inputs
 		     .clk		(rx_lclk_div4),
-		     .nrst_in		(rx_nreset));
+		     .nrst_in		(rx_nreset)
+		     );
       	   
 `ifdef TARGET_XILINX	
 
