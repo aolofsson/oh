@@ -34,7 +34,7 @@ module emailbox (/*AUTOARG*/
    parameter ID     = 12'h000;   //link id
 
    parameter WIDTH  = 104;
-   parameter DEPTH  = 16;
+   parameter DEPTH  = 32;
    
    /*****************************/
    /*RESET                      */
@@ -81,7 +81,7 @@ module emailbox (/*AUTOARG*/
    wire 	    mailbox_pop;
    wire [31:0] 	    emesh_addr;
    wire [63:0] 	    emesh_din;
-   wire 	    emesh__write;
+   wire 	    emesh_write;
    
    /*****************************/
    /*WRITE TO FIFO              */
