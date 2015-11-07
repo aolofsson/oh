@@ -14,8 +14,7 @@ module rsync (/*AUTOARG*/
    input [DW-1:0]  nrst_in;
    output [DW-1:0] nrst_out;
    
-   reg [PS-1:0] sync_pipe[DW-1:0];   
- 
+   reg [PS-1:0]    sync_pipe[DW-1:0];   
    
    genvar 	i;
    integer 	j;

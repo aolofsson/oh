@@ -34,7 +34,7 @@ module axi_elink(/*AUTOARG*/
    parameter S_IDW       = 12;       //ID width for S_AXI
    parameter M_IDW       = 6;        //ID width for M_AXI
    parameter IOSTD_ELINK = "LVDS_25";
-   parameter ETYPE       = 1;
+   parameter ETYPE       = 0;
    
    /****************************/
    /*CLK AND RESET             */

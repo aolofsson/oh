@@ -281,7 +281,6 @@ module erx_core (/*AUTOARG*/
    
    erx_cfg erx_cfg (.rx_status    	(rx_status[15:0]),
 		    .timer_cfg		(),
-		    .rx_enable		(),//TODO:what to do with this??
 		     /*AUTOINST*/
 		    // Outputs
 		    .mi_dout		(mi_cfg_dout[DW-1:0]),	 // Templated

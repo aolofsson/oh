@@ -5,9 +5,8 @@
 `include "elink_regmap.v"
 module erx_cfg (/*AUTOARG*/
    // Outputs
-   mi_dout, rx_enable, mmu_enable, remap_mode, remap_base,
-   remap_pattern, remap_sel, timer_cfg, idelay_value, load_taps,
-   test_mode,
+   mi_dout, mmu_enable, remap_mode, remap_base, remap_pattern,
+   remap_sel, timer_cfg, idelay_value, load_taps, test_mode,
    // Inputs
    nreset, clk, mi_en, mi_we, mi_addr, mi_din, erx_test_access,
    erx_test_data, gpio_datain, rx_status
@@ -42,7 +41,6 @@ module erx_cfg (/*AUTOARG*/
    /*CONFIG SIGNALS             */
    /*****************************/
    //rx
-   output 	 rx_enable;      // enable signal for rx  
    output 	 mmu_enable;     // enables MMU on rx path (static)  
    input [8:0] 	 gpio_datain;    // frame and data inputs (static)        
    input [15:0]  rx_status;      // etx status signals
