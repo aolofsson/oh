@@ -8,6 +8,7 @@ make_wrapper -files [get_files $projdir/${design}.srcs/sources_1/bd/system/syste
 ###########################################################
 # Add generated wrapper file
 ###########################################################
+remove_files -fileset sources_1 $projdir/${design}.srcs/sources_1/bd/system/hdl/system_wrapper.v
 add_files -fileset sources_1 -norecurse $projdir/${design}.srcs/sources_1/bd/system/hdl/system_wrapper.v
 
 ###########################################################

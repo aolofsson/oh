@@ -1,8 +1,6 @@
 ###########################################################
 # OH! Specific constants
 ###########################################################
-set report_dir  $projdir/reports
-set results_dir $projdir/results
 
 ###########################################################
 # CREATE PROJECT
@@ -13,6 +11,8 @@ set_property target_language Verilog [current_project]
 ###########################################################
 # Create Report/Results Directory
 ###########################################################
+set report_dir  $projdir/reports
+set results_dir $projdir/results
 if ![file exists $report_dir]  {file mkdir $report_dir}
 if ![file exists $results_dir] {file mkdir $results_dir}
 
@@ -50,11 +50,11 @@ if {[llength $hdl_files] != 0} {
 }
 
 #CONSTRAINTS
-if {[string equal [get_filesets -quiet constraints_1] ""]} {
-  create_fileset -constrset constraints_1
+if {[string equal [get_filesets -quiet constrs_1] ""]} {
+  create_fileset -constrset constrs_1
 }
 if {[llength $constraints_files] != 0} {
-    add_files -norecurse -fileset [get_filesets constraints_1] $constraints_files
+    add_files -norecurse -fileset [get_filesets constrs_1] $constraints_files
 }
 
 
