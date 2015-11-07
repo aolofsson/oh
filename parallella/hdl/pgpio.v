@@ -106,7 +106,7 @@ module pgpio(/*AUTOARG*/
    genvar i;
    generate
       for (i=NGPIO*2;i<NPS;i=i+1)
-	assign ps_gpio_i = 1'b0;
+	assign ps_gpio_i[i] = 1'b0;
    endgenerate
    
       
