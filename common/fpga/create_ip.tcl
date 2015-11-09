@@ -36,12 +36,12 @@ foreach file $ip_files {
 upgrade_ip [get_ips]
 
 #TODO: How to check for this status of previous command?
-foreach file $ip_files {
-    generate_target all [get_files $file]
-    set obj  [create_ip_run -force [get_files $file]]
-    launch_run -jobs 2 $obj
-    wait_on_run $obj
-}
+#foreach file $ip_files {
+#    generate_target all [get_files $file]
+#    set obj  [create_ip_run -force [get_files $file]]
+#    launch_run -jobs 2 $obj
+#    wait_on_run $obj
+#}
 
 ###########################################################
 # SYNTHESIZE (FOR SANITY)
