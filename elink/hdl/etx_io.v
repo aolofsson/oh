@@ -1,11 +1,10 @@
 module etx_io (/*AUTOARG*/
    // Outputs
    txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
-   txo_data_n, tx_io_wait, tx_wr_wait, tx_rd_wait,
+   txo_data_n, tx_io_ack, tx_wr_wait, tx_rd_wait,
    // Inputs
-   nreset, tx_lclk, tx_lclk_io, tx_lclk90, txi_wr_wait_p,
-   txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n, tx_packet, tx_access,
-   tx_burst
+   nreset, tx_lclk_io, tx_lclk90, txi_wr_wait_p, txi_wr_wait_n,
+   txi_rd_wait_p, txi_rd_wait_n, tx_packet, tx_access, tx_burst
    );
    
    parameter IOSTD_ELINK = "LVDS_25";
@@ -16,7 +15,6 @@ module etx_io (/*AUTOARG*/
    //# reset, clocks
    //##########
    input        nreset;              //sync reset for io  
-   input 	tx_lclk;	     //fast clock for io state machine
    input 	tx_lclk_io;	     //fast ODDR
    input 	tx_lclk90;           //fast 90deg shifted lclk   
    
@@ -35,7 +33,7 @@ module etx_io (/*AUTOARG*/
    input [PW-1:0] tx_packet;
    input          tx_access;
    input          tx_burst;
-   output 	  tx_io_wait;   
+   output 	  tx_io_ack;   
    output 	  tx_wr_wait;
    output 	  tx_rd_wait;
    
@@ -65,7 +63,7 @@ module etx_io (/*AUTOARG*/
    wire [7:0] 	  txo_data;
    wire 	  txo_frame;   
    wire 	  txo_lclk90;
-   reg 		  tx_io_wait;
+   reg 		  tx_io_ack;
    
    //#############################
    //# Transmit state machine
@@ -80,7 +78,7 @@ module etx_io (/*AUTOARG*/
 `define CYCLE6  3'b110
 `define CYCLE7  3'b111
      
-always @ (posedge tx_lclk)
+always @ (posedge tx_lclk_io)
   if(!nreset)
     tx_state[2:0] <= `IDLE;
   else
@@ -98,17 +96,17 @@ always @ (posedge tx_lclk)
    assign tx_new_frame = (tx_state[2:0]==`CYCLE1);
 
  
-   //Creating wait pulse for slow clock domain
-   always @ (posedge tx_lclk)
-     if(!nreset | !tx_access)
-       tx_io_wait <= 1'b0;
-     else if ((tx_state[2:0] ==`CYCLE4) & ~tx_burst)
-       tx_io_wait <= 1'b1;
+   //Creating wide acknowledge on cycle 4
+   always @ (posedge tx_lclk_io)
+     if(!nreset)
+       tx_io_ack <= 1'b0;
+     else if ((tx_state[2:0] ==`CYCLE4))
+       tx_io_ack <= 1'b1;   
      else if (tx_state[2:0]==`IDLE)
-       tx_io_wait <= 1'b0;
+       tx_io_ack <= 1'b0;
   
    //Create frame signal for output
-   always @ (posedge tx_lclk)
+   always @ (posedge tx_lclk_io)
      begin
 	tx_state_reg[2:0]     <= tx_state[2:0];
 	tx_frame              <= |(tx_state_reg[2:0]);
@@ -117,7 +115,7 @@ always @ (posedge tx_lclk)
    //#############################
    //# 2 CYCLE PACKET PIPELINE
    //#############################  
-   always @ (posedge tx_lclk)
+   always @ (posedge tx_lclk_io)
      if (tx_access)
        tx_packet_reg[PW-1:0] <= tx_packet[PW-1:0];
 
@@ -137,7 +135,7 @@ always @ (posedge tx_lclk)
     * 
     */
 
-   always @ (posedge tx_lclk)
+   always @ (posedge tx_lclk_io)
      if (tx_new_frame)
        tx_double[63:0] <= {16'b0,//16
 			   ~write,7'b0,ctrlmode[3:0],//12
@@ -149,7 +147,7 @@ always @ (posedge tx_lclk)
    //# SELECTING DATA FOR TRANSMIT
    //#############################  
    
-   always @ (posedge tx_lclk)
+   always @ (posedge tx_lclk_io)
      case(tx_state_reg[2:0])
        //Cycle1
        3'b001: tx_data16[15:0]  <= tx_double[47:32];       
@@ -171,7 +169,7 @@ always @ (posedge tx_lclk)
    //#############################
    //# CLOCK DRIVERS
    //#############################  
-   BUFIO i_lclk    (.I(tx_lclk_io), .O(tx_lclk_ddr));
+   //BUFIO i_lclk    (.I(tx_lclk_io), .O(tx_lclk_ddr));
    BUFIO i_lclk90  (.I(tx_lclk90), .O(tx_lclk90_ddr));
 
    //#############################
@@ -185,7 +183,7 @@ always @ (posedge tx_lclk)
 	ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
 	oddr_data (
 		   .Q  (txo_data[i]),
-		   .C  (tx_lclk_ddr),
+		   .C  (tx_lclk_io),
 		   .CE (1'b1),
 		   .D1 (tx_data16[i+8]),
 		   .D2 (tx_data16[i]),
@@ -199,7 +197,7 @@ always @ (posedge tx_lclk)
    ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
    oddr_frame (
 	      .Q  (txo_frame),
-	      .C  (tx_lclk_ddr),
+	      .C  (tx_lclk_io),
 	      .CE (1'b1),
 	      .D1 (tx_frame),
 	      .D2 (tx_frame),
@@ -259,8 +257,7 @@ always @ (posedge tx_lclk)
 	      .O     (tx_wr_wait));	 
 	end
    endgenerate
-   
-   
+      
 //TODO: Come up with cleaner defines for this
 //Parallella and other platforms...   
 `ifdef TODO

@@ -6,7 +6,7 @@ module erx_clocks (/*AUTOARG*/
    sys_nreset, soft_reset, tx_active, sys_clk, rx_clkin
    );
 
-`ifdef TARGET_SIMPLE
+`ifdef TARGET_SIM
    parameter RCW                 = 4;          // reset counter width
 `else
    parameter RCW                 = 8;          // reset counter width

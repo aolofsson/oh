@@ -1,13 +1,13 @@
 `include "elink_constants.v"
 module etx_clocks (/*AUTOARG*/
    // Outputs
-   tx_lclk, tx_lclk_io, tx_lclk90, tx_lclk_div4, cclk_p, cclk_n,
-   etx_nreset, etx_io_nreset, chip_nreset, tx_active,
+   tx_lclk_io, tx_lclk90, tx_lclk_div4, cclk_p, cclk_n, etx_nreset,
+   etx_io_nreset, chip_nreset, tx_active,
    // Inputs
    sys_nreset, soft_reset, sys_clk
    );
 
-`ifdef TARGET_SIMPLE
+`ifdef TARGET_SIM
    parameter RCW                 = 4;          // reset counter width
 `else
    parameter RCW                 = 8;          // reset counter width
@@ -35,8 +35,7 @@ module etx_clocks (/*AUTOARG*/
    input      sys_clk;            // always on input clk cclk/TX MMCM
     
    //TX Clocks
-   output     tx_lclk;           // tx clock for IO state machine
-   output     tx_lclk_io;        // tx clock for DDR IO
+   output     tx_lclk_io;        // tx clock for high speeed IO
    output     tx_lclk90;         // tx output clock shifted by 90 degrees
    output     tx_lclk_div4;      // tx slow clock for logic
      
@@ -204,7 +203,7 @@ module etx_clocks (/*AUTOARG*/
        (
         .CLKOUT0(cclk_mmcm),
 	.CLKOUT0B(),
-        .CLKOUT1(tx_lclk_io),
+        .CLKOUT1(tx_lclk),
 	.CLKOUT1B(),
         .CLKOUT2(tx_lclk90),
 	.CLKOUT2B(),
@@ -238,8 +237,8 @@ module etx_clocks (/*AUTOARG*/
         
 
    //Tx clock buffers
-   BUFG i_lclk_bufg_i      (.I(tx_lclk_io),        .O(tx_lclk));     //300MHz
-   BUFG i_lclk_div4_bufg_i (.I(tx_lclk_div4_mmcm), .O(tx_lclk_div4));//75MHz
+   BUFG i_lclk_bufg_i      (.I(tx_lclk),          .O(tx_lclk_io));   //300MHz
+   BUFG i_lclk_div4_bufg_i (.I(tx_lclk_div4_mmcm),.O(tx_lclk_div4)); //75MHz
 //   BUFG i_fb_buf           (.I(cclk_fb_out), .O(cclk_fb_in));      //FB
 
    //###########################
@@ -268,7 +267,7 @@ module etx_clocks (/*AUTOARG*/
 `else // !`ifdef TARGET_XILINX
    assign cclk_p       = sys_clk;
    assign cclk_n       = sys_clk;
-   assign tx_lclk      = sys_clk;
+   assign tx_lclk_io   = sys_clk;
    assign tx_lclk_div4 = sys_clk;
    assign tx_lclk90    = sys_clk;
 

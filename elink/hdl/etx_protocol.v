@@ -5,7 +5,7 @@ module etx_protocol (/*AUTOARG*/
    etx_rd_wait, etx_wr_wait, tx_packet, tx_access, tx_burst,
    // Inputs
    nreset, clk, etx_access, etx_packet, tx_enable, gpio_data,
-   gpio_enable, tx_io_wait, tx_rd_wait, tx_wr_wait
+   gpio_enable, tx_io_ack, tx_rd_wait, tx_wr_wait
    );
 
    parameter PW = 104;
@@ -34,14 +34,14 @@ module etx_protocol (/*AUTOARG*/
    output [PW-1:0] tx_packet;
    output          tx_access;
    output          tx_burst;
-   input           tx_io_wait;  
+   input           tx_io_ack;   // acknowledge signal from IO (clears wait) 
    input           tx_rd_wait;  // The wait signals are passed through
    input           tx_wr_wait;  // to the emesh interfaces
 
    //###################################################################
    //# Local regs & wires
    //###################################################################
-   reg 		   tx_burst;
+   reg 		 tx_burst;
    
    reg           tx_access;
    reg [PW-1:0]  tx_packet; 
@@ -57,7 +57,6 @@ module etx_protocol (/*AUTOARG*/
    wire [3:0]	 last_ctrlmode;
    wire [AW-1:0] last_dstaddr;   
    wire 	 etx_valid;
-   reg           etx_io_wait;
    wire 	 burst_match;
    wire 	 burst_type_match;
    wire [31:0] 	 burst_addr;
@@ -81,12 +80,20 @@ module etx_protocol (/*AUTOARG*/
 		       );
    
 
-   reg 		 tx_io_wait_reg;
+   reg 		 tx_io_wait;
    
-   //Pipeline the io wait to improve timing
-   always @ (posedge clk)
-     tx_io_wait_reg <= tx_io_wait;
-
+   //Simple stall state machine
+   //Gets set for one cycle whenever there is no burst
+   //gets cleared by ack from io logic
+   
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       tx_io_wait <= 1'b0;
+     else if (tx_io_ack)
+       tx_io_wait <= 1'b0;
+     else if (tx_access & ~tx_burst)
+       tx_io_wait <= 1'b1;
+   
    //Prepare transaction / with burst
    always @ (posedge clk)
      if(!nreset)

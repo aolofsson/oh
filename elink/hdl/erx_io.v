@@ -256,7 +256,7 @@ module erx_io (/*AUTOARG*/
    //###################################
    //#RX CLOCK for IDDR
    //###################################      
-   BUFIO i_rx_lclk_iddr (.I(rx_clkin), .O(rx_lclk_iddr));//for iddr
+   //BUFIO i_rx_lclk_iddr (.I(rx_clkin), .O(rx_lclk_iddr));//for iddr
    
    //###################################
    //#IDELAY CIRCUIT
@@ -306,7 +306,7 @@ module erx_io (/*AUTOARG*/
 	iddr_data (
 		   .Q1 (rx_word[i]),
 		   .Q2 (rx_word[i+8]),
-		   .C  (rx_lclk_iddr),
+		   .C  (rx_lclk),//rx_lclk_iddr
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[i]),
 		   .R  (1'b0),
@@ -320,7 +320,7 @@ module erx_io (/*AUTOARG*/
 	iddr_frame (
 		   .Q1 (rx_frame),
 		   .Q2 (),    
-		   .C  (rx_lclk_iddr),
+		   .C  (rx_lclk),//rx_lclk_iddr
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[8]),
 		   .R  (1'b0),

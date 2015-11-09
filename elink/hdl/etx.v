@@ -59,14 +59,13 @@ module etx(/*AUTOARG*/
    /*AUTOINPUT*/        
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			tx_lclk;		// From etx_clocks of etx_clocks.v
+   wire			tx_io_ack;		// From etx_io of etx_io.v
    wire			tx_lclk90;		// From etx_clocks of etx_clocks.v
    wire			tx_lclk_io;		// From etx_clocks of etx_clocks.v
    // End of automatics
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			tx_access;		// From etx_core of etx_core.v
    wire			tx_burst;		// From etx_core of etx_core.v
-   wire			tx_io_wait;		// From etx_io of etx_io.v
    wire [PW-1:0]	tx_packet;		// From etx_core of etx_core.v
    wire			tx_rd_wait;		// From etx_io of etx_io.v
    wire			tx_wr_wait;		// From etx_io of etx_io.v
@@ -86,7 +85,6 @@ module etx(/*AUTOARG*/
    etx_clocks etx_clocks (.etx_io_nreset	(etx_io_nreset),
 			  /*AUTOINST*/
 			  // Outputs
-			  .tx_lclk		(tx_lclk),
 			  .tx_lclk_io		(tx_lclk_io),
 			  .tx_lclk90		(tx_lclk90),
 			  .tx_lclk_div4		(tx_lclk_div4),
@@ -138,7 +136,7 @@ module etx(/*AUTOARG*/
    /***********************************************************/
    /*etx_core   AUTO_TEMPLATE ( .tx_access	(tx_access),
 		                .tx_burst	(tx_burst),
-    		                .tx_io_wait	(tx_io_wait), 
+    		                .tx_io_ack	(tx_io_ack), 
                                 .tx_rd_wait	(tx_rd_wait),
 		                .tx_wr_wait	(tx_wr_wait),
 		                .tx_packet	(tx_packet[PW-1:0]),
@@ -166,7 +164,7 @@ module etx(/*AUTOARG*/
 		      .etx_cfg_access	(etx_cfg_access),	 // Templated
 		      .etx_cfg_packet	(etx_cfg_packet[PW-1:0]), // Templated
 		      // Inputs
-		      .tx_io_wait	(tx_io_wait),		 // Templated
+		      .tx_io_ack	(tx_io_ack),		 // Templated
 		      .tx_rd_wait	(tx_rd_wait),		 // Templated
 		      .tx_wr_wait	(tx_wr_wait),		 // Templated
 		      .txrd_access	(txrd_fifo_access),	 // Templated
@@ -192,11 +190,10 @@ module etx(/*AUTOARG*/
 	   .txo_frame_n			(txo_frame_n),
 	   .txo_data_p			(txo_data_p[7:0]),
 	   .txo_data_n			(txo_data_n[7:0]),
-	   .tx_io_wait			(tx_io_wait),
+	   .tx_io_ack			(tx_io_ack),
 	   .tx_wr_wait			(tx_wr_wait),
 	   .tx_rd_wait			(tx_rd_wait),
 	   // Inputs
-	   .tx_lclk			(tx_lclk),
 	   .tx_lclk_io			(tx_lclk_io),
 	   .tx_lclk90			(tx_lclk90),
 	   .txi_wr_wait_p		(txi_wr_wait_p),
