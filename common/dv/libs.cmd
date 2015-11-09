@@ -18,6 +18,9 @@
 -y ../../xilibs/hdl
 -y ../../parallella/hdl
 
+#FPGA
+-y ../../memory/fpga
+
 #INCLUDE PATHS (FOR CONSTANTS)
 +incdir+../../emesh/hdl
 +incdir+../../elink/hdl

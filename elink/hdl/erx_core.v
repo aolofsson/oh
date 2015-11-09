@@ -207,10 +207,9 @@ module erx_core (/*AUTOARG*/
 			.mailbox_full	(mailbox_full),
 			.mailbox_not_empty(mailbox_not_empty),
 			// Inputs
-			.wr_nreset	(nreset),		 // Templated
+			.nreset		(nreset),
 			.wr_clk		(clk),			 // Templated
 			.rd_clk		(clk),			 // Templated
-			.rd_nreset	(nreset),		 // Templated
 			.emesh_access	(emmu_access),		 // Templated
 			.emesh_packet	(emmu_packet[PW-1:0]),	 // Templated
 			.mi_en		(mi_cfg_en),		 // Templated

@@ -117,6 +117,7 @@ module elink (/*AUTOARG*/
    wire			erx_soft_reset;		// From elink_cfg of elink_cfg.v
    wire			etx_cfg_access;		// From etx of etx.v
    wire [PW-1:0]	etx_cfg_packet;		// From etx of etx.v
+   wire			etx_nreset;		// From etx of etx.v
    wire			etx_soft_reset;		// From elink_cfg of elink_cfg.v
    wire			rx_lclk_div4;		// From erx of erx.v
    wire			tx_active;		// From etx of etx.v
@@ -206,7 +207,7 @@ module elink (/*AUTOARG*/
    defparam etx.ID          = ID;
    defparam etx.ETYPE       = ETYPE;
 
-   etx etx(.etx_nreset			(etx_nreset),
+   etx etx(
 	   /*AUTOINST*/
 	   // Outputs
 	   .tx_active			(tx_active),
@@ -224,6 +225,7 @@ module elink (/*AUTOARG*/
 	   .txrr_wait			(txrr_wait),
 	   .etx_cfg_access		(etx_cfg_access),
 	   .etx_cfg_packet		(etx_cfg_packet[PW-1:0]),
+	   .etx_nreset			(etx_nreset),
 	   .tx_lclk_div4		(tx_lclk_div4),
 	   // Inputs
 	   .sys_clk			(sys_clk),
@@ -247,8 +249,7 @@ module elink (/*AUTOARG*/
    defparam ecfg_cdc.DW=104;
    defparam ecfg_cdc.DEPTH=32;
    
-   fifo_cdc ecfg_cdc (.nreset_in	(etx_nreset),
-		      .nreset_out	(erx_nreset),
+   fifo_cdc ecfg_cdc (.nreset   	(etx_nreset),
 		      // Outputs
 		      .wait_out		(etx_cfg_wait),	
 		      .access_out	(erx_cfg_access),	

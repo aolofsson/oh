@@ -59,6 +59,9 @@ module erx (/*AUTOARG*/
    output 	   timeout;
    output 	   mailbox_full;
    output 	   mailbox_not_empty;
+
+   //hack up for now
+   assign timeout = 1'b0;
    
    /*AUTOOUTPUT*/
    /*AUTOINPUT*/
@@ -193,10 +196,9 @@ module erx (/*AUTOARG*/
 			.rxrr_fifo_wait	(rxrr_fifo_wait),
 			.rxwr_fifo_wait	(rxwr_fifo_wait),
 			// Inputs
-			.erx_nreset	(erx_nreset),
 			.sys_nreset	(sys_nreset),
-			.rx_lclk_div4	(rx_lclk_div4),
 			.sys_clk	(sys_clk),
+			.rx_lclk_div4	(rx_lclk_div4),
 			.rxwr_wait	(rxwr_wait),
 			.rxrd_wait	(rxrd_wait),
 			.rxrr_wait	(rxrr_wait),

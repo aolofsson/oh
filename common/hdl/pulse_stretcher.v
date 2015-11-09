@@ -7,13 +7,12 @@ module pulse_stretcher (/*AUTOARG*/
    // Outputs
    out,
    // Inputs
-   clk, reset, in
+   clk, in
    );
 
    parameter DW = 1;
    
    input clk;
-   input reset;   
    input in;
    output out;
 

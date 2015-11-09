@@ -60,7 +60,7 @@ module erx_cfg (/*AUTOARG*/
    reg [31:0] 	ecfg_offset_reg;
    reg [8:0] 	ecfg_gpio_reg;
    reg [2:0] 	ecfg_rx_status_reg;   
-   reg [63:0] 	idelay_reg;
+   reg [44:0] 	idelay;
    reg 		load_taps;   
    reg [31:0] 	mi_dout;
    reg [31:0] 	ecfg_testdata_reg;
@@ -134,23 +134,23 @@ module erx_cfg (/*AUTOARG*/
    //###########################
    always @ (posedge clk or negedge nreset) 
      if(!nreset)
-       idelay_reg[63:0]  <= 'b0;   
+       idelay[44:0]  <= 'b0;   
      else if (ecfg_idelay0_write)
-       idelay_reg[31:0]  <= mi_din[31:0];
+       idelay[31:0]  <= mi_din[31:0];
      else if(ecfg_idelay1_write)
-       idelay_reg[63:32] <= mi_din[31:0];
+       idelay[44:32] <= mi_din[12:0];
 
 
    //Construct delay for io (5*9 bits)   
-   assign idelay_value[44:0] = {idelay_reg[44],idelay_reg[35:32],//frame
-				idelay_reg[43],idelay_reg[31:28],//d7
-				idelay_reg[42],idelay_reg[27:24],//d6
-				idelay_reg[41],idelay_reg[23:20],//d5
-				idelay_reg[40],idelay_reg[19:16],//d4
-				idelay_reg[39],idelay_reg[15:12],//d3
-				idelay_reg[38],idelay_reg[11:8], //d2
-				idelay_reg[37],idelay_reg[7:4],  //d1
-				idelay_reg[36],idelay_reg[3:0]   //d0
+   assign idelay_value[44:0] = {idelay[44],idelay[35:32],//frame
+				idelay[43],idelay[31:28],//d7
+				idelay[42],idelay[27:24],//d6
+				idelay[41],idelay[23:20],//d5
+				idelay[40],idelay[19:16],//d4
+				idelay[39],idelay[15:12],//d3
+				idelay[38],idelay[11:8], //d2
+				idelay[37],idelay[7:4],  //d1
+				idelay[36],idelay[3:0]   //d0
 				};
    always @ (posedge clk)
      load_taps <= ecfg_idelay1_write;

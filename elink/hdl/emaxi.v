@@ -400,6 +400,15 @@ module emaxi(/*autoarg*/
                 rxrd_datamode[1:0]
                 };
    
+
+   //Rest synchronization
+   wire sync_nreset;   
+   dsync dsync(.dout	(sync_nreset),
+	       .clk	(m_axi_aclk),
+	       .din	(m_axi_aresetn)
+	       );
+   
+   //Synchronous FIFO for read transactions
    fifo_sync 
      #(
        // parameters
@@ -413,7 +422,7 @@ module emaxi(/*autoarg*/
       .wr_full                          (readinfo_full),
       // inputs
       .clk                              (m_axi_aclk),
-      .reset                            (~m_axi_aresetn),
+      .reset                            (~sync_nreset),
       .wr_data                          (readinfo_in[47:0]),
       .wr_en                            (m_axi_arvalid & m_axi_arready),
       .rd_en                            (m_axi_rready & m_axi_rvalid)
@@ -496,6 +505,6 @@ module emaxi(/*autoarg*/
    
 endmodule // emaxi
 // Local Variables:
-// verilog-library-directories:("." "../../emesh/hdl" "../../memory/hdl")
+// verilog-library-directories:("." "../../emesh/hdl" "../../memory/hdl" "../../common/hdl"  )
 // End:
 

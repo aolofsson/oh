@@ -175,6 +175,7 @@ module erx_io (/*AUTOARG*/
    //###################################
  
    //stretch access pulse to 4 cycles
+   //TODO: Multi cycle path for STA???   
    pulse_stretcher #(.DW(3)) 
    ps0 (
 	.out(access_wide),
@@ -191,7 +192,6 @@ module erx_io (/*AUTOARG*/
 	  rx_packet[PW-1:0] <= rx_packet_lclk[PW-1:0];
 	  rx_burst          <= burst;	  
        end
-
 
    //################################
    //# I/O Buffers Instantiation

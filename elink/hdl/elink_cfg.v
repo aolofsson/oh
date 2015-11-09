@@ -49,7 +49,7 @@ module elink_cfg (/*AUTOARG*/
    //registers
    reg [1:0] 	ecfg_reset_reg;
    reg [15:0] 	ecfg_clk_reg;
-   reg [11:0] 	ecfg_chipid_reg;
+   reg [11:0] 	ecfg_chipid;
    reg [31:0] 	mi_dout;
    
    //wires
@@ -127,11 +127,11 @@ module elink_cfg (/*AUTOARG*/
    //###########################
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       ecfg_chipid_reg[11:0] <= DEFAULT_CHIPID;
+       ecfg_chipid[11:0] <= DEFAULT_CHIPID;
      else if (ecfg_chipid_write)
-       ecfg_chipid_reg[11:0] <= mi_din[11:0];   
+       ecfg_chipid[11:0] <= mi_din[11:0];   
    
-   assign chipid[11:0]=ecfg_chipid_reg[5:2];   
+   assign chipid[11:0]=ecfg_chipid[11:0];   
     
 endmodule // ecfg_elink
 

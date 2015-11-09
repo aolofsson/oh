@@ -39,7 +39,7 @@ module erx_clocks (/*AUTOARG*/
    output     rx_lclk_div4;      // rx slow clock for logic
 
    //Reset
-   output     rx_active;         // rx active
+   output     rx_active;          // rx active
    output     erx_nreset;         // reset for rx core logic
    output     erx_io_nreset;      // io reset (synced to high speed clock)
    

@@ -107,8 +107,6 @@ module etx(/*AUTOARG*/
 		      .txrd_wait	(txrd_wait),
 		      .txwr_wait	(txwr_wait),
 		      .txrr_wait	(txrr_wait),
-		      .etx_cfg_access	(etx_cfg_access),
-		      .etx_cfg_packet	(etx_cfg_packet[PW-1:0]),
 		      .txrd_fifo_access	(txrd_fifo_access),
 		      .txrd_fifo_packet	(txrd_fifo_packet[PW-1:0]),
 		      .txrr_fifo_access	(txrr_fifo_access),
@@ -116,7 +114,6 @@ module etx(/*AUTOARG*/
 		      .txwr_fifo_access	(txwr_fifo_access),
 		      .txwr_fifo_packet	(txwr_fifo_packet[PW-1:0]),
 		      // Inputs
-		      .etx_nreset	(etx_nreset),
 		      .sys_nreset	(sys_nreset),
 		      .sys_clk		(sys_clk),
 		      .tx_lclk_div4	(tx_lclk_div4),
@@ -126,7 +123,6 @@ module etx(/*AUTOARG*/
 		      .txwr_packet	(txwr_packet[PW-1:0]),
 		      .txrr_access	(txrr_access),
 		      .txrr_packet	(txrr_packet[PW-1:0]),
-		      .etx_cfg_wait	(etx_cfg_wait),
 		      .txrd_fifo_wait	(txrd_fifo_wait),
 		      .txrr_fifo_wait	(txrr_fifo_wait),
 		      .txwr_fifo_wait	(txwr_fifo_wait));
