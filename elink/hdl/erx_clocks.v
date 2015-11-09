@@ -61,7 +61,6 @@ module erx_clocks (/*AUTOARG*/
    //PLL
    wire       rx_lclk_fb;
    wire       rx_nreset_in;
-   wire       rx_nreset;
    
    //###########################
    // RESET STATE MACHINE
@@ -69,13 +68,11 @@ module erx_clocks (/*AUTOARG*/
   
    reg [RCW:0] reset_counter = 'b0; //works b/c of free running counter!
    reg 	       heartbeat;   
-   reg 	       pll_locked_reg;
-   reg 	       pll_locked_sync;     
+   wire        pll_locked_sync;     
    reg [2:0]   reset_state;
    wire        pll_reset;
-   reg [1:0]   reset_pipe_lclkb;    
-   reg [1:0]   reset_pipe_lclk_div4b;   
-
+   reg 	       rx_nreset;
+   
    //Reset 
    assign rx_nreset_in  =  sys_nreset & tx_active;   
    
@@ -86,14 +83,7 @@ module erx_clocks (/*AUTOARG*/
 	heartbeat              <= ~(|reset_counter[RCW-1:0]);
      end
    
-   //two clock synchronizer
-   always @ (posedge sys_clk)
-     begin
-        pll_locked_reg    <= pll_locked;	
-        pll_locked_sync   <= pll_locked_reg;	
-     end
-
-   
+  
 `define RX_RESET_ALL        3'b000
 `define RX_START_PLL        3'b001
 `define RX_ACTIVE           3'b010
@@ -120,9 +110,11 @@ module erx_clocks (/*AUTOARG*/
    assign pll_reset    =  (reset_state[2:0]==`RX_RESET_ALL);   
    assign idelay_reset =  (reset_state[2:0]==`RX_RESET_ALL);
 
-   //asynch rx block reset
-   assign rx_nreset    =  ~(reset_state[2:0] != `RX_ACTIVE);
-
+   
+   //Reset for RX (pipeline to improve timing)
+   always @ (posedge sys_clk)
+     rx_nreset <= ~(reset_state[2:0] != `RX_ACTIVE);
+   
    //active indicator
    assign rx_active   =  (reset_state[2:0] == `RX_ACTIVE);
    
@@ -206,6 +198,13 @@ module erx_clocks (/*AUTOARG*/
    BUFG i_lclk_div4_bufg (.I(rx_lclk_div4_pll),  .O(rx_lclk_div4));  //75 MHz (300/4)
    BUFG i_idelay__bufg   (.I(idelay_ref_clk_pll),.O(idelay_ref_clk));//idelay ctrl clock
 //   BUFG i_lclk_fb_bufg   (.I(rx_lclk_fb_out),    .O(rx_lclk_fb_in)); //feedback buffer
+
+   //two clock synchronizer for lock signal
+   dsync dsync (.dout			(pll_locked_sync),
+	       .clk			(sys_clk),
+	       .din			(pll_locked)
+	       );
+   
    
    //###########################
    // Idelay controller

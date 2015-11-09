@@ -12,16 +12,24 @@ remove_files -fileset sources_1 $projdir/${design}.srcs/sources_1/bd/system/hdl/
 add_files -fileset sources_1 -norecurse $projdir/${design}.srcs/sources_1/bd/system/hdl/system_wrapper.v
 
 ###########################################################
-# Implement Design
+# SYNTHESIS
 ###########################################################
 launch_runs synth_1
 wait_on_run synth_1
+#report_timing_summary -file synth_timing_summary.rpt
+
+###########################################################
+# PLACE AND ROUTE
+###########################################################
 launch_runs impl_1
 wait_on_run impl_1
+#report_timing_summary -file impl_timing_summary.rpt
 
 ###########################################################
 # Write Bitstream
 ###########################################################
 launch_runs impl_1 -to_step write_bitstream
+
+
 
 
