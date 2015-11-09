@@ -72,7 +72,7 @@ module parallella_base(/*AUTOARG*/
    output [NPS-1:0] 	ps_gpio_i;		// From pgpio of pgpio.v
    inout [NGPIO-1:0] 	gpio_n;			// To/From pgpio of pgpio.v
    inout [NGPIO-1:0]	gpio_p;			// To/From pgpio of pgpio.v
-   
+
    //TX
    output [7:0] 	txo_data_n;		// From axe_elink of axi_elink.v
    output [7:0]		txo_data_p;		// From axe_elink of axi_elink.v
