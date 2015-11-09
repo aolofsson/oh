@@ -16,28 +16,39 @@ module rsync (/*AUTOARG*/
    
    //TOOD: Should only be one target
 `ifdef TARGET_SIM
-   reg [PS-1:0]    sync_pipe[DW-1:0];
+   reg [DW-1:0]    sync_pipe[PS-1:0];
 `else   
-   (* ASYNC_REG = "TRUE"  *) (* DONT_TOUCH =  "TRUE" *) reg [PS-1:0]    sync_pipe[DW-1:0];   
+   (* ASYNC_REG = "TRUE"  *) (* DONT_TOUCH =  "TRUE" *) reg [DW-1:0]    sync_pipe[PS-1:0];   
 `endif
  
    genvar 	i;
-   integer 	j;
-   
-   generate    
-      for(i=0;i<DW;i=i+1)
-	begin
-	   always @ (posedge clk or negedge nrst_in[i])
-	     if(!nrst_in[i])
-	       sync_pipe[i]  <= 'b0;
-	     else
+   genvar 	j;   
+   generate          
+      for(i=0;i<PS;i=i+1)
+	if(i==0)
+	  begin
+	     for(j=0;j<DW;j=j+1)		 
 	       begin
-		  sync_pipe[i][0] =1'b1;		  
-		  for(j=1;j<PS;j=j+1)
-		    sync_pipe[i][j] = sync_pipe[i][j-1];		  
+		  always @ (posedge clk or negedge nrst_in[j])		 
+		    if(!nrst_in[j])
+		      sync_pipe[0][j] <= 1'b0;
+		    else
+		      sync_pipe[0][j] <= 1'b1;	     
 	       end
-	   assign nrst_out[i] = sync_pipe[i][PS-1];
-	end      
+	  end
+	else
+	  begin
+	     for(j=0;j<DW;j=j+1)		 
+	       begin
+		  always @ (posedge clk or negedge nrst_in[j])		 
+		    if(!nrst_in[j])
+		      sync_pipe[i][j] <= 1'b0;
+		    else
+		      sync_pipe[i][j] <=  sync_pipe[i-1][j]; 
+	       end
+	  end	  	 
    endgenerate
-
+   
+   assign nrst_out[DW-1:0] = sync_pipe[PS-1][DW-1:0];
+   		    	
 endmodule // rsync
