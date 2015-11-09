@@ -8,18 +8,21 @@ module fifo_cdc (/*AUTOARG*/
    // Outputs
    wait_out, access_out, packet_out,
    // Inputs
-   clk_in, nreset_in, access_in, packet_in, clk_out, nreset_out,
-   wait_in
+   nreset, clk_in, access_in, packet_in, clk_out, wait_in
    );
 
    parameter DW    = 104;
    parameter DEPTH = 32;
 
    /********************************/
+   /*Shard async reset             */
+   /********************************/
+   input              nreset;   
+
+   /********************************/
    /*Incoming Packet               */
    /********************************/
-   input              clk_in;   
-   input              nreset_in;
+   input              clk_in;     
    input 	      access_in;   
    input [DW-1:0]     packet_in;   
    output 	      wait_out;   
@@ -28,7 +31,6 @@ module fifo_cdc (/*AUTOARG*/
    /*Outgoing Packet               */
    /********************************/  
    input              clk_out;   
-   input              nreset_out;
    output 	      access_out;   
    output [DW-1:0]    packet_out;   
    input 	      wait_in;   
@@ -46,8 +48,8 @@ module fifo_cdc (/*AUTOARG*/
    assign wait_out = full;
 
    //Keep access high until "acknowledge"
-   always @ (posedge clk_out or negedge nreset_out)
-     if(!nreset_out)
+   always @ (posedge clk_out or negedge nreset)
+     if(!nreset)
        access_out <=1'b0;   
      else if(~wait_in)
        access_out <=rd_en;
@@ -58,8 +60,7 @@ module fifo_cdc (/*AUTOARG*/
 
    fifo_async  fifo (.prog_full		(full),//stay safe for now
 		     .full		(),
-		     .wr_rst		(~nreset_in),
-		     .rd_rst		(~nreset_out),
+		     .rst		(~nreset),
 		     // Outputs
 		     .dout		(packet_out[DW-1:0]),
 		     .empty		(empty),

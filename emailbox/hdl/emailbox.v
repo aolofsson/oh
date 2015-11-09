@@ -23,8 +23,8 @@ module emailbox (/*AUTOARG*/
    // Outputs
    mi_dout, mailbox_full, mailbox_not_empty,
    // Inputs
-   wr_nreset, wr_clk, rd_clk, rd_nreset, emesh_access, emesh_packet,
-   mi_en, mi_we, mi_addr, mi_din
+   nreset, wr_clk, rd_clk, emesh_access, emesh_packet, mi_en, mi_we,
+   mi_addr, mi_din
    );
 
    parameter DW     = 32;        //data width of fifo
@@ -34,16 +34,14 @@ module emailbox (/*AUTOARG*/
    parameter ID     = 12'h000;   //link id
 
    parameter WIDTH  = 104;
-   parameter DEPTH  = 16;
+   parameter DEPTH  = 32;
    
    /*****************************/
    /*RESET                      */
    /*****************************/
-   input           wr_nreset;   //asynchronous active low reset
+   input           nreset;      //asynchronous active low reset
    input 	   wr_clk;      //write clock
    input 	   rd_clk;      //read clock
-   input           rd_nreset;   //asynchronous active low reset
-
 
    /*****************************/
    /*WRITE INTERFACE            */
@@ -122,14 +120,13 @@ module emailbox (/*AUTOARG*/
 
    assign mailbox_not_empty         = ~mailbox_empty;
 
-   //BUG! This fifo is currently hard coded to 16 entries
+   //BUG! This fifo is currently hard coded to 32 entries
    //Should be parametrized to up to 4096 entries
 
    defparam fifo.DW    = WIDTH;
    defparam fifo.DEPTH = DEPTH;
    
-   fifo_async fifo(.wr_rst   (~wr_nreset),
-  		   .rd_rst   (~rd_nreset),  
+   fifo_async fifo(.rst       (~nreset),  
 		    // Outputs
 		   .dout      (mailbox_fifo_data[WIDTH-1:0]),
 		   .empty     (mailbox_empty),

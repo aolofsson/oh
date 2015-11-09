@@ -9,7 +9,7 @@
 
 module fifo_sync
   #(
-    // Address width (must be 5 => 32-deep FIFO)
+    // Address width (must be 5 => 32-deep FIFO)??
     parameter AW = 5,
     // Data width
     parameter DW = 16
@@ -24,12 +24,12 @@ module fifo_sync
     output reg           rd_empty,
     output reg           wr_full
     );
-   
+
    reg [AW-1:0]          wr_addr;
    reg [AW-1:0]          rd_addr;
    reg [AW-1:0]          count;
    
-   always @ ( posedge clk or posedge reset ) begin
+   always @ ( posedge clk ) begin
       if( reset ) 
 	begin	   
            wr_addr[AW-1:0] <= 'd0;
@@ -60,10 +60,10 @@ module fifo_sync
               if( count == 'd1 )
 		rd_empty <= 1'b1;	      
            end
-	end // else: !if( reset )
-   end // always @ ( posedge clk )
+	end
+   end
       
-
+   // GENERIC DUAL PORTED MEMORY
    defparam mem.DW=DW;
    defparam mem.AW=AW;   
    memory_dp mem (
