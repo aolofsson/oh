@@ -13,7 +13,13 @@ module dsync (/*AUTOARG*/
    input [DW-1:0]  din;
    output [DW-1:0] dout;
    
-   reg [PS-1:0] sync_pipe[DW-1:0];
+ 
+`ifdef TARGET_SIM
+   reg [PS-1:0]    sync_pipe[DW-1:0];
+`else   
+   (* ASYNC_REG = "TRUE"  *) (* DONT_TOUCH =  "TRUE" *) reg [PS-1:0]    sync_pipe[DW-1:0];   
+`endif
+   
    
    genvar 	i;
    integer 	j;

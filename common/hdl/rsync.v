@@ -14,8 +14,13 @@ module rsync (/*AUTOARG*/
    input [DW-1:0]  nrst_in;
    output [DW-1:0] nrst_out;
    
-   reg [PS-1:0]    sync_pipe[DW-1:0];   
-   
+   //TOOD: Should only be one target
+`ifdef TARGET_SIM
+   reg [PS-1:0]    sync_pipe[DW-1:0];
+`else   
+   (* ASYNC_REG = "TRUE"  *) (* DONT_TOUCH =  "TRUE" *) reg [PS-1:0]    sync_pipe[DW-1:0];   
+`endif
+ 
    genvar 	i;
    integer 	j;
    
