@@ -299,7 +299,7 @@ module erx_io (/*AUTOARG*/
  
    //DATA
    genvar        i;
-   generate for(i=0; i<4; i=i+1)
+   generate for(i=0; i<8; i=i+1)
      begin : gen_iddr           
 	IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"), .SRTYPE("SYNC"))
 	iddr_data (
