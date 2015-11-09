@@ -105,7 +105,7 @@ module parallella_base(/*AUTOARG*/
    output [3:0]		m_axi_arcache;		// From axe_elink of axi_elink.v
    output [M_IDW-1:0]	m_axi_arid;		// From axe_elink of axi_elink.v
    output [7:0]		m_axi_arlen;		// From axe_elink of axi_elink.v
-   output [1:0]		m_axi_arlock;		// From axe_elink of axi_elink.v
+   output		m_axi_arlock;		// From axe_elink of axi_elink.v
    output [2:0]		m_axi_arprot;		// From axe_elink of axi_elink.v
    output [3:0]		m_axi_arqos;		// From axe_elink of axi_elink.v
    output [2:0]		m_axi_arsize;		// From axe_elink of axi_elink.v
@@ -115,7 +115,7 @@ module parallella_base(/*AUTOARG*/
    output [3:0]		m_axi_awcache;		// From axe_elink of axi_elink.v
    output [M_IDW-1:0]	m_axi_awid;		// From axe_elink of axi_elink.v
    output [7:0]		m_axi_awlen;		// From axe_elink of axi_elink.v
-   output [1:0]		m_axi_awlock;		// From axe_elink of axi_elink.v
+   output		m_axi_awlock;		// From axe_elink of axi_elink.v
    output [2:0]		m_axi_awprot;		// From axe_elink of axi_elink.v
    output [3:0]		m_axi_awqos;		// From axe_elink of axi_elink.v
    output [2:0]		m_axi_awsize;		// From axe_elink of axi_elink.v
@@ -159,7 +159,7 @@ module parallella_base(/*AUTOARG*/
    input		s_axi_aresetn;		// To axe_elink of axi_elink.v
    input [S_IDW-1:0]	s_axi_arid;		// To axe_elink of axi_elink.v
    input [7:0]		s_axi_arlen;		// To axe_elink of axi_elink.v
-   input [1:0]		s_axi_arlock;		// To axe_elink of axi_elink.v
+   input		s_axi_arlock;		// To axe_elink of axi_elink.v
    input [2:0]		s_axi_arprot;		// To axe_elink of axi_elink.v
    input [3:0]		s_axi_arqos;		// To axe_elink of axi_elink.v
    input [2:0]		s_axi_arsize;		// To axe_elink of axi_elink.v
@@ -169,7 +169,7 @@ module parallella_base(/*AUTOARG*/
    input [3:0]		s_axi_awcache;		// To axe_elink of axi_elink.v
    input [S_IDW-1:0]	s_axi_awid;		// To axe_elink of axi_elink.v
    input [7:0]		s_axi_awlen;		// To axe_elink of axi_elink.v
-   input [1:0]		s_axi_awlock;		// To axe_elink of axi_elink.v
+   input		s_axi_awlock;		// To axe_elink of axi_elink.v
    input [2:0]		s_axi_awprot;		// To axe_elink of axi_elink.v
    input [3:0]		s_axi_awqos;		// To axe_elink of axi_elink.v
    input [2:0]		s_axi_awsize;		// To axe_elink of axi_elink.v
@@ -214,7 +214,7 @@ module parallella_base(/*AUTOARG*/
 			.m_axi_awlen	(m_axi_awlen[7:0]),	 // Templated
 			.m_axi_awsize	(m_axi_awsize[2:0]),	 // Templated
 			.m_axi_awburst	(m_axi_awburst[1:0]),	 // Templated
-			.m_axi_awlock	(m_axi_awlock[1:0]),	 // Templated
+			.m_axi_awlock	(m_axi_awlock),		 // Templated
 			.m_axi_awcache	(m_axi_awcache[3:0]),	 // Templated
 			.m_axi_awprot	(m_axi_awprot[2:0]),	 // Templated
 			.m_axi_awqos	(m_axi_awqos[3:0]),	 // Templated
@@ -230,7 +230,7 @@ module parallella_base(/*AUTOARG*/
 			.m_axi_arlen	(m_axi_arlen[7:0]),	 // Templated
 			.m_axi_arsize	(m_axi_arsize[2:0]),	 // Templated
 			.m_axi_arburst	(m_axi_arburst[1:0]),	 // Templated
-			.m_axi_arlock	(m_axi_arlock[1:0]),	 // Templated
+			.m_axi_arlock	(m_axi_arlock),		 // Templated
 			.m_axi_arcache	(m_axi_arcache[3:0]),	 // Templated
 			.m_axi_arprot	(m_axi_arprot[2:0]),	 // Templated
 			.m_axi_arqos	(m_axi_arqos[3:0]),	 // Templated
@@ -278,7 +278,7 @@ module parallella_base(/*AUTOARG*/
 			.s_axi_araddr	(s_axi_araddr[31:0]),	 // Templated
 			.s_axi_arburst	(s_axi_arburst[1:0]),	 // Templated
 			.s_axi_arcache	(s_axi_arcache[3:0]),	 // Templated
-			.s_axi_arlock	(s_axi_arlock[1:0]),	 // Templated
+			.s_axi_arlock	(s_axi_arlock),		 // Templated
 			.s_axi_arlen	(s_axi_arlen[7:0]),	 // Templated
 			.s_axi_arprot	(s_axi_arprot[2:0]),	 // Templated
 			.s_axi_arqos	(s_axi_arqos[3:0]),	 // Templated
@@ -288,7 +288,7 @@ module parallella_base(/*AUTOARG*/
 			.s_axi_awaddr	(s_axi_awaddr[31:0]),	 // Templated
 			.s_axi_awburst	(s_axi_awburst[1:0]),	 // Templated
 			.s_axi_awcache	(s_axi_awcache[3:0]),	 // Templated
-			.s_axi_awlock	(s_axi_awlock[1:0]),	 // Templated
+			.s_axi_awlock	(s_axi_awlock),		 // Templated
 			.s_axi_awlen	(s_axi_awlen[7:0]),	 // Templated
 			.s_axi_awprot	(s_axi_awprot[2:0]),	 // Templated
 			.s_axi_awqos	(s_axi_awqos[3:0]),	 // Templated

@@ -71,7 +71,6 @@ module erx_io (/*AUTOARG*/
    reg 		 rx_access;
    reg [PW-1:0]  rx_packet;
    reg 		 rx_burst;
-   wire 	 rx_lclk_iddr;
    wire [8:0] 	 rxi_delay_in;
    wire [8:0] 	 rxi_delay_out;
    reg 		 burst_detect;
@@ -93,23 +92,22 @@ module erx_io (/*AUTOARG*/
       
    //convert to 112 bit packet
    always @ (posedge rx_lclk)
-     if(rx_frame)   
-       begin
-	  if(rx_pointer[0])
-	    rx_sample[15:0]    <= rx_word[15:0];
-	  if(rx_pointer[1])
-	    rx_sample[31:16]   <= rx_word[15:0];
-	  if(rx_pointer[2])
-	    rx_sample[47:32]   <= rx_word[15:0];
-	  if(rx_pointer[3])
-	    rx_sample[63:48]   <= rx_word[15:0];
-	  if(rx_pointer[4])
-	    rx_sample[79:64]   <= rx_word[15:0];
-	  if(rx_pointer[5])
-	    rx_sample[95:80]   <= rx_word[15:0];
-	  if(rx_pointer[6])
-	    rx_sample[111:96]  <= rx_word[15:0];	  
-       end // if (rx_frame)
+     begin
+	if(rx_pointer[0])
+	  rx_sample[15:0]    <= rx_word[15:0];
+	if(rx_pointer[1])
+	  rx_sample[31:16]   <= rx_word[15:0];
+	if(rx_pointer[2])
+	  rx_sample[47:32]   <= rx_word[15:0];
+	if(rx_pointer[3])
+	  rx_sample[63:48]   <= rx_word[15:0];
+	if(rx_pointer[4])
+	  rx_sample[79:64]   <= rx_word[15:0];
+	if(rx_pointer[5])
+	  rx_sample[95:80]   <= rx_word[15:0];
+	if(rx_pointer[6])
+	  rx_sample[111:96]  <= rx_word[15:0];	  
+     end // if (rx_frame)
    
    //#####################  
    //#DATA VALID SIGNAL 
@@ -256,8 +254,9 @@ module erx_io (/*AUTOARG*/
    //###################################
    //#RX CLOCK for IDDR
    //###################################      
-   //BUFIO i_rx_lclk_iddr (.I(rx_clkin), .O(rx_lclk_iddr));//for iddr
-   
+   wire rx_lclk_iddr;   
+   BUFIO i_bufio0 (.I(rx_clkin), .O(rx_lclk_iddr));//for iddr
+      
    //###################################
    //#IDELAY CIRCUIT
    //###################################
@@ -300,13 +299,13 @@ module erx_io (/*AUTOARG*/
  
    //DATA
    genvar        i;
-   generate for(i=0; i<8; i=i+1)
+   generate for(i=0; i<4; i=i+1)
      begin : gen_iddr           
 	IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"), .SRTYPE("SYNC"))
 	iddr_data (
 		   .Q1 (rx_word[i]),
 		   .Q2 (rx_word[i+8]),
-		   .C  (rx_lclk),//rx_lclk_iddr
+		   .C  (rx_lclk_iddr),//rx_lclk_iddr
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[i]),
 		   .R  (1'b0),
@@ -320,7 +319,7 @@ module erx_io (/*AUTOARG*/
 	iddr_frame (
 		   .Q1 (rx_frame),
 		   .Q2 (),    
-		   .C  (rx_lclk),//rx_lclk_iddr
+		   .C  (rx_lclk_iddr),//rx_lclk_iddr
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[8]),
 		   .R  (1'b0),

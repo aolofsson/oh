@@ -84,7 +84,7 @@ module axi_elink(/*AUTOARG*/
    output [7 : 0]     m_axi_awlen;   // burst length.
    output [2 : 0]     m_axi_awsize;  // burst size.
    output [1 : 0]     m_axi_awburst; // burst type.
-   output [1 : 0]     m_axi_awlock;  // lock type   
+   output 	      m_axi_awlock;  // lock type   
    output [3 : 0]     m_axi_awcache; // memory type.
    output [2 : 0]     m_axi_awprot;  // protection type.
    output [3 : 0]     m_axi_awqos;   // quality of service
@@ -111,7 +111,7 @@ module axi_elink(/*AUTOARG*/
    output [7 : 0]     m_axi_arlen;   // burst length
    output [2 : 0]     m_axi_arsize;  // burst size
    output [1 : 0]     m_axi_arburst; // burst type
-   output [1 : 0]     m_axi_arlock;  // lock type   
+   output 	      m_axi_arlock;  // lock type   
    output [3 : 0]     m_axi_arcache; // memory type
    output [2 : 0]     m_axi_arprot;  // protection type
    output [3 : 0]     m_axi_arqos;   // --
@@ -137,7 +137,7 @@ module axi_elink(/*AUTOARG*/
    input [31:0]       s_axi_araddr;
    input [1:0] 	      s_axi_arburst;
    input [3:0] 	      s_axi_arcache;
-   input [1:0] 	      s_axi_arlock;
+   input  	      s_axi_arlock;
    input [7:0] 	      s_axi_arlen;
    input [2:0] 	      s_axi_arprot;
    input [3:0] 	      s_axi_arqos;
@@ -150,7 +150,7 @@ module axi_elink(/*AUTOARG*/
    input [31:0]       s_axi_awaddr;
    input [1:0] 	      s_axi_awburst;
    input [3:0] 	      s_axi_awcache;
-   input [1:0] 	      s_axi_awlock;
+   input      s_axi_awlock;
    input [7:0] 	      s_axi_awlen;
    input [2:0] 	      s_axi_awprot;
    input [3:0] 	      s_axi_awqos;   
@@ -310,7 +310,7 @@ module axi_elink(/*AUTOARG*/
 		.s_axi_araddr		(s_axi_araddr[31:0]),
 		.s_axi_arburst		(s_axi_arburst[1:0]),
 		.s_axi_arcache		(s_axi_arcache[3:0]),
-		.s_axi_arlock		(s_axi_arlock[1:0]),
+		.s_axi_arlock		(s_axi_arlock),
 		.s_axi_arlen		(s_axi_arlen[7:0]),
 		.s_axi_arprot		(s_axi_arprot[2:0]),
 		.s_axi_arqos		(s_axi_arqos[3:0]),
@@ -320,7 +320,7 @@ module axi_elink(/*AUTOARG*/
 		.s_axi_awaddr		(s_axi_awaddr[31:0]),
 		.s_axi_awburst		(s_axi_awburst[1:0]),
 		.s_axi_awcache		(s_axi_awcache[3:0]),
-		.s_axi_awlock		(s_axi_awlock[1:0]),
+		.s_axi_awlock		(s_axi_awlock),
 		.s_axi_awlen		(s_axi_awlen[7:0]),
 		.s_axi_awprot		(s_axi_awprot[2:0]),
 		.s_axi_awqos		(s_axi_awqos[3:0]),
@@ -351,7 +351,7 @@ module axi_elink(/*AUTOARG*/
 		.m_axi_awlen		(m_axi_awlen[7:0]),
 		.m_axi_awsize		(m_axi_awsize[2:0]),
 		.m_axi_awburst		(m_axi_awburst[1:0]),
-		.m_axi_awlock		(m_axi_awlock[1:0]),
+		.m_axi_awlock		(m_axi_awlock),
 		.m_axi_awcache		(m_axi_awcache[3:0]),
 		.m_axi_awprot		(m_axi_awprot[2:0]),
 		.m_axi_awqos		(m_axi_awqos[3:0]),
@@ -367,7 +367,7 @@ module axi_elink(/*AUTOARG*/
 		.m_axi_arlen		(m_axi_arlen[7:0]),
 		.m_axi_arsize		(m_axi_arsize[2:0]),
 		.m_axi_arburst		(m_axi_arburst[1:0]),
-		.m_axi_arlock		(m_axi_arlock[1:0]),
+		.m_axi_arlock		(m_axi_arlock),
 		.m_axi_arcache		(m_axi_arcache[3:0]),
 		.m_axi_arprot		(m_axi_arprot[2:0]),
 		.m_axi_arqos		(m_axi_arqos[3:0]),

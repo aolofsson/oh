@@ -87,7 +87,7 @@ module emaxi(/*autoarg*/
    output [7 : 0]      m_axi_awlen;   // burst length.
    output [2 : 0]      m_axi_awsize;  // burst size.
    output [1 : 0]      m_axi_awburst; // burst type.
-   output [1 : 0]      m_axi_awlock;  // lock type   
+   output              m_axi_awlock;  // lock type   
    output [3 : 0]      m_axi_awcache; // memory type.
    output [2 : 0]      m_axi_awprot;  // protection type.
    output [3 : 0]      m_axi_awqos;   // quality of service
@@ -95,7 +95,7 @@ module emaxi(/*autoarg*/
    input 	       m_axi_awready; // write address ready
 
    //Write data channel
-   output [M_IDW-1:0]    m_axi_wid;     
+   output [M_IDW-1:0]  m_axi_wid;     
    output [63 : 0]     m_axi_wdata;   // master interface write data.
    output [7 : 0]      m_axi_wstrb;   // byte write strobes
    output 	       m_axi_wlast;   // indicates last transfer in a write burst.
@@ -109,12 +109,12 @@ module emaxi(/*autoarg*/
    output 	       m_axi_bready;  // master can accept write response.
 
    //Read address channel
-   output [M_IDW-1:0]    m_axi_arid;    // read address ID
+   output [M_IDW-1:0]  m_axi_arid;    // read address ID
    output [31 : 0]     m_axi_araddr;  // initial address of a read burst
    output [7 : 0]      m_axi_arlen;   // burst length
    output [2 : 0]      m_axi_arsize;  // burst size
    output [1 : 0]      m_axi_arburst; // burst type
-   output [1 : 0]      m_axi_arlock;  //lock type   
+   output              m_axi_arlock;  //lock type   
    output [3 : 0]      m_axi_arcache; // memory type
    output [2 : 0]      m_axi_arprot;  // protection type
    output [3 : 0]      m_axi_arqos;   // 
@@ -228,19 +228,28 @@ module emaxi(/*autoarg*/
    //AXI unimplemented constants
    //#########################################################################
 
+   //AW
+   assign m_axi_awid[M_IDW-1:0]  = {(M_IDW){1'b0}};
    assign m_axi_awburst[1:0]	= 2'b01; //only increment burst supported
    assign m_axi_awcache[3:0]	= 4'b0000;//TODO: correct value??
    assign m_axi_awprot[2:0]	= 3'b000;
    assign m_axi_awqos[3:0]	= 4'b0000;
-   assign m_axi_awlock          = 2'b00;
+   assign m_axi_awlock          = 1'b0;
 
+   //AR
+   assign m_axi_arid[M_IDW-1:0] = {(M_IDW){1'b0}};
    assign m_axi_arburst[1:0]	= 2'b01; //only increment burst supported
    assign m_axi_arcache[3:0]	= 4'b0000;
    assign m_axi_arprot[2:0]	= 3'h0;
    assign m_axi_arqos[3:0]	= 4'h0;
+   assign m_axi_arlock          = 1'b0;
+    
+   //B
+   assign m_axi_bready    	= 1'b1;//TODO: tie to wait signal????   
 
-   assign m_axi_bready    	= 1'b1;//tie to wait signal????   
-   
+   //W
+   assign m_axi_wid[M_IDW-1:0]  = {(M_IDW){1'b0}};
+
    //#########################################################################
    //Write address channel
    //#########################################################################

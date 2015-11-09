@@ -188,8 +188,8 @@ module erx_clocks (/*AUTOARG*/
 	.DEN(1'b0),
 	.DI(16'b0),
 	.DWE(1'b0),
-	.DRDY(),
-	.DO(), 
+	.DRDY(),//??
+	.DO(), //??
 	.LOCKED(pll_locked)
         );
    

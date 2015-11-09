@@ -56,7 +56,7 @@ module esaxi (/*autoarg*/
    input [31:0]    s_axi_araddr;
    input [1:0] 	   s_axi_arburst;
    input [3:0] 	   s_axi_arcache;
-   input [1:0] 	   s_axi_arlock;
+   input  	   s_axi_arlock;
    input [7:0] 	   s_axi_arlen;
    input [2:0] 	   s_axi_arprot;
    input [3:0] 	   s_axi_arqos;
@@ -69,7 +69,7 @@ module esaxi (/*autoarg*/
    input [31:0]    s_axi_awaddr;
    input [1:0] 	   s_axi_awburst;
    input [3:0] 	   s_axi_awcache;
-   input [1:0] 	   s_axi_awlock;
+   input  	   s_axi_awlock;
    input [7:0] 	   s_axi_awlen;
    input [2:0] 	   s_axi_awprot;
    input [3:0] 	   s_axi_awqos;   
