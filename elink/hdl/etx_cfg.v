@@ -105,6 +105,8 @@ module etx_cfg (/*AUTOARG*/
    always @ (posedge clk)
      if(!nreset)
        ecfg_tx_status_reg[2:0] <= 'd0;
+     else if (ecfg_tx_status_write)
+       ecfg_tx_status_reg[2:0] <= mi_din[2:0];   
      else
        ecfg_tx_status_reg[2:0]<= ecfg_tx_status_reg[2:0] | tx_status[2:0];
 

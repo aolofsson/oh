@@ -3,7 +3,7 @@
  
  ########################################################################
  */
-
+`include "elink_regmap.v"
 module ecfg_if (/*AUTOARG*/
    // Outputs
    mi_mmu_en, mi_dma_en, mi_cfg_en, mi_we, mi_addr, mi_din,
@@ -75,6 +75,8 @@ module ecfg_if (/*AUTOARG*/
    wire [31:0] 	 data_out;
    
    //parameter didn't seem to work
+   //this module used in rx and tx, parameter used to make address decode work out
+   ////rxsel=1 for RX, rxsel=0 for TX   
    assign 	 rxsel = RX;   
 
    //splicing packet
@@ -90,25 +92,22 @@ module ecfg_if (/*AUTOARG*/
 
    //ENABLE SIGNALS
    assign mi_match   = access_in & (dstaddr[31:20]==ID);
-    
+
    //config select (group 2 and 3)
    assign mi_cfg_en = mi_match & 
-		      (dstaddr[19:16]==4'hF) &
-		      (dstaddr[10:8]=={2'b01,rxsel});
+		      (dstaddr[19:16]==`EGROUP_MMR) &
+		      (dstaddr[10:8]=={2'b01,rxsel});  
    
-
    //dma select (group 5)
    assign mi_dma_en = mi_match &
-		      (dstaddr[19:16]==4'hF) & 
+		      (dstaddr[19:16]==`EGROUP_MMR) & 
 		      (dstaddr[10:8]==3'h5)  & 
 		      (dstaddr[5]==rxsel);
-   
 
    //mmu select
    assign mi_mmu_en = mi_match & 
-		      (dstaddr[19:16]==4'hE) &
+		      (dstaddr[19:16]==`EGROUP_MMU) &
 		      (dstaddr[15]==rxsel);
-
 
    //read/write indicator
    assign mi_en = (mi_mmu_en | mi_cfg_en | mi_dma_en);   
@@ -117,8 +116,12 @@ module ecfg_if (/*AUTOARG*/
    
    //signal to carry transaction from ETX to ERX block through fifo_cdc
    assign mi_rx_en = mi_match & 
-		     ((dstaddr[19:16]==4'hE) | (dstaddr[19:16]==4'hF)) &  
-		     ~mi_en;
+		     ~mi_en & 
+		     ((dstaddr[19:16]==`EGROUP_RR)  | 
+		      (dstaddr[19:16]==`EGROUP_MMR) |
+		      (dstaddr[19:16]==`EGROUP_MMU)
+		      );
+					  
       
    //ADDR
    assign mi_addr[14:0] = dstaddr[14:0];
