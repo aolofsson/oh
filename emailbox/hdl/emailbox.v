@@ -84,16 +84,21 @@ module emailbox (/*AUTOARG*/
    /*****************************/
    /*WRITE TO FIFO              */
    /*****************************/  
-
-   assign emesh_addr[31:0]  = emesh_packet[39:8];
-
-   assign emesh_din[63:0]   = emesh_packet[103:40];
-  
-   assign emesh_write       = emesh_access &
-			      emesh_packet[1] &
-			      (emesh_addr[31:20]==ID) & 
-			      (emesh_addr[10:8]==3'h3) & 
-                              (emesh_addr[RFAW+1:2]==`E_MAILBOXLO); 
+   packet2emesh pe2 (// Outputs
+		     .write_out		(emesh_write),
+		     .datamode_out	(),
+		     .ctrlmode_out	(),
+		     .data_out		(emesh_din[31:0]),
+		     .dstaddr_out	(emesh_addr[31:0]),
+		     .srcaddr_out	(emesh_din[63:32]),
+		     // Inputs
+		     .packet_in		(emesh_packet[PW-1:0]));
+   
+   wire emailbox_write  = emesh_access &
+	                  emesh_write  &
+	                  (emesh_addr[31:20]==ID) & 
+			  (emesh_addr[19:16]==`EGROUP_MMR) & 
+                          (emesh_addr[RFAW+1:2]==`E_MAILBOXLO); 
    
    /*****************************/
    /*READ BACK DATA             */
@@ -101,7 +106,7 @@ module emailbox (/*AUTOARG*/
 
    assign mi_rd =  mi_en & ~mi_we;
    
-   assign mailbox_pop  = mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI); //fifo read
+   wire emailbox_read  = mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI); //fifo read
 
    always @ (posedge rd_clk)
      if(mi_rd)
@@ -120,12 +125,9 @@ module emailbox (/*AUTOARG*/
 
    assign mailbox_not_empty         = ~mailbox_empty;
 
-   //BUG! This fifo is currently hard coded to 32 entries
-   //Should be parametrized to up to 4096 entries
-
    defparam fifo.DW    = WIDTH;
    defparam fifo.DEPTH = DEPTH;
-   
+   //TODO: fix the width and depth
    fifo_async fifo(.rst       (~nreset),  
 		    // Outputs
 		   .dout      (mailbox_fifo_data[WIDTH-1:0]),
@@ -134,12 +136,16 @@ module emailbox (/*AUTOARG*/
      		   .prog_full (),
 		   .valid(),
 		   //Read Port
-		   .rd_en    (mailbox_pop), 
+		   .rd_en    (emailbox_read), 
 		   .rd_clk   (rd_clk),  
 		   //Write Port 
 		   .din      ({40'b0,emesh_din[63:0]}),
-		   .wr_en    (emesh_write),
+		   .wr_en    (emailbox_write),
 		   .wr_clk   (wr_clk)  			     
 		   ); 
    
 endmodule // emailbox
+
+// Local Variables:
+// verilog-library-directories:("." "../../emesh/hdl")
+// End:
