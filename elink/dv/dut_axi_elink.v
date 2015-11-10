@@ -84,7 +84,7 @@ module dut(/*AUTOARG*/
    wire [3:0]		elink0_m_axi_arcache;	// From elink0 of axi_elink.v
    wire [M_IDW-1:0]	elink0_m_axi_arid;	// From elink0 of axi_elink.v
    wire [7:0]		elink0_m_axi_arlen;	// From elink0 of axi_elink.v
-   wire [1:0]		elink0_m_axi_arlock;	// From elink0 of axi_elink.v
+   wire			elink0_m_axi_arlock;	// From elink0 of axi_elink.v
    wire [2:0]		elink0_m_axi_arprot;	// From elink0 of axi_elink.v
    wire [3:0]		elink0_m_axi_arqos;	// From elink0 of axi_elink.v
    wire [2:0]		elink0_m_axi_arsize;	// From elink0 of axi_elink.v
@@ -94,7 +94,7 @@ module dut(/*AUTOARG*/
    wire [3:0]		elink0_m_axi_awcache;	// From elink0 of axi_elink.v
    wire [M_IDW-1:0]	elink0_m_axi_awid;	// From elink0 of axi_elink.v
    wire [7:0]		elink0_m_axi_awlen;	// From elink0 of axi_elink.v
-   wire [1:0]		elink0_m_axi_awlock;	// From elink0 of axi_elink.v
+   wire			elink0_m_axi_awlock;	// From elink0 of axi_elink.v
    wire [2:0]		elink0_m_axi_awprot;	// From elink0 of axi_elink.v
    wire [3:0]		elink0_m_axi_awqos;	// From elink0 of axi_elink.v
    wire [2:0]		elink0_m_axi_awsize;	// From elink0 of axi_elink.v
@@ -141,7 +141,7 @@ module dut(/*AUTOARG*/
    wire [3:0]		m_axi_arcache;		// From emaxi of emaxi.v
    wire [M_IDW-1:0]	m_axi_arid;		// From emaxi of emaxi.v
    wire [7:0]		m_axi_arlen;		// From emaxi of emaxi.v
-   wire [1:0]		m_axi_arlock;		// From emaxi of emaxi.v
+   wire			m_axi_arlock;		// From emaxi of emaxi.v
    wire [2:0]		m_axi_arprot;		// From emaxi of emaxi.v
    wire [3:0]		m_axi_arqos;		// From emaxi of emaxi.v
    wire			m_axi_arready;		// From elink0 of axi_elink.v
@@ -152,7 +152,7 @@ module dut(/*AUTOARG*/
    wire [3:0]		m_axi_awcache;		// From emaxi of emaxi.v
    wire [M_IDW-1:0]	m_axi_awid;		// From emaxi of emaxi.v
    wire [7:0]		m_axi_awlen;		// From emaxi of emaxi.v
-   wire [1:0]		m_axi_awlock;		// From emaxi of emaxi.v
+   wire			m_axi_awlock;		// From emaxi of emaxi.v
    wire [2:0]		m_axi_awprot;		// From emaxi of emaxi.v
    wire [3:0]		m_axi_awqos;		// From emaxi of emaxi.v
    wire			m_axi_awready;		// From elink0 of axi_elink.v
@@ -262,7 +262,7 @@ module dut(/*AUTOARG*/
 	  .m_axi_awlen			(m_axi_awlen[7:0]),
 	  .m_axi_awsize			(m_axi_awsize[2:0]),
 	  .m_axi_awburst		(m_axi_awburst[1:0]),
-	  .m_axi_awlock			(m_axi_awlock[1:0]),
+	  .m_axi_awlock			(m_axi_awlock),
 	  .m_axi_awcache		(m_axi_awcache[3:0]),
 	  .m_axi_awprot			(m_axi_awprot[2:0]),
 	  .m_axi_awqos			(m_axi_awqos[3:0]),
@@ -278,7 +278,7 @@ module dut(/*AUTOARG*/
 	  .m_axi_arlen			(m_axi_arlen[7:0]),
 	  .m_axi_arsize			(m_axi_arsize[2:0]),
 	  .m_axi_arburst		(m_axi_arburst[1:0]),
-	  .m_axi_arlock			(m_axi_arlock[1:0]),
+	  .m_axi_arlock			(m_axi_arlock),
 	  .m_axi_arcache		(m_axi_arcache[3:0]),
 	  .m_axi_arprot			(m_axi_arprot[2:0]),
 	  .m_axi_arqos			(m_axi_arqos[3:0]),
@@ -359,7 +359,7 @@ module dut(/*AUTOARG*/
 		     .m_axi_awlen	(elink0_m_axi_awlen[7:0]), // Templated
 		     .m_axi_awsize	(elink0_m_axi_awsize[2:0]), // Templated
 		     .m_axi_awburst	(elink0_m_axi_awburst[1:0]), // Templated
-		     .m_axi_awlock	(elink0_m_axi_awlock[1:0]), // Templated
+		     .m_axi_awlock	(elink0_m_axi_awlock),	 // Templated
 		     .m_axi_awcache	(elink0_m_axi_awcache[3:0]), // Templated
 		     .m_axi_awprot	(elink0_m_axi_awprot[2:0]), // Templated
 		     .m_axi_awqos	(elink0_m_axi_awqos[3:0]), // Templated
@@ -375,7 +375,7 @@ module dut(/*AUTOARG*/
 		     .m_axi_arlen	(elink0_m_axi_arlen[7:0]), // Templated
 		     .m_axi_arsize	(elink0_m_axi_arsize[2:0]), // Templated
 		     .m_axi_arburst	(elink0_m_axi_arburst[1:0]), // Templated
-		     .m_axi_arlock	(elink0_m_axi_arlock[1:0]), // Templated
+		     .m_axi_arlock	(elink0_m_axi_arlock),	 // Templated
 		     .m_axi_arcache	(elink0_m_axi_arcache[3:0]), // Templated
 		     .m_axi_arprot	(elink0_m_axi_arprot[2:0]), // Templated
 		     .m_axi_arqos	(elink0_m_axi_arqos[3:0]), // Templated
@@ -409,7 +409,7 @@ module dut(/*AUTOARG*/
 		     .s_axi_araddr	(m_axi_araddr[31:0]),	 // Templated
 		     .s_axi_arburst	(m_axi_arburst[1:0]),	 // Templated
 		     .s_axi_arcache	(m_axi_arcache[3:0]),	 // Templated
-		     .s_axi_arlock	(m_axi_arlock[1:0]),	 // Templated
+		     .s_axi_arlock	(m_axi_arlock),		 // Templated
 		     .s_axi_arlen	(m_axi_arlen[7:0]),	 // Templated
 		     .s_axi_arprot	(m_axi_arprot[2:0]),	 // Templated
 		     .s_axi_arqos	(m_axi_arqos[3:0]),	 // Templated
@@ -419,7 +419,7 @@ module dut(/*AUTOARG*/
 		     .s_axi_awaddr	(m_axi_awaddr[31:0]),	 // Templated
 		     .s_axi_awburst	(m_axi_awburst[1:0]),	 // Templated
 		     .s_axi_awcache	(m_axi_awcache[3:0]),	 // Templated
-		     .s_axi_awlock	(m_axi_awlock[1:0]),	 // Templated
+		     .s_axi_awlock	(m_axi_awlock),		 // Templated
 		     .s_axi_awlen	(m_axi_awlen[7:0]),	 // Templated
 		     .s_axi_awprot	(m_axi_awprot[2:0]),	 // Templated
 		     .s_axi_awqos	(m_axi_awqos[3:0]),	 // Templated
