@@ -114,6 +114,7 @@ module elink (/*AUTOARG*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			erx_cfg_wait;		// From erx of erx.v
+   wire			erx_nreset;		// From erx of erx.v
    wire			erx_soft_reset;		// From elink_cfg of elink_cfg.v
    wire			etx_cfg_access;		// From etx of etx.v
    wire [PW-1:0]	etx_cfg_packet;		// From etx of etx.v
@@ -157,7 +158,6 @@ module elink (/*AUTOARG*/
    defparam erx.ETYPE       = ETYPE;
    
    erx erx(.rx_active			(elink_active),
-	   .erx_nreset			(),
 	   /*AUTOINST*/
 	   // Outputs
 	   .rxo_wr_wait_p		(rxo_wr_wait_p),
@@ -172,6 +172,7 @@ module elink (/*AUTOARG*/
 	   .rxrr_packet			(rxrr_packet[PW-1:0]),
 	   .erx_cfg_wait		(erx_cfg_wait),
 	   .rx_lclk_div4		(rx_lclk_div4),
+	   .erx_nreset			(erx_nreset),
 	   .timeout			(timeout),
 	   .mailbox_full		(mailbox_full),
 	   .mailbox_not_empty		(mailbox_not_empty),
@@ -249,7 +250,7 @@ module elink (/*AUTOARG*/
    defparam ecfg_cdc.DW=104;
    defparam ecfg_cdc.DEPTH=32;
    
-   fifo_cdc ecfg_cdc (.nreset   	(etx_nreset),
+   fifo_cdc ecfg_cdc (.nreset   	(erx_nreset),
 		      // Outputs
 		      .wait_out		(etx_cfg_wait),	
 		      .access_out	(erx_cfg_access),	
