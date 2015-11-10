@@ -68,6 +68,7 @@ module emailbox (/*AUTOARG*/
    /*REGISTERS                  */
    /*****************************/
    reg [63:0]     mi_dout;
+   reg            mi_rdout;		  
 
    /*****************************/
    /*WIRES                      */
@@ -108,12 +109,23 @@ module emailbox (/*AUTOARG*/
    
    wire emailbox_read  = mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI); //fifo read
 
+   //#####################################################################
+   //# Pipeline stage (mailbox_fifo_data takes time..)
+   //#####################################################################
+   
    always @ (posedge rd_clk)
-     if(mi_rd)
+     if (!rd_nreset)
+       mi_rdout <= 1'b0;
+     else
+       mi_rdout <= mi_rd;
+  
+   always @ (posedge rd_clk)
+     if(mi_rdout)
        case(mi_addr[RFAW+1:2])	 
 	 `E_MAILBOXLO:   mi_dout[63:0] <= mailbox_fifo_data[63:0];	 
-	 `E_MAILBOXHI:   mi_dout[63:0] <= {mailbox_fifo_data[2*DW-1:DW],
-					   mailbox_fifo_data[2*DW-1:DW]};	 
+	 //`E_MAILBOXHI:   mi_dout[63:0] <= {mailbox_fifo_data[2*DW-1:DW],
+	 //				   mailbox_fifo_data[2*DW-1:DW]};
+	 `E_MAILBOXHI:   mi_dout[63:0] <= mailbox_fifo_data[63:0];
 	 default:        mi_dout[63:0] <= 64'd0;
        endcase // case (mi_addr[RFAW-1:2])
      else

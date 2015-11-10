@@ -65,6 +65,7 @@ module ecfg_if (/*AUTOARG*/
    wire 	 mi_en;
    
    //regs;
+   reg           mi_rdout;
    reg 		 access_out;   
    reg [31:0] 	 dstaddr_reg;
    reg [31:0] 	 srcaddr_reg;
@@ -141,7 +142,7 @@ module ecfg_if (/*AUTOARG*/
      
 
    //Access out packet  
-   assign access_forward = (mi_rx_en | mi_rd);
+   assign access_forward = (mi_rx_en | mi_rdout);
 
    always @ (posedge clk or negedge nreset)
      if(!nreset)
@@ -152,8 +153,11 @@ module ecfg_if (/*AUTOARG*/
    always @ (posedge clk)
      if(~wait_in)
        begin
-	  readback_reg      <= mi_rd;
-	  write_reg         <= (mi_rx_en & write) | mi_rd;	  
+	  //Reading registers takes time so delay mi_rd
+	  //TODO work out if this causes a problem with back to back read/write
+	  mi_rdout          <= mi_rd;
+	  readback_reg      <= mi_rdout;
+	  write_reg         <= (mi_rx_en & write) | mi_rdout;	  
 	  datamode_reg[1:0] <= datamode[1:0];
 	  ctrlmode_reg[3:0] <= ctrlmode[3:0];
 	  dstaddr_reg[31:0] <= mi_rx_en ? dstaddr[31:0] : srcaddr[31:0];
