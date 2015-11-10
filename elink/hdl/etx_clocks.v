@@ -74,7 +74,6 @@ module etx_clocks (/*AUTOARG*/
    wire       lclk_locked;   
    wire       tx_nreset;
    wire       mmcm_reset;
-   wire       tx_lclk;
    wire       tx_lclk_div4_mmcm;
    
    
@@ -207,9 +206,9 @@ module etx_clocks (/*AUTOARG*/
        (
         .CLKOUT0(cclk_mmcm),
 	.CLKOUT0B(),
-        .CLKOUT1(tx_lclk),
+        .CLKOUT1(tx_lclk_mmcm),
 	.CLKOUT1B(),
-        .CLKOUT2(tx_lclk90),
+        .CLKOUT2(tx_lclk90_mmcm),//goes directly to IO
 	.CLKOUT2B(),
         .CLKOUT3(tx_lclk_div4_mmcm),
 	.CLKOUT3B(),
@@ -242,9 +241,10 @@ module etx_clocks (/*AUTOARG*/
         
 
    //Tx clock buffers
-   BUFG i_lclk_bufg_i      (.I(tx_lclk),          .O(tx_lclk_io));   //300MHz
-   BUFG i_lclk_div4_bufg_i (.I(tx_lclk_div4_mmcm),.O(tx_lclk_div4)); //75MHz
-//   BUFG i_fb_buf           (.I(cclk_fb_out), .O(cclk_fb_in));      //FB
+   BUFG i_lclk_bufg      (.I(tx_lclk_mmcm),     .O(tx_lclk_io));   //300MHz
+   BUFG i_lclk_div4_bufg (.I(tx_lclk_div4_mmcm),.O(tx_lclk_div4)); //75MHz
+   BUFG i_lclk90_bufg    (.I(tx_lclk90_mmcm),   .O(tx_lclk90));    //300MHz 90deg clock
+//   BUFG i_fb_buf           (.I(cclk_fb_out), .O(cclk_fb_in));    //FB
 
    //###########################
    // CCLK

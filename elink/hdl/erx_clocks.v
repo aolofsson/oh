@@ -198,7 +198,6 @@ module erx_clocks (/*AUTOARG*/
    BUFG i_lclk_bufg      (.I(rx_lclk_pll),       .O(rx_lclk));       //300Mhz
    BUFG i_lclk_div4_bufg (.I(rx_lclk_div4_pll),  .O(rx_lclk_div4));  //75 MHz (300/4)
    BUFG i_idelay__bufg   (.I(idelay_ref_clk_pll),.O(idelay_ref_clk));//idelay ctrl clock
-//   BUFG i_lclk_fb_bufg   (.I(rx_lclk_fb_out),    .O(rx_lclk_fb_in)); //feedback buffer
 
    //two clock synchronizer for lock signal
    dsync dsync (.dout			(pll_locked_sync),

@@ -172,7 +172,7 @@ always @ (posedge tx_lclk_io)
    //# CLOCK DRIVERS
    //#############################  
    //BUFIO i_lclk    (.I(tx_lclk_io), .O(tx_lclk_ddr));
-   BUFIO i_lclk90  (.I(tx_lclk90), .O(tx_lclk90_ddr));
+   //BUFIO i_lclk90  (.I(tx_lclk90), .O(tx_lclk90_ddr));
 
    //#############################
    //# ODDR DRIVERS
@@ -211,7 +211,7 @@ always @ (posedge tx_lclk_io)
    ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
    oddr_lclk (
 	      .Q  (txo_lclk90),
-	      .C  (tx_lclk90_ddr),
+	      .C  (tx_lclk90),
 	      .CE (1'b1),
 	      .D1 (1'b1),
 	      .D2 (1'b0),
