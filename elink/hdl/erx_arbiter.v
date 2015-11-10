@@ -55,16 +55,24 @@ module erx_arbiter (/*AUTOARG*/
    output [PW-1:0] rxrr_packet;   
    input           rxrr_wait;
 
-   //wires
-   wire            emmu_write;
-   wire 	   emmu_read;
-   
-   wire [11:0] 	   myid;
-
    //####################################
    //Splicing pakets
    //####################################
-   assign 	 myid[11:0] = ID;   
+   wire 	   emmu_write;
+   wire [AW-1:0]   emmu_dstaddr;
+   wire 	   emmu_read;
+   
+   packet2emesh p2e (// Outputs
+		     .write_out		(emmu_write),
+		     .datamode_out	(),
+		     .ctrlmode_out	(),
+		     .data_out		(),
+		     .dstaddr_out	(emmu_dstaddr[AW-1:0]),
+		     .srcaddr_out	(),
+		     // Inputs
+		     .packet_in		(emmu_packet[PW-1:0]));
+   
+
    
    //####################################
    //Read response path (from IO or cfg)
@@ -81,9 +89,10 @@ module erx_arbiter (/*AUTOARG*/
    //####################################
    //Write Path (through MMU)
    //####################################
-   assign emmu_write          = emmu_packet[0];
 
-   assign rxwr_access         = emmu_access & emmu_write;
+   assign rxwr_access         = emmu_access    & 
+				emmu_write    &
+				~(emmu_dstaddr[31:20]==ID);
    
    assign rxwr_packet[PW-1:0] = emmu_packet[PW-1:0];
          
@@ -110,7 +119,7 @@ module erx_arbiter (/*AUTOARG*/
 endmodule // erx_arbiter
 
 // Local Variables:
-// verilog-library-directories:("." "../../common/hdl" "../../emmu/hdl")
+// verilog-library-directories:("." "../../common/hdl" "../../emesh/hdl")
 // End:
 
-//#############################################################################
+
