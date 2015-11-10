@@ -9,8 +9,8 @@ module ecfg_if (/*AUTOARG*/
    mi_mmu_en, mi_dma_en, mi_cfg_en, mi_we, mi_addr, mi_din,
    access_out, packet_out,
    // Inputs
-   clk, access_in, packet_in, mi_dout0, mi_dout1, mi_dout2, mi_dout3,
-   wait_in
+   clk, nreset, access_in, packet_in, mi_dout0, mi_dout1, mi_dout2,
+   mi_dout3, wait_in
    );
 
    parameter RX     = 0;     //0,1
@@ -22,7 +22,8 @@ module ecfg_if (/*AUTOARG*/
    /********************************/
    /*Clocks/reset                  */
    /********************************/  
-   input             clk;  
+   input             clk;
+   input 	     nreset;
 
    /********************************/
    /*Incoming Packet               */
@@ -73,6 +74,9 @@ module ecfg_if (/*AUTOARG*/
    reg 		 readback_reg;   
    reg [31:0] 	 data_reg;
    wire [31:0] 	 data_out;
+   wire 	 write;
+   wire 	 mi_match;
+   wire 	 mi_rx_en;
    
    //parameter didn't seem to work
    //this module used in rx and tx, parameter used to make address decode work out
@@ -139,8 +143,10 @@ module ecfg_if (/*AUTOARG*/
    //Access out packet  
    assign access_forward = (mi_rx_en | mi_rd);
 
-   always @ (posedge clk)
-     if(~wait_in)
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       access_out <= 1'b0;   
+     else if(~wait_in)
        access_out   <= access_forward;
    
    always @ (posedge clk)

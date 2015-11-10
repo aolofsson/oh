@@ -74,20 +74,17 @@ module erx_arbiter (/*AUTOARG*/
    
 
    
-   //####################################
-   //Read response path (from IO or cfg)
-   //####################################
+   //#######################################################
+   //Read response path (from IO or elink register readback)
+   //#######################################################
    
-   assign rxrr_access         = erx_rr_access   |
-			        ecfg_access;
+   assign rxrr_access         = erx_rr_access | ecfg_access;
    
    assign rxrr_packet[PW-1:0] = erx_rr_access ?  erx_packet[PW-1:0] :
 			 	                 ecfg_packet[PW-1:0];
-
-   assign ecfg_wait           = erx_rr_access;
-
+   
    //####################################
-   //Write Path (through MMU)
+   //Write Path (from IO through MMU)
    //####################################
 
    assign rxwr_access         = emmu_access    & 
@@ -96,9 +93,9 @@ module erx_arbiter (/*AUTOARG*/
    
    assign rxwr_packet[PW-1:0] = emmu_packet[PW-1:0];
          
-   //####################################
-   //Read Request Path 
-   //####################################
+   //########################################
+   //Read Request Path (from IO through MMU) 
+   //########################################
 
    assign emmu_read           = emmu_access & ~emmu_write;
    
@@ -114,7 +111,9 @@ module erx_arbiter (/*AUTOARG*/
    assign rx_rd_wait    = rxrd_wait;
    assign rx_wr_wait    = rxwr_wait | rxrr_wait;
    assign edma_wait     = rxrd_wait | emmu_read;
-   assign erx_cfg_wait  = rxwr_wait | rxrr_wait;   
+   assign ecfg_wait     = erx_rr_access |
+			  rxrr_wait     |
+			  rxwr_wait;
    
 endmodule // erx_arbiter
 
