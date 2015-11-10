@@ -79,7 +79,7 @@ module emailbox (/*AUTOARG*/
    wire 	    mailbox_pop;
    wire [31:0] 	    emesh_addr;
    wire [63:0] 	    emesh_din;
-   wire 	    emesh__write;
+   wire 	    emesh_write;
    
    /*****************************/
    /*WRITE TO FIFO              */

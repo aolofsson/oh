@@ -1,3 +1,4 @@
+/* verilator lint_off STMTDLY */
 module emesh_monitor(/*AUTOARG*/
    // Inputs
    clk, nreset, dut_access, dut_packet, wait_in, coreid
@@ -28,11 +29,9 @@ module emesh_monitor(/*AUTOARG*/
 	//TODO: Figure out these delays
 	#10
 	  //index should be core ID
-	    $sformat(tracefile,"%0s_%0h%s",NAME,coreid,".trace");
-	    ftrace  = $fopen({tracefile}, "w");  
+	  $sformat(tracefile,"%0s_%0h%s",NAME,coreid,".trace");
+	ftrace  = $fopen({tracefile}, "w");  
      end
-
-  
    
    always @ (posedge clk or negedge nreset)
      if(nreset & dut_access & ~wait_in)

@@ -64,6 +64,8 @@ module etx_io (/*AUTOARG*/
    wire 	  txo_frame;   
    wire 	  txo_lclk90;
    reg 		  tx_io_ack;
+   wire 	  tx_new_frame;
+   wire 	  tx_lclk90_ddr;
    
    //#############################
    //# Transmit state machine

@@ -1,4 +1,5 @@
 `timescale 1ns/10ps
+/* verilator lint_off WIDTH */
 module IDELAYE2 (/*AUTOARG*/
    // Outputs
    CNTVALUEOUT, DATAOUT,

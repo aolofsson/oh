@@ -157,7 +157,7 @@ module elink (/*AUTOARG*/
    defparam erx.ETYPE       = ETYPE;
    
    erx erx(.rx_active			(elink_active),
-	   .erx_nreset			(erx_nreset),
+	   .erx_nreset			(),
 	   /*AUTOINST*/
 	   // Outputs
 	   .rxo_wr_wait_p		(rxo_wr_wait_p),

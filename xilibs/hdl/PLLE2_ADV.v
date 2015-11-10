@@ -1,5 +1,6 @@
 `timescale 1ns/10ps
-
+/* verilator lint_off STMTDLY */
+/* verilator lint_off WIDTH */
 module PLLE2_ADV #(
  
   parameter BANDWIDTH = "OPTIMIZED",
@@ -143,6 +144,7 @@ module PLLE2_ADV #(
    endgenerate
 
    reg [5:0] CLKOUT_DIV_LOCK;   
+
    always @ (posedge (CLKIN1 & vco_clk) or negedge (CLKIN1&~vco_clk))
      begin
 	CLKOUT_DIV_LOCK[5:0] <= CLKOUT_DIV[5:0];	

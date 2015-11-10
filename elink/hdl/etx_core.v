@@ -136,6 +136,7 @@ module etx_core(/*AUTOARG*/
 		      .packet_out	(etx_cfg_packet[PW-1:0]), // Templated
 		      // Inputs
 		      .clk		(clk),
+		      .nreset		(nreset),
 		      .access_in	(etx_access),		 // Templated
 		      .packet_in	(etx_packet[PW-1:0]),	 // Templated
 		      .mi_dout0		({32'b0,mi_cfg_dout[31:0]}), // Templated

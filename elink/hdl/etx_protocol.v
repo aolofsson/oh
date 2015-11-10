@@ -130,7 +130,7 @@ module etx_protocol (/*AUTOARG*/
 		     .srcaddr_out	(),
 		     .packet_in		(tx_packet[PW-1:0]));//input
 
-   assign burst_addr[31:0]  = (last_dstaddr[31:0] + 4'd8);
+   assign burst_addr[31:0]  = (last_dstaddr[31:0] + 32'h8);
    
    assign burst_addr_match  = (burst_addr[31:0] == etx_dstaddr[31:0]);
 

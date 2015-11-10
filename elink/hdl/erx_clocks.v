@@ -72,6 +72,7 @@ module erx_clocks (/*AUTOARG*/
    reg [2:0]   reset_state;
    wire        pll_reset;
    reg 	       rx_nreset;
+   wire        pll_locked;
    
    //Reset 
    assign rx_nreset_in  =  sys_nreset & tx_active;   

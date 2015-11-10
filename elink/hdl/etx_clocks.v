@@ -73,6 +73,10 @@ module etx_clocks (/*AUTOARG*/
    reg 	      mmcm_locked_sync;
    wire       lclk_locked;   
    wire       tx_nreset;
+   wire       mmcm_reset;
+   wire       tx_lclk;
+   wire       tx_lclk_div4_mmcm;
+   
    
    //###########################
    // RESET STATE MACHINE
@@ -155,7 +159,7 @@ module etx_clocks (/*AUTOARG*/
    rsync rsync_io (// Outputs
 		   .nrst_out		(etx_io_nreset),
 		   // Inputs
-		   .clk			(tx_lclk),
+		   .clk			(tx_lclk_io),
 		   .nrst_in		(tx_nreset));
    
    rsync rsync_core (// Outputs
@@ -215,7 +219,8 @@ module etx_clocks (/*AUTOARG*/
 	.PWRDWN(1'b0),
         .RST(mmcm_reset),     //reset
         .CLKFBIN(cclk_fb),
-        .CLKFBOUT(cclk_fb),  //feedback clock     
+        .CLKFBOUT(cclk_fb),  //feedback clock
+	.CLKFBOUTB(),        //inverted output feedback clock     
         .CLKIN1(sys_clk),    //input clock
 	.CLKIN2(1'b0),
 	.CLKINSEL(1'b1),      

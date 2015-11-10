@@ -61,7 +61,8 @@ module elink_cfg (/*AUTOARG*/
    wire 	mi_en;
    wire [31:0] 	mi_addr;
    wire [31:0] 	mi_din;
-
+   wire 	mi_we;
+   
    packet2emesh pe2 (
 		     // Outputs
 		     .write_out		(mi_we),

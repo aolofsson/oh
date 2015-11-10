@@ -63,6 +63,8 @@ module etx(/*AUTOARG*/
    wire			tx_lclk90;		// From etx_clocks of etx_clocks.v
    wire			tx_lclk_io;		// From etx_clocks of etx_clocks.v
    // End of automatics
+
+
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			tx_access;		// From etx_core of etx_core.v
    wire			tx_burst;		// From etx_core of etx_core.v
@@ -78,12 +80,11 @@ module etx(/*AUTOARG*/
    wire			txwr_fifo_access;	// From etx_fifo of etx_fifo.v
    wire [PW-1:0]	txwr_fifo_packet;	// From etx_fifo of etx_fifo.v
    wire			txwr_fifo_wait;		// From etx_core of etx_core.v
-  
+   wire 		etx_io_nreset;
    /************************************************************/
    /*Clocks                                                    */
    /************************************************************/
-   etx_clocks etx_clocks (.etx_io_nreset	(etx_io_nreset),
-			  /*AUTOINST*/
+   etx_clocks etx_clocks (/*AUTOINST*/
 			  // Outputs
 			  .tx_lclk_io		(tx_lclk_io),
 			  .tx_lclk90		(tx_lclk90),
@@ -91,6 +92,7 @@ module etx(/*AUTOARG*/
 			  .cclk_p		(cclk_p),
 			  .cclk_n		(cclk_n),
 			  .etx_nreset		(etx_nreset),
+			  .etx_io_nreset	(etx_io_nreset),
 			  .chip_nreset		(chip_nreset),
 			  .tx_active		(tx_active),
 			  // Inputs
@@ -175,10 +177,14 @@ module etx(/*AUTOARG*/
    /***********************************************************/
    /*TRANSMIT I/O LOGIC                                       */
    /***********************************************************/
-
+   /*etx_io   AUTO_TEMPLATE (
+                           .nreset		(etx_io_nreset),
+    );
+    */
+   
    etx_io #(.ETYPE(ETYPE))
-   etx_io (.nreset		(etx_io_nreset),
-		  /*AUTOINST*/
+   etx_io (
+	   /*AUTOINST*/
 	   // Outputs
 	   .txo_lclk_p			(txo_lclk_p),
 	   .txo_lclk_n			(txo_lclk_n),
@@ -190,6 +196,7 @@ module etx(/*AUTOARG*/
 	   .tx_wr_wait			(tx_wr_wait),
 	   .tx_rd_wait			(tx_rd_wait),
 	   // Inputs
+	   .nreset			(etx_io_nreset),	 // Templated
 	   .tx_lclk_io			(tx_lclk_io),
 	   .tx_lclk90			(tx_lclk90),
 	   .txi_wr_wait_p		(txi_wr_wait_p),

@@ -1,13 +1,7 @@
-#Always search local
 -y .
-
-#DV
 -y ../../common/dv
 -y ../../emesh/dv
 -y ../../memory/dv
-
-#HDL
--y .
 -y ../../common/hdl
 -y ../../elink/hdl
 -y ../../edma/hdl
@@ -17,11 +11,7 @@
 -y ../../memory/hdl
 -y ../../xilibs/hdl
 -y ../../parallella/hdl
-
-#FPGA
 -y ../../memory/fpga
-
-#INCLUDE PATHS (FOR CONSTANTS)
 +incdir+../../emesh/hdl
 +incdir+../../elink/hdl
 +incdir+../../edma/hdl

@@ -67,7 +67,8 @@ module etx_cfg (/*AUTOARG*/
    wire 	   ecfg_tx_test_write;
    wire 	   ecfg_tx_addr_write;
    wire 	   ecfg_tx_data_write;
-   wire 	   loop_mode;
+   wire 	   ecfg_version_write;
+   wire 	   ecfg_tx_status_write;
    
    /*****************************/
    /*ADDRESS DECODE LOGIC       */

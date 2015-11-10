@@ -248,11 +248,11 @@ module dut(/*AUTOARG*/
                          );
   */
    //No read/write from elink1 (for now)
-   assign elink1_txrd_access = 1'b0;
-   assign elink1_txrd_packet = 'b0;
-   assign elink1_txwr_access = 1'b0;
-   assign elink1_txwr_packet = 'b0;
-   assign elink1_rxrr_wait   = 1'b0;
+   wire elink1_txrd_access = 1'b0;
+   wire elink1_txrd_packet = 'b0;
+   wire elink1_txwr_access = 1'b0;
+   wire elink1_txwr_packet = 'b0;
+   wire elink1_rxrr_wait   = 1'b0;
    
    defparam elink1.ID = 12'h820;   
    defparam elink1.ETYPE = 0; 
@@ -310,6 +310,8 @@ module dut(/*AUTOARG*/
 		 .rxrd_wait		(elink1_rxrd_wait));	 // Templated
    
 
+   wire emem_wait;
+   
    //"Arbitration" between read/write transaction   
    assign  emem_access           = elink1_rxwr_access | elink1_rxrd_access;      
 

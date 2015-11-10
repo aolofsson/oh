@@ -245,6 +245,7 @@ module erx_core (/*AUTOARG*/
 		      .packet_out	(ecfg_packet[PW-1:0]),	 // Templated
 		      // Inputs
 		      .clk		(clk),
+		      .nreset		(nreset),
 		      .access_in	(erx_cfg_access),	 // Templated
 		      .packet_in	(erx_cfg_packet[PW-1:0]), // Templated
 		      .mi_dout0		({32'b0,mi_cfg_dout[31:0]}), // Templated
