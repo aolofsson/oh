@@ -209,7 +209,7 @@ ETX_MMU        | -W     | 0xE0000 | TX MMU table
 ***************|******* |*********|********************
 ERX_CFG        | RW     | 0xF0300 | RX configuration
 ERX_STATUS     | R-     | 0xF0304 | RX status register
-ERX_GPIO       | R      | 0xF0308 | RX data in GPIO mode
+ERX_GPIO       | R-     | 0xF0308 | RX data in GPIO mode
 ERX_OFFSET     | RW     | 0xF030C | RX mem offset in remap mode
 E_MAILBOXLO    | RW     | 0xF0310 | RX mailbox (lower 32 bit)
 E_MAILBOXHI    | RW     | 0xF0314 | RX mailbox (upper 32 bits)
