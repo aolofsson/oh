@@ -55,15 +55,16 @@ module erx_io (/*AUTOARG*/
    wire          rxi_frame;
    wire 	 rxi_lclk;
    wire 	 access_wide;
-   reg 		 valid_packet;
-   wire [15:0]   rx_word;
-   reg [15:0] 	 rx_word_sync;
+   wire [15:0]   rx_word_iddr;
+   wire  	 rx_frame_iddr;
+ 
    
    //############
    //# REGS
    //############
-   wire  	 rx_frame;
-   reg [111:0]   rx_sample; 
+   reg 		 valid_packet;
+   reg [15:0] 	 rx_word_sync;
+   reg [111:0] 	 rx_sample; 
    reg [6:0] 	 rx_pointer;
    reg 		 access;  
    reg 		 burst;
@@ -75,7 +76,20 @@ module erx_io (/*AUTOARG*/
    wire [8:0] 	 rxi_delay_out;
    reg 		 burst_detect;
    
-    //#####################
+   
+   //#######################################
+   //#Register DDR inputs for better timing
+   //#######################################
+   reg 		 rx_frame;
+   reg [15:0] 	 rx_word;
+   
+   always @ (posedge rx_lclk)
+     begin
+	rx_frame      <= rx_frame_iddr;
+	rx_word[15:0] <= rx_word_iddr[15:0];	
+     end
+   
+   //#####################
    //#CREATE 112 BIT PACKET 
    //#####################
    
@@ -131,6 +145,7 @@ module erx_io (/*AUTOARG*/
    //###################################
 
    //(..and shuffle data for 104 bit packet)
+   //seems redundant??? for burst??
    always @ (posedge rx_lclk)
      if(access)   
        begin
@@ -170,19 +185,15 @@ module erx_io (/*AUTOARG*/
    
    //###################################
    //#SYNCHRONIZE TO SLOW CLK
-   //###################################
- 
+   //################################### 
    //stretch access pulse to 4 cycles
    //TODO: Multi cycle path for STA???   
-   pulse_stretcher #(.DW(3)) 
-   ps0 (
-	.out(access_wide),
-	.in(valid_packet),
-	.clk(rx_lclk));
+   pulse_stretcher #(.DW(3)) ps0 (.out(access_wide),
+				  .in(valid_packet),
+				  .clk(rx_lclk));
      
    always @ (posedge rx_lclk_div4)
      rx_access <= access_wide;
-
         
    always @ (posedge rx_lclk_div4)
      if(access_wide)
@@ -303,8 +314,8 @@ module erx_io (/*AUTOARG*/
      begin : gen_iddr           
 	IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"), .SRTYPE("SYNC"))
 	iddr_data (
-		   .Q1 (rx_word[i]),
-		   .Q2 (rx_word[i+8]),
+		   .Q1 (rx_word_iddr[i]),
+		   .Q2 (rx_word_iddr[i+8]),
 		   .C  (rx_lclk_iddr),//rx_lclk_iddr
 		   .CE (1'b1),
 		   .D  (rxi_delay_out[i]),
@@ -317,7 +328,7 @@ module erx_io (/*AUTOARG*/
    //FRAME
    IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"), .SRTYPE("SYNC"))
 	iddr_frame (
-		   .Q1 (rx_frame),
+		   .Q1 (rx_frame_iddr),
 		   .Q2 (),    
 		   .C  (rx_lclk_iddr),//rx_lclk_iddr
 		   .CE (1'b1),
