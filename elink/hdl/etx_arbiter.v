@@ -75,13 +75,13 @@ module etx_arbiter (/*AUTOARG*/
    wire 	   txrr_arb_wait;
    wire 	   txrd_arb_wait;
    wire 	   txwr_arb_wait;
-   wire [PW-1:0]   txrd_data;
-   wire [PW-1:0]   txwr_data;
+   wire [PW-1:0]   txrd_splice_packet;
+   wire [PW-1:0]   txwr_splice_packet;
    wire [PW-1:0]   etx_mux;
    wire            write_in;
 
    //##########################################################################
-   //# Insert special control mode in packet
+   //# Insert special control mode in packet (UGLY)
    //##########################################################################
    assign txrd_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
 				                   txrd_packet[6:3];
@@ -89,18 +89,19 @@ module etx_arbiter (/*AUTOARG*/
    assign txwr_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
 				                   txwr_packet[6:3];
 
-   assign txrd_data[PW-1:0] = {txrd_packet[PW-1:8],   
-                               txrd_ctrlmode[3:0], 
-			       txrd_packet[3:0]};
+   assign txrd_splice_packet[PW-1:0] = {txrd_packet[PW-1:8],   
+					1'b0,
+					txrd_ctrlmode[3:0], 
+					txrd_packet[2:0]};
 
-   assign txwr_data[PW-1:0] = {txwr_packet[PW-1:8],   
-                               txwr_ctrlmode[3:0], 
-			       txwr_packet[3:0]};
+   assign txwr_splice_packet[PW-1:0] = {txwr_packet[PW-1:8],   
+					1'b0,
+					txwr_ctrlmode[3:0], 
+					txwr_packet[2:0]};
  
    //##########################################################################
    //# Arbiter
    //##########################################################################
-  
    
    arbiter_priority #(.ARW(3)) arbiter (.grant({txrr_grant,	
 						txrd_grant,
@@ -116,8 +117,8 @@ module etx_arbiter (/*AUTOARG*/
 						  })	
 				  );
    //Priority Mux
-   assign etx_mux[PW-1:0] =({(PW){txwr_grant}} & txwr_data[PW-1:0]) |
-			   ({(PW){txrd_grant}} & txrd_data[PW-1:0]) |
+   assign etx_mux[PW-1:0] =({(PW){txwr_grant}} & txwr_splice_packet[PW-1:0]) |
+			   ({(PW){txrd_grant}} & txrd_splice_packet[PW-1:0]) |
 			   ({(PW){txrr_grant}} & txrr_packet[PW-1:0]);
  
    //######################################################################
