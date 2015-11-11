@@ -7,8 +7,9 @@
 #include "elink_regs.h"
 
 #define EPIPHANY_BASE  0x80800000
-#define ELINK_BASE     0x81000000
-#define ELINK_VERSION  0x0
+#define ELINK_BASE     0x81000000 //Not used for now
+#define ELINK_VERSION  0x1        //Set to 0 for 2015.1 version 
+                                  //Set to 1 for 2015.12 version
 
 #define COREADDR(a,b)  ((a << 26) | ( b << 20))
 
@@ -77,7 +78,8 @@ int e_debug_read(unsigned addr, unsigned *data) {
   char *ptr;
 
   //Debug
-  //printf("read addr=%08x data=%08x\n", addr, *data);
+  printf("read addr=%08x data=%08x\n", addr, *data);
+  fflush(stdout);
 
   //Map device into memory
   ret = e_debug_map(addr, (void **)&ptr, &offset);
@@ -99,8 +101,8 @@ int e_debug_write(unsigned addr, unsigned data) {
   char *ptr;
 
   //Debug
-  //printf("write addr=%08x data=%08x\n", addr, data);
-
+  printf("write addr=%08x data=%08x\n", addr, data);
+  fflush(stdout);
   //Map device into memory
   ret = e_debug_map(addr, (void **)&ptr, &offset);
 
@@ -228,16 +230,8 @@ void e_debug_init(int version){
     e_debug_write(E_SYS_CFGTX, data);//set ctrlmode back to normal
     usleep(1000);
   }
-  else{
-    //Reduce Epiphany Elink TX to half speed
-    data = 0x51;
-    e_debug_write(ELINK_TXCFG, data);
-    usleep(1000);
-    data = 0x1;//divide east lclk by 4
-    e_debug_write((EPIPHANY_BASE + COREADDR(2,3) + E_REG_LINKMODE), data);
-    usleep(1000);
-    data = 0x1;
-    e_debug_write(E_SYS_CFGTX, data);
-    usleep(1000);
+  else{   
+    //Do nothing! Access should be raw, no side effects!
+    //Keep the old one there for now, too long a recipe
   }
 }
