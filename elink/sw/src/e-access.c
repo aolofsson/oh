@@ -4,19 +4,28 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include "elink_regs.h"
+
+#define EPIPHANY_BASE  0x80800000
+#define ELINK_BASE     0x81000000
+#define ELINK_VERSION  0x0
+
+#define COREADDR(a,b)  ((a << 26) | ( b << 20))
 
 //TODO: Remove globals?
 unsigned page_size = 0;
 int      mem_fd = -1;
 
+//Declarations
 void usage();
 void e_debug_unmap(void *ptr);
 int e_debug_read(unsigned addr, unsigned *data);
 int e_debug_write(unsigned addr, unsigned data);
 int e_debug_map(unsigned addr, void **ptr, unsigned *offset);
+void e_debug_init(int version);
 
 //########################################################################
-//# "Epiphany Access Function"
+//# "Epiphany Access Function (e-access)"
 //# Decodes a 104 bit packet and sends transaction to elink
 //#########################################################################
 
@@ -35,12 +44,17 @@ int main(int argc, char *argv[]){
     write    = command & 0x01;
     ctrlmode = (command & 0xF8)>>3;//TODO:implement
     datamode = (command & 0x06)>>1;//TODO:implement later
+    
+    //Init
+    e_debug_init(ELINK_VERSION);
+
+    //Access
     if(write){
 	e_debug_write(dstaddr,data);
     }
     else{
 	e_debug_read(dstaddr, &rdata);
-	printf("%08x\n", rdata);
+	printf("[%08x]=0x%08x\n",dstaddr,rdata);
     }
 }
 
@@ -49,7 +63,7 @@ int main(int argc, char *argv[]){
 //############################################
 void usage(){
     printf("Usage: e-access <packet>\n");
-    printf("Example: 00000000_76543210_82000000_05\n");
+    printf("Ex: 00000000_76543210_80800000_05\n");
     return;
 }
 
@@ -62,10 +76,13 @@ int e_debug_read(unsigned addr, unsigned *data) {
   unsigned offset;
   char *ptr;
 
+  //Debug
+  //printf("read addr=%08x data=%08x\n", addr, *data);
+
   //Map device into memory
   ret = e_debug_map(addr, (void **)&ptr, &offset);
 
-  //Read value from the device register
+  //Read value from the device register  
   *data = *((unsigned *)(ptr + offset));
 
   //Unmap device memory
@@ -80,6 +97,9 @@ int e_debug_write(unsigned addr, unsigned data) {
   int  ret;
   unsigned offset;
   char *ptr;
+
+  //Debug
+  //printf("write addr=%08x data=%08x\n", addr, data);
 
   //Map device into memory
   ret = e_debug_map(addr, (void **)&ptr, &offset);
@@ -141,3 +161,83 @@ void e_debug_unmap(void *ptr) {
     }
 }
 
+//#########################################
+//# Initalize elink
+//# Type:
+//# 0 = jan 2015 release ("Fred's")
+//# 1 = nov 2015 version ("Andreas'")
+//#########################################
+void e_debug_init(int version){
+
+  unsigned int data;  
+
+  if(version==0){
+    //Assert Reset
+    data = 0x1; 
+    e_debug_write(E_SYS_RESET, data);
+    usleep(1000);
+
+    //Disable TX
+    data = 0x0; 
+    e_debug_write(E_SYS_CFGTX, data);
+    usleep(1000);
+
+    //Disable RX
+    data = 0x0; 
+    e_debug_write(E_SYS_CFGRX, data);
+    usleep(1000);
+
+    //Enable CCLK at full speed
+    data = 0x7; 
+    e_debug_write(E_SYS_CFGCLK, data);
+    usleep(1000);
+
+    //Stop Clock
+    data = 0x0; 
+    e_debug_write(E_SYS_CFGCLK, data);
+    usleep(1000);
+
+    //Deassert Reset
+    data = 0x0; 
+    e_debug_write(E_SYS_RESET, data);
+    usleep(1000);
+
+    //Start Clock
+    data = 0x7; 
+    e_debug_write(E_SYS_CFGCLK, data);
+    usleep(1000);
+    
+    //Start TX LCLK and enable link
+    data = 0x1;
+    e_debug_write(E_SYS_CFGTX, data);
+    usleep(1000);
+    
+    //Enable RX
+    data = 0x1;
+    e_debug_write(E_SYS_CFGRX, data);
+    usleep(1000);
+    
+    //Reduce Epiphany Elink TX to half speed
+    data = 0x51;
+    e_debug_write(E_SYS_CFGTX, data);//set ctrlmode
+    usleep(1000);
+    data = 0x1;
+    e_debug_write((EPIPHANY_BASE + COREADDR(2,3) + E_REG_LINKMODE), data);//set half speed
+    usleep(1000);
+    data = 0x1;
+    e_debug_write(E_SYS_CFGTX, data);//set ctrlmode back to normal
+    usleep(1000);
+  }
+  else{
+    //Reduce Epiphany Elink TX to half speed
+    data = 0x51;
+    e_debug_write(ELINK_TXCFG, data);
+    usleep(1000);
+    data = 0x1;//divide east lclk by 4
+    e_debug_write((EPIPHANY_BASE + COREADDR(2,3) + E_REG_LINKMODE), data);
+    usleep(1000);
+    data = 0x1;
+    e_debug_write(E_SYS_CFGTX, data);
+    usleep(1000);
+  }
+}
