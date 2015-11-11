@@ -1,0 +1,8 @@
+00000000_0300f004_820f0300_05_0010 //Configure remap on elink1 RX
+00000000_0300f004_810f0300_05_0010 //Configure remap on elink0 RX
+00000000_87654321_8e000100_05_0010 //Write to remote memory
+00000000_fedcba98_8e000200_05_0010 //Write to remote memory
+00000100_DEADBEEF_8e000100_04_0010 //Read from remote memory
+00000200_DEADBEEF_8e000200_04_0010 //Read from remote memory
+
+
