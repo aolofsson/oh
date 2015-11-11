@@ -311,10 +311,10 @@ module emaxi(/*autoarg*/
 
    always @*
      case( rxwr_datamode[1:0] )        
-       2'd0:    wdata_aligned[63:0] = { 8{rxwr_data[7:0]}};
-       2'd1:    wdata_aligned[63:0] = { 4{rxwr_data[15:0]}};
-       2'd2:    wdata_aligned[63:0] = { 2{rxwr_data[31:0]}};
-       default: wdata_aligned[63:0] = { rxwr_srcaddr[31:0], rxwr_data[31:0]};
+       2'b00:    wdata_aligned[63:0] = { 8{rxwr_data[7:0]}};
+       2'b01:    wdata_aligned[63:0] = { 4{rxwr_data[15:0]}};
+       2'b10:    wdata_aligned[63:0] = { 2{rxwr_data[31:0]}};
+       default: wdata_aligned[63:0]  = { rxwr_srcaddr[31:0], rxwr_data[31:0]};
      endcase
 
    always @*
@@ -482,21 +482,21 @@ module emaxi(/*autoarg*/
 	  case(readinfo_out[1:0])//datamode
             2'd0:  // byte read
               case(readinfo_out[8:6])
-		3'd0:     txrr_data[7:0] <= m_axi_rdata_reg[7:0];
-		3'd1:     txrr_data[7:0] <= m_axi_rdata_reg[15:8];
-		3'd2:     txrr_data[7:0] <= m_axi_rdata_reg[23:16];
-		3'd3:     txrr_data[7:0] <= m_axi_rdata_reg[31:24];
-		3'd4:     txrr_data[7:0] <= m_axi_rdata_reg[39:32];
-		3'd5:     txrr_data[7:0] <= m_axi_rdata_reg[47:40];
-		3'd6:     txrr_data[7:0] <= m_axi_rdata_reg[55:48];
-		default:  txrr_data[7:0] <= m_axi_rdata_reg[63:56];
+		3'd0:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[7:0]};
+		3'd1:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[15:8]};
+		3'd2:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[23:16]};
+		3'd3:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[31:24]};
+		3'd4:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[39:32]};
+		3'd5:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[47:40]};
+		3'd6:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[55:48]};
+		default:  txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[63:56]};
               endcase	    
             2'd1:  // 16b hword
               case( readinfo_out[8:7] )
-		2'd0:    txrr_data[15:0] <= m_axi_rdata_reg[15:0];
-		2'd1:    txrr_data[15:0] <= m_axi_rdata_reg[31:16];
-		2'd2:    txrr_data[15:0] <= m_axi_rdata_reg[47:32];
-		default: txrr_data[15:0] <= m_axi_rdata_reg[63:48];
+		2'd0:    txrr_data[31:0] <= {16'b0,m_axi_rdata_reg[15:0]};
+		2'd1:    txrr_data[31:0] <= {16'b0,m_axi_rdata_reg[31:16]};
+		2'd2:    txrr_data[31:0] <= {16'b0,m_axi_rdata_reg[47:32]};
+		default: txrr_data[31:0] <= {16'b0,m_axi_rdata_reg[63:48]};
               endcase
             2'd2:  // 32b word
               if( readinfo_out[8] )
