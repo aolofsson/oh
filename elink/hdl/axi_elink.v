@@ -221,6 +221,7 @@ module axi_elink(/*AUTOARG*/
     
    defparam elink.IOSTD_ELINK = IOSTD_ELINK;
    defparam elink.ETYPE       = ETYPE;
+   defparam elink.ID          = ID;
 
    elink elink(
 	       /*AUTOINST*/
@@ -281,6 +282,7 @@ module axi_elink(/*AUTOARG*/
    //########################################################
    
    defparam esaxi.S_IDW=S_IDW;
+   defparam esaxi.ID=ID;
    esaxi esaxi (.s_axi_aclk		(sys_clk),
 		/*AUTOINST*/
 		// Outputs

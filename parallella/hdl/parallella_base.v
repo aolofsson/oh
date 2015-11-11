@@ -190,6 +190,7 @@ module parallella_base(/*AUTOARG*/
                         .s_axi_\(.*\) (s_axi_\1[]),
                        );
    */
+   defparam axi_elink.ID=ID;   
    axi_elink axe_elink (.mailbox_full	(),
 			/*AUTOINST*/
 			// Outputs
