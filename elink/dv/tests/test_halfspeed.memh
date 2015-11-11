@@ -1,0 +1,3 @@
+00000000_00000151_810f0210_05_0000 // set ctrlmode to "FORCE EAST"
+00000000_00000001_88bf0300_05_0000 // set east link to half speed
+00000000_00000000_810f0210_05_0000 // clear ctrlmode
