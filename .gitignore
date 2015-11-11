@@ -4,6 +4,7 @@
 *.o
 *.e
 *.d
+bin/
 ######################
 # Emacs/vim/gedit backup files
 *~
@@ -40,7 +41,6 @@ xgui/
 *_stub.v
 *_funcsim.v
 *_changelog.txt
-src/
 *.vhdl
 *.dcp
 *.veo
