@@ -191,7 +191,7 @@ module parallella_base(/*AUTOARG*/
                        );
    */
    defparam axi_elink.ID=ID;   
-   axi_elink axe_elink (.mailbox_full	(),
+   axi_elink axi_elink (.mailbox_full	(),
 			/*AUTOINST*/
 			// Outputs
 			.elink_active	(elink_active),
