@@ -12,8 +12,7 @@ module erx_core (/*AUTOARG*/
    parameter DW      = 32;
    parameter PW      = 104;
    parameter RFAW    = 6;
-   parameter ID      = 12'h800;
-
+   parameter ID      = 12'h999;
 
    //clock and reset
    input		nreset;  //synced to clk
@@ -233,6 +232,8 @@ module erx_core (/*AUTOARG*/
     */
    
    defparam erx_cfgif.RX=1;
+   defparam erx_cfgif.ID=ID;
+   
    ecfg_if erx_cfgif (/*AUTOINST*/
 		      // Outputs
 		      .mi_mmu_en	(mi_mmu_en),

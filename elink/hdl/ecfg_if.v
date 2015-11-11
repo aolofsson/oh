@@ -17,7 +17,7 @@ module ecfg_if (/*AUTOARG*/
    parameter PW     = 104;
    parameter AW     = 32;
    parameter DW     = 32;
-   parameter ID     = 12'h810;
+   parameter ID     = 12'h999;
    
    /********************************/
    /*Clocks/reset                  */
@@ -82,7 +82,8 @@ module ecfg_if (/*AUTOARG*/
    //this module used in rx and tx, parameter used to make address decode work out
    ////rxsel=1 for RX, rxsel=0 for TX   
    assign 	 rxsel = RX;   
-
+   wire [11:0]   myid = ID;
+   
    //splicing packet
    packet2emesh p2e (
 		     .write_out	   (write),

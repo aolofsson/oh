@@ -11,7 +11,7 @@ module etx_core(/*AUTOARG*/
    parameter DW      = 32;
    parameter PW      = 104;
    parameter RFAW    = 6;
-   parameter ID      = 12'h000;
+   parameter ID      = 12'h999;
    
    //Clocks,reset,config
    input           nreset;
@@ -121,7 +121,8 @@ module etx_core(/*AUTOARG*/
     );
         */
    
-   defparam etx_cfgif.RX =0;   
+   defparam etx_cfgif.RX = 0;
+   defparam etx_cfgif.ID = ID;   
    ecfg_if etx_cfgif (.mi_dout3		(64'b0),
 		      .mi_dout1		(64'b0), 
 		      .mi_dma_en	(),
@@ -131,7 +132,7 @@ module etx_core(/*AUTOARG*/
 		      .mi_cfg_en	(mi_cfg_en),
 		      .mi_we		(mi_we),
 		      .mi_addr		(mi_addr[14:0]),
-		      .mi_din		(mi_din[63:0]),
+		      .mi_din		(mi_din[63:0]), 
 		      .access_out	(etx_cfg_access),	 // Templated
 		      .packet_out	(etx_cfg_packet[PW-1:0]), // Templated
 		      // Inputs

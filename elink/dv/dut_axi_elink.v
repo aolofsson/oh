@@ -324,6 +324,7 @@ module dut(/*AUTOARG*/
    axi_elink elink0 (.s_axi_aresetn	(nreset),
 		     .sys_nreset        (nreset), 
 		     .elink_active	(dut_active),
+		     .s_axi_wstrb	(m_axi_wstrb[3:0] | m_axi_wstrb[7:4]),//64b-->32bi interface HACK 
 		     .m_axi_aresetn	(1'b1),
 		     .m_axi_awready	(1'b0),
 		     .m_axi_wready	(1'b0),
@@ -335,7 +336,7 @@ module dut(/*AUTOARG*/
 		     .m_axi_bresp	(2'b0),
 		     .m_axi_rid		(6'b0),
 		     .m_axi_rdata	(64'b0),
-		     .m_axi_rresp	(2'b0),		    
+		     .m_axi_rresp	(2'b0),	 		     
 		     /*AUTOINST*/
 		     // Outputs
 		     .rxo_wr_wait_p	(elink0_rxo_wr_wait_p),	 // Templated
@@ -430,13 +431,31 @@ module dut(/*AUTOARG*/
 		     .s_axi_wid		(m_axi_wid[S_IDW-1:0]),	 // Templated
 		     .s_axi_wdata	(m_axi_wdata[31:0]),	 // Templated
 		     .s_axi_wlast	(m_axi_wlast),		 // Templated
-		     .s_axi_wstrb	(m_axi_wstrb[3:0]),	 // Templated
 		     .s_axi_wvalid	(m_axi_wvalid));		 // Templated
 
 
    //######################################################################
    //2ND ELINK (WITH EPIPHANY MEMORY)
    //######################################################################
+   //Fifo hack to avoid waits...
+   wire [PW-1:0] 	elink1_txwr_packet;
+   
+   fifo_cdc 
+     #(.DW(104),
+     .DEPTH(32))
+   fifo_cdc (
+		      // Outputs
+		      .wait_out		(),
+		      .access_out	(elink1_txwr_access),
+		      .packet_out	(elink1_txwr_packet[PW-1:0]),
+		      // Inputs
+		      .nreset		(nreset),
+		      .clk_in		(clk),
+		      .access_in	(elink0_txwr_access & (elink0_txwr_packet[39:24]==16'h820f)),
+		      .packet_in	(elink0_txwr_packet[PW-1:0]),
+		      .clk_out		(clk),
+		      .wait_in		(elink1_txwr_wait));
+
    /*elink AUTO_TEMPLATE (
                           // Outputs                        
                           .sys_clk            (clk),
@@ -445,25 +464,24 @@ module dut(/*AUTOARG*/
                           .txi_\(.*\)         (elink0_rxo_\1[]),
                           .\(.*\)             (@"(substring vl-cell-name  0 6)"_\1[]),
 
-                         );
+                         )
   */
    //No read/write from elink1 (for now)
    assign elink1_txrd_access = 1'b0;
-   assign elink1_txrd_packet = 'b0;
-   assign elink1_txwr_access = 1'b0;
-   assign elink1_txwr_packet = 'b0;
+   assign elink1_txrd_packet = 'b0;   
    assign elink1_rxrr_wait   = 1'b0;
    
    defparam elink1.ID = 12'h820;   
    defparam elink1.ETYPE = 0; 
 
-   elink elink1 (.rxrr_wait		(1'b0),
-		 .txwr_access		(1'b0),
-		 .txwr_packet		({(PW){1'b0}}),
+   elink elink1 (//Hack for configuring 2nd link 
+		 .txwr_access		(elink1_txwr_access),
+		 .txwr_packet		(elink1_txwr_packet[PW-1:0]),		 	 
 		 .txrd_access		(1'b0),
 		 .txrd_packet		({(PW){1'b0}}),
 		 .txrr_access		(elink1_txrr_access),
-		 .txrr_packet		(elink1_txrr_packet[PW-1:0]),		 
+		 .txrr_packet		(elink1_txrr_packet[PW-1:0]),
+		 .rxrr_wait		(1'b0),			 
 		 /*AUTOINST*/
 		 // Outputs
 		 .elink_active		(elink1_elink_active),	 // Templated
@@ -544,7 +562,7 @@ module dut(/*AUTOARG*/
         
 endmodule // dv_elink
 // Local Variables:
-// verilog-library-directories:("." "../hdl" "../../emesh/dv" "../../emesh/hdl")
+// verilog-library-directories:("." "../hdl" "../../emesh/dv" "../../emesh/hdl" "../../memory/hdl")
 // End:
 
 

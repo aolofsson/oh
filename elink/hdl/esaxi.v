@@ -16,7 +16,7 @@ module esaxi (/*autoarg*/
    s_axi_wstrb, s_axi_wvalid
    );
    
-   parameter [11:0]  ID                  = 12'h810;
+   parameter         ID                  = 12'h999;   
    parameter         S_IDW               = 12;
    parameter         PW                  = 104;
    parameter [15:0]  RETURN_ADDR         = {ID,`EGROUP_RR};
@@ -215,8 +215,8 @@ module esaxi (/*autoarg*/
       else 
 	begin
            // we're always ready for an address cycle if we're not doing something else
-           //  note: might make this faster by going ready on last beat instead of after,
-           //  but if we want the very best each channel should be fifo'd.
+           // note: might make this faster by going ready on last beat instead of after,
+           // but if we want the very best each channel should be fifo'd.
            if( ~s_axi_awready & ~write_active & ~b_wait )
              s_axi_awready <= 1'b1;
            else if( s_axi_awvalid )
@@ -230,13 +230,11 @@ module esaxi (/*autoarg*/
              write_active <= 1'b0;         
 	end // else: !if(~s_axi_aresetn)
      end // always @ (posedge s_axi_aclk )
-   
-   // capture address & other aw info, update address during cycle
-   
+        
    always @( posedge s_axi_aclk ) 
      if (~s_axi_aresetn)  
        begin
-          axi_bid[S_IDW-1:0]   <= 'd0;  // capture for write response
+          axi_bid[S_IDW-1:0] <= 'd0;  // capture for write response
           axi_awaddr[31:0]   <= 32'd0;
           axi_awsize[2:0]    <= 3'd0;
           axi_awburst[1:0]   <= 2'd0;         
@@ -246,19 +244,17 @@ module esaxi (/*autoarg*/
           if( s_axi_awready & s_axi_awvalid ) 
 	    begin	     
 	       axi_bid[S_IDW-1:0] <= s_axi_awid[S_IDW-1:0];
-               axi_awaddr[31:0] <= s_axi_awaddr[31:0];
-               axi_awsize[2:0]  <= s_axi_awsize[2:0];  // 0=byte, 1=16b, 2=32b
-               axi_awburst[1:0] <= s_axi_awburst[1:0]; // type, 0=fixed, 1=incr, 2=wrap
+               axi_awaddr[31:0]   <= s_axi_awaddr[31:0];
+               axi_awsize[2:0]    <= s_axi_awsize[2:0];  // 0=byte, 1=16b, 2=32b
+               axi_awburst[1:0]   <= s_axi_awburst[1:0]; // type, 0=fixed, 1=incr, 2=wrap
             end 
 	  else if( s_axi_wvalid & s_axi_wready ) 
             if( axi_awburst == 2'b01 ) 
 	      begin //incremental burst
-		 // the write address for all the beats in the transaction are increments by the data width.
-		 // note: this should be based on awsize instead to support narrow bursts, i think.
-		 axi_awaddr[31:2] <= axi_awaddr[31:2] + 30'd1;
-		 //awaddr alignedto data width
-		 axi_awaddr[1:0]  <= 2'b0;   		  
-	      end  // both fixed & wrapping types are treated as fixed, no update.
+		 //TODOL FIX This, this is not right (double bug canceling!!)
+		 axi_awaddr[31:2] <= axi_awaddr[31:2] + 32'd1;
+		 axi_awaddr[1:0]  <= 2'b0;		 
+	      end 
        end // else: !if(~s_axi_aresetn)
    
    //###################################################
@@ -355,12 +351,8 @@ module esaxi (/*autoarg*/
 		s_axi_rlast <= 1'b1;              
               if( s_axi_arburst == 2'b01) 
 		begin //incremental burst
-		   // the read address for all the beats in the transaction are increments by awsize
-		   // note: this should be based on awsize instead to support narrow bursts, i think?
-		   axi_araddr[31:2] <= axi_araddr[31:2] + 1;//TODO: doesn;t seem right...
-		   //araddr aligned to 4 byte boundary
+		   axi_araddr[31:2] <= axi_araddr[31:2] + 1;
 		   axi_araddr[1:0]  <= 2'b0;   
-		   //for awsize = 4 bytes (010)
 		end
            end // if ( s_axi_rvalid & s_axi_rready)
 	end // else: !if( s_axi_aresetn == 1'b0 )
@@ -386,7 +378,7 @@ module esaxi (/*autoarg*/
           txwr_access               <= pre_wr_en;
 	  txwr_datamode_reg[1:0]    <= axi_awsize[1:0];	
           txwr_dstaddr_reg[31:2]    <= axi_awaddr[31:2]; //set lsbs of address based on write strobes	 
-	  if(s_axi_wstrb[0] | (axi_awsize[1:0]==2'b10))
+	  if(s_axi_wstrb[0])//| (axi_awsize[1:0]==2'b10)32-bits
 	    begin
 	       txwr_data_reg[31:0]   <= s_axi_wdata[31:0];
 	       txwr_dstaddr_reg[1:0] <= 2'd0;
