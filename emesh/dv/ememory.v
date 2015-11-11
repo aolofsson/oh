@@ -52,12 +52,13 @@ module ememory(/*AUTOARG*/
    wire [AW-1:0]    dstaddr_in;
    wire [DW-1:0]    data_in;   
    wire [AW-1:0]    srcaddr_in;   
-
+   wire [DW-1:0]    data_align;
+   
    
    packet2emesh #(.PW(PW))
    p2e (
 	.write_out	(write_in),
-	.datamode_out	(datamode_in[1:0]),
+	.datamode_out	(datamode_in[1:0] ),
 	.ctrlmode_out	(ctrlmode_in[3:0]),
 	.dstaddr_out	(dstaddr_in[AW-1:0]),
 	.data_out	(data_in[DW-1:0]),
@@ -77,9 +78,14 @@ module ememory(/*AUTOARG*/
    //Address-in (shifted by three bits, 64 bit wide memory)
    assign addr[MAW-1:0] = dstaddr_in[MAW+2:3];     
 
+   //Shift up
+   assign  data_align[DW-1:0] = (datamode_in[1:0]==2'b00) ? {(4){data_in[7:0]}}  :
+				(datamode_in[1:0]==2'b01) ? {(2){data_in[15:0]}} :						
+ 			                                    data_in[31:0];
+   
    //Data-in (hardoded width)
-   assign din[63:0] =(datamode_in[1:0]==2'b11) ? {srcaddr_in[31:0],data_in[31:0]}:
-		                                 {data_in[31:0],data_in[31:0]};
+   assign din[63:0] =(datamode_in[1:0]==2'b11) ? {srcaddr_in[31:0],data_align[31:0]}:
+		                                 {data_align[31:0],data_align[31:0]};
    //Write mask
    always@*
      casez({write_in, datamode_in[1:0],dstaddr_in[2:0]})
@@ -163,12 +169,12 @@ module ememory(/*AUTOARG*/
        )
    emesh_monitor (.dut_access	(access_in & write_in),
 		  .dut_packet	(packet_in[PW-1:0]),
-		  .wait_in		(1'b0),
+		  .wait_in	(1'b0),
 		  /*AUTOINST*/
 		  // Inputs
-		  .clk			(clk),
-		  .nreset		(nreset),
-		  .coreid		(coreid[IDW-1:0]));
+		  .clk		(clk),
+		  .nreset	(nreset),
+		  .coreid	(coreid[IDW-1:0]));
    
 endmodule // emesh_memory
 // Local Variables:
