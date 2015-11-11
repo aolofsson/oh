@@ -2,7 +2,6 @@
 #define ELINK_REGS_H
 
 // New Epiphany system registers
-//TODO: This should be dynamic???
 typedef enum {
 	ELINK_BASE       = 0x81000000,
 	ELINK_RESET      = ELINK_BASE + 0xF0200,
@@ -25,5 +24,27 @@ typedef enum {
         ELINK_RXDATA     = ELINK_BASE + 0xF0320,
         ELINK_RXMMU      = ELINK_BASE + 0xE8000,
 } elink_regs_id_t;
+
+typedef enum {
+	E_REG_LINKMODE   = 0xF0300,
+	E_REG_TXCFG      = 0xF0304,
+	E_REG_RXCFG      = 0xF0308,
+	E_REG_GPIOCFG    = 0xF030C,
+} epiphany_regs_id_t;
+
+//FOR LEGACY ONLY!
+typedef enum {
+        E_SYS_BASE       = 0x70000000,
+	E_SYS_RESET	 = E_SYS_BASE + 0x0040,
+	E_SYS_CFGTX	 = E_SYS_BASE + 0x0044,
+	E_SYS_CFGRX	 = E_SYS_BASE + 0x0048,
+	E_SYS_CFGCLK	 = E_SYS_BASE + 0x004c,
+	E_SYS_COREID	 = E_SYS_BASE + 0x0050,
+	E_SYS_VERSION	 = E_SYS_BASE + 0x0054,
+	E_SYS_GPIOIN	 = E_SYS_BASE + 0x0058,
+	E_SYS_GPIOOUT	 = E_SYS_BASE + 0x005c
+} e_sys_reg_id_t;
+
+
 
 #endif
