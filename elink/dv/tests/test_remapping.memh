@@ -4,5 +4,3 @@
 00000000_fedcba98_8e000200_05_0010 //Write to remote memory
 00000100_DEADBEEF_8e000100_04_0010 //Read from remote memory
 00000200_DEADBEEF_8e000200_04_0010 //Read from remote memory
-
-
