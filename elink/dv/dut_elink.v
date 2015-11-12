@@ -313,14 +313,16 @@ module dut(/*AUTOARG*/
    wire emem_wait;
    
    //"Arbitration" between read/write transaction   
-   assign  emem_access           = elink1_rxwr_access | elink1_rxrd_access;      
+   assign  emem_access           = ~elink1_rxwr_wait & (elink1_rxwr_access | elink1_rxrd_access);      
 
    assign  emem_packet[PW-1:0]   = elink1_rxwr_access ? elink1_rxwr_packet[PW-1:0]:
                                                         elink1_rxrd_packet[PW-1:0];
 
-   assign elink1_rxrd_wait       = emem_wait | elink1_rxwr_access;
+   assign elink1_rxrd_wait       = emem_wait | 
+				   elink1_rxwr_access |
+				   elink1_rxwr_wait;
   
-   
+  
    /*ememory AUTO_TEMPLATE ( 
                         // Outputs
                         .\(.*\)_out       (elink1_txrr_\1[]),
@@ -333,13 +335,14 @@ module dut(/*AUTOARG*/
 		 .clk		        (clk),
 		 .wait_out		(emem_wait),
 		 .coreid		(12'h0),
+		 .access_in		(emem_access),		 // Templated
 		 /*AUTOINST*/
 		 // Outputs
 		 .access_out		(elink1_txrr_access),	 // Templated
 		 .packet_out		(elink1_txrr_packet[PW-1:0]), // Templated
 		 // Inputs
 		 .nreset		(nreset),
-		 .access_in		(emem_access),		 // Templated
+		 
 		 .packet_in		(emem_packet[PW-1:0]));	 // Templated
 
 
@@ -351,7 +354,7 @@ module dut(/*AUTOARG*/
      else
        wait_counter[7:0] <= wait_counter+1'b1;
       
-   assign elink1_rxwr_wait       = 1'b0;//(|wait_counter[7:0]);//1'b0;
+   assign elink1_rxwr_wait       = (|wait_counter[4:0]);//(|wait_counter[3:0]);//1'b0;
    
 endmodule // dv_elink
 // Local Variables:
