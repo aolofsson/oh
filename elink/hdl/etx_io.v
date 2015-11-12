@@ -42,9 +42,7 @@ module etx_io (/*AUTOARG*/
    //############
    reg [7:0] 	  tx_pointer;   
    reg [15:0] 	  tx_data16;
-   reg 		  tx_access_reg;
    reg 		  tx_frame;
-   reg 		  tx_io_wait_reg;
    reg [PW-1:0]   tx_packet_reg;
    reg [63:0] 	  tx_double;
    reg [2:0] 	  tx_state_reg;
@@ -97,7 +95,6 @@ always @ (posedge tx_lclk_io)
    
    assign tx_new_frame = (tx_state[2:0]==`CYCLE1);
 
- 
    //Creating wide acknowledge on cycle 4
    always @ (posedge tx_lclk_io)
      if(!nreset)
@@ -130,7 +127,6 @@ always @ (posedge tx_lclk_io)
 		      .srcaddr_out	(srcaddr[31:0]),
 		      .packet_in	(tx_packet_reg[PW-1:0]));
  
-
    /*
     * The following format is used by the Epiphany multicore ASIC.
     * Don't change it if you want to communicate with Epiphany.
@@ -274,6 +270,7 @@ always @ (posedge tx_lclk_io)
    //On Parallella this signal comes in single-ended
    assign tx_rd_wait = txi_rd_wait_p;
 `endif
+
    
 endmodule // etx_io
 // Local Variables:

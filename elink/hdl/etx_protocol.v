@@ -41,10 +41,10 @@ module etx_protocol (/*AUTOARG*/
    //###################################################################
    //# Local regs & wires
    //###################################################################
-   reg 		 tx_burst;
-   
+   reg 		 tx_burst;   
    reg           tx_access;
    reg [PW-1:0]  tx_packet; 
+
    wire		 tx_rd_wait_sync;
    wire 	 tx_wr_wait_sync;
    wire 	 etx_write;
@@ -61,7 +61,8 @@ module etx_protocol (/*AUTOARG*/
    wire 	 burst_type_match;
    wire [31:0] 	 burst_addr;
    wire 	 burst_addr_match;
-    
+   wire 	 burst_in;
+   
    //packet to emesh bundle
    packet2emesh p2m0 (
 		      .write_out	(etx_write),
@@ -92,9 +93,9 @@ module etx_protocol (/*AUTOARG*/
      else if (tx_io_ack)
        tx_io_wait <= 1'b0;
      else if (tx_access & ~tx_burst)
-       tx_io_wait <= 1'b1;
+       tx_io_wait <= ~burst_in;
    
-   //Prepare transaction / with burst
+   //Hold transaction while waiting
    always @ (posedge clk)
      if(!nreset)
        begin
@@ -106,20 +107,15 @@ module etx_protocol (/*AUTOARG*/
 	tx_packet[PW-1:0] <= etx_packet[PW-1:0];
 	tx_access         <= etx_valid;
        end
-
-   
-   always @ (posedge clk)
-     if(!nreset)
-       tx_burst <= 1'b0;   
-     else       
-       tx_burst          <= (etx_write                 & //write 
-	       	            (etx_datamode[1:0]==2'b11) & //double only
-			    burst_type_match           & //same types
-			    burst_addr_match);           //inc by 8
    
    //#############################
    //# Burst Detection
    //#############################
+   always @ (posedge clk)
+     if(!nreset)
+       tx_burst <= 1'b0;   
+     else       
+       tx_burst          <= burst_in;
 
    packet2emesh p2m1 (
 		     .write_out		(last_write),
@@ -137,8 +133,14 @@ module etx_protocol (/*AUTOARG*/
    assign burst_type_match  = {last_ctrlmode[3:0],last_datamode[1:0],last_write}
 			       ==
 		   	      {etx_ctrlmode[3:0],etx_datamode[1:0], etx_write};
-   			      
 
+   assign burst_in         =   ~tx_wr_wait_sync           & //interrupt burst on wait     
+			       etx_write                  & //write 
+	       	               (etx_datamode[1:0]==2'b11) & //double only
+			       burst_type_match           & //same types
+			       burst_addr_match;            //inc by 8
+   			      
+   
    //#############################
    //# Wait signals (async)
    //#############################
