@@ -40,12 +40,15 @@ module fifo_cdc (/*AUTOARG*/
    wire 	      rd_en;   
    wire 	      empty;
    wire 	      full;
+   wire 	      prog_full;   
    wire 	      valid;   
    reg 		      access_out;
       
-   assign wr_en    = access_in & ~full;
+   //We use the prog_full clean out any buffers in pipe that are too hard
+   //to stop. "slack"
+   assign wr_en    = access_in;//
    assign rd_en    = ~empty & ~wait_in;
-   assign wait_out = full;
+   assign wait_out = prog_full;
 
    //Keep access high until "acknowledge"
    always @ (posedge clk_out or negedge nreset)
@@ -58,8 +61,8 @@ module fifo_cdc (/*AUTOARG*/
    defparam fifo.DW    = DW;
    defparam fifo.DEPTH = DEPTH;
 
-   fifo_async  fifo (.prog_full		(full),//stay safe for now
-		     .full		(),
+   fifo_async  fifo (.prog_full		(prog_full),//stay safe for now
+		     .full		(full),
 		     .rst		(~nreset),
 		     // Outputs
 		     .dout		(packet_out[DW-1:0]),
