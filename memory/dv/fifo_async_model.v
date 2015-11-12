@@ -38,8 +38,8 @@ module fifo_async_model
     
    //Wires
    wire [DW/8-1:0] wr_vec;
-   wire [AW:0]	   wr_rd_gray_pointer;
-   wire [AW:0] 	   rd_wr_gray_pointer;
+   wire [AW:0]	   rd_gray_pointer_sync;
+   wire [AW:0] 	   wr_gray_pointer_sync;
    wire [AW:0] 	   wr_gray_pointer;
    wire [AW:0] 	   rd_gray_pointer;
    wire [AW-1:0]   rd_addr;
@@ -74,12 +74,12 @@ module fifo_async_model
    fifo_empty_block #(.AW(AW)) fifo_empty_block(
 						// Outputs
 						.rd_fifo_empty	(empty),
-						.rd_addr	(rd_addr[AW-1:0]),
-						.rd_gray_pointer(rd_gray_pointer[AW:0]),
+                                                .rd_gray_pointer(rd_gray_pointer[AW:0]),	
 						// Inputs
+						.rd_addr	(rd_addr[AW-1:0]),
 						.reset		(rst),
 						.rd_clk		(rd_clk),
-						.rd_wr_gray_pointer(rd_wr_gray_pointer[AW:0]),
+						.rd_wr_gray_pointer(wr_gray_pointer_sync[AW:0]),
 						.rd_read	(rd_en));
    
    //Write circuit (and full indicator)
@@ -87,38 +87,43 @@ module fifo_async_model
 					      // Outputs
 					      .wr_fifo_almost_full(),
 					      .wr_fifo_full	(full),				      
-					      .wr_addr		(wr_addr[AW-1:0]),
 					      .wr_gray_pointer	(wr_gray_pointer[AW:0]),
 					      // Inputs
+					      .wr_addr		(wr_addr[AW-1:0]),
 					      .reset		(rst),
 					      .wr_clk		(wr_clk),
-					      .wr_rd_gray_pointer(wr_rd_gray_pointer[AW:0]),
-					      .wr_write		(wr_en));
+					      .wr_rd_gray_pointer(rd_gray_pointer_sync[AW:0]),
+					      .wr_write		(wr_en)
+					  );
    
 
    //Half Full Indicator
-   fifo_full_block #(.AW(AW-1)) half_full_block (
+   wire [AW-1:0]   hack_addr;
+   
+   assign hack_addr = wr_addr[AW-1:0]+AW/4;
+   
+   fifo_full_block #(.AW(AW)) half_full_block (
 					      // Outputs
 					      .wr_fifo_almost_full(),
 					      .wr_fifo_full	(prog_full),			      
-					      .wr_addr		(wr_addr[AW-2:0]),
 					      .wr_gray_pointer	(),
 					      // Inputs
+					      .wr_addr		(hack_addr[AW-1:0]),//hack for now, need to move to better model
 					      .reset		(rst),
 					      .wr_clk		(wr_clk),
-					      .wr_rd_gray_pointer(wr_rd_gray_pointer[AW-1:0]),
+					      .wr_rd_gray_pointer(rd_gray_pointer_sync[AW:0]),
 					      .wr_write		(wr_en));
 
 
    
    //Read pointer sync
-   synchronizer #(.DW(AW+1)) rd2wr_sync (.out		(wr_rd_gray_pointer[AW:0]),
+   synchronizer #(.DW(AW+1)) rd2wr_sync (.out		(rd_gray_pointer_sync[AW:0]),
 					 .in		(rd_gray_pointer[AW:0]),
                                          .reset		(rst),
 					 .clk		(wr_clk));
    
    //Write pointer sync
-   synchronizer #(.DW(AW+1)) wr2rd_sync (.out		(rd_wr_gray_pointer[AW:0]),
+   synchronizer #(.DW(AW+1)) wr2rd_sync (.out		(wr_gray_pointer_sync[AW:0]),
 					 .in		(wr_gray_pointer[AW:0]),
                                          .reset		(rst),
 					 .clk		(rd_clk));
