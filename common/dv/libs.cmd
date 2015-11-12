@@ -10,8 +10,8 @@
 -y ../../emailbox/hdl
 -y ../../memory/hdl
 -y ../../xilibs/hdl
+-y ../../xilibs/ip
 -y ../../parallella/hdl
--y ../../memory/fpga
 +incdir+../../emesh/hdl
 +incdir+../../elink/hdl
 +incdir+../../edma/hdl
