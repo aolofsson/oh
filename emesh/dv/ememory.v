@@ -44,7 +44,7 @@ module ememory(/*AUTOARG*/
 
    wire [AW-1:0]    srcaddr_out;
    wire [AW-1:0]    data_out;   
-   reg 		    hilo_sel;
+   reg  [2:0]       align_addr;
 
    wire 	    write_in;   
    wire [1:0] 	    datamode_in;
@@ -52,8 +52,8 @@ module ememory(/*AUTOARG*/
    wire [AW-1:0]    dstaddr_in;
    wire [DW-1:0]    data_in;   
    wire [AW-1:0]    srcaddr_in;   
-   wire [DW-1:0]    data_align;
-   
+   wire [DW-1:0]    din_aligned;
+   wire [DW-1:0]    dout_aligned;
    
    packet2emesh #(.PW(PW))
    p2e (
@@ -79,13 +79,13 @@ module ememory(/*AUTOARG*/
    assign addr[MAW-1:0] = dstaddr_in[MAW+2:3];     
 
    //Shift up
-   assign  data_align[DW-1:0] = (datamode_in[1:0]==2'b00) ? {(4){data_in[7:0]}}  :
+   assign  din_aligned[DW-1:0] = (datamode_in[1:0]==2'b00) ? {(4){data_in[7:0]}}  :
 				(datamode_in[1:0]==2'b01) ? {(2){data_in[15:0]}} :						
  			                                    data_in[31:0];
    
    //Data-in (hardoded width)
-   assign din[63:0] =(datamode_in[1:0]==2'b11) ? {srcaddr_in[31:0],data_align[31:0]}:
-		                                 {data_align[31:0],data_align[31:0]};
+   assign din[63:0] =(datamode_in[1:0]==2'b11) ? {srcaddr_in[31:0],din_aligned[31:0]}:
+		                                 {din_aligned[31:0],din_aligned[31:0]};
    //Write mask
    always@*
      casez({write_in, datamode_in[1:0],dstaddr_in[2:0]})
@@ -136,19 +136,23 @@ module ememory(/*AUTOARG*/
      if(mem_rd & ~wait_in)   
        begin
 	  write_out           <= 1'b1;
-          hilo_sel            <= dstaddr_in[2];
+          align_addr[2:0]     <= dstaddr_in[2:0];
 	  datamode_out[1:0]   <= datamode_in[1:0];
 	  ctrlmode_out[4:0]   <= ctrlmode_in[3:0];                  
           dstaddr_out[AW-1:0] <= srcaddr_in[AW-1:0];
        end
 
-
-   assign srcaddr_out[AW-1:0] = dout[63:32];
    
+   //Data alignment for readback
+   emesh_rdalign emesh_rdalign (// Outputs
+				.data_out	(dout_aligned[DW-1:0]),
+				// Inputs
+				.datamode	(datamode_out[1:0]),
+				.addr		(align_addr[2:0]),
+				.data_in	(dout[2*DW-1:0]));
 
-   //note sure about this???
-   assign data_out[DW-1:0]     = hilo_sel ? dout[63:32] :
-				            dout[31:0]; 
+   assign srcaddr_out[AW-1:0] = dout_aligned[63:32];     
+   assign data_out[DW-1:0]    = dout_aligned[31:0];
    
    //Concatenate
    emesh2packet #(.PW(PW)) 
@@ -172,13 +176,13 @@ module ememory(/*AUTOARG*/
 		  .wait_in	(1'b0),
 		  /*AUTOINST*/
 		  // Inputs
-		  .clk		(clk),
-		  .nreset	(nreset),
-		  .coreid	(coreid[IDW-1:0]));
+		  .clk			(clk),
+		  .nreset		(nreset),
+		  .coreid		(coreid[IDW-1:0]));
    
 endmodule // emesh_memory
 // Local Variables:
-// verilog-library-directories:("." "../dv" )
+// verilog-library-directories:("." "../hdl" )
 // End:
 
 
