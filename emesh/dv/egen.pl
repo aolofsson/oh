@@ -53,12 +53,9 @@ elsif($ctrlmode < 8){
 }
 
 for($i=0;$i<$n;$i++){    
-    printf("%08x_%08x_%08x_%02x_0000 // $op $size \n", $srcaddr,
-	   $dstaddr,
-	   $data,
-	   $ctrlmode,
-	   $op,
-	   $size);
+    printf("%08x_%08x_%08x_%02x_0000 // $op $size \n", 
+	   $srcaddr,$data,$dstaddr,$ctrlmode,$op,$size);
+
     $srcaddr=$srcaddr+$incr;
     $dstaddr=$dstaddr+$incr;
     $data   =$data+$incr;

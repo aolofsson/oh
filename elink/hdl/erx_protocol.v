@@ -15,7 +15,7 @@ module erx_protocol (/*AUTOARG*/
    parameter AW   = 32;
    parameter DW   = 32;
    parameter PW   = 104;
-   parameter ID   = 12'h800; //link id
+   parameter ID   = 12'h999; //link id
    
    // System reset input
    input           clk;

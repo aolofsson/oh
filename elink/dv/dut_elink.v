@@ -319,7 +319,7 @@ module dut(/*AUTOARG*/
                                                         elink1_rxrd_packet[PW-1:0];
 
    assign elink1_rxrd_wait       = emem_wait | elink1_rxwr_access;
-   assign elink1_rxwr_wait       = 1'b0;//TODO: elink1_random_wait
+  
    
    /*ememory AUTO_TEMPLATE ( 
                         // Outputs
@@ -342,7 +342,17 @@ module dut(/*AUTOARG*/
 		 .access_in		(emem_access),		 // Templated
 		 .packet_in		(emem_packet[PW-1:0]));	 // Templated
 
-        
+
+   //Write wait circuit
+   reg [7:0] wait_counter;   
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       wait_counter[7:0] <= 'b0;   
+     else
+       wait_counter[7:0] <= wait_counter+1'b1;
+      
+   assign elink1_rxwr_wait       = 1'b0;//(|wait_counter[7:0]);//1'b0;
+   
 endmodule // dv_elink
 // Local Variables:
 // verilog-library-directories:("." "../hdl" "../../emesh/dv" "../../emesh/hdl")

@@ -219,7 +219,7 @@ module erx_io (/*AUTOARG*/
       .O     (rxi_frame));
 
 
-   IBUFGDS #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTD_ELINK))
+   IBUFDS #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTD_ELINK))
    ibuf_lclk (.I     (rxi_lclk_p),
 	      .IB    (rxi_lclk_n),
 	      .O     (rx_clkin)

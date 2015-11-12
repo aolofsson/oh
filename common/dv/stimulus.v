@@ -129,7 +129,8 @@ module stimulus (/*AUTOARG*/
        end
 
    assign stim_packet = dut_wait ? stim_packet_reg : mem_data[PW+16-1:16];
-   assign stim_access = dut_wait ? stim_access_reg : mem_access;
+   //assign stim_access = dut_wait ? stim_access_reg : mem_access;
+   assign stim_access = dut_wait ? 1'b0 : mem_access;
    
    //TODO: Implement
    //lfsr?
