@@ -109,7 +109,7 @@ module erx_arbiter (/*AUTOARG*/
    //####################################   
    
    assign rx_rd_wait    = rxrd_wait;
-   assign rx_wr_wait    = rxwr_wait | rxrr_wait;
+   assign rx_wr_wait    = rxwr_wait | (rxrr_wait & rxrr_access);
    assign edma_wait     = rxrd_wait | emmu_read;
    assign ecfg_wait     = erx_rr_access |
 			  rxrr_wait     |

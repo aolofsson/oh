@@ -3,7 +3,7 @@ module erx_fifo (/*AUTOARG*/
    rxwr_access, rxwr_packet, rxrd_access, rxrd_packet, rxrr_access,
    rxrr_packet, rxrd_fifo_wait, rxrr_fifo_wait, rxwr_fifo_wait,
    // Inputs
-   sys_nreset, sys_clk, rx_lclk_div4, rxwr_wait, rxrd_wait, rxrr_wait,
+   sys_clk, rx_lclk_div4, erx_nreset, rxwr_wait, rxrd_wait, rxrr_wait,
    rxrd_fifo_access, rxrd_fifo_packet, rxrr_fifo_access,
    rxrr_fifo_packet, rxwr_fifo_access, rxwr_fifo_packet
    );
@@ -15,10 +15,10 @@ module erx_fifo (/*AUTOARG*/
    parameter ID      = 12'h800;
 
    //reset & clocks
-   input           sys_nreset;
    input 	   sys_clk;
    input 	   rx_lclk_div4;
-
+   input           erx_nreset;     //keep in reset longer
+   
    //WR to AXI master
    output 	   rxwr_access;		
    output [PW-1:0] rxwr_packet;
@@ -70,7 +70,7 @@ module erx_fifo (/*AUTOARG*/
                                .clk_in	   (rx_lclk_div4),
                                .access_in  (@"(substring vl-cell-name  0 4)"_fifo_access),
                                .wait_in    (@"(substring vl-cell-name  0 4)"_wait),
-			       .nreset     (sys_nreset),
+			       .nreset     (erx_nreset),
                                .packet_in  (@"(substring vl-cell-name  0 4)"_fifo_packet[PW-1:0]),
     );
    */
@@ -85,7 +85,7 @@ module erx_fifo (/*AUTOARG*/
 		.access_out		(rxrd_access),		 // Templated
 		.packet_out		(rxrd_packet[PW-1:0]),	 // Templated
 		// Inputs
-		.nreset			(sys_nreset),		 // Templated
+		.nreset			(erx_nreset),		 // Templated
 		.clk_in			(rx_lclk_div4),		 // Templated
 		.access_in		(rxrd_fifo_access),	 // Templated
 		.packet_in		(rxrd_fifo_packet[PW-1:0]), // Templated
@@ -103,7 +103,7 @@ module erx_fifo (/*AUTOARG*/
 	     .access_out		(rxwr_access),		 // Templated
 	     .packet_out		(rxwr_packet[PW-1:0]),	 // Templated
 	     // Inputs
-	     .nreset			(sys_nreset),		 // Templated
+	     .nreset			(erx_nreset),		 // Templated
 	     .clk_in			(rx_lclk_div4),		 // Templated
 	     .access_in			(rxwr_fifo_access),	 // Templated
 	     .packet_in			(rxwr_fifo_packet[PW-1:0]), // Templated
@@ -120,7 +120,7 @@ module erx_fifo (/*AUTOARG*/
 	     .access_out		(rxrr_access),		 // Templated
 	     .packet_out		(rxrr_packet[PW-1:0]),	 // Templated
 	     // Inputs
-	     .nreset			(sys_nreset),		 // Templated
+	     .nreset			(erx_nreset),		 // Templated
 	     .clk_in			(rx_lclk_div4),		 // Templated
 	     .access_in			(rxrr_fifo_access),	 // Templated
 	     .packet_in			(rxrr_fifo_packet[PW-1:0]), // Templated

@@ -196,9 +196,9 @@ module erx (/*AUTOARG*/
 			.rxrr_fifo_wait	(rxrr_fifo_wait),
 			.rxwr_fifo_wait	(rxwr_fifo_wait),
 			// Inputs
-			.sys_nreset	(sys_nreset),
 			.sys_clk	(sys_clk),
 			.rx_lclk_div4	(rx_lclk_div4),
+			.erx_nreset	(erx_nreset),
 			.rxwr_wait	(rxwr_wait),
 			.rxrd_wait	(rxrd_wait),
 			.rxrr_wait	(rxrr_wait),
