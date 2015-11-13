@@ -20,7 +20,7 @@ module emmu (/*AUTOARG*/
    mi_dout, emesh_access_out, emesh_packet_out, emesh_packet_hi_out,
    // Inputs
    rd_clk, wr_clk, mmu_en, mmu_bp, mi_en, mi_we, mi_addr, mi_din,
-   emesh_access_in, emesh_packet_in, emesh_wait
+   emesh_access_in, emesh_packet_in, emesh_rd_wait, emesh_wr_wait
    );
    parameter DW     = 32;         //data width
    parameter AW     = 32;         //address width 
@@ -56,7 +56,8 @@ module emmu (/*AUTOARG*/
    /*****************************/  
    input 	     emesh_access_in;
    input [PW-1:0]    emesh_packet_in;
-   input 	     emesh_wait;      //BUG?: separate wait fifos?   
+   input 	     emesh_rd_wait;
+   input 	     emesh_wr_wait;
 
    /*****************************/
    /*EMESH OUTPUTS              */
@@ -76,7 +77,7 @@ module emmu (/*AUTOARG*/
    wire [63:0] 	      mi_wr_data;
    wire [5:0] 	      mi_wr_vec;
    wire 	      mi_match;
-   wire [MW-1:0]      emmu_rd_addr;
+   wire [31:0]        emmu_rd_addr;
    wire 	      write_in;
 
    /*****************************/
@@ -97,9 +98,16 @@ module emmu (/*AUTOARG*/
    /*****************************/
    /*MMU READ  LOGIC            */
    /*****************************/
-   assign write_in              = emesh_packet_in[1];     //TODO:  
-   assign emmu_rd_addr[MAW-1:0] = emesh_packet_in[39:28];
-   
+   packet2emesh p2e (//outputs
+		     .write_out		(write_in),
+		     .datamode_out	(),
+		     .ctrlmode_out	(),
+		     .data_out		(),
+		     .dstaddr_out	(emmu_rd_addr[AW-1:0]),
+		     .srcaddr_out	(),
+		     //inputs
+		     .packet_in		(emesh_packet_in[PW-1:0]));
+         
    memory_dp #(.DW(MW),.AW(MAW)) memory_dp (
 					   // Outputs
 					   .rd_data		(emmu_lookup_data[MW-1:0]),
@@ -121,11 +129,11 @@ module emmu (/*AUTOARG*/
    //the pushback is needed stall async transmit path      
 
    always @ (posedge  rd_clk)
-     if(~emesh_wait)
-     begin
-	emesh_access_out         <= emesh_access_in;
-	emesh_packet_reg[PW-1:0] <= emesh_packet_in[PW-1:0];	  
-     end
+     if(~(emesh_wr_wait & write_in) & ~(emesh_rd_wait & ~write_in))
+       begin
+	  emesh_access_out         <=  emesh_access_in;
+	  emesh_packet_reg[PW-1:0] <=  emesh_packet_in[PW-1:0];	  
+       end
      	 
    assign emesh_dstaddr_out[63:0] = (mmu_en & ~mmu_bp) ? {emmu_lookup_data[43:0], emesh_packet_reg[27:8]} :
 				                         {32'b0,emesh_packet_reg[39:8]}; 
@@ -140,7 +148,7 @@ module emmu (/*AUTOARG*/
       
 endmodule // emmu
 // Local Variables:
-// verilog-library-directories:("." "../../common/hdl" "../../memory/hdl")
+// verilog-library-directories:("." "../../common/hdl" "../../memory/hdl" "../../emesh/hdl")
 // End:
 
 
