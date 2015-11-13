@@ -96,8 +96,20 @@ B15      | data[23:16] in 64 bit write burst mode only
  
 The rising edge FRAME signal (sampled on the positive edge of LCLK) indicates the start of a new transmission. The byte captured on the first positive clock edge of the new packet is B00.  If the FRAME control signal stays high after B13, then the the elink automatically enters “bursting mode”, meaning that the  last byte of the previous transaction (B13) will be followed by B06 of a new transaction.  
 
-Read and write wait signals are used to stall transmission when a receiver is unable to accept more transactions. The receiver will raise its WAIT output signal during an active transmission indicating that it can receive only one more transaction. The wait signal seen by the transmitter is of unspecified phase delay (while still of the LCLK clock period) and therefore has to be sampled with the two-cycle synchronizer.  If the transaction is in the middle of the transmission when the synchronized WAIT control goes high, the transmission process is to be completed without interruption.    
-              
+Read and write wait signals are used to stall transmission when a receiver is unable to accept more transactions. The receiver will raise its WAIT output signal during an active transmission indicating that it can receive ONLY one more transaction. The wait signal seen by the transmitter is of unspecified phase delay (while still of the LCLK clock period) and therefore has to be sampled with the two-cycle synchronizer.  If the transaction is in the middle of the transmission when the synchronized WAIT control goes high, the transmission process is to be completed without interruption.    
+
+
+```
+          ___     ___     ___     ___     ___     ___     ___     ___ 
+ TXO_LCLK    \___/   \___/   \___/   \___/   \___/   \___/   \___/   \___/
+
+                            ______________________________________________
+ TXI_WAIT    ______________/--------------->| (2 cycle synchronizer)
+             _______________________________
+ TXO_FRAME                                  \___________________________
+
+```
+
 ###SYSTEM SIDE PROTOCOL  
 
 Communication between the elink and the system side (i.e. the AXI side) is done using 104 bit parallel packet interfaces. Read, write, and read response transactions have independent channels into the elink. Data from a receiver read request is expected to return on the read response transmit channel.   
@@ -106,10 +118,10 @@ The "access" signals indicate a valid transaction. The wait signals indicate tha
 
  PACKET FIELD  | BITS    | DESCRIPTION 
  --------------|---------|----------
- access        | [0]     | Indicates a valid transaction
- write         | [1]     | Indicates a write transaction
- datamode[1:0] | [3:2]   | Datasize (00=8b,01=16b,10=32b,11=64b)
- ctrlmode[3:0] | [7:4]   | Various special modes for the Epiphany chip
+ write         | [0]     | Indicates a write transaction
+ datamode[1:0] | [2:1]   | Datasize (00=8b,01=16b,10=32b,11=64b)
+ ctrlmode[3:0] | [6:3]   | Various special modes for the Epiphany chip
+ reserved      | [7]     | Reserved for future use
  dstraddr[31:0]| [39:8]  | Address for write, read-request, or read-responses
  data[31:0]    | [71:40] | Data for write transaction, data for read response
  srcaddr[31:0] | [103:72]| Return address for read-request, upper data for write
