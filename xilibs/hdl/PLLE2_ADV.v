@@ -1,4 +1,3 @@
-`timescale 1ns/10ps
 /* verilator lint_off STMTDLY */
 /* verilator lint_off WIDTH */
 module PLLE2_ADV #(

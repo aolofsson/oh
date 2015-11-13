@@ -1,6 +1,5 @@
 /* verilator lint_off STMTDLY */
 /* verilator lint_off WIDTH */
-`timescale 1ns/10ps
 module MMCME2_ADV # (
 		     parameter BANDWIDTH = "OPTIMIZED",
 		     parameter real CLKFBOUT_MULT_F = 5.000,

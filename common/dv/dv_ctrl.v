@@ -1,4 +1,3 @@
-`timescale 1ns/1ps
 module dv_ctrl(/*AUTOARG*/
    // Outputs
    nreset, clk, start,
@@ -8,7 +7,7 @@ module dv_ctrl(/*AUTOARG*/
 
    parameter CLK_PERIOD = 10;
    parameter CLK_PHASE  = CLK_PERIOD/2;
-   parameter TIMEOUT    = 10000;
+   parameter TIMEOUT    = 100000;
 
    output nreset;     // async active low reset
    output clk;        // main clock

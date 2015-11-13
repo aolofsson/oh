@@ -5,7 +5,7 @@
  * NOTE: wait comes in one next cycle, this block adjusts for that!
  * 
  */ 
- 
+`timescale 1ns/1ps
 module stimulus (/*AUTOARG*/
    // Outputs
    stim_access, stim_packet, stim_count, stim_done, stim_wait,

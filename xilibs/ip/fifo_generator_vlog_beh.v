@@ -1314,7 +1314,7 @@ reg r_inv_pad_0 = 0;
 
 
 
-      generate if (C_INTERFACE_TYPE == 0 && C_HAS_DATA_COUNTS_AXIS == 3) begin : fifo_ic_adapter
+   generate if (C_INTERFACE_TYPE == 0 && C_HAS_DATA_COUNTS_AXIS == 3) begin : fifo_ic_adapter
     assign wr_eop_ad = WR_EN & !(FULL);
     assign rd_eop_ad = RD_EN & !(EMPTY);
 
@@ -4970,6 +4970,7 @@ module fifo_generator_v12_0_bhv_ver_as
    endgenerate
 
    // Write pointer adjustment based on pointers width for EMPTY/ALMOST_EMPTY generation
+   //ANDREAS: NOP
    generate
      if (C_RD_PNTR_WIDTH > C_WR_PNTR_WIDTH) begin : rdg // Read depth greater than write depth
        assign adj_wr_pntr_rd[C_RD_PNTR_WIDTH-1:C_RD_PNTR_WIDTH-C_WR_PNTR_WIDTH] = wr_pntr_rd;
@@ -5276,8 +5277,9 @@ module fifo_generator_v12_0_bhv_ver_as
   ***************************************************************************/
   task write_fifo;
     begin
+       //ANDREAS:$display("writing %x %d %m", DIN,wr_pntr);       
       memory[wr_ptr]     <= DIN;
-      wr_pntr <= #`TCQ wr_pntr + 1;
+      wr_pntr           <= #`TCQ wr_pntr + 1;
       // Store the type of error injection (double/single) on write
       case (C_ERROR_INJECTION_TYPE)
         3:       ecc_err[wr_ptr]    <= {INJECTDBITERR,INJECTSBITERR};
@@ -5335,7 +5337,7 @@ module fifo_generator_v12_0_bhv_ver_as
         if (ENABLE_ERR_INJECTION && C_DIN_WIDTH == C_DOUT_WIDTH) begin
           if (tmp_ecc_err[1]) begin // Corrupt the output data only for double bit error
             if (C_DOUT_WIDTH == 1) begin
-              $display("FAILURE : Data width must be >= 2 for double bit error injection.");
+               $display("FAILURE : Data width must be >= 2 for double bit error injection.");
               $finish;
             end else if (C_DOUT_WIDTH == 2)
               tmp_dout = {~tmp_dout[C_DOUT_WIDTH-1],~tmp_dout[C_DOUT_WIDTH-2]};
@@ -5879,6 +5881,7 @@ module fifo_generator_v12_0_bhv_ver_as
            end else 
              if ((tmp_wr_listsize + C_DEPTH_RATIO_RD - 1)/C_DEPTH_RATIO_RD ==
                 C_FIFO_WR_DEPTH-1) begin
+		
              //Add value on DIN port to FIFO
              write_fifo;
              next_num_wr_bits = next_num_wr_bits + C_DIN_WIDTH;
@@ -5895,6 +5898,7 @@ module fifo_generator_v12_0_bhv_ver_as
              if ((tmp_wr_listsize + C_DEPTH_RATIO_RD - 1)/C_DEPTH_RATIO_RD == 
                 C_FIFO_WR_DEPTH-2) begin
              //Add value on DIN port to FIFO
+   	    $display("two from full");
              write_fifo;
              next_num_wr_bits =  next_num_wr_bits + C_DIN_WIDTH;
              //Write successful, so issue acknowledge
