@@ -44,9 +44,8 @@ module etx_protocol (/*AUTOARG*/
    reg 		 tx_burst;   
    reg           tx_access;
    reg [PW-1:0]  tx_packet; 
-
-   wire		 tx_rd_wait_sync;
-   wire 	 tx_wr_wait_sync;
+   reg 		 tx_io_wait;
+   
    wire 	 etx_write;
    wire [1:0] 	 etx_datamode;
    wire [3:0]	 etx_ctrlmode;
@@ -56,7 +55,6 @@ module etx_protocol (/*AUTOARG*/
    wire [1:0] 	 last_datamode;
    wire [3:0]	 last_ctrlmode;
    wire [AW-1:0] last_dstaddr;   
-   wire 	 etx_valid;
    wire 	 burst_match;
    wire 	 burst_type_match;
    wire [31:0] 	 burst_addr;
@@ -73,39 +71,30 @@ module etx_protocol (/*AUTOARG*/
 		      .srcaddr_out	(),
 		      .packet_in	(etx_packet[PW-1:0]));//input
 
-   //Only set valid if not wait and 
-   assign etx_valid = (tx_enable & 
-		       etx_access & 
-		       ~((etx_dstaddr[31:20]==ID) & (etx_dstaddr[19:16]!=`EGROUP_RR)) &
-		      ((etx_write & ~tx_wr_wait_sync) | (~etx_write & ~tx_rd_wait_sync))
-		       );
-   
-
-   reg 		 tx_io_wait;
-   
    //Simple stall state machine
    //Gets set for one cycle whenever there is no burst
    //gets cleared by ack from io logic
    
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       tx_io_wait <= 1'b0;
+       tx_io_wait <= 1'b0;    
      else if (tx_io_ack)
        tx_io_wait <= 1'b0;
-     else if (tx_access & ~tx_burst)
-       tx_io_wait <= ~burst_in;
-   
+     else
+       tx_io_wait <= tx_access & ~burst_in;        
+     
    //Hold transaction while waiting
+   //This transaction should be flushed out
    always @ (posedge clk)
      if(!nreset)
        begin
 	  tx_packet[PW-1:0] <= 'b0;
 	  tx_access         <= 1'b0;
-       end
-   else if(~tx_io_wait)
-     begin
-	tx_packet[PW-1:0] <= etx_packet[PW-1:0];
-	tx_access         <= etx_valid;
+       end     
+     else if(~(etx_wr_wait | etx_rd_wait))
+       begin
+	  tx_packet[PW-1:0] <= etx_packet[PW-1:0];
+	  tx_access         <= tx_enable & etx_access;	
        end
    
    //#############################
@@ -119,7 +108,7 @@ module etx_protocol (/*AUTOARG*/
 
    packet2emesh p2m1 (
 		     .write_out		(last_write),
-		      .datamode_out	(last_datamode[1:0]),
+		     .datamode_out	(last_datamode[1:0]),
 		     .ctrlmode_out	(last_ctrlmode[3:0]),
 		     .dstaddr_out	(last_dstaddr[31:0]),
 		     .data_out		(),
@@ -134,34 +123,14 @@ module etx_protocol (/*AUTOARG*/
 			       ==
 		   	      {etx_ctrlmode[3:0],etx_datamode[1:0], etx_write};
 
-   assign burst_in         =   ~tx_wr_wait_sync           & //interrupt burst on wait     
-			       etx_write                  & //write 
-	       	               (etx_datamode[1:0]==2'b11) & //double only
-			       burst_type_match           & //same types
-			       burst_addr_match;            //inc by 8
+   assign burst_in   =    etx_write                 & //write 
+	       	         (etx_datamode[1:0]==2'b11) & //double only
+		          burst_type_match          & //same types
+		          burst_addr_match;            //inc by 8
    			      
-   
-   //#############################
-   //# Wait signals (async)
-   //#############################
-
-   dsync dsync_rd (
-		// Outputs
-		.dout			(tx_rd_wait_sync),
-		// Inputs
-		.clk			(clk),
-		.din			(tx_rd_wait));
-   
-   dsync dsync_wr (
-		// Outputs
-		.dout			(tx_wr_wait_sync),
-		// Inputs
-		.clk			(clk),
-		.din			(tx_wr_wait));
-          
    //Stall for all etx pipeline
-   assign etx_wr_wait = tx_wr_wait_sync | tx_io_wait;
-   assign etx_rd_wait = tx_rd_wait_sync | tx_io_wait;
+   assign etx_wr_wait = (tx_wr_wait & etx_write)  | tx_io_wait;
+   assign etx_rd_wait = (tx_rd_wait & ~etx_write) | tx_io_wait;
         
 endmodule // etx_protocol
 // Local Variables:

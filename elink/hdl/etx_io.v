@@ -30,7 +30,7 @@ module etx_io (/*AUTOARG*/
    //#############
    //# Fabric interface
    //#############
-   input [PW-1:0] tx_packet;
+   input [PW-1:0] tx_packet;//lclkdiv4 domain
    input          tx_access;
    input          tx_burst;
    output 	  tx_io_ack;   
@@ -42,11 +42,14 @@ module etx_io (/*AUTOARG*/
    //############
    reg [7:0] 	  tx_pointer;   
    reg [15:0] 	  tx_data16;
-   reg 		  tx_frame;
+   reg		  tx_frame;
+   reg [2:0] 	  tx_state_reg;
    reg [PW-1:0]   tx_packet_reg;
    reg [63:0] 	  tx_double;
-   reg [2:0] 	  tx_state_reg;
    reg [2:0] 	  tx_state;
+   reg 		  tx_io_ack;
+   reg 		  tx_access_reg;
+   
    //############
    //# WIRES
    //############
@@ -61,14 +64,12 @@ module etx_io (/*AUTOARG*/
    wire [7:0] 	  txo_data;
    wire 	  txo_frame;   
    wire 	  txo_lclk90;
-   reg 		  tx_io_ack;
+  
    wire 	  tx_new_frame;
    wire 	  tx_lclk90_ddr;
-   
-   //#############################
-   //# Transmit state machine
-   //#############################  
-  
+   wire 	  tx_wr_wait_async;
+   wire 	  tx_rd_wait_async;
+
 `define IDLE    3'b000
 `define CYCLE1  3'b001
 `define CYCLE2  3'b010
@@ -77,56 +78,98 @@ module etx_io (/*AUTOARG*/
 `define CYCLE5  3'b101
 `define CYCLE6  3'b110
 `define CYCLE7  3'b111
-     
-always @ (posedge tx_lclk_io)
-  if(!nreset)
-    tx_state[2:0] <= `IDLE;
-  else
-    case (tx_state[2:0])
-      `IDLE   : tx_state[2:0] <= tx_access ? `CYCLE1 : `IDLE;
-      `CYCLE1 : tx_state[2:0] <= `CYCLE2;
-      `CYCLE2 : tx_state[2:0] <= `CYCLE3;
-      `CYCLE3 : tx_state[2:0] <= `CYCLE4;
-      `CYCLE4 : tx_state[2:0] <= `CYCLE5;
-      `CYCLE5 : tx_state[2:0] <= `CYCLE6;
-      `CYCLE6 : tx_state[2:0] <= `CYCLE7;
-      `CYCLE7 : tx_state[2:0] <= tx_burst ? `CYCLE4 : `IDLE;	
-    endcase // case (tx_state)   
    
-   assign tx_new_frame = (tx_state[2:0]==`CYCLE1);
+   //#############################
+   //# Synchronize to lclk_io
+   //#############################  
+   always @ (posedge tx_lclk_io)
+     if(tx_sample)
+	  tx_packet_reg[PW-1:0] <= tx_packet[PW-1:0];
+   
+   always @ (posedge tx_lclk_io)
+     tx_access_reg         <= tx_access;	  
+   
+   packet2emesh p2e_reg (
+			  .write_out	(write),
+			  .datamode_out	(datamode[1:0]),
+			  .ctrlmode_out	(ctrlmode[3:0]),
+			  .dstaddr_out	(dstaddr[31:0]),
+			  .data_out	(data[31:0]),
+			  .srcaddr_out	(srcaddr[31:0]),
+			  .packet_in	(tx_packet_reg[PW-1:0]));
+    
 
-   //Creating wide acknowledge on cycle 4
+   assign tx_new_frame = tx_access_reg & (tx_state[2:0]==`IDLE) & ~tx_wait_in;
+        
    always @ (posedge tx_lclk_io)
      if(!nreset)
-       tx_io_ack <= 1'b0;
-     else if ((tx_state[2:0] ==`CYCLE4))
-       tx_io_ack <= 1'b1;   
-     else if (tx_state[2:0]==`IDLE)
-       tx_io_ack <= 1'b0;
-  
-   //Create frame signal for output
-   always @ (posedge tx_lclk_io)
-     begin
-	tx_state_reg[2:0]     <= tx_state[2:0];
-	tx_frame              <= |(tx_state_reg[2:0]);
-     end
+       tx_state[2:0] <= `IDLE;
+     else
+       case (tx_state[2:0])
+	 `IDLE   : tx_state[2:0] <=  tx_new_frame & ~tx_wait ? `CYCLE1 : `IDLE;
+	 `CYCLE1 : tx_state[2:0] <= `CYCLE2;
+	 `CYCLE2 : tx_state[2:0] <= `CYCLE3;
+	 `CYCLE3 : tx_state[2:0] <= `CYCLE4;	 
+	 `CYCLE4 : tx_state[2:0] <= `CYCLE5;
+	 `CYCLE5 : tx_state[2:0] <= `CYCLE6;
+	 `CYCLE6 : tx_state[2:0] <= `CYCLE7;
+	 `CYCLE7 : tx_state[2:0] <= tx_wait   ? `IDLE   :
+				    tx_burst  ? `CYCLE4 : 
+				                `IDLE;	
+       endcase // case (tx_state)   
+   
+   //BUG??
+//   wire tx_sample = ~tx_wait_in & (
+//	            ((tx_state[2:0]==`CYCLE4) & tx_burst) | (tx_state[2:0]==`IDLE));
 
+   wire 	  tx_sample = ((tx_state[2:0]==`CYCLE4) & tx_burst) | 
+                              (tx_state[2:0]==`IDLE);
+
+ 
+   reg [2:0] counter;
+   //makes sure all transactions are cleared
+   always @ (posedge tx_lclk_io)
+     if(!nreset)
+       counter[2:0] <= 3'b111;
+     else if(tx_sample & ~tx_wait_in)
+       counter[2:0] <= 3'b111;
+    else if(|counter[2:0])
+      counter[2:0] <= counter[2:0] - 1'b1;
+   
+   //Creating wide acknowledge/wait on cycle 4/0
+   reg 	     tx_rd_wait;
+   reg 	     tx_wr_wait;
+   always @ (posedge tx_lclk_io)
+     if(!nreset)
+       begin
+	  tx_io_ack <= 1'b0;
+	  tx_rd_wait <= 1'b0;
+	  tx_wr_wait <= 1'b0;	  
+       end
+     else if ((tx_state[2:0] ==`CYCLE4))
+       begin
+	  tx_io_ack  <= 1'b1;   
+	  tx_rd_wait <= tx_rd_wait_sync;
+	  tx_wr_wait <= tx_wr_wait_sync;
+       end
+     else if (tx_state[2:0]==`IDLE)
+       begin
+	  tx_io_ack <= 1'b0;
+	  tx_rd_wait <= tx_rd_wait_sync;
+	  tx_wr_wait <= tx_wr_wait_sync;
+       end
+   //Wait signal (align with end of transfer)
+
+   wire tx_wait_in = (tx_access_reg & tx_rd_wait_sync & ~write )  |
+  		     (tx_access_reg & tx_wr_wait_sync &  write );
+       
+   assign tx_wait = tx_wait_in & ~(|counter[2:1]);
+   
+		         
    //#############################
    //# 2 CYCLE PACKET PIPELINE
    //#############################  
-   always @ (posedge tx_lclk_io)
-     if (tx_access)
-       tx_packet_reg[PW-1:0] <= tx_packet[PW-1:0];
-
-    packet2emesh p2e (
-		      .write_out	(write),
-		      .datamode_out	(datamode[1:0]),
-		      .ctrlmode_out	(ctrlmode[3:0]),
-		      .dstaddr_out	(dstaddr[31:0]),
-		      .data_out		(data[31:0]),
-		      .srcaddr_out	(srcaddr[31:0]),
-		      .packet_in	(tx_packet_reg[PW-1:0]));
- 
+  
    /*
     * The following format is used by the Epiphany multicore ASIC.
     * Don't change it if you want to communicate with Epiphany.
@@ -138,12 +181,17 @@ always @ (posedge tx_lclk_io)
        tx_double[63:0] <= {16'b0,//16
 			   ~write,7'b0,ctrlmode[3:0],//12
 			   dstaddr[31:0],datamode[1:0],write,tx_access};//36
-     else if(tx_state[2:0]==`CYCLE4)
+     else if((tx_state[2:0]==`CYCLE4))
        tx_double[63:0] <= {data[31:0],srcaddr[31:0]};
-  
+   
    //#############################
    //# SELECTING DATA FOR TRANSMIT
    //#############################  
+   always @ (posedge tx_lclk_io)
+     begin
+	tx_state_reg[2:0] <= tx_state[2:0];
+	tx_frame          <= (|tx_state_reg[2:0]); 
+     end        
    
    always @ (posedge tx_lclk_io)
      case(tx_state_reg[2:0])
@@ -163,7 +211,7 @@ always @ (posedge tx_lclk_io)
        3'b111: tx_data16[15:0]  <= tx_double[15:0];       
        default  tx_data16[15:0] <= 16'b0;
      endcase // case (tx_state[2:0])
-                       
+     
    //#############################
    //# CLOCK DRIVERS
    //#############################  
@@ -242,7 +290,7 @@ always @ (posedge tx_lclk_io)
    generate
       if(ETYPE==1)
 	begin
-	   assign tx_wr_wait = txi_wr_wait_p;
+	   assign tx_wr_wait_async = txi_wr_wait_p;
 	end
       else if (ETYPE==0)
 	begin
@@ -252,7 +300,7 @@ always @ (posedge tx_lclk_io)
 	   ibufds_wrwait
 	     (.I     (txi_wr_wait_p),
 	      .IB    (txi_wr_wait_n),
-	      .O     (tx_wr_wait));	 
+	      .O     (tx_wr_wait_async));	 
 	end
    endgenerate
       
@@ -265,13 +313,31 @@ always @ (posedge tx_lclk_io)
       ibufds_rdwait
      (.I     (txi_rd_wait_p),
       .IB    (txi_rd_wait_n),
-      .O     (tx_rd_wait));
+      .O     (tx_rd_wait_async));
 `else
    //On Parallella this signal comes in single-ended
-   assign tx_rd_wait = txi_rd_wait_p;
+   assign tx_rd_wait_async = txi_rd_wait_p;
 `endif
 
+   //################################
+   //# Wait signal synchronizers
+   //################################
    
+   dsync sync_rd (
+		// Outputs
+		.dout			(tx_rd_wait_sync),
+		// Inputs
+		.clk			(tx_lclk_io),
+		.din			(tx_rd_wait_async));
+   
+   dsync sync_wr (
+		// Outputs
+		.dout			(tx_wr_wait_sync),
+		// Inputs
+		.clk			(tx_lclk_io),
+		.din			(tx_wr_wait_async));
+   
+
 endmodule // etx_io
 // Local Variables:
 // verilog-library-directories:("." "../../emesh/hdl")
