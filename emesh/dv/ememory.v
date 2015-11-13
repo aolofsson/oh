@@ -32,7 +32,6 @@ module ememory(/*AUTOARG*/
    wire [63:0] 	    dout;
    wire 	    en; 
    wire 	    mem_rd;
-   wire 	    mem_wr;
    reg [7:0] 	    wen;
 
    //State
@@ -54,7 +53,8 @@ module ememory(/*AUTOARG*/
    wire [AW-1:0]    srcaddr_in;   
    wire [DW-1:0]    din_aligned;
    wire [DW-1:0]    dout_aligned;
-   
+   wire 	    wait_random; //TODO: make random  
+
    packet2emesh #(.PW(PW))
    p2e (
 	.write_out	(write_in),
@@ -67,13 +67,13 @@ module ememory(/*AUTOARG*/
 	);
       
    //Access-in
-   assign mem_rd = (access_in & ~write_in & ~wait_in);
-   assign mem_wr = (access_in & write_in );
-   
-   assign en =  mem_rd | mem_wr;
+   assign en     =  access_in & ~wait_all & ~wait_all;
+   assign mem_rd = (access_in & ~write_in & ~wait_all);   
+
 
    //Pushback Circuit (pass through problems?)
-   assign wait_out = access_in & wait_in;
+   assign wait_out = (access_in & wait_all);
+
    
    //Address-in (shifted by three bits, 64 bit wide memory)
    assign addr[MAW-1:0] = dstaddr_in[MAW+2:3];     
@@ -128,21 +128,16 @@ module ememory(/*AUTOARG*/
    always @ (posedge  clk or negedge nreset)
      if(!nreset)
        access_out <=1'b0;   
-     else if(~wait_in)
-       access_out                    <= mem_rd;
-                 
-   //Other emesh signals "dataload"
-   always @ (posedge clk)
-     if(mem_rd & ~wait_in)   
+     else
        begin
+	  access_out          <= mem_rd;
 	  write_out           <= 1'b1;
           align_addr[2:0]     <= dstaddr_in[2:0];
 	  datamode_out[1:0]   <= datamode_in[1:0];
 	  ctrlmode_out[4:0]   <= ctrlmode_in[3:0];                  
           dstaddr_out[AW-1:0] <= srcaddr_in[AW-1:0];
        end
-
-   
+                      
    //Data alignment for readback
    emesh_rdalign emesh_rdalign (// Outputs
 				.data_out	(dout_aligned[DW-1:0]),
@@ -173,12 +168,27 @@ module ememory(/*AUTOARG*/
        )
    emesh_monitor (.dut_access	(access_in & write_in),
 		  .dut_packet	(packet_in[PW-1:0]),
-		  .wait_in	(1'b0),
+		  .wait_in	(wait_random),
 		  /*AUTOINST*/
 		  // Inputs
 		  .clk			(clk),
 		  .nreset		(nreset),
 		  .coreid		(coreid[IDW-1:0]));
+
+
+   //Access wait circuit
+   reg [7:0] wait_counter;
+  
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       wait_counter[7:0] <= 'b0;   
+     else
+       wait_counter[7:0] <= wait_counter+1'b1;
+      
+   assign wait_random      = (|wait_counter[4:0]);//(|wait_counter[3:0]);//1'b0;
+
+   assign wait_all = (wait_random | wait_in);
+   
    
 endmodule // emesh_memory
 // Local Variables:

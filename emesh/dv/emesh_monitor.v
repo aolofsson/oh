@@ -35,8 +35,10 @@ module emesh_monitor(/*AUTOARG*/
    
    always @ (posedge clk or negedge nreset)
      if(nreset & dut_access & ~wait_in)
-       $fwrite(ftrace, "%h_%h_%h_%h\n",dut_packet[PW-1:72],dut_packet[71:40],dut_packet[39:8],dut_packet[7:0]);   
-
+       begin
+	  $fwrite(ftrace, "%h_%h_%h_%h\n",dut_packet[PW-1:72],dut_packet[71:40],dut_packet[39:8],dut_packet[7:0]);   
+	  $display("%h_%h_%h_%h\n",dut_packet[PW-1:72],dut_packet[71:40],dut_packet[39:8],dut_packet[7:0]);   
+       end
 endmodule // dut_monitor
 
 
