@@ -145,9 +145,16 @@ module etx_arbiter (/*AUTOARG*/
 		      (txrd_grant & ~txrd_wait) |
 		      (txrr_grant & ~txrr_wait);
 
-   //Pipeline + stall
-   assign write_in = etx_mux[1];
-
+   packet2emesh p2e (// Outputs
+		     .write_out		(write_in),
+		     .datamode_out	(),
+		     .ctrlmode_out	(),
+		     .data_out		(),
+		     .dstaddr_out	(),
+		     .srcaddr_out	(),
+		     // Inputs
+		     .packet_in		(etx_mux[PW-1:0]));
+      
    //access
     always @ (posedge clk)
       if (!nreset)
