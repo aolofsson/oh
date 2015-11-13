@@ -58,7 +58,7 @@ module etx_remap (/*AUTOARG*/
 
    //stall read/write access appropriately
    always @ (posedge clk)     
-     if((write_in & ~etx_wr_wait) | (~write_in & ~etx_rd_wait))
+     if(~(etx_wr_wait | etx_rd_wait))
        begin
 	  emesh_access_out         <= emesh_access_in;
 	  emesh_packet_out[PW-1:0] <= {emesh_packet_in[PW-1:40],

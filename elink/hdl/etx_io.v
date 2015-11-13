@@ -82,9 +82,19 @@ module etx_io (/*AUTOARG*/
    //#############################
    //# Synchronize to lclk_io
    //#############################  
+   
    always @ (posedge tx_lclk_io)
      if(tx_sample)
+       begin
 	  tx_packet_reg[PW-1:0] <= tx_packet[PW-1:0];
+       end
+
+   reg 		  tx_burst_reg;   
+   always @ (posedge tx_lclk_io)
+     if(!nreset)
+       tx_burst_reg <= 1'b0;  
+     else if(tx_state[2:0]==`CYCLE4)
+	tx_burst_reg <= tx_burst;   
    
    always @ (posedge tx_lclk_io)
      tx_access_reg         <= tx_access;	  
@@ -113,9 +123,9 @@ module etx_io (/*AUTOARG*/
 	 `CYCLE4 : tx_state[2:0] <= `CYCLE5;
 	 `CYCLE5 : tx_state[2:0] <= `CYCLE6;
 	 `CYCLE6 : tx_state[2:0] <= `CYCLE7;
-	 `CYCLE7 : tx_state[2:0] <= tx_wait   ? `IDLE   :
-				    tx_burst  ? `CYCLE4 : 
-				                `IDLE;	
+	 `CYCLE7 : tx_state[2:0] <= tx_wait      ?  `IDLE   :
+				    tx_burst_reg  ? `CYCLE4 : 
+				                    `IDLE;	
        endcase // case (tx_state)   
    
    //BUG??
@@ -146,12 +156,12 @@ module etx_io (/*AUTOARG*/
 	  tx_rd_wait <= 1'b0;
 	  tx_wr_wait <= 1'b0;	  
        end
-     else if ((tx_state[2:0] ==`CYCLE4))
+     else if (tx_state[2:0] ==`CYCLE4)
        begin
 	  tx_io_ack  <= 1'b1;   
 	  tx_rd_wait <= tx_rd_wait_sync;
 	  tx_wr_wait <= tx_wr_wait_sync;
-       end
+       end    
      else if (tx_state[2:0]==`IDLE)
        begin
 	  tx_io_ack <= 1'b0;
@@ -160,8 +170,7 @@ module etx_io (/*AUTOARG*/
        end
    //Wait signal (align with end of transfer)
 
-   wire tx_wait_in = (tx_access_reg & tx_rd_wait_sync & ~write )  |
-  		     (tx_access_reg & tx_wr_wait_sync &  write );
+   wire tx_wait_in = tx_rd_wait_sync | tx_wr_wait_sync;
        
    assign tx_wait = tx_wait_in & ~(|counter[2:1]);
    

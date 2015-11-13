@@ -129,8 +129,8 @@ module etx_protocol (/*AUTOARG*/
 		          burst_addr_match;            //inc by 8
    			      
    //Stall for all etx pipeline
-   assign etx_wr_wait = (tx_wr_wait & etx_write)  | tx_io_wait;
-   assign etx_rd_wait = (tx_rd_wait & ~etx_write) | tx_io_wait;
+   assign etx_wr_wait = tx_wr_wait  | tx_io_wait;
+   assign etx_rd_wait = tx_rd_wait  | tx_io_wait;
         
 endmodule // etx_protocol
 // Local Variables:
