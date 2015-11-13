@@ -36,10 +36,16 @@ module etx_remap (/*AUTOARG*/
    reg 		   emesh_access_out;
    reg [PW-1:0]    emesh_packet_out;
 
-   
-   assign addr_in[31:0]   =  emesh_packet_in[39:8];
-   assign write_in        =  emesh_packet_in[1];
-      
+   packet2emesh p2e (// Outputs
+		     .write_out		(write_in),
+		     .datamode_out	(),
+		     .ctrlmode_out	(),
+		     .data_out		(),
+		     .dstaddr_out	(addr_in[31:0]),
+		     .srcaddr_out	(),
+		     // Inputs
+		     .packet_in		(emesh_packet_in[PW-1:0]));
+         
    assign addr_remap[31:0] = {addr_in[29:18],//ID
 			      addr_in[17:16],//SPECIAL GROUP
                              {(2){(|addr_in[17:16])}},//ZERO IF NOT SPECIAL
@@ -61,5 +67,9 @@ module etx_remap (/*AUTOARG*/
 				       };	
        end
    
-endmodule // etx_mux
+endmodule // etx_remap
 
+
+// Local Variables:
+// verilog-library-directories:("." "../../emesh/hdl")
+// End:
