@@ -129,7 +129,7 @@ module emmu (/*AUTOARG*/
    //the pushback is needed stall async transmit path      
 
    always @ (posedge  rd_clk)
-     if(~(emesh_wr_wait & write_in) & ~(emesh_rd_wait & ~write_in))
+     if(~(emesh_wr_wait | emesh_rd_wait))
        begin
 	  emesh_access_out         <=  emesh_access_in;
 	  emesh_packet_reg[PW-1:0] <=  emesh_packet_in[PW-1:0];	  
