@@ -126,15 +126,18 @@ module etx_arbiter (/*AUTOARG*/
    //######################################################################
    
    //Write waits on pin wr wait or cfg_wait
-   assign txwr_wait = etx_wr_wait | 
+   assign txwr_wait = etx_wr_wait |
+		      etx_rd_wait |
 		      etx_cfg_wait;
    
    //Host read request (self throttling, one read at a time)
-   assign txrd_wait = etx_rd_wait  | 
+   assign txrd_wait = etx_rd_wait |
+		      etx_wr_wait |
 		      etx_cfg_wait | 
 		      txrd_arb_wait;
    //Read response
-   assign txrr_wait = etx_wr_wait  | 
+   assign txrr_wait = etx_wr_wait  |
+		      etx_rd_wait  |
 		      etx_cfg_wait |
 		      txrr_arb_wait;
  
@@ -162,15 +165,17 @@ module etx_arbiter (/*AUTOARG*/
 	   etx_access        <= 1'b0;   
 	   etx_rr            <= 1'b0;	   
 	end
-      else if (access_in & (write_in & ~etx_wr_wait) | (~write_in & ~etx_rd_wait))
+      else if (~(etx_wr_wait | etx_rd_wait))
 	begin
 	   etx_access         <= access_in;
 	   etx_rr             <= txrr_grant;
 	end	   
 
+   
+   
    //packet
    always @ (posedge clk)
-     if (access_in & (write_in & ~etx_wr_wait) | (~write_in & ~etx_rd_wait))
+     if (access_in & ~(etx_wr_wait | etx_rd_wait))
 	  etx_packet[PW-1:0] <= etx_mux[PW-1:0];	 
    
 endmodule // etx_arbiter
