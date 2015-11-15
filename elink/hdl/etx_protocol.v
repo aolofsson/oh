@@ -5,7 +5,7 @@ module etx_protocol (/*AUTOARG*/
    etx_rd_wait, etx_wr_wait, tx_packet, tx_access, tx_burst,
    // Inputs
    nreset, clk, etx_access, etx_packet, tx_enable, gpio_data,
-   gpio_enable, tx_io_ack, tx_rd_wait, tx_wr_wait
+   gpio_enable, tx_rd_wait, tx_wr_wait
    );
 
    parameter PW = 104;
@@ -34,14 +34,12 @@ module etx_protocol (/*AUTOARG*/
    output [PW-1:0] tx_packet;
    output          tx_access;
    output          tx_burst;
-   input           tx_io_ack;   // acknowledge signal from IO (clears wait) 
    input           tx_rd_wait;  // The wait signals are passed through
    input           tx_wr_wait;  // to the emesh interfaces
 
    //###################################################################
    //# Local regs & wires
    //###################################################################
-   reg 		 tx_burst;   
    reg           tx_access;
    reg [PW-1:0]  tx_packet; 
    reg 		 tx_io_wait;
@@ -60,8 +58,10 @@ module etx_protocol (/*AUTOARG*/
    wire [31:0] 	 burst_addr;
    wire 	 burst_addr_match;
    wire 	 burst_in;
-   
-   //packet to emesh bundle
+
+   //##############################################################
+   //# Packet Pipeline
+   //##############################################################
    packet2emesh p2m0 (
 		      .write_out	(etx_write),
 		      .datamode_out	(etx_datamode[1:0]),
@@ -71,20 +71,17 @@ module etx_protocol (/*AUTOARG*/
 		      .srcaddr_out	(),
 		      .packet_in	(etx_packet[PW-1:0]));//input
 
-   //Simple stall state machine
-   //Gets set for one cycle whenever there is no burst
-   //gets cleared by ack from io logic
-   
+   //Creates a one cycle wait whenever there is no burst
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       tx_io_wait <= 1'b0;    
-     else if (tx_io_ack)
-       tx_io_wait <= 1'b0;
+       tx_io_wait <= 1'b0;         
+     else if (tx_io_wait)
+       tx_io_wait <= 1'b0;   
      else
-       tx_io_wait <= tx_access & ~burst_in;        
+       tx_io_wait <= etx_access & ~tx_burst;        
      
    //Hold transaction while waiting
-   //This transaction should be flushed out
+   //This transaction should be flushed out on wait????
    always @ (posedge clk)
      if(!nreset)
        begin
@@ -94,17 +91,12 @@ module etx_protocol (/*AUTOARG*/
      else if(~(etx_wr_wait | etx_rd_wait))
        begin
 	  tx_packet[PW-1:0] <= etx_packet[PW-1:0];
-	  tx_access         <= tx_enable & etx_access;	
+	  tx_access         <= tx_enable & etx_access;
        end
-   
+       
    //#############################
    //# Burst Detection
    //#############################
-   always @ (posedge clk)
-     if(!nreset)
-       tx_burst <= 1'b0;   
-     else       
-       tx_burst          <= burst_in;
 
    packet2emesh p2m1 (
 		     .write_out		(last_write),
@@ -123,14 +115,26 @@ module etx_protocol (/*AUTOARG*/
 			       ==
 		   	      {etx_ctrlmode[3:0],etx_datamode[1:0], etx_write};
 
-   assign burst_in   =    etx_write                 & //write 
-	       	         (etx_datamode[1:0]==2'b11) & //double only
-		          burst_type_match          & //same types
+   assign tx_burst     =  tx_access                  & //avoid garbage
+                          ~tx_wr_wait_reg            & //clear on wait
+                          etx_write                  & //write 
+	       	          (etx_datamode[1:0]==2'b11) & //double only
+		          burst_type_match           & //same types
 		          burst_addr_match;            //inc by 8
-   			      
-   //Stall for all etx pipeline
+
+   //#############################
+   //# Wait propagation circuit
+   //#############################	      
    assign etx_wr_wait = tx_wr_wait  | tx_io_wait;
    assign etx_rd_wait = tx_rd_wait  | tx_io_wait;
+
+   reg tx_wr_wait_reg;   
+   always @ (posedge clk)
+     tx_wr_wait_reg <=tx_wr_wait;
+   
+   
+   
+   
         
 endmodule // etx_protocol
 // Local Variables:

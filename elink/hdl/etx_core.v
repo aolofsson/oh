@@ -3,9 +3,8 @@ module etx_core(/*AUTOARG*/
    tx_access, tx_burst, tx_packet, txrd_wait, txrr_wait, txwr_wait,
    etx_cfg_access, etx_cfg_packet,
    // Inputs
-   nreset, clk, tx_io_ack, tx_rd_wait, tx_wr_wait, txrd_access,
-   txrd_packet, txrr_access, txrr_packet, txwr_access, txwr_packet,
-   etx_cfg_wait
+   nreset, clk, tx_rd_wait, tx_wr_wait, txrd_access, txrd_packet,
+   txrr_access, txrr_packet, txwr_access, txwr_packet, etx_cfg_wait
    );
    parameter AW      = 32;
    parameter DW      = 32;
@@ -21,7 +20,6 @@ module etx_core(/*AUTOARG*/
    output 	   tx_access;
    output 	   tx_burst;
    output [PW-1:0] tx_packet; 
-   input 	   tx_io_ack;  
    input 	   tx_rd_wait;
    input 	   tx_wr_wait;
    
@@ -207,7 +205,6 @@ module etx_core(/*AUTOARG*/
 			      .tx_enable	(tx_enable),
 			      .gpio_data	(gpio_data[8:0]),
 			      .gpio_enable	(gpio_enable),
-			      .tx_io_ack	(tx_io_ack),
 			      .tx_rd_wait	(tx_rd_wait),
 			      .tx_wr_wait	(tx_wr_wait));
    
