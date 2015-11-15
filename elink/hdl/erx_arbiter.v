@@ -72,8 +72,6 @@ module erx_arbiter (/*AUTOARG*/
 		     // Inputs
 		     .packet_in		(emmu_packet[PW-1:0]));
    
-
-   
    //#######################################################
    //Read response path (from IO or elink register readback)
    //#######################################################
@@ -87,7 +85,7 @@ module erx_arbiter (/*AUTOARG*/
    //Write Path (from IO through MMU)
    //####################################
 
-   assign rxwr_access         = emmu_access    & 
+   assign rxwr_access         = emmu_access   & 
 				emmu_write    &
 				~(emmu_dstaddr[31:20]==ID);
    
@@ -109,11 +107,14 @@ module erx_arbiter (/*AUTOARG*/
    //####################################   
    
    assign rx_rd_wait    = rxrd_wait;
-   assign rx_wr_wait    = rxwr_wait | (rxrr_wait & rxrr_access);
+
+   assign rx_wr_wait    = rxwr_wait | 
+			  rxrr_wait;
+
    assign edma_wait     = rxrd_wait | emmu_read;
+
    assign ecfg_wait     = erx_rr_access |
-			  rxrr_wait     |
-			  rxwr_wait;
+			  rxrr_wait;
    
 endmodule // erx_arbiter
 
