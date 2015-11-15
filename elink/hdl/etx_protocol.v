@@ -43,7 +43,7 @@ module etx_protocol (/*AUTOARG*/
    reg           tx_access;
    reg [PW-1:0]  tx_packet; 
    reg 		 tx_io_wait;
-   
+   reg 		 tx_burst;   
    wire 	 etx_write;
    wire [1:0] 	 etx_datamode;
    wire [3:0]	 etx_ctrlmode;
@@ -78,7 +78,7 @@ module etx_protocol (/*AUTOARG*/
      else if (tx_io_wait)
        tx_io_wait <= 1'b0;   
      else
-       tx_io_wait <= etx_access & ~tx_burst;        
+       tx_io_wait <= etx_access & ~tx_burst_in;        
      
    //Hold transaction while waiting
    //This transaction should be flushed out on wait????
@@ -92,6 +92,7 @@ module etx_protocol (/*AUTOARG*/
        begin
 	  tx_packet[PW-1:0] <= etx_packet[PW-1:0];
 	  tx_access         <= tx_enable & etx_access;
+	  tx_burst          <= tx_burst_in;	  
        end
        
    //#############################
@@ -115,7 +116,7 @@ module etx_protocol (/*AUTOARG*/
 			       ==
 		   	      {etx_ctrlmode[3:0],etx_datamode[1:0], etx_write};
 
-   assign tx_burst     =  tx_access                  & //avoid garbage
+   assign tx_burst_in =  tx_access                  & //avoid garbage
                           ~tx_wr_wait_reg            & //clear on wait
                           etx_write                  & //write 
 	       	          (etx_datamode[1:0]==2'b11) & //double only

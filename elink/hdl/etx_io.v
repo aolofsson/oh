@@ -49,7 +49,6 @@ module etx_io (/*AUTOARG*/
    reg [63:0] 	  tx_double;
    reg [2:0] 	  tx_state;   
    reg 		  tx_access_reg;
-   reg 		  tx_burst_reg;
    
    //############
    //# WIRES
@@ -99,7 +98,6 @@ module etx_io (/*AUTOARG*/
      if(firstedge)
        begin
 	  tx_access_reg    <= tx_access & ~tx_wait;
-	  tx_burst_reg     <= tx_burst  & ~tx_wait;   
        end
 
    //Pushback on wait
@@ -136,8 +134,8 @@ module etx_io (/*AUTOARG*/
 	 `CYCLE4 : tx_state[2:0] <= `CYCLE5;
 	 `CYCLE5 : tx_state[2:0] <= `CYCLE6;
 	 `CYCLE6 : tx_state[2:0] <= `CYCLE7;
-	 `CYCLE7 : tx_state[2:0] <= tx_burst_reg & ~tx_wait  ? `CYCLE4 : 
-				                                `IDLE;	
+	 `CYCLE7 : tx_state[2:0] <= tx_burst  & ~tx_wait  ? `CYCLE4 : 
+				                            `IDLE;	
        endcase // case (tx_state)   
 
    //#############################
