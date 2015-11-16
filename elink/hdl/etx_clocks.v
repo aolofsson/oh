@@ -25,7 +25,7 @@ module etx_clocks (/*AUTOARG*/
    localparam integer CCLK_DIVIDE   = MMCM_VCO_MULT*FREQ_SYSCLK/FREQ_CCLK;
    
    //VCO multiplers
-   parameter MMCM_VCO_MULT   = 12;  //TX + CCLK
+   parameter  MMCM_VCO_MULT = 12;  //TX + CCLK
       
    //Input clock, reset, config interface
    input      sys_nreset;        // por reset (hw)
@@ -75,7 +75,6 @@ module etx_clocks (/*AUTOARG*/
    wire       tx_nreset;
    wire       mmcm_reset;
    wire       tx_lclk_div4_mmcm;
-   
    
    //###########################
    // RESET STATE MACHINE

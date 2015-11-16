@@ -1,5 +1,6 @@
-//A reset signal synchronizer
-//Async entry, synchronous exit!
+/* A synchronization circuit for reset signals
+ * Async reset assertion and sync reset deassertion on otput
+ */ 
 module rsync (/*AUTOARG*/
    // Outputs
    nrst_out,
@@ -14,13 +15,12 @@ module rsync (/*AUTOARG*/
    input [DW-1:0]  nrst_in;
    output [DW-1:0] nrst_out;
    
-   //TOOD: Should only be one target
 `ifdef TARGET_SIM
    reg [DW-1:0]    sync_pipe[PS-1:0];
-`else   
+`else
    (* ASYNC_REG = "TRUE"  *) (* DONT_TOUCH =  "TRUE" *) reg [DW-1:0]    sync_pipe[PS-1:0];   
 `endif
- 
+   
    genvar 	i;
    genvar 	j;   
    generate          
