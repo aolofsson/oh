@@ -44,9 +44,7 @@ module etx_io (/*AUTOARG*/
    reg [7:0] 	  tx_pointer;   
    reg [15:0] 	  tx_data16;
    reg		  tx_frame;
-   reg [2:0] 	  tx_state_reg;
    reg [PW-1:0]   tx_packet_reg;
-   reg [63:0] 	  tx_double;
    reg [2:0] 	  tx_state;   
    reg 		  tx_access_reg;
    
@@ -85,10 +83,7 @@ module etx_io (/*AUTOARG*/
    //#########################################  
 
    //Find the aligned edge
-   edgealign edgealign (
-			// Outputs
-			.firstedge	(firstedge),
-			// Inputs
+   edgealign edgealign (.firstedge	(firstedge),
 			.fastclk	(tx_lclk_io),
 			.slowclk	(tx_lclk_div4)
 			);
@@ -96,13 +91,11 @@ module etx_io (/*AUTOARG*/
    //Sample on aligned edge
    always @ (posedge tx_lclk_io)
      if(firstedge)
-       begin
-	  tx_access_reg    <= tx_access & ~tx_wait;
-       end
+       tx_access_reg    <= tx_access & ~tx_wait;
 
    //Pushback on wait
    always @ (posedge tx_lclk_io)
-     if(firstedge & ~tx_wait)
+     if(firstedge & ~tx_wait & ~((tx_state[2:0]==`CYCLE3) & ~tx_burst))
        tx_packet_reg[PW-1:0] <= tx_packet[PW-1:0];	 
 
    //#########################################
@@ -163,24 +156,29 @@ module etx_io (/*AUTOARG*/
 
    //Stopping pipeline is urgent so synchronization
    //must be done on fast clock
-   
-   dsync sync_rd (
-		// Outputs
-		.dout			(tx_rd_wait),
-		// Inputs
-		.clk			(tx_lclk_io),
-		.din			(tx_rd_wait_async));
-   
-   dsync sync_wr (
-		// Outputs
-		.dout			(tx_wr_wait),
-		// Inputs
-		.clk			(tx_lclk_io),
-		.din			(tx_wr_wait_async));
+   //But this sync makes the timing better for the rest of the logic
 
-   assign tx_wait =  tx_rd_wait | tx_wr_wait; 
+   reg tx_wr_wait_sync;
+   reg tx_rd_wait_sync; 
+   reg tx_wr_wait;
+   reg tx_rd_wait;
+   reg tx_wait;   
+   always @ (posedge tx_lclk_io)
+     begin
+	tx_wr_wait_sync <= tx_wr_wait_async;
+	tx_rd_wait_sync <= tx_rd_wait_async;
+     end
 
+   always @ (posedge tx_lclk_io)
+     if(firstedge)
+       tx_wait <= tx_wr_wait_sync | tx_rd_wait_sync;
    
+   always @ (posedge tx_lclk_div4)
+     begin
+	tx_wr_wait <= tx_wr_wait_sync;
+	tx_rd_wait <= tx_rd_wait_sync;
+     end
+         
    //#############################
    //# IO DRIVER STUFF
    //#############################  

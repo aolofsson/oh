@@ -74,27 +74,30 @@ module etx_protocol (/*AUTOARG*/
    //Creates a one cycle wait whenever there is no burst
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       tx_io_wait <= 1'b0;         
-     else if (tx_io_wait)
-       tx_io_wait <= 1'b0;   
+       tx_io_wait <= 1'b0;            
+     else if (tx_rd_wait | tx_wr_wait)
+       tx_io_wait <= 1'b0;            
      else
-       tx_io_wait <= etx_access & ~tx_burst_in;        
-     
+       tx_io_wait <= (~tx_io_wait & etx_access & ~tx_burst_in);
+   
    //Hold transaction while waiting
    //This transaction should be flushed out on wait????
    always @ (posedge clk)
      if(!nreset)
        begin
 	  tx_packet[PW-1:0] <= 'b0;
-	  tx_access         <= 1'b0;
+	  tx_access     <= 1'b0;
        end     
      else if(~(etx_wr_wait | etx_rd_wait))
        begin
 	  tx_packet[PW-1:0] <= etx_packet[PW-1:0];
 	  tx_access         <= tx_enable & etx_access;
-	  tx_burst          <= tx_burst_in;	  
        end
        
+  
+
+   
+   
    //#############################
    //# Burst Detection
    //#############################
@@ -116,27 +119,37 @@ module etx_protocol (/*AUTOARG*/
 			       ==
 		   	      {etx_ctrlmode[3:0],etx_datamode[1:0], etx_write};
 
-   assign tx_burst_in =  tx_access                  & //avoid garbage
+   assign tx_burst_in =  tx_access                   & //avoid garbage
                           ~tx_wr_wait_reg            & //clear on wait
                           etx_write                  & //write 
 	       	          (etx_datamode[1:0]==2'b11) & //double only
 		          burst_type_match           & //same types
 		          burst_addr_match;            //inc by 8
 
+
+   reg tx_wr_wait_reg;
+   reg tx_rd_wait_reg;   
+   reg tx_io_wait_reg;   
+   //sample to align up witth tx_access   
+   always @ (posedge clk)
+     begin
+	tx_burst          <= tx_burst_in;
+	tx_wr_wait_reg    <= tx_wr_wait;
+	tx_rd_wait_reg    <= tx_rd_wait;
+	tx_io_wait_reg    <= tx_io_wait;
+     end
+
+   
+   assign special_sample = tx_io_wait_reg                    & 
+		           (tx_wr_wait     | tx_rd_wait)    &
+   			   ~(tx_wr_wait_reg | tx_rd_wait_reg) 
+			    ;
    //#############################
    //# Wait propagation circuit
    //#############################	      
-   assign etx_wr_wait = tx_wr_wait  | tx_io_wait;
-   assign etx_rd_wait = tx_rd_wait  | tx_io_wait;
-
-   reg tx_wr_wait_reg;   
-   always @ (posedge clk)
-     tx_wr_wait_reg <=tx_wr_wait;
-   
-   
-   
-   
-        
+   assign etx_wr_wait = (tx_wr_wait  | tx_io_wait) & ~special_sample;
+   assign etx_rd_wait = (tx_rd_wait  | tx_io_wait) & ~special_sample;
+  
 endmodule // etx_protocol
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")
