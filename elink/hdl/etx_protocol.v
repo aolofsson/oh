@@ -43,16 +43,16 @@ module etx_protocol (/*AUTOARG*/
    reg           tx_access;
    reg [PW-1:0]  tx_packet; 
    reg 		 tx_io_wait;
-   reg 		 tx_burst;   
+   
    wire 	 etx_write;
    wire [1:0] 	 etx_datamode;
    wire [3:0]	 etx_ctrlmode;
    wire [AW-1:0] etx_dstaddr;
    wire [DW-1:0] etx_data;
-   wire 	 last_write;
-   wire [1:0] 	 last_datamode;
-   wire [3:0]	 last_ctrlmode;
-   wire [AW-1:0] last_dstaddr;   
+   wire 	 tx_write;
+   wire [1:0] 	 tx_datamode;
+   wire [3:0]	 tx_ctrlmode;
+   wire [AW-1:0] tx_dstaddr;   
    wire 	 burst_match;
    wire 	 burst_type_match;
    wire [31:0] 	 burst_addr;
@@ -78,7 +78,7 @@ module etx_protocol (/*AUTOARG*/
      else if (tx_rd_wait | tx_wr_wait)
        tx_io_wait <= 1'b0;            
      else
-       tx_io_wait <= (~tx_io_wait & etx_access & ~tx_burst_in);
+       tx_io_wait <= etx_access & ~tx_io_wait & ~tx_burst;//~tx_burst_reg
    
    //Hold transaction while waiting
    //This transaction should be flushed out on wait????
@@ -93,57 +93,75 @@ module etx_protocol (/*AUTOARG*/
 	  tx_packet[PW-1:0] <= etx_packet[PW-1:0];
 	  tx_access         <= tx_enable & etx_access;
        end
-       
-  
-
-   
    
    //#############################
    //# Burst Detection
    //#############################
 
    packet2emesh p2m1 (
-		     .write_out		(last_write),
-		     .datamode_out	(last_datamode[1:0]),
-		     .ctrlmode_out	(last_ctrlmode[3:0]),
-		     .dstaddr_out	(last_dstaddr[31:0]),
+		     .write_out		(tx_write),
+		     .datamode_out	(tx_datamode[1:0]),
+		     .ctrlmode_out	(tx_ctrlmode[3:0]),
+		     .dstaddr_out	(tx_dstaddr[31:0]),
 		     .data_out		(),
 		     .srcaddr_out	(),
 		     .packet_in		(tx_packet[PW-1:0]));//input
 
-   assign burst_addr[31:0]  = (last_dstaddr[31:0] + 32'h8);
+   reg [31:0] dstaddr_incr;
+   reg [1:0]  datamode_old;
+   reg [3:0]  ctrlmode_old;
+   reg        write_old;
+   reg 	      access_old;
    
-   assign burst_addr_match  = (burst_addr[31:0] == etx_dstaddr[31:0]);
 
-   assign burst_type_match  = {last_ctrlmode[3:0],last_datamode[1:0],last_write}
-			       ==
-		   	      {etx_ctrlmode[3:0],etx_datamode[1:0], etx_write};
+/*   always @ (posedge clk)
+     if (~(etx_wr_wait | etx_rd_wait))
+     begin
+	dstaddr_incr[31:0] <= tx_dstaddr[31:0] + 32'h8;
+	write_old          <= tx_write;
+	datamode_old[1:0]  <= tx_datamode[1:0];
+	access_old         <= tx_access;
+	ctrlmode_old[3:0]  <= tx_ctrlmode[3:0];	
+     end     
+*/
+   
+   assign burst_addr_match  = ((tx_dstaddr[31:0]+32'h8) == etx_dstaddr[31:0]);
 
-   assign tx_burst_in =  tx_access                   & //avoid garbage
-                          ~tx_wr_wait_reg            & //clear on wait
-                          etx_write                  & //write 
-	       	          (etx_datamode[1:0]==2'b11) & //double only
-		          burst_type_match           & //same types
-		          burst_addr_match;            //inc by 8
+   assign current_match     = tx_access &
+			      tx_write &
+		              (tx_datamode[1:0]==2'b11) &		       
+			      (tx_ctrlmode[3:0]==4'b0000);
 
+   assign next_match       =  etx_access &
+			      etx_write &
+		              (etx_datamode[1:0]==2'b11) &		       
+			      (etx_ctrlmode[3:0]==4'b0000);
+     
+   assign tx_burst_in =  ~tx_wr_wait      &
+			 current_match    &
+			 next_match       &
+			 burst_addr_match;
 
    reg tx_wr_wait_reg;
    reg tx_rd_wait_reg;   
-   reg tx_io_wait_reg;   
+   reg tx_io_wait_reg; 
+   reg tx_burst_reg;
+   reg tx_burst;   
    //sample to align up witth tx_access   
-   always @ (posedge clk)
+   always @ (posedge clk) 
      begin
 	tx_burst          <= tx_burst_in;
-	tx_wr_wait_reg    <= tx_wr_wait;
+	tx_burst_reg      <= tx_burst;
 	tx_rd_wait_reg    <= tx_rd_wait;
+	tx_wr_wait_reg    <= tx_wr_wait;
 	tx_io_wait_reg    <= tx_io_wait;
      end
-
-   
-   assign special_sample = tx_io_wait_reg                    & 
+        
+   assign special_sample = tx_io_wait_reg                   & 
 		           (tx_wr_wait     | tx_rd_wait)    &
    			   ~(tx_wr_wait_reg | tx_rd_wait_reg) 
 			    ;
+
    //#############################
    //# Wait propagation circuit
    //#############################	      
