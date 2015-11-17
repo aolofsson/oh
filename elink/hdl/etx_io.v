@@ -89,15 +89,20 @@ module etx_io (/*AUTOARG*/
 			);
       
    //Sample on aligned edge
+   reg 		  tx_burst_reg;   
    always @ (posedge tx_lclk_io)
      if(firstedge)
-       tx_access_reg    <= tx_access & ~tx_wait;
-
+       begin
+	  tx_access_reg    <= tx_access & ~tx_wait;
+	  tx_burst_reg     <= tx_burst;	  //need early indicator for first cycle
+       end
    //Pushback on wait
    always @ (posedge tx_lclk_io)
-     if(firstedge & ~tx_wait & ~((tx_state[2:0]==`CYCLE3) & ~tx_burst))
+     if(firstedge & ~tx_wait & ~(~tx_burst_reg & tx_state[2:0]==`CYCLE3))
        tx_packet_reg[PW-1:0] <= tx_packet[PW-1:0];	 
 
+
+   
    //#########################################
    //# Transmit state machine
    //#########################################     
@@ -127,8 +132,8 @@ module etx_io (/*AUTOARG*/
 	 `CYCLE4 : tx_state[2:0] <= `CYCLE5;
 	 `CYCLE5 : tx_state[2:0] <= `CYCLE6;
 	 `CYCLE6 : tx_state[2:0] <= `CYCLE7;
-	 `CYCLE7 : tx_state[2:0] <= tx_burst  & ~tx_wait  ? `CYCLE4 : 
-				                            `IDLE;	
+	 `CYCLE7 : tx_state[2:0] <= tx_burst_reg & ~tx_wait  ? `CYCLE4 : 
+				                           `IDLE;	
        endcase // case (tx_state)   
 
    //#############################
@@ -136,7 +141,7 @@ module etx_io (/*AUTOARG*/
    //#############################  
     always @ (posedge tx_lclk_io)
       case(tx_state[2:0])
-	`CYCLE1 : tx_data16[15:0]  <= {~write,7'b0,ctrlmode[3:0],dstaddr[31:28]};
+	`CYCLE1 : tx_data16[15:0]  <= {~write,6'b0,tx_burst,1'b0,ctrlmode[3:0],dstaddr[31:28]};
 	`CYCLE2 : tx_data16[15:0]  <= dstaddr[27:12];
 	`CYCLE3 : tx_data16[15:0]  <= {dstaddr[11:0],datamode[1:0],write,tx_access};
 	`CYCLE4 : tx_data16[15:0]  <= data[31:16];       
