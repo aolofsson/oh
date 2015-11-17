@@ -134,8 +134,18 @@ module etx_io (/*AUTOARG*/
 	 `CYCLE6 : tx_state[2:0] <= `CYCLE7;
 	 `CYCLE7 : tx_state[2:0] <= tx_burst_reg & ~tx_wait  ? `CYCLE4 : 
 				                           `IDLE;	
-       endcase // case (tx_state)   
-
+       endcase // case (tx_state)
+   
+   reg [31:0] trans_counter;
+   
+`ifdef TARGET_SIM
+   always @ (posedge tx_lclk_io)
+     if(!nreset)       
+       trans_counter[31:0]<='b0;   
+     else if(tx_state[2:0]==`CYCLE7)
+       trans_counter[31:0]<=trans_counter[31:0]+1'b1;
+`endif
+   
    //#############################
    //# THE ELINK BYTE FORMAT
    //#############################  
