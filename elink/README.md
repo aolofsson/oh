@@ -48,7 +48,7 @@ $ diff test_0.trace test/test_random.exp
 ```
 
 ###HOW TO BUILD THE FPGA DESIGN
-The following example shows how to build a display-less (ie headless) FPGA bitstream for the Parallella board.
+The following example shows how to build a display-less (ie headless) FPGA bitstream for the Parallella board. You will need to install Vivado 2015.2 on your own.
 ```sh
 $ cd oh/parallella/fpga/parallella_base
 $ ./build.sh
