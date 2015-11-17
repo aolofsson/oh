@@ -15,14 +15,14 @@ module etx_clocks (/*AUTOARG*/
 
    //Frequency Settings (Mhz)
    parameter FREQ_SYSCLK     = 100; 
-   parameter FREQ_TXCLK      = 300;
-   parameter FREQ_CCLK       = 600;  
+   parameter FREQ_TXCLK      = 100;  
+   parameter FREQ_CCLK       = 400;  
    parameter TXCLK_PHASE     = 90;   //txclk phase shift
 
    //Don't touch these! (derived parameters)
-   localparam real    SYSCLK_PERIOD = 1000.000000/FREQ_SYSCLK;
-   localparam integer TXCLK_DIVIDE  = MMCM_VCO_MULT*FREQ_SYSCLK/FREQ_TXCLK;
-   localparam integer CCLK_DIVIDE   = MMCM_VCO_MULT*FREQ_SYSCLK/FREQ_CCLK;
+   localparam real    SYSCLK_PERIOD = 1000.000000 / FREQ_SYSCLK;
+   localparam integer TXCLK_DIVIDE  = MMCM_VCO_MULT * FREQ_SYSCLK / FREQ_TXCLK;
+   localparam integer CCLK_DIVIDE   = MMCM_VCO_MULT * FREQ_SYSCLK / FREQ_CCLK;
    
    //VCO multiplers
    parameter  MMCM_VCO_MULT = 12;  //TX + CCLK

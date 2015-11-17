@@ -13,15 +13,14 @@ module erx_clocks (/*AUTOARG*/
 `endif
 
    //Frequency Settings (Mhz)
-   parameter FREQ_SYSCLK     = 100;
-   parameter FREQ_RXCLK      = 300;   
+   parameter FREQ_RXCLK      = 200;   
    parameter FREQ_IDELAY     = 200;   
    parameter RXCLK_PHASE     = 0;   //270;  //-90 deg rxclk phase shift      
    parameter PLL_VCO_MULT    = 4;   //RX
 
    //Don't touch these! (derived parameters)
-   localparam real    RXCLK_PERIOD  = 1000.000000/FREQ_RXCLK; 
-   localparam integer IREF_DIVIDE   = PLL_VCO_MULT * FREQ_RXCLK/FREQ_IDELAY;
+   localparam real    RXCLK_PERIOD  = 1000.000000 / FREQ_RXCLK; 
+   localparam integer IREF_DIVIDE   = PLL_VCO_MULT * FREQ_RXCLK / FREQ_IDELAY;
    localparam integer RXCLK_DIVIDE  = PLL_VCO_MULT; //1:1
       
    //Input clock, reset, config interface
@@ -42,8 +41,7 @@ module erx_clocks (/*AUTOARG*/
    output     rx_active;          // rx active
    output     erx_nreset;         // reset for rx core logic
    output     erx_io_nreset;      // io reset (synced to high speed clock)
-   
-    
+       
    //############
    //# WIRES
    //############
@@ -83,14 +81,12 @@ module erx_clocks (/*AUTOARG*/
 	reset_counter[RCW-1:0] <= reset_counter[RCW-1:0]+1'b1;
 	heartbeat              <= ~(|reset_counter[RCW-1:0]);
      end
-   
-  
+     
 `define RX_RESET_ALL        3'b000
 `define RX_START_PLL        3'b001
 `define RX_ACTIVE           3'b010
 
    //Reset sequence state machine
-
 
    always @ (posedge sys_clk or negedge rx_nreset_in)
      if(!rx_nreset_in)

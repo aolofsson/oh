@@ -86,30 +86,7 @@ module etx_protocol (/*AUTOARG*/
    //Clear out the access while in wait state
    //the IO pipeline flushes out
    assign tx_access = tx_access_reg  &
-//		      ~burst_negedge &
 		      ~(tx_wr_wait | tx_rd_wait);
-
-   //#################################
-   //# Checking for transaction "done"
-   //#################################
-   //if burst, you get immediate "ack"
-   //otherwise you get ack in one cycle  
-   reg 		 done;
-   wire 	 tx_io_wait;
-
-   always @ (posedge clk or negedge nreset)
-     if(!nreset)
-       done <= 1'b0;                 
-     else
-       done <= tx_access & ~done;
-  
-   assign tx_io_wait = tx_access & ~done & ~tx_burst;//tx_burst_reg
-
-   assign adjust     = tx_io_wait_reg & (tx_rd_wait | tx_wr_wait);
-  		      
-   //#############################
-   //# Burst Detection
-   //#############################
 
    packet2emesh p2m1 (
 		     .write_out		(tx_write),
@@ -119,7 +96,33 @@ module etx_protocol (/*AUTOARG*/
 		     .data_out		(),
 		     .srcaddr_out	(),
 		     .packet_in		(tx_packet[PW-1:0]));//input
-   
+
+   //############################################################
+   //# Checking for transaction "done"
+   //#############################################################
+   //if burst, you get immediate "ack"
+   //otherwise you get ack in one cycle (since it takes 2 clocks for trans to exit IO)  
+   reg 		 done;
+   wire 	 tx_io_wait;
+
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       done <= 1'b0;                 
+     else
+       done <= tx_access & ~done & ~tx_burst;
+  
+   assign tx_io_wait = tx_access & ~done & ~tx_burst;//tx_burst_reg
+
+   //Ugly hack. When there is an async wait coming in and we are in the middle of a transction
+   //we sample in a new value to realign the pipeline since the current transaction already went
+   //out to the IO.(must be a better way???)
+   assign adjust     = tx_io_wait_reg & (tx_rd_wait | tx_wr_wait);
+  		      
+   //#############################
+   //# Burst Detection
+   //#############################
+
+  
    assign burst_addr_match  = ((tx_dstaddr[31:0]+32'h8) == etx_dstaddr[31:0]);
 
    assign current_match     = tx_access & 
@@ -151,17 +154,16 @@ module etx_protocol (/*AUTOARG*/
      end
 
    assign tx_burst  = tx_burst_reg & 
-		      tx_burst_in & 
+//		      tx_burst_in & 
 		       ~(tx_wr_wait | tx_rd_wait);
      
-   assign burst_negedge = ~tx_burst_in &
-			  tx_burst_reg;
-   
-   //#############################
-   //# Wait propagation circuit
-   //#############################	      
-   assign etx_wr_wait = (tx_wr_wait | tx_io_wait | burst_negedge) & ~adjust;
-   assign etx_rd_wait = (tx_rd_wait | tx_io_wait | burst_negedge) & ~adjust;
+  
+
+   //#######################################
+   //# Wait propagation circuit backwards
+   //########################################	      
+   assign etx_wr_wait = (tx_wr_wait | tx_io_wait ) & ~adjust;
+   assign etx_rd_wait = (tx_rd_wait | tx_io_wait ) & ~adjust;
   
 endmodule // etx_protocol
 // Local Variables:

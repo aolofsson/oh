@@ -64,7 +64,6 @@ module etx_io (/*AUTOARG*/
    wire 	  txo_lclk90;
   
    wire 	  tx_new_frame;
-   wire 	  tx_lclk90_ddr;
    wire 	  tx_wr_wait_async;
    wire 	  tx_rd_wait_async;
    wire 	  firstedge;
@@ -101,12 +100,6 @@ module etx_io (/*AUTOARG*/
      if(firstedge & ~tx_wait & ~(~tx_burst_reg & tx_state[2:0]==`CYCLE3))
        tx_packet_reg[PW-1:0] <= tx_packet[PW-1:0];	 
 
-
-   
-   //#########################################
-   //# Transmit state machine
-   //#########################################     
-
    //decode incoming packet
    packet2emesh p2e_reg (
 			  .write_out	(write),
@@ -116,9 +109,10 @@ module etx_io (/*AUTOARG*/
 			  .data_out	(data[31:0]),
 			  .srcaddr_out	(srcaddr[31:0]),
 			  .packet_in	(tx_packet_reg[PW-1:0]));
-    
 
-   assign tx_new_frame = (tx_state[2:0]==`CYCLE1);
+   //#########################################
+   //# Transmit state machine
+   //#########################################     
         
    always @ (posedge tx_lclk_io)
      if(!nreset)
@@ -132,13 +126,16 @@ module etx_io (/*AUTOARG*/
 	 `CYCLE4 : tx_state[2:0] <= `CYCLE5;
 	 `CYCLE5 : tx_state[2:0] <= `CYCLE6;
 	 `CYCLE6 : tx_state[2:0] <= `CYCLE7;
-	 `CYCLE7 : tx_state[2:0] <= tx_burst_reg & ~tx_wait  ? `CYCLE4 : 
-				                           `IDLE;	
+	 //NOTE: Burst jumps into middle of state, except for on end of burst
+	 `CYCLE7 : tx_state[2:0] <= (tx_burst_reg & tx_burst) & ~tx_wait  ? `CYCLE4 : 
+				                                            `IDLE;	
        endcase // case (tx_state)
+
+   assign tx_new_frame = (tx_state[2:0]==`CYCLE1);
    
-   reg [31:0] trans_counter;
-   
+   //A transaction counter for debugging, might be nice to put this in hardware, but then it should go in div4 domain
 `ifdef TARGET_SIM
+   reg [31:0] trans_counter;
    always @ (posedge tx_lclk_io)
      if(!nreset)       
        trans_counter[31:0]<='b0;   
