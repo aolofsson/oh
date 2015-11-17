@@ -2,11 +2,10 @@
 use Getopt::Long;
 $Usage =<<EOF;
 #######################################################
-Usage: erand.pl -rand <random-mode>
+Usage: egen.pl -rand <random-mode>
                 -n    <count>
                 -mask <ID mask>
 Description: Epiphany random transaction generator
-
 #######################################################
 #1.) Generates random writes(8,16,32,64)
 #2.) Random burst sizes (1-16) 
