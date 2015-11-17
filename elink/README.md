@@ -4,16 +4,55 @@ ELINK INTRODUCTION
 =====================================
 The "elink" is a low-latency/high-speed interface for communicating between FPGAs and ASICs (such as EpiphanyIII). The interface can achieve a peak throughput of 8 Gbit/s (duplex) in modern FPGAs using 24 LVDS signal pairs.  
 
-###HOW TO SIMULATE  
-```sh
-$ sudo apt-get install gtkwave iverilog   
-$ git clone https://github.com/parallella/oh.git  
-$ cd oh/elink/dv  
-$ ./build.sh
-$ ./run.sh test/test_basic.memh
-$ gtkwave test.vcd
+###HOW TO SIMULATE
+You can simulate the elink using the open source ICARUS verilog simulator. Proprietary Verilog simulators should also work.(although we haven't tried them) 
 
+```sh
+$ sudo apt-get install gtkwave iverilog 
+$ cd oh/elink/dv
+$ ./build.sh
+$ ./run.sh test/test_hello.memh
+$ gtkwave waveform.vcd #to view results
 ```
+
+###TEST FORMAT
+The elink simulator reads in a test file with the format seen below:
+
+<srcaddr>_<data>_<dstaddr>_<ctrlmode><datamode><wr/rd>_<delay>
+
+There are a number of pre written tests in the elink/dv/tests directory.
+
+```sh
+AAAAAAAA_11111111_80800000_05_0010 //32 bit write
+AAAAAAAA_22222222_80800004_05_0010 //
+AAAAAAAA_33333333_80800008_05_0010 //
+AAAAAAAA_44444444_8080000c_05_0010 //
+AAAAAAAA_55555555_80800010_05_0010 //
+810D0000_DEADBEEF_80800000_04_0010 //32 bit read
+810D0004_DEADBEEF_80800004_04_0010 //
+810D0008_DEADBEEF_80800008_04_0010 //
+810D000c_DEADBEEF_8080000c_04_0010 //
+810D0010_DEADBEEF_80800010_04_0010 //
+```
+###RANDOM TEST GENERATOR
+To elink comes with a test transaction generator with random sequences of different data format and burst lenghts. To run a randomly generated test.
+
+```sh
+$ cd oh/elink/dv
+$ ./gen_random.sh 100
+$ ./run.sh test/test_random.memh
+$ diff test_0.trace test/test_random.exp
+```
+
+###HOW TO BUILD THE FPGA DESIGN
+The following example shows how to build a display-less (ie headless) FPGA bitstream for the Parallella board.
+```sh
+$ cd oh/parallella/fpga/parallella_base
+$ ./build.sh
+$ cd ../headless
+$ ./build.sh
+```
+
 ###STRUCTURE
 
 ![alt tag](docs/elink.png)
@@ -72,7 +111,7 @@ The default elink communication protocol uses source synchronous clocks, a packe
            
 BYTE     | DESCRIPTION 
 ---------|--------------
-B00      | R0000000 (R bit set to 1 for read transaction)
+B00      | R00000B0 (R set to 1 for reads, B set to 1 for bursts)
 B01      | {ctrlmode[3:0],dstaddr[31:28]}
 B02      | dstaddr[27:20]
 B03      | dstaddr[19:12]
