@@ -2,7 +2,7 @@
 
 ELINK INTRODUCTION
 =====================================
-The "elink" is a low-latency/high-speed interface for communicating between FPGAs and ASICs (such as EpiphanyIII). The interface can achieve a peak throughput of 8 Gbit/s (duplex) in modern FPGAs using 24 LVDS signal pairs.  
+The "elink" is a low-latency/high-speed interface for communicating between FPGAs and ASICs (such as EpiphanyIII). The interface can achieve up to 8 Gbit/s (duplex) in fast speed grade FPGAs using 24 LVDS signal pairs.  
 
 ###HOW TO SIMULATE
 You can simulate the elink using the open source ICARUS verilog simulator. Proprietary Verilog simulators should also work.(although we haven't tried them) 
@@ -15,12 +15,14 @@ $ ./run.sh test/test_hello.memh
 $ gtkwave waveform.vcd #to view results
 ```
 
-###TEST FORMAT
+###WRITING TESTS
 The elink simulator reads in a test file with the format seen below:
 
+```
 <srcaddr>_<data>_<dstaddr>_<ctrlmode><datamode><wr/rd>_<delay>
+```
 
-There are a number of pre written tests in the elink/dv/tests directory.
+Example: (tests/test_hello.memh)
 
 ```sh
 AAAAAAAA_11111111_80800000_05_0010 //32 bit write
@@ -34,8 +36,9 @@ AAAAAAAA_55555555_80800010_05_0010 //
 810D000c_DEADBEEF_8080000c_04_0010 //
 810D0010_DEADBEEF_80800010_04_0010 //
 ```
+
 ###RANDOM TEST GENERATOR
-To elink comes with a test transaction generator with random sequences of different data format and burst lenghts. To run a randomly generated test.
+Directed testing will only get you so far so we created a simple random transaction generator that produces sequences of different data format and burst lenghts. To generate a random testfile and simulate:.
 
 ```sh
 $ cd oh/elink/dv
