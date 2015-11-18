@@ -9,42 +9,29 @@ The "elink" is a low-latency/high-speed interface for communicating between FPGA
 
 ## CONTENT
 
-1.  [Module Specifications](#Introduction)
-
-1.1 [I/O Interface](#I/O-Interface)
-
-1.2 [System Side Interface](#System-side-interface)
-
-1.3 [Clocking & Reset](#Clocking-and-reset)
-
-1.4 [Module Interface](#module-interface)
-
-1.5 [Design Structure](#design-structure)
-
-1.6 [Registers](#registers)
-
-2.  [Testbench](#testbench)
-
-2.1 [Build Instructions](#build-instructions)
-
-2.2 [Test Format](#test-format)
-
-2.3 [Random Transaction Generator](#random-transaction-generator)
-
-3.  [FPGA Design](#fpga-design)
-
-3.1 [Resource Summary](#fpga-resource-summary)
-
-3.2 [Synthesis Instructions](#synthesis-scripts)
+1.  [MODULE SPECIFICATIONS](#MODULE-SPECIFICATIONS)  
+  1. [IO interface](#IO-interface)
+  1. [Packet format](#Packet-format)
+  1. [Clocking and reset](#Clocking-and-reset)
+  1. [Module interface](#Module-interface)
+  1. [Design structure](#Design-structure)
+  1. [Registers](#Registers)
+2.  [TESTBENCH](#TESTBENCH)
+  2. [Simulation instructions](#Simulation-instructions)
+  2. [Test format](#Test-format)
+  2. [Random transaction generator](#Tandom-transaction-generator)
+3.  [FPGA DESIGN](#FPGA-DESIGN)
+  3. [Resource summary](#Resource-summary)
+  3. [Synthesis scripts](#Synthesis-scripts) 
 
 ----------------------------------------------------------------------------
 
 MODULE SPECIFICATIONS
 ================================================
 
-## I/O INTERFACE
+## IO interface
 
-The default elink communication protocol uses source synchronous clocks, a packet frame signal, 8-bit wide dual data rate data bus, and separate read and write packet wait signals to implement a glueless point to point link. The elink has a modular structure allowing the default communication protocol to be easily changed by modifying  the "etx_protocol" and "erx_protocol" blocks.    
+The default elink communication protocol uses source synchronous clocks, a packet frame signal, 8-bit wide dual data rate data bus, and separate read and write packet wait signals to implement a glueless point to point link. The elink has a modular structure allowing the default communication protocol to be changed simply by modifying the "etx_io" and "erx_io" blocks.    
 
 ```
                ___     ___     ___     ___     ___     ___     ___     ___ 
@@ -96,7 +83,7 @@ Read and write wait signals are used to stall transmission when a receiver is un
 
 ```
 
-## SYSTEM SIDE INTERFACAE  
+## Packet format  
 
 Communication between the elink and the system side (i.e. the AXI side) is done using 104 bit parallel packet interfaces. Read, write, and read response transactions have independent channels into the elink. Data from a receiver read request is expected to return on the read response transmit channel.   
 
@@ -112,7 +99,7 @@ The "access" signals indicate a valid transaction. The wait signals indicate tha
  data[31:0]    | [71:40] | Data for write transaction, data for read response
  srcaddr[31:0] | [103:72]| Return address for read-request, upper data for write
 
-## CLOCKING AND RESET
+## Clocking and reset
 The elink has the following clock domains:
 
 * sys_clk : used by the axi interfaces
@@ -126,7 +113,7 @@ The elink uses a mix of asynchronous and synchronous reset out of necessity. Asy
 
 ![alt tag](docs/clocking.png)
     
-## MODULE INTERFACE
+## Module interface
    
 SIGNAL             | DIR| DESCRIPTION 
 -------------------|----|--------------
@@ -154,7 +141,7 @@ e_resetb           | O  | Active low reset for Epiphany chip (optional)
 e_cclk_{p/n}       | O  | High speed clock for Epiphany chip (optional)  
 
 
-## DESIGN STRUCTURE
+## Design structure
 
 ![alt tag](docs/elink.png)
 
@@ -198,7 +185,7 @@ elink
 ```
 
 
-## REGISTERS
+## Registers
  
 The full 32 bit physical address of an elink register is the address seen below added to the 12 bit elink ID that maps to address bits 31:20.  As an example, if the elink ID is 0x810, then writing to the E_RESET register would be done to address 0x810F0200. Readback is done through the txrd channel with the source address sub field set to 810Dxxxx;
  
@@ -461,7 +448,7 @@ FIELD    | DESCRIPTION
 TESTBENCH
 ================================================
 
-## BUILD INSTRUCTIONS
+## Simulation instructions
 You can simulate the elink using the open source ICARUS verilog simulator. Proprietary Verilog simulators should also work.(although we haven't tried them) 
 
 ```sh
@@ -472,7 +459,7 @@ $ ./run.sh test/test_hello.memh
 $ gtkwave waveform.vcd #to view results
 ```
 
-## TEST FORMAT
+## Test format
 The elink simulator reads in a test file with the format seen below:
 
 ```
@@ -494,7 +481,7 @@ AAAAAAAA_55555555_80800010_05_0010 //
 810D0010_DEADBEEF_80800010_04_0010 //
 ```
 
-## RANDOM TRANSACTION GENERATOR
+## Random transaction generator
 Directed testing will only get you so far so we created a simple random transaction generator that produces sequences of different data format and burst lenghts. To generate a random testfile and simulate:.
 
 ```sh
@@ -507,7 +494,7 @@ $ diff test_0.trace test/test_random.exp
 FPGA DESIGN
 ================================================
 
-## RESOURCE SUMMARY
+## Resource summary
 The following table shows the rough resource usage of the elink synthesized with the xc7z010clg400-1 as a target.
 (as of May 12, 2015)  
 
@@ -525,7 +512,7 @@ Instance             |Module                   | FPGA Cells
   ----etx_fifo       |etx_fifo                 |  2685
   ----etx_io         |etx_io                   |    21
   
-## SYNTHESIS SCRIPTS
+## Synthesis script
 The following example shows how to build a display-less (ie headless) FPGA bitstream for the Parallella board. You will need to install Vivado 2015.2 on your own.
 ```sh
 $ cd oh/parallella/fpga/parallella_base
