@@ -9,20 +9,20 @@ The "elink" is a low-latency/high-speed interface for communicating between FPGA
 
 ## CONTENT
 
-1.  [MODULE SPECIFICATIONS](#MODULE-SPECIFICATIONS)  
-  1. [IO interface](#IO-interface)
-  1. [Packet format](#Packet-format)
-  1. [Clocking and reset](#Clocking-and-reset)
-  1. [Module interface](#Module-interface)
-  1. [Design structure](#Design-structure)
-  1. [Registers](#Registers)
-2.  [TESTBENCH](#TESTBENCH)
-  2. [Simulation instructions](#Simulation-instructions)
-  2. [Test format](#Test-format)
-  2. [Random transaction generator](#Tandom-transaction-generator)
-3.  [FPGA DESIGN](#FPGA-DESIGN)
-  3. [Resource summary](#Resource-summary)
-  3. [Synthesis scripts](#Synthesis-scripts) 
+1.  [MODULE SPECIFICATIONS](#module-specifications)  
+  1. [IO interface](#io-interface)
+  1. [Packet format](#packet-format)
+  1. [Design structure](#design-structure)
+  1. [Module interface](#module-interface)
+  1. [Registers](#registers)
+2.  [TESTBENCH](#testbench)
+  2. [Simulation instructions](#simulation-instructions)
+  2. [Test format](#test-format)
+  2. [Random transaction generator](#random-transaction-generator)
+3.  [FPGA DESIGN](#fpga-DESIGN)
+  3. [Clocking and reset](#clocking-and-reset)
+  3. [Resource summary](#resource-summary)
+  3. [Synthesis scripts](#synthesis-scripts) 
 
 ----------------------------------------------------------------------------
 
@@ -512,7 +512,7 @@ Instance             |Module                   | FPGA Cells
   ----etx_fifo       |etx_fifo                 |  2685
   ----etx_io         |etx_io                   |    21
   
-## Synthesis script
+## Synthesis scripts
 The following example shows how to build a display-less (ie headless) FPGA bitstream for the Parallella board. You will need to install Vivado 2015.2 on your own.
 ```sh
 $ cd oh/parallella/fpga/parallella_base
