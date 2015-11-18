@@ -2,104 +2,48 @@
 
 ELINK INTRODUCTION
 =====================================
-The "elink" is a low-latency/high-speed interface for communicating between FPGAs and ASICs (such as EpiphanyIII). The interface can achieve up to 8 Gbit/s (duplex) in fast speed grade FPGAs using 24 LVDS signal pairs.  
 
-###HOW TO SIMULATE
-You can simulate the elink using the open source ICARUS verilog simulator. Proprietary Verilog simulators should also work.(although we haven't tried them) 
+The "elink" is a low-latency/high-speed interface for communicating between FPGAs and ASICs (such as the Epiphany multicore ASICs). The interface can achieve up to 8 Gbit/s (duplex) in fast speed grade FPGAs using 24 LVDS signal pairs.
 
-```sh
-$ sudo apt-get install gtkwave iverilog 
-$ cd oh/elink/dv
-$ ./build.sh
-$ ./run.sh test/test_hello.memh
-$ gtkwave waveform.vcd #to view results
-```
+----------------------------------------------------------------------------
 
-###WRITING TESTS
-The elink simulator reads in a test file with the format seen below:
+## CONTENT
 
-```
-<srcaddr>_<data>_<dstaddr>_<ctrlmode><datamode><wr/rd>_<delay>
-```
+1.  [Module Specifications](#Introduction)
 
-Example: (tests/test_hello.memh)
+1.1 [I/O Interface](#I/O-Interface)
 
-```sh
-AAAAAAAA_11111111_80800000_05_0010 //32 bit write
-AAAAAAAA_22222222_80800004_05_0010 //
-AAAAAAAA_33333333_80800008_05_0010 //
-AAAAAAAA_44444444_8080000c_05_0010 //
-AAAAAAAA_55555555_80800010_05_0010 //
-810D0000_DEADBEEF_80800000_04_0010 //32 bit read
-810D0004_DEADBEEF_80800004_04_0010 //
-810D0008_DEADBEEF_80800008_04_0010 //
-810D000c_DEADBEEF_8080000c_04_0010 //
-810D0010_DEADBEEF_80800010_04_0010 //
-```
+1.2 [System Side Interface](#System-side-interface)
 
-###RANDOM TEST GENERATOR
-Directed testing will only get you so far so we created a simple random transaction generator that produces sequences of different data format and burst lenghts. To generate a random testfile and simulate:.
+1.3 [Clocking & Reset](#Clocking-and-reset)
 
-```sh
-$ cd oh/elink/dv
-$ ./gen_random.sh 100
-$ ./run.sh test/test_random.memh
-$ diff test_0.trace test/test_random.exp
-```
+1.4 [Module Interface](#module-interface)
 
-###HOW TO BUILD THE FPGA DESIGN
-The following example shows how to build a display-less (ie headless) FPGA bitstream for the Parallella board. You will need to install Vivado 2015.2 on your own.
-```sh
-$ cd oh/parallella/fpga/parallella_base
-$ ./build.sh
-$ cd ../headless
-$ ./build.sh
-```
+1.5 [Design Structure](#design-structure)
 
-###STRUCTURE
+1.6 [Registers](#registers)
 
-![alt tag](docs/elink.png)
+2.  [Testbench](#testbench)
 
-```
-elink
- |----emaxi (AXI master interface)
- |----esaxi (AXI slave interface)
- |----ereset (elink and chip reset generator)
- |----ecfg_clocks (elink clock and reset configuration)
- |----eclocks (PLL instantiation)
- |----ecfg_cdc (etx-->erx path for configuration register access)
- |----erx (receive path)
- |     |----erx_io (chip level I/O interface
- |     |----erx_core
- |     |     |----erx_protocol (elink protocol-->emesh packet converter)
- |     |     |----erx_remap (simple dstaddr remapping)
- |     |     |----erx_mmu (advanced dstaddr mapping)
- |     |     |----erx_cfgif (configuration interface)
- |     |     |----erx_cfg (basic rx config registers)
- |     |     |----erx_mailbox (fifo style mailbox with interrupt output)
- |     |     |----erx_dma (RX DMA)
- |     |     |----erx_arbiter (sends RX transaction to WR/RD/RR fifo)
- |     |----erx_fifo
- |           |----rxwr_fifo (write fifo)
- |           |----rxrd_fifo (read request fifo)
- |           |----rxrr_fifo (read response fifo)
- |----etx (transmit path)
-       |----etx_io (chip level I/O interface)
-       |----etx_core
-       |     |----etx_protocol (emesh-->elink protocol converter)
-       |     |----etx_remap (simple dstaddr remapping)
-       |     |----etx_mmu (advanced dstaddr mapping)
-       |     |----etx_cfgif (configuration interface)
-       |     |----etx_cfg (basic rx config registers)
-       |     |----etx_arbiter (sends rx transaction to WR/RD/RR fifo)
-       |----etx_fifo
-             |----txwr_fifo (write fifo)     
-             |----txrd_fifo (read request fifo)
-             |----txrr_fifo (read response fifo)
- --------------------------------------------------------------------
-```
+2.1 [Build Instructions](#build-instructions)
 
-###I/O PROTOCOL 
+2.2 [Test Format](#test-format)
+
+2.3 [Random Transaction Generator](#random-transaction-generator)
+
+3.  [FPGA Design](#fpga-design)
+
+3.1 [Resource Summary](#fpga-resource-summary)
+
+3.2 [Synthesis Instructions](#synthesis-scripts)
+
+----------------------------------------------------------------------------
+
+MODULE SPECIFICATIONS
+================================================
+
+## I/O INTERFACE
+
 The default elink communication protocol uses source synchronous clocks, a packet frame signal, 8-bit wide dual data rate data bus, and separate read and write packet wait signals to implement a glueless point to point link. The elink has a modular structure allowing the default communication protocol to be easily changed by modifying  the "etx_protocol" and "erx_protocol" blocks.    
 
 ```
@@ -152,7 +96,7 @@ Read and write wait signals are used to stall transmission when a receiver is un
 
 ```
 
-###SYSTEM SIDE PROTOCOL  
+## SYSTEM SIDE INTERFACAE  
 
 Communication between the elink and the system side (i.e. the AXI side) is done using 104 bit parallel packet interfaces. Read, write, and read response transactions have independent channels into the elink. Data from a receiver read request is expected to return on the read response transmit channel.   
 
@@ -168,7 +112,7 @@ The "access" signals indicate a valid transaction. The wait signals indicate tha
  data[31:0]    | [71:40] | Data for write transaction, data for read response
  srcaddr[31:0] | [103:72]| Return address for read-request, upper data for write
 
-###Clocking and Reset
+## CLOCKING AND RESET
 The elink has the following clock domains:
 
 * sys_clk : used by the axi interfaces
@@ -178,9 +122,11 @@ The elink has the following clock domains:
 * txo_lclk: Used by the etx_io for transmitting dual rate data at pins
 * txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample the dual data rate data.
 
+The elink uses a mix of asynchronous and synchronous reset out of necessity. Asynchronous reset is used where needed in the RX block because we cannot guarantee a free running clock.
+
 ![alt tag](docs/clocking.png)
     
-###INTERFACE SIGNALS  
+## MODULE INTERFACE
    
 SIGNAL             | DIR| DESCRIPTION 
 -------------------|----|--------------
@@ -207,44 +153,52 @@ e_chipid[11:0]     | O  | ID for Epiphany chip  (optional)
 e_resetb           | O  | Active low reset for Epiphany chip (optional)  
 e_cclk_{p/n}       | O  | High speed clock for Epiphany chip (optional)  
 
-###FPGA RESOURCE USAGE
-The following table shows the rough resource usage of the elink synthesized with the xc7z010clg400-1 as a target.
-(as of May 12, 2015)  
 
-Instance             |Module                   | FPGA Cells 
----------------------|-------------------------|------------
-  elink              |elink                    |  9809
-  --eclocks          |eclocks                  |     3
-  --ecfg_cdc         |fifo_cdc                 |   994
-  --erx              |erx                      |  5200
-  ----erx_core       |erx_core                 |  2450
-  ------erx_cfg      |erx_cfg                  |   174
-  ------erx_cfgif    |ecfg_if                  |   106
-  ------erx_mailbox  |emailbox                 |   952
-  ------erx_mmu      |emmu                     |   233
-  ------erx_protocol |erx_protocol             |   880
-  ------erx_remap    |erx_remap                |   105
-  ----erx_fifo       |erx_fifo                 |  2711
-  ------rxrd_fifo    |fifo_cdc                 |   865
-  ------rxrr_fifo    |fifo_cdc                 |   857
-  ------rxwr_fifo    |fifo_cdc                 |   989
-  ----erx_io         |erx_io                   |    34
-  --etx              |etx                      |  3596
-  ----etx_core       |etx_core                 |   890
-  ------etx_arbiter  |etx_arbiter              |   197
-  ------etx_cfg      |etx_cfg                  |    61
-  ------etx_cfgif    |ecfg_if                  |   122
-  ------etx_mmu      |emmu                     |   219
-  ------etx_protocol |etx_protocol             |   187
-  ------etx_remap    |etx_remap                |   104
-  ----etx_fifo       |etx_fifo                 |  2685
-  ------txrd_fifo    |fifo_cdc                 |   867
-  ------txrr_fifo    |fifo_cdc                 |   859
-  ------txwr_fifo    |fifo_cdc                 |   959
-  ----etx_io         |etx_io                   |    21
-  
+## DESIGN STRUCTURE
 
-###REGISTER MAP  
+![alt tag](docs/elink.png)
+
+```
+elink
+ |----emaxi (AXI master interface)
+ |----esaxi (AXI slave interface)
+ |----ereset (elink and chip reset generator)
+ |----ecfg_clocks (elink clock and reset configuration)
+ |----eclocks (PLL instantiation)
+ |----ecfg_cdc (etx-->erx path for configuration register access)
+ |----erx (receive path)
+ |     |----erx_io (chip level I/O interface
+ |     |----erx_core
+ |     |     |----erx_protocol (elink protocol-->emesh packet converter)
+ |     |     |----erx_remap (simple dstaddr remapping)
+ |     |     |----erx_mmu (advanced dstaddr mapping)
+ |     |     |----erx_cfgif (configuration interface)
+ |     |     |----erx_cfg (basic rx config registers)
+ |     |     |----erx_mailbox (fifo style mailbox with interrupt output)
+ |     |     |----erx_dma (RX DMA)
+ |     |     |----erx_arbiter (sends RX transaction to WR/RD/RR fifo)
+ |     |----erx_fifo
+ |           |----rxwr_fifo (write fifo)
+ |           |----rxrd_fifo (read request fifo)
+ |           |----rxrr_fifo (read response fifo)
+ |----etx (transmit path)
+       |----etx_io (chip level I/O interface)
+       |----etx_core
+       |     |----etx_protocol (emesh-->elink protocol converter)
+       |     |----etx_remap (simple dstaddr remapping)
+       |     |----etx_mmu (advanced dstaddr mapping)
+       |     |----etx_cfgif (configuration interface)
+       |     |----etx_cfg (basic rx config registers)
+       |     |----etx_arbiter (sends rx transaction to WR/RD/RR fifo)
+       |----etx_fifo
+             |----txwr_fifo (write fifo)     
+             |----txrd_fifo (read request fifo)
+             |----txrr_fifo (read response fifo)
+ --------------------------------------------------------------------
+```
+
+
+## REGISTERS
  
 The full 32 bit physical address of an elink register is the address seen below added to the 12 bit elink ID that maps to address bits 31:20.  As an example, if the elink ID is 0x810, then writing to the E_RESET register would be done to address 0x810F0200. Readback is done through the txrd channel with the source address sub field set to 810Dxxxx;
  
@@ -271,10 +225,7 @@ ELINK_RXDELAY1  | RW     | 0xF031C | RX idelay msbs and frametap lsbs
 ELINK_RXTESTDATA| RW     | 0xF0320 | RX sampled data
 ELINK_RXMMU     | -W     | 0xE8000 | RX MMU table 
 
-REGISTER DESCRIPTIONS
-===========================================
-
-###ELINK_RESET (0xF0200)
+## ELINK_RESET (0xF0200)
 Reset control register for the elink and Epiphany chip
 
 FIELD    | DESCRIPTION 
@@ -284,7 +235,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_CLK (0xF0204) (NOT IMPLEMENTED) 
+## ELINK_CLK (0xF0204) (NOT IMPLEMENTED) 
 Transmit and Epiphany clock settings.
   
 FIELD    | DESCRIPTION 
@@ -319,7 +270,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_CHIPID (0xF0208)
+## ELINK_CHIPID (0xF0208)
 Column and row chip id pins to the Epiphany chip.
 
 FIELD    | DESCRIPTION 
@@ -329,7 +280,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_VERSION (0xF020C)
+## ELINK_VERSION (0xF020C)
 Platform and revision number.
 
 FIELD    | DESCRIPTION 
@@ -339,7 +290,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_TXCFG (0xF0210)
+## ELINK_TXCFG (0xF0210)
 TX configuration settings
 
 FIELD    | DESCRIPTION 
@@ -366,7 +317,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_TXSTATUS (0xF0214)
+## ELINK_TXSTATUS (0xF0214)
 TX status register
 
 FIELD    | DESCRIPTION 
@@ -375,7 +326,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_TXGPIO (0xF0218)
+## ELINK_TXGPIO (0xF0218)
 Data to drive on txo_data and txo_frame pins in gpio mode
  
 FIELD    | DESCRIPTION 
@@ -385,7 +336,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_TXMMU (0xE0000)
+## ELINK_TXMMU (0xE0000)
 A table of N entries for translating incoming 12 bit address to a new value. Entries are aligned on 8 byte boundaries
  
 FIELD    | DESCRIPTION 
@@ -393,7 +344,7 @@ FIELD    | DESCRIPTION
  [11:0]  | Output address bits 31:20
  [43:12] | Output address bits 63:32 (TBD)
  
-###ELINK_RXCFG (0xF0300)
+## ELINK_RXCFG (0xF0300)
 RX configuration register
 
 FIELD    | DESCRIPTION 
@@ -423,14 +374,14 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_RXSTATUS (0xF0304)
+## ELINK_RXSTATUS (0xF0304)
 RX status register
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [15:0]  | TBD
 
-###ELINK_RXGPIO (0xF0308)
+## ELINK_RXGPIO (0xF0308)
 RX status register. Data sampled on  rxi_data and rxi_frame pins in gpio mode
 
 FIELD    | DESCRIPTION 
@@ -438,7 +389,7 @@ FIELD    | DESCRIPTION
  [7:0]   | Data from rxi_data pins
  [8]     | Data from rxi_frame pin
 
-###ELINK_RXOFFSET (0xF030C)
+## ELINK_RXOFFSET (0xF030C)
 Address offset used in the dynamic address remapping mode.
 
 FIELD    | DESCRIPTION 
@@ -447,7 +398,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_MAILBOXLO (0xF0310)
+## ELINK_MAILBOXLO (0xF0310)
 Lower 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Must be read before ELINK_MAILBOXHI is read
 
 FIELD    | DESCRIPTION 
@@ -456,7 +407,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_MAILBOXHI (0xF0314)
+## ELINK_MAILBOXHI (0xF0314)
 Upper 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Reading this register causes the RX FIFO read pointer to increment by one.
 
 FIELD    | DESCRIPTION 
@@ -465,7 +416,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_RXDELAY0 (0xF0318)
+## ELINK_RXDELAY0 (0xF0318)
 Four bit LSB fields for the RX IDELAY of data bits [7:0]
 
 FIELD    | DESCRIPTION 
@@ -481,7 +432,7 @@ FIELD    | DESCRIPTION
  
 -------------------------------
 
-###ELINK_RXDELAY1 (0xF031c)
+## ELINK_RXDELAY1 (0xF031c)
 MSB field for all RX IDELAY values and lsbs for frame signal
 
 FIELD   | DESCRIPTION 
@@ -499,7 +450,7 @@ FIELD   | DESCRIPTION
  
 -------------------------------
 
-###ELINK_RXMMU (0xE8000)
+## ELINK_RXMMU (0xE8000)
 A table of N entries for translating incoming 12 bit address to a new value. Entries are aligned on 8 byte boundaries.
  
 FIELD    | DESCRIPTION 
@@ -507,3 +458,78 @@ FIELD    | DESCRIPTION
  [11:0]  | Output address bits 31:20
  [43:12] | Output address bits 63:32 (TBD)
 
+TESTBENCH
+================================================
+
+## BUILD INSTRUCTIONS
+You can simulate the elink using the open source ICARUS verilog simulator. Proprietary Verilog simulators should also work.(although we haven't tried them) 
+
+```sh
+$ sudo apt-get install gtkwave iverilog 
+$ cd oh/elink/dv
+$ ./build.sh
+$ ./run.sh test/test_hello.memh
+$ gtkwave waveform.vcd #to view results
+```
+
+## TEST FORMAT
+The elink simulator reads in a test file with the format seen below:
+
+```
+<srcaddr>_<data>_<dstaddr>_<ctrlmode><datamode><wr/rd>_<delay>
+```
+
+Example: (tests/test_hello.memh)
+
+```sh
+AAAAAAAA_11111111_80800000_05_0010 //32 bit write
+AAAAAAAA_22222222_80800004_05_0010 //
+AAAAAAAA_33333333_80800008_05_0010 //
+AAAAAAAA_44444444_8080000c_05_0010 //
+AAAAAAAA_55555555_80800010_05_0010 //
+810D0000_DEADBEEF_80800000_04_0010 //32 bit read
+810D0004_DEADBEEF_80800004_04_0010 //
+810D0008_DEADBEEF_80800008_04_0010 //
+810D000c_DEADBEEF_8080000c_04_0010 //
+810D0010_DEADBEEF_80800010_04_0010 //
+```
+
+## RANDOM TRANSACTION GENERATOR
+Directed testing will only get you so far so we created a simple random transaction generator that produces sequences of different data format and burst lenghts. To generate a random testfile and simulate:.
+
+```sh
+$ cd oh/elink/dv
+$ ./gen_random.sh 100
+$ ./run.sh test/test_random.memh
+$ diff test_0.trace test/test_random.exp
+```
+
+FPGA DESIGN
+================================================
+
+## RESOURCE SUMMARY
+The following table shows the rough resource usage of the elink synthesized with the xc7z010clg400-1 as a target.
+(as of May 12, 2015)  
+
+Instance             |Module                   | FPGA Cells 
+---------------------|-------------------------|------------
+  elink              |elink                    |  9809
+  --eclocks          |eclocks                  |     3
+  --ecfg_cdc         |fifo_cdc                 |   994
+  --erx              |erx                      |  5200
+  ----erx_core       |erx_core                 |  2450
+  ----erx_fifo       |erx_fifo                 |  2711
+  ----erx_io         |erx_io                   |    34
+  --etx              |etx                      |  3596
+  ----etx_core       |etx_core                 |   890
+  ----etx_fifo       |etx_fifo                 |  2685
+  ----etx_io         |etx_io                   |    21
+  
+## SYNTHESIS SCRIPTS
+The following example shows how to build a display-less (ie headless) FPGA bitstream for the Parallella board. You will need to install Vivado 2015.2 on your own.
+```sh
+$ cd oh/parallella/fpga/parallella_base
+$ ./build.sh
+$ cd ../headless
+$ ./build.sh
+```
