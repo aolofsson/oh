@@ -270,8 +270,8 @@ module esaxi (/*autoarg*/
 	  if( last_wr_beat )
 	    s_axi_wready <= 1'b0;
 	  else if( write_active )
-	    s_axi_wready <= ~txwr_wait;
-       end
+	    s_axi_wready <= ~txwr_wait;//this signal needs to be a programmable fifo full to work	  
+       end                             //regular pushback won't work FIX!
    
    always @( posedge s_axi_aclk )
      if (~s_axi_aresetn) 
@@ -378,7 +378,8 @@ module esaxi (/*autoarg*/
           txwr_access               <= pre_wr_en;
 	  txwr_datamode_reg[1:0]    <= axi_awsize[1:0];	
           txwr_dstaddr_reg[31:2]    <= axi_awaddr[31:2]; //set lsbs of address based on write strobes	 
-	  if(s_axi_wstrb[0])//| (axi_awsize[1:0]==2'b10)32-bits
+	  //What is up with this logic??
+	  if(s_axi_wstrb[0]| (axi_awsize[1:0]==2'b10))//| (axi_awsize[1:0]==2'b10)32-bits
 	    begin
 	       txwr_data_reg[31:0]   <= s_axi_wdata[31:0];
 	       txwr_dstaddr_reg[1:0] <= 2'd0;
