@@ -420,9 +420,6 @@ module esaxi (/*autoarg*/
    // -- because elink reads are not generally 
    // -- returned in order, we will only allow
    // -- one at a time.
-
-   //TODO: Fix this nonsense, need to improve performance
-   //Allow up to N outstanding transactions, use ID to match them up
    //Need to look at txrd_wait signal
    assign txrd_write         = 1'b0;
    always @( posedge s_axi_aclk )
