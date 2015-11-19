@@ -19,7 +19,7 @@ The "elink" is a low-latency/high-speed interface for communicating between FPGA
   2. [Simulation instructions](#simulation-instructions)
   2. [Test format](#test-format)
   2. [Random transaction generator](#random-transaction-generator)
-3.  [FPGA DESIGN](#fpga-DESIGN)
+3.  [FPGA DESIGN](#fpga-design)
   3. [Clocking and reset](#clocking-and-reset)
   3. [Resource summary](#resource-summary)
   3. [Synthesis scripts](#synthesis-scripts) 
@@ -99,19 +99,7 @@ The "access" signals indicate a valid transaction. The wait signals indicate tha
  data[31:0]    | [71:40] | Data for write transaction, data for read response
  srcaddr[31:0] | [103:72]| Return address for read-request, upper data for write
 
-## Clocking and reset
-The elink has the following clock domains:
 
-* sys_clk : used by the axi interfaces
-* rxi_lclk_div4: Used for the erx_core logic
-* txo_lclk_div: Used for the etx_core logic
-* rxi_lclk: Used by the erx_io for clocking in dual data rate data at pins
-* txo_lclk: Used by the etx_io for transmitting dual rate data at pins
-* txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample the dual data rate data.
-
-The elink uses a mix of asynchronous and synchronous reset out of necessity. Asynchronous reset is used where needed in the RX block because we cannot guarantee a free running clock.
-
-![alt tag](docs/clocking.png)
     
 ## Module interface
    
@@ -494,14 +482,28 @@ $ diff test_0.trace test/test_random.exp
 FPGA DESIGN
 ================================================
 
+## Clocking and reset
+The elink has the following clock domains:
+
+* sys_clk : used by the axi interfaces
+* rxi_lclk_div4: Used for the erx_core logic
+* txo_lclk_div: Used for the etx_core logic
+* rxi_lclk: Used by the erx_io for clocking in dual data rate data at pins
+* txo_lclk: Used by the etx_io for transmitting dual rate data at pins
+* txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample the dual data rate data.
+
+The elink uses a mix of asynchronous and synchronous reset out of necessity. Asynchronous reset is used where needed in the RX block because we cannot guarantee a free running clock.
+
+The reset and clocking circuitry can be found in the "etx_clocks" and "erx_clocks" blocks.
+
+![alt tag](docs/clocking.png)
+
 ## Resource summary
-The following table shows the rough resource usage of the elink synthesized with the xc7z010clg400-1 as a target.
-(as of May 12, 2015)  
+The following table shows the rough resource usage of the elink synthesized with the xc7z010clg400-1 as a target. (as of May 12, 2015)
 
 Instance             |Module                   | FPGA Cells 
 ---------------------|-------------------------|------------
   elink              |elink                    |  9809
-  --eclocks          |eclocks                  |     3
   --ecfg_cdc         |fifo_cdc                 |   994
   --erx              |erx                      |  5200
   ----erx_core       |erx_core                 |  2450

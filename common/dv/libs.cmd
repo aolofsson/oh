@@ -2,6 +2,7 @@
 -y ../../common/dv
 -y ../../emesh/dv
 -y ../../memory/dv
+-y ../../axi/dv
 -y ../../common/hdl
 -y ../../elink/hdl
 -y ../../edma/hdl
