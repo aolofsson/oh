@@ -2,19 +2,134 @@
 
 ELINK INTRODUCTION
 =====================================
-The "elink" is a low-latency/high-speed interface for communicating between FPGAs and ASICs (such as EpiphanyIII). The interface can achieve a peak throughput of 8 Gbit/s (duplex) in modern FPGAs using 24 LVDS signal pairs.  
 
-###HOW TO SIMULATE  
-```sh
-$ sudo apt-get install gtkwave iverilog   
-$ git clone https://github.com/parallella/oh.git  
-$ cd oh/elink/dv  
-$ ./build.sh
-$ ./run.sh test/test_basic.memh
-$ gtkwave test.vcd
+The "elink" is a low-latency/high-speed interface for communicating between FPGAs and ASICs (such as the Epiphany multicore ASICs). The interface can achieve up to 8 Gbit/s (duplex) in fast speed grade FPGAs using 24 LVDS signal pairs.
+
+----------------------------------------------------------------------------
+
+## CONTENT
+
+1.  [MODULE SPECIFICATIONS](#module-specifications)  
+  1. [IO interface](#io-interface)
+  1. [Packet format](#packet-format)
+  1. [Design structure](#design-structure)
+  1. [Module interface](#module-interface)
+  1. [Registers](#registers)
+2.  [TESTBENCH](#testbench)
+  2. [Simulation instructions](#simulation-instructions)
+  2. [Test format](#test-format)
+  2. [Random transaction generator](#random-transaction-generator)
+3.  [FPGA DESIGN](#fpga-design)
+  3. [Clocking and reset](#clocking-and-reset)
+  3. [Resource summary](#resource-summary)
+  3. [Synthesis scripts](#synthesis-scripts) 
+
+----------------------------------------------------------------------------
+
+MODULE SPECIFICATIONS
+================================================
+
+## IO interface
+
+The default elink communication protocol uses source synchronous clocks, a packet frame signal, 8-bit wide dual data rate data bus, and separate read and write packet wait signals to implement a glueless point to point link. The elink has a modular structure allowing the default communication protocol to be changed simply by modifying the "etx_io" and "erx_io" blocks.    
 
 ```
-###STRUCTURE
+               ___     ___     ___     ___     ___     ___     ___     ___ 
+ LCLK     \___/   \___/   \___/   \___/   \___/   \___/   \___/   \___/
+           _______________________________________________________________
+ FRAME   _/                                                        \______ 
+               
+ DATA   XXXX|B00|B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14
+
+```
+           
+BYTE     | DESCRIPTION 
+---------|--------------
+B00      | R00000B0 (R set to 1 for reads, B set to 1 for bursts)
+B01      | {ctrlmode[3:0],dstaddr[31:28]}
+B02      | dstaddr[27:20]
+B03      | dstaddr[19:12]
+B04      | dstaddr[11:4]
+B05      | {dstaddr[3:0],datamode[1:0],write,access}
++B06     | data[31:24]
++B07     | data[23:16]
++B08     | data[15:8]
+++B09    | data[7:0]
+B10      | data[63:56] or srcaddr[31:24]
+B11      | data[55:48] or srcaddr[23:16]
+B12      | data[47:40] or srcaddr[15:8]
+B13      | data[39:32] or srcaddr[7:0]
++++B14   | data[31:24] in 64 bit write burst mode only
+B15      | data[23:16] in 64 bit write burst mode only
+...      | ...
+
++B01-B06: srcaddr used for read request, otherwise data  
+++B09: is the last byte of 32 bit write or read transaction    
++++B14: is the first data byte of bursting transaction  
+ 
+The rising edge FRAME signal (sampled on the positive edge of LCLK) indicates the start of a new transmission. The byte captured on the first positive clock edge of the new packet is B00.  If the FRAME control signal stays high after B13, then the the elink automatically enters “bursting mode”, meaning that the  last byte of the previous transaction (B13) will be followed by B06 of a new transaction.  
+
+Read and write wait signals are used to stall transmission when a receiver is unable to accept more transactions. The receiver will raise its WAIT output signal during an active transmission indicating that it can receive ONLY one more transaction. The wait signal seen by the transmitter is of unspecified phase delay (while still of the LCLK clock period) and therefore has to be sampled with the two-cycle synchronizer.  If the transaction is in the middle of the transmission when the synchronized WAIT control goes high, the transmission process is to be completed without interruption.    
+
+
+```
+          ___     ___     ___     ___     ___     ___     ___     ___ 
+ TXO_LCLK    \___/   \___/   \___/   \___/   \___/   \___/   \___/   \___/
+
+                            ______________________________________________
+ TXI_WAIT    ______________/--------------->| (2 cycle synchronizer)
+             _______________________________
+ TXO_FRAME                                  \___________________________
+
+```
+
+## Packet format  
+
+Communication between the elink and the system side (i.e. the AXI side) is done using 104 bit parallel packet interfaces. Read, write, and read response transactions have independent channels into the elink. Data from a receiver read request is expected to return on the read response transmit channel.   
+
+The "access" signals indicate a valid transaction. The wait signals indicate that the receiving block is not ready to receive the packet. An elink packet has the following bit ordering.  
+
+ PACKET FIELD  | BITS    | DESCRIPTION 
+ --------------|---------|----------
+ write         | [0]     | Indicates a write transaction
+ datamode[1:0] | [2:1]   | Datasize (00=8b,01=16b,10=32b,11=64b)
+ ctrlmode[3:0] | [6:3]   | Various special modes for the Epiphany chip
+ reserved      | [7]     | Reserved for future use
+ dstraddr[31:0]| [39:8]  | Address for write, read-request, or read-responses
+ data[31:0]    | [71:40] | Data for write transaction, data for read response
+ srcaddr[31:0] | [103:72]| Return address for read-request, upper data for write
+
+
+    
+## Module interface
+   
+SIGNAL             | DIR| DESCRIPTION 
+-------------------|----|--------------
+m_*                | IO | AXI master interface
+s_*                | IO | AXI slave interface
+*******************|****|***********************************
+txo_frame_{p/n}    | O  | TX packet framing signal
+txo_lclk_{p/n}     | O  | TX clock aligned in the center of the data eye
+txo_data_{p/n}[7:0]| O  | TX dual data rate (DDR) that transmits packet
+txi_rd_wait_{p/n}  | I  | TX push back (input) for read transactions
+txi_wd_wait{p/n}   | I  | TX push back (input) for write transactions
+rxi_frame_{p/n}    | I  | RX packet framing signal.
+rxi_lclk_{p/n}     | I  | RX clock aligned in the center of the data eye
+rxi_data_{p/n}[7:0]| I  | RX dual data rate (DDR) that transmits packet
+rxo_rd_wait_{p/n}  | O  | RX push back (output) for read transactions
+rxo_wr_wait_{p/n}  | O  | RX push back (output) for write transactions
+*******************|****|***********************************
+reset              | I  | Reset input  
+pll_clk            | I  | Clock input for CCLK/LCLK PLL  
+sys_clk            | I  | System clock for FIFOs
+embox_not_empty    | O  | Mailbox not empty (connect to interrupt line)   
+embox_full         | O  | Mailbox is full indicator
+e_chipid[11:0]     | O  | ID for Epiphany chip  (optional)  
+e_resetb           | O  | Active low reset for Epiphany chip (optional)  
+e_cclk_{p/n}       | O  | High speed clock for Epiphany chip (optional)  
+
+
+## Design structure
 
 ![alt tag](docs/elink.png)
 
@@ -57,152 +172,8 @@ elink
  --------------------------------------------------------------------
 ```
 
-###I/O PROTOCOL 
-The default elink communication protocol uses source synchronous clocks, a packet frame signal, 8-bit wide dual data rate data bus, and separate read and write packet wait signals to implement a glueless point to point link. The elink has a modular structure allowing the default communication protocol to be easily changed by modifying  the "etx_protocol" and "erx_protocol" blocks.    
 
-```
-               ___     ___     ___     ___     ___     ___     ___     ___ 
- LCLK     \___/   \___/   \___/   \___/   \___/   \___/   \___/   \___/
-           _______________________________________________________________
- FRAME   _/                                                        \______ 
-               
- DATA   XXXX|B00|B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14
-
-```
-           
-BYTE     | DESCRIPTION 
----------|--------------
-B00      | R0000000 (R bit set to 1 for read transaction)
-B01      | {ctrlmode[3:0],dstaddr[31:28]}
-B02      | dstaddr[27:20]
-B03      | dstaddr[19:12]
-B04      | dstaddr[11:4]
-B05      | {dstaddr[3:0],datamode[1:0],write,access}
-+B06     | data[31:24]
-+B07     | data[23:16]
-+B08     | data[15:8]
-++B09    | data[7:0]
-B10      | data[63:56] or srcaddr[31:24]
-B11      | data[55:48] or srcaddr[23:16]
-B12      | data[47:40] or srcaddr[15:8]
-B13      | data[39:32] or srcaddr[7:0]
-+++B14   | data[31:24] in 64 bit write burst mode only
-B15      | data[23:16] in 64 bit write burst mode only
-...      | ...
-
-+B01-B06: srcaddr used for read request, otherwise data  
-++B09: is the last byte of 32 bit write or read transaction    
-+++B14: is the first data byte of bursting transaction  
- 
-The rising edge FRAME signal (sampled on the positive edge of LCLK) indicates the start of a new transmission. The byte captured on the first positive clock edge of the new packet is B00.  If the FRAME control signal stays high after B13, then the the elink automatically enters “bursting mode”, meaning that the  last byte of the previous transaction (B13) will be followed by B06 of a new transaction.  
-
-Read and write wait signals are used to stall transmission when a receiver is unable to accept more transactions. The receiver will raise its WAIT output signal during an active transmission indicating that it can receive ONLY one more transaction. The wait signal seen by the transmitter is of unspecified phase delay (while still of the LCLK clock period) and therefore has to be sampled with the two-cycle synchronizer.  If the transaction is in the middle of the transmission when the synchronized WAIT control goes high, the transmission process is to be completed without interruption.    
-
-
-```
-          ___     ___     ___     ___     ___     ___     ___     ___ 
- TXO_LCLK    \___/   \___/   \___/   \___/   \___/   \___/   \___/   \___/
-
-                            ______________________________________________
- TXI_WAIT    ______________/--------------->| (2 cycle synchronizer)
-             _______________________________
- TXO_FRAME                                  \___________________________
-
-```
-
-###SYSTEM SIDE PROTOCOL  
-
-Communication between the elink and the system side (i.e. the AXI side) is done using 104 bit parallel packet interfaces. Read, write, and read response transactions have independent channels into the elink. Data from a receiver read request is expected to return on the read response transmit channel.   
-
-The "access" signals indicate a valid transaction. The wait signals indicate that the receiving block is not ready to receive the packet. An elink packet has the following bit ordering.  
-
- PACKET FIELD  | BITS    | DESCRIPTION 
- --------------|---------|----------
- write         | [0]     | Indicates a write transaction
- datamode[1:0] | [2:1]   | Datasize (00=8b,01=16b,10=32b,11=64b)
- ctrlmode[3:0] | [6:3]   | Various special modes for the Epiphany chip
- reserved      | [7]     | Reserved for future use
- dstraddr[31:0]| [39:8]  | Address for write, read-request, or read-responses
- data[31:0]    | [71:40] | Data for write transaction, data for read response
- srcaddr[31:0] | [103:72]| Return address for read-request, upper data for write
-
-###Clocking and Reset
-The elink has the following clock domains:
-
-* sys_clk : used by the axi interfaces
-* rxi_lclk_div4: Used for the erx_core logic
-* txo_lclk_div: Used for the etx_core logic
-* rxi_lclk: Used by the erx_io for clocking in dual data rate data at pins
-* txo_lclk: Used by the etx_io for transmitting dual rate data at pins
-* txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample the dual data rate data.
-
-![alt tag](docs/clocking.png)
-    
-###INTERFACE SIGNALS  
-   
-SIGNAL             | DIR| DESCRIPTION 
--------------------|----|--------------
-m_*                | IO | AXI master interface
-s_*                | IO | AXI slave interface
-*******************|****|***********************************
-txo_frame_{p/n}    | O  | TX packet framing signal
-txo_lclk_{p/n}     | O  | TX clock aligned in the center of the data eye
-txo_data_{p/n}[7:0]| O  | TX dual data rate (DDR) that transmits packet
-txi_rd_wait_{p/n}  | I  | TX push back (input) for read transactions
-txi_wd_wait{p/n}   | I  | TX push back (input) for write transactions
-rxi_frame_{p/n}    | I  | RX packet framing signal.
-rxi_lclk_{p/n}     | I  | RX clock aligned in the center of the data eye
-rxi_data_{p/n}[7:0]| I  | RX dual data rate (DDR) that transmits packet
-rxo_rd_wait_{p/n}  | O  | RX push back (output) for read transactions
-rxo_wr_wait_{p/n}  | O  | RX push back (output) for write transactions
-*******************|****|***********************************
-reset              | I  | Reset input  
-pll_clk            | I  | Clock input for CCLK/LCLK PLL  
-sys_clk            | I  | System clock for FIFOs
-embox_not_empty    | O  | Mailbox not empty (connect to interrupt line)   
-embox_full         | O  | Mailbox is full indicator
-e_chipid[11:0]     | O  | ID for Epiphany chip  (optional)  
-e_resetb           | O  | Active low reset for Epiphany chip (optional)  
-e_cclk_{p/n}       | O  | High speed clock for Epiphany chip (optional)  
-
-###FPGA RESOURCE USAGE
-The following table shows the rough resource usage of the elink synthesized with the xc7z010clg400-1 as a target.
-(as of May 12, 2015)  
-
-Instance             |Module                   | FPGA Cells 
----------------------|-------------------------|------------
-  elink              |elink                    |  9809
-  --eclocks          |eclocks                  |     3
-  --ecfg_cdc         |fifo_cdc                 |   994
-  --erx              |erx                      |  5200
-  ----erx_core       |erx_core                 |  2450
-  ------erx_cfg      |erx_cfg                  |   174
-  ------erx_cfgif    |ecfg_if                  |   106
-  ------erx_mailbox  |emailbox                 |   952
-  ------erx_mmu      |emmu                     |   233
-  ------erx_protocol |erx_protocol             |   880
-  ------erx_remap    |erx_remap                |   105
-  ----erx_fifo       |erx_fifo                 |  2711
-  ------rxrd_fifo    |fifo_cdc                 |   865
-  ------rxrr_fifo    |fifo_cdc                 |   857
-  ------rxwr_fifo    |fifo_cdc                 |   989
-  ----erx_io         |erx_io                   |    34
-  --etx              |etx                      |  3596
-  ----etx_core       |etx_core                 |   890
-  ------etx_arbiter  |etx_arbiter              |   197
-  ------etx_cfg      |etx_cfg                  |    61
-  ------etx_cfgif    |ecfg_if                  |   122
-  ------etx_mmu      |emmu                     |   219
-  ------etx_protocol |etx_protocol             |   187
-  ------etx_remap    |etx_remap                |   104
-  ----etx_fifo       |etx_fifo                 |  2685
-  ------txrd_fifo    |fifo_cdc                 |   867
-  ------txrr_fifo    |fifo_cdc                 |   859
-  ------txwr_fifo    |fifo_cdc                 |   959
-  ----etx_io         |etx_io                   |    21
-  
-
-###REGISTER MAP  
+## Registers
  
 The full 32 bit physical address of an elink register is the address seen below added to the 12 bit elink ID that maps to address bits 31:20.  As an example, if the elink ID is 0x810, then writing to the E_RESET register would be done to address 0x810F0200. Readback is done through the txrd channel with the source address sub field set to 810Dxxxx;
  
@@ -229,10 +200,7 @@ ELINK_RXDELAY1  | RW     | 0xF031C | RX idelay msbs and frametap lsbs
 ELINK_RXTESTDATA| RW     | 0xF0320 | RX sampled data
 ELINK_RXMMU     | -W     | 0xE8000 | RX MMU table 
 
-REGISTER DESCRIPTIONS
-===========================================
-
-###ELINK_RESET (0xF0200)
+## ELINK_RESET (0xF0200)
 Reset control register for the elink and Epiphany chip
 
 FIELD    | DESCRIPTION 
@@ -242,7 +210,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_CLK (0xF0204) (NOT IMPLEMENTED) 
+## ELINK_CLK (0xF0204) (NOT IMPLEMENTED) 
 Transmit and Epiphany clock settings.
   
 FIELD    | DESCRIPTION 
@@ -277,7 +245,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_CHIPID (0xF0208)
+## ELINK_CHIPID (0xF0208)
 Column and row chip id pins to the Epiphany chip.
 
 FIELD    | DESCRIPTION 
@@ -287,7 +255,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_VERSION (0xF020C)
+## ELINK_VERSION (0xF020C)
 Platform and revision number.
 
 FIELD    | DESCRIPTION 
@@ -297,7 +265,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_TXCFG (0xF0210)
+## ELINK_TXCFG (0xF0210)
 TX configuration settings
 
 FIELD    | DESCRIPTION 
@@ -324,7 +292,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_TXSTATUS (0xF0214)
+## ELINK_TXSTATUS (0xF0214)
 TX status register
 
 FIELD    | DESCRIPTION 
@@ -333,7 +301,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_TXGPIO (0xF0218)
+## ELINK_TXGPIO (0xF0218)
 Data to drive on txo_data and txo_frame pins in gpio mode
  
 FIELD    | DESCRIPTION 
@@ -343,7 +311,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_TXMMU (0xE0000)
+## ELINK_TXMMU (0xE0000)
 A table of N entries for translating incoming 12 bit address to a new value. Entries are aligned on 8 byte boundaries
  
 FIELD    | DESCRIPTION 
@@ -351,7 +319,7 @@ FIELD    | DESCRIPTION
  [11:0]  | Output address bits 31:20
  [43:12] | Output address bits 63:32 (TBD)
  
-###ELINK_RXCFG (0xF0300)
+## ELINK_RXCFG (0xF0300)
 RX configuration register
 
 FIELD    | DESCRIPTION 
@@ -381,14 +349,14 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_RXSTATUS (0xF0304)
+## ELINK_RXSTATUS (0xF0304)
 RX status register
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [15:0]  | TBD
 
-###ELINK_RXGPIO (0xF0308)
+## ELINK_RXGPIO (0xF0308)
 RX status register. Data sampled on  rxi_data and rxi_frame pins in gpio mode
 
 FIELD    | DESCRIPTION 
@@ -396,7 +364,7 @@ FIELD    | DESCRIPTION
  [7:0]   | Data from rxi_data pins
  [8]     | Data from rxi_frame pin
 
-###ELINK_RXOFFSET (0xF030C)
+## ELINK_RXOFFSET (0xF030C)
 Address offset used in the dynamic address remapping mode.
 
 FIELD    | DESCRIPTION 
@@ -405,7 +373,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_MAILBOXLO (0xF0310)
+## ELINK_MAILBOXLO (0xF0310)
 Lower 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Must be read before ELINK_MAILBOXHI is read
 
 FIELD    | DESCRIPTION 
@@ -414,7 +382,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_MAILBOXHI (0xF0314)
+## ELINK_MAILBOXHI (0xF0314)
 Upper 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Reading this register causes the RX FIFO read pointer to increment by one.
 
 FIELD    | DESCRIPTION 
@@ -423,7 +391,7 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-###ELINK_RXDELAY0 (0xF0318)
+## ELINK_RXDELAY0 (0xF0318)
 Four bit LSB fields for the RX IDELAY of data bits [7:0]
 
 FIELD    | DESCRIPTION 
@@ -439,7 +407,7 @@ FIELD    | DESCRIPTION
  
 -------------------------------
 
-###ELINK_RXDELAY1 (0xF031c)
+## ELINK_RXDELAY1 (0xF031c)
 MSB field for all RX IDELAY values and lsbs for frame signal
 
 FIELD   | DESCRIPTION 
@@ -457,7 +425,7 @@ FIELD   | DESCRIPTION
  
 -------------------------------
 
-###ELINK_RXMMU (0xE8000)
+## ELINK_RXMMU (0xE8000)
 A table of N entries for translating incoming 12 bit address to a new value. Entries are aligned on 8 byte boundaries.
  
 FIELD    | DESCRIPTION 
@@ -465,3 +433,92 @@ FIELD    | DESCRIPTION
  [11:0]  | Output address bits 31:20
  [43:12] | Output address bits 63:32 (TBD)
 
+TESTBENCH
+================================================
+
+## Simulation instructions
+You can simulate the elink using the open source ICARUS verilog simulator. Proprietary Verilog simulators should also work.(although we haven't tried them) 
+
+```sh
+$ sudo apt-get install gtkwave iverilog 
+$ cd oh/elink/dv
+$ ./build.sh
+$ ./run.sh test/test_hello.memh
+$ gtkwave waveform.vcd #to view results
+```
+
+## Test format
+The elink simulator reads in a test file with the format seen below:
+
+```
+<srcaddr>_<data>_<dstaddr>_<ctrlmode><datamode><wr/rd>_<delay>
+```
+
+Example: (tests/test_hello.memh)
+
+```sh
+AAAAAAAA_11111111_80800000_05_0010 //32 bit write
+AAAAAAAA_22222222_80800004_05_0010 //
+AAAAAAAA_33333333_80800008_05_0010 //
+AAAAAAAA_44444444_8080000c_05_0010 //
+AAAAAAAA_55555555_80800010_05_0010 //
+810D0000_DEADBEEF_80800000_04_0010 //32 bit read
+810D0004_DEADBEEF_80800004_04_0010 //
+810D0008_DEADBEEF_80800008_04_0010 //
+810D000c_DEADBEEF_8080000c_04_0010 //
+810D0010_DEADBEEF_80800010_04_0010 //
+```
+
+## Random transaction generator
+Directed testing will only get you so far so we created a simple random transaction generator that produces sequences of different data format and burst lenghts. To generate a random testfile and simulate:.
+
+```sh
+$ cd oh/elink/dv
+$ ./gen_random.sh 100
+$ ./run.sh test/test_random.memh
+$ diff test_0.trace test/test_random.exp
+```
+
+FPGA DESIGN
+================================================
+
+## Clocking and reset
+The elink has the following clock domains:
+
+* sys_clk : used by the axi interfaces
+* rxi_lclk_div4: Used for the erx_core logic
+* txo_lclk_div: Used for the etx_core logic
+* rxi_lclk: Used by the erx_io for clocking in dual data rate data at pins
+* txo_lclk: Used by the etx_io for transmitting dual rate data at pins
+* txo_lclk90: The txo_lclk phase shifted by 90 degrees. Used by RX to sample the dual data rate data.
+
+The elink uses a mix of asynchronous and synchronous reset out of necessity. Asynchronous reset is used where needed in the RX block because we cannot guarantee a free running clock.
+
+The reset and clocking circuitry can be found in the "etx_clocks" and "erx_clocks" blocks.
+
+![alt tag](docs/clocking.png)
+
+## Resource summary
+The following table shows the rough resource usage of the elink synthesized with the xc7z010clg400-1 as a target. (as of May 12, 2015)
+
+Instance             |Module                   | FPGA Cells 
+---------------------|-------------------------|------------
+  elink              |elink                    |  9809
+  --ecfg_cdc         |fifo_cdc                 |   994
+  --erx              |erx                      |  5200
+  ----erx_core       |erx_core                 |  2450
+  ----erx_fifo       |erx_fifo                 |  2711
+  ----erx_io         |erx_io                   |    34
+  --etx              |etx                      |  3596
+  ----etx_core       |etx_core                 |   890
+  ----etx_fifo       |etx_fifo                 |  2685
+  ----etx_io         |etx_io                   |    21
+  
+## Synthesis scripts
+The following example shows how to build a display-less (ie headless) FPGA bitstream for the Parallella board. You will need to install Vivado 2015.2 on your own.
+```sh
+$ cd oh/parallella/fpga/parallella_base
+$ ./build.sh
+$ cd ../headless
+$ ./build.sh
+```

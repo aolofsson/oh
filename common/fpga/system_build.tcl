@@ -29,7 +29,6 @@ wait_on_run impl_1
 # Write Bitstream
 ###########################################################
 launch_runs impl_1 -to_step write_bitstream
-
-
+wait_on_run impl_1
 
 

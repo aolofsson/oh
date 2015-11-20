@@ -1,4 +1,6 @@
-//Variable pipeline depth syncrhonizer
+/* A control signal synchronizer with "PS" number of stages 
+ */
+
 module dsync (/*AUTOARG*/
    // Outputs
    dout,
@@ -16,13 +18,11 @@ module dsync (/*AUTOARG*/
  
 `ifdef TARGET_SIM
    reg [DW-1:0]    sync_pipe[PS-1:0];
-`else   
+`else
    (* ASYNC_REG = "TRUE"  *) (* DONT_TOUCH =  "TRUE" *) reg [DW-1:0]    sync_pipe[PS-1:0];   
 `endif
    
-   
-   genvar 	i;
-
+   genvar 	   i;
    generate          
       for(i=0;i<PS;i=i+1)
 	if(i==0)

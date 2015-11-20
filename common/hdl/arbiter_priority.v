@@ -14,7 +14,7 @@ module arbiter_priority(/*AUTOARG*/
        
    input  [ARW-1:0] request;  //request vector
    output [ARW-1:0] grant;    //grant (one hot)
-   output [ARW-1:0] await;    //grant mask
+   output [ARW-1:0] await;    //wait mask!
    
    genvar j;
    assign await[0]   = 1'b0;   
@@ -26,6 +26,5 @@ module arbiter_priority(/*AUTOARG*/
    //grant circuit
    assign grant[ARW-1:0] = request[ARW-1:0] & ~await[ARW-1:0];
 
-   
 endmodule // arbiter_priority
 

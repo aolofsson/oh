@@ -80,8 +80,8 @@ module ememory(/*AUTOARG*/
 
    //Shift up
    assign  din_aligned[DW-1:0] = (datamode_in[1:0]==2'b00) ? {(4){data_in[7:0]}}  :
-				(datamode_in[1:0]==2'b01) ? {(2){data_in[15:0]}} :						
- 			                                    data_in[31:0];
+			  	 (datamode_in[1:0]==2'b01) ? {(2){data_in[15:0]}} :	
+ 			                                     data_in[31:0];
    
    //Data-in (hardoded width)
    assign din[63:0] =(datamode_in[1:0]==2'b11) ? {srcaddr_in[31:0],din_aligned[31:0]}:
@@ -146,7 +146,7 @@ module ememory(/*AUTOARG*/
 				.addr		(align_addr[2:0]),
 				.data_in	(dout[2*DW-1:0]));
 
-   assign srcaddr_out[AW-1:0] = dout_aligned[63:32];     
+   assign srcaddr_out[AW-1:0] = (datamode_out[1:0]==2'b11) ? dout[63:32] : 32'b0;   
    assign data_out[DW-1:0]    = dout_aligned[31:0];
    
    //Concatenate

@@ -40,19 +40,16 @@ module etx_protocol (/*AUTOARG*/
    //###################################################################
    //# Local regs & wires
    //###################################################################
-   reg           tx_access;
    reg [PW-1:0]  tx_packet; 
-   reg 		 tx_io_wait;
-   reg 		 tx_burst;   
    wire 	 etx_write;
    wire [1:0] 	 etx_datamode;
    wire [3:0]	 etx_ctrlmode;
    wire [AW-1:0] etx_dstaddr;
    wire [DW-1:0] etx_data;
-   wire 	 last_write;
-   wire [1:0] 	 last_datamode;
-   wire [3:0]	 last_ctrlmode;
-   wire [AW-1:0] last_dstaddr;   
+   wire 	 tx_write;
+   wire [1:0] 	 tx_datamode;
+   wire [3:0]	 tx_ctrlmode;
+   wire [AW-1:0] tx_dstaddr;   
    wire 	 burst_match;
    wire 	 burst_type_match;
    wire [31:0] 	 burst_addr;
@@ -70,85 +67,103 @@ module etx_protocol (/*AUTOARG*/
 		      .data_out		(),
 		      .srcaddr_out	(),
 		      .packet_in	(etx_packet[PW-1:0]));//input
-
-   //Creates a one cycle wait whenever there is no burst
-   always @ (posedge clk or negedge nreset)
-     if(!nreset)
-       tx_io_wait <= 1'b0;            
-     else if (tx_rd_wait | tx_wr_wait)
-       tx_io_wait <= 1'b0;            
-     else
-       tx_io_wait <= (~tx_io_wait & etx_access & ~tx_burst_in);
    
    //Hold transaction while waiting
    //This transaction should be flushed out on wait????
+   reg 	 tx_access_reg;  
    always @ (posedge clk)
      if(!nreset)
        begin
-	  tx_packet[PW-1:0] <= 'b0;
-	  tx_access     <= 1'b0;
-       end     
+	  tx_access_reg <= 'b0;
+	  tx_packet[PW-1:0] <= 'b0;	  
+       end
      else if(~(etx_wr_wait | etx_rd_wait))
        begin
 	  tx_packet[PW-1:0] <= etx_packet[PW-1:0];
-	  tx_access         <= tx_enable & etx_access;
+	  tx_access_reg     <= tx_enable & etx_access;
        end
-       
   
-
-   
-   
-   //#############################
-   //# Burst Detection
-   //#############################
+   //Clear out the access while in wait state
+   //the IO pipeline flushes out
+   assign tx_access = tx_access_reg  &
+		      ~(tx_wr_wait | tx_rd_wait);
 
    packet2emesh p2m1 (
-		     .write_out		(last_write),
-		     .datamode_out	(last_datamode[1:0]),
-		     .ctrlmode_out	(last_ctrlmode[3:0]),
-		     .dstaddr_out	(last_dstaddr[31:0]),
+		     .write_out		(tx_write),
+		     .datamode_out	(tx_datamode[1:0]),
+		     .ctrlmode_out	(tx_ctrlmode[3:0]),
+		     .dstaddr_out	(tx_dstaddr[31:0]),
 		     .data_out		(),
 		     .srcaddr_out	(),
 		     .packet_in		(tx_packet[PW-1:0]));//input
 
-   assign burst_addr[31:0]  = (last_dstaddr[31:0] + 32'h8);
-   
-   assign burst_addr_match  = (burst_addr[31:0] == etx_dstaddr[31:0]);
+   //############################################################
+   //# Checking for transaction "done"
+   //#############################################################
+   //if burst, you get immediate "ack"
+   //otherwise you get ack in one cycle (since it takes 2 clocks for trans to exit IO)  
+   reg 		 done;
+   wire 	 tx_io_wait;
 
-   assign burst_type_match  = {last_ctrlmode[3:0],last_datamode[1:0],last_write}
-			       ==
-		   	      {etx_ctrlmode[3:0],etx_datamode[1:0], etx_write};
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       done <= 1'b0;                 
+     else
+       done <= tx_access & ~done & ~tx_burst;
+  
+   assign tx_io_wait = tx_access & ~done & ~tx_burst;//tx_burst_reg
 
-   assign tx_burst_in =  tx_access                   & //avoid garbage
-                          ~tx_wr_wait_reg            & //clear on wait
-                          etx_write                  & //write 
-	       	          (etx_datamode[1:0]==2'b11) & //double only
-		          burst_type_match           & //same types
-		          burst_addr_match;            //inc by 8
+   //Ugly hack. When there is an async wait coming in and we are in the middle of a transction
+   //we sample in a new value to realign the pipeline since the current transaction already went
+   //out to the IO.(must be a better way???)
+   assign adjust     = tx_io_wait_reg & (tx_rd_wait | tx_wr_wait);
+  		      
+   //#############################
+   //# Burst Detection
+   //#############################
 
+  
+   assign burst_addr_match  = ((tx_dstaddr[31:0]+32'h8) == etx_dstaddr[31:0]);
+
+   assign current_match     = tx_access & 
+			       tx_write &
+		              (tx_datamode[1:0]==2'b11) &		       
+			      (tx_ctrlmode[3:0]==4'b0000);
+
+   assign next_match       =  etx_access &
+			      etx_write &
+		              (etx_datamode[1:0]==2'b11) &		       
+			      (etx_ctrlmode[3:0]==4'b0000);
+     
+   assign tx_burst_in =  current_match    &
+			 next_match       &
+			 burst_addr_match;
 
    reg tx_wr_wait_reg;
    reg tx_rd_wait_reg;   
-   reg tx_io_wait_reg;   
+   reg tx_io_wait_reg; 
+   reg tx_burst_reg;
+   //reg tx_burst;   
    //sample to align up witth tx_access   
-   always @ (posedge clk)
+   always @ (posedge clk) 
      begin
-	tx_burst          <= tx_burst_in;
-	tx_wr_wait_reg    <= tx_wr_wait;
+	tx_burst_reg      <= tx_burst_in & tx_access_reg;
 	tx_rd_wait_reg    <= tx_rd_wait;
+	tx_wr_wait_reg    <= tx_wr_wait;
 	tx_io_wait_reg    <= tx_io_wait;
      end
 
-   
-   assign special_sample = tx_io_wait_reg                    & 
-		           (tx_wr_wait     | tx_rd_wait)    &
-   			   ~(tx_wr_wait_reg | tx_rd_wait_reg) 
-			    ;
-   //#############################
-   //# Wait propagation circuit
-   //#############################	      
-   assign etx_wr_wait = (tx_wr_wait  | tx_io_wait) & ~special_sample;
-   assign etx_rd_wait = (tx_rd_wait  | tx_io_wait) & ~special_sample;
+   assign tx_burst  = tx_burst_reg & 
+//		      tx_burst_in & 
+		       ~(tx_wr_wait | tx_rd_wait);
+     
+  
+
+   //#######################################
+   //# Wait propagation circuit backwards
+   //########################################	      
+   assign etx_wr_wait = (tx_wr_wait | tx_io_wait ) & ~adjust;
+   assign etx_rd_wait = (tx_rd_wait | tx_io_wait ) & ~adjust;
   
 endmodule // etx_protocol
 // Local Variables:

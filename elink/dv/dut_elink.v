@@ -131,8 +131,6 @@ module dut(/*AUTOARG*/
                             .c2e_\(.*\)_wait_out(),             
                              );
   */
-
-
    
    emesh_if #(.PW(PW)) emesh_if (.c2e_rmesh_access_in(1'b0),
 				 .c2e_rmesh_packet_in({(PW){1'b0}}),
@@ -141,7 +139,7 @@ module dut(/*AUTOARG*/
 				 .e2c_xmesh_wait_in(1'b0),
 				 .e2c_xmesh_access_out(),
 				 .e2c_xmesh_packet_out(),		      
-		      /*AUTOINST*/
+				 /*AUTOINST*/
 				 // Outputs
 				 .c2e_cmesh_wait_out	(),		 // Templated
 				 .e2c_cmesh_access_out	(elink0_txwr_access), // Templated
@@ -333,13 +331,13 @@ module dut(/*AUTOARG*/
 		 .clk		        (clk),
 		 .wait_out		(emem_wait),
 		 .coreid		(12'h0),
-		 .access_in		(emem_access),
 		 /*AUTOINST*/
 		 // Outputs
 		 .access_out		(elink1_txrr_access),	 // Templated
 		 .packet_out		(elink1_txrr_packet[PW-1:0]), // Templated
 		 // Inputs
 		 .nreset		(nreset),
+		 .access_in		(emem_access),		 // Templated
 		 .packet_in		(emem_packet[PW-1:0]));	 // Templated
 
 
