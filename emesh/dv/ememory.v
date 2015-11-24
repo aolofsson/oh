@@ -9,8 +9,9 @@ module ememory(/*AUTOARG*/
    parameter IDW   = 12;
    parameter DW    = 32;   
    parameter AW    = 32;   
-   parameter MAW   = 16; //=64K words
+   parameter MAW   = 16;    //64K words
    parameter NAME  = "emem";
+   parameter WAIT  = 0;     //turns on random wait circuit
   
    //Basic Interface
    input            clk;
@@ -54,7 +55,8 @@ module ememory(/*AUTOARG*/
    wire [DW-1:0]    din_aligned;
    wire [DW-1:0]    dout_aligned;
    wire 	    wait_random; //TODO: make random  
-
+   wire 	    wait_all;
+   
    packet2emesh #(.PW(PW))
    p2e (
 	.write_out	(write_in),
@@ -72,8 +74,8 @@ module ememory(/*AUTOARG*/
 
 
    //Pushback Circuit (pass through problems?)
-   assign wait_out = (access_in & wait_all);
-
+   assign wait_all = (wait_random | wait_in);
+   assign wait_out = wait_all;// & access_in
    
    //Address-in (shifted by three bits, 64 bit wide memory)
    assign addr[MAW-1:0] = dstaddr_in[MAW+2:3];     
@@ -176,19 +178,25 @@ module ememory(/*AUTOARG*/
 		  .coreid		(coreid[IDW-1:0]));
 
 
-   //Access wait circuit
-   reg [7:0] wait_counter;
+   //Random wait generator
+   //TODO: make this a module
+   generate
+      if(WAIT)
+	begin	   
+	   reg [7:0] wait_counter;  
+	   always @ (posedge clk or negedge nreset)
+	     if(!nreset)
+	       wait_counter[7:0] <= 'b0;   
+	     else
+	       wait_counter[7:0] <= wait_counter+1'b1;         
+	   assign wait_random      = (|wait_counter[4:0]);//(|wait_counter[3:0]);//1'b0;
+	end
+      else
+	begin
+	   assign wait_random = 1'b0;
+	end // else: !if(WAIT)
+   endgenerate
   
-   always @ (posedge clk or negedge nreset)
-     if(!nreset)
-       wait_counter[7:0] <= 'b0;   
-     else
-       wait_counter[7:0] <= wait_counter+1'b1;
-      
-   assign wait_random      = (|wait_counter[4:0]);//(|wait_counter[3:0]);//1'b0;
-
-   assign wait_all = (wait_random | wait_in);
-   
    
 endmodule // emesh_memory
 // Local Variables:
