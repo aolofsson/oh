@@ -9,7 +9,8 @@ module fifo_async
    parameter DW    = 104;     //FIFO width
    parameter DEPTH = 32;      //FIFO depth
    parameter TYPE  = "XILINX";//"BASIC" or "XILINX" or "ALTERA"
-   
+   parameter WAIT  = 1;       //assert random prog_full wait
+
    //##########
    //# RESET/CLOCK
    //##########
@@ -33,6 +34,11 @@ module fifo_async
    output 	   empty;
    output 	   valid;
 
+   wire 	   fifo_prog_full;
+   wire 	   wait_random;
+   
+   assign prog_full = fifo_prog_full | wait_random;
+   
 generate
 if(TYPE=="BASIC") begin : basic   
    fifo_async_model 
@@ -42,7 +48,7 @@ if(TYPE=="BASIC") begin : basic
 	       /*AUTOINST*/
 	       // Outputs
 	       .full			(full),
-	       .prog_full		(prog_full),
+	       .prog_full		(fifo_prog_full),
 	       .dout			(dout[DW-1:0]),
 	       .empty			(empty),
 	       .valid			(valid),
@@ -61,7 +67,7 @@ else if (TYPE=="XILINX") begin : xilinx
 					     /*AUTOINST*/
 					     // Outputs
 					     .full		(full),
-					     .prog_full		(prog_full),
+					     .prog_full		(fifo_prog_full),
 					     .dout		(dout[DW-1:0]),
 					     .empty		(empty),
 					     .valid		(valid),
@@ -76,6 +82,25 @@ else if (TYPE=="XILINX") begin : xilinx
      end // if ((DW==104) & (DEPTH==32))
 end // block: xilinx   
 endgenerate
+
+ //Random wait generator
+   generate
+      if(WAIT)
+	begin	   
+	   reg [7:0] wait_counter;  
+	   always @ (posedge wr_clk or posedge rst)
+	     if(rst)
+	       wait_counter[7:0] <= 'b0;   
+	     else
+	       wait_counter[7:0] <= wait_counter+1'b1;         
+	   assign wait_random      = (|wait_counter[4:0]);//(|wait_counter[3:0]);//1'b0;
+	end
+      else
+	begin
+	   assign wait_random = 1'b0;
+	end // else: !if(WAIT)
+   endgenerate
+   
    
 endmodule // fifo_async
 // Local Variables:

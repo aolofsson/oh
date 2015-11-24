@@ -13,6 +13,7 @@ module fifo_cdc (/*AUTOARG*/
 
    parameter DW    = 104;
    parameter DEPTH = 32;
+   parameter WAIT  = 0;
 
    /********************************/
    /*Shard async reset             */
@@ -60,6 +61,7 @@ module fifo_cdc (/*AUTOARG*/
    //Read response fifo (from master)
    defparam fifo.DW    = DW;
    defparam fifo.DEPTH = DEPTH;
+   defparam fifo.WAIT = WAIT;
 
    fifo_async  fifo (.prog_full		(prog_full),//stay safe for now
 		     .full		(full),
