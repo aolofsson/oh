@@ -799,8 +799,10 @@ module elink_e16 (/*AUTOARG*/
    output 	     c0_emesh_wait_out; // wait to the emesh   
    output 	     c0_mesh_wait_out;  // wait to the mesh 
 
+
+   //TODO: NOTRE FIXED COORDINATE
    wire [3:0] 	     ext_yid_k=4'h8;   
-   wire [3:0] 	     ext_xid_k=4'h4;   
+   wire [3:0] 	     ext_xid_k=4'h2;   
    wire 	     vertical_k=1'b1; // specifies if block is vertical or horizontal
    wire [3:0] 	     who_am_i=4'b0100;   // (north,east,south,west)
    wire 	     cfg_extcomp_dis=1'b0;// Disable external coordinates comparison
@@ -1240,15 +1242,7 @@ module link_port(/*AUTOARG*/
 				      .c3_mesh_srcaddr_in(c3_mesh_srcaddr_in[AW-1:0]),
 				      .c3_mesh_data_in	(c3_mesh_data_in[DW-1:0]),
 				      .c3_mesh_datamode_in(c3_mesh_datamode_in[1:0]),
-				      .c3_mesh_ctrlmode_in(c3_mesh_ctrlmode_in[3:0]),
-				      .c0_emesh_frame_in(c0_emesh_frame_in),
-				      .c0_emesh_tran_in	(c0_emesh_tran_in[2*LW-1:0]),
-				      .c1_emesh_frame_in(c1_emesh_frame_in),
-				      .c1_emesh_tran_in	(c1_emesh_tran_in[2*LW-1:0]),
-				      .c2_emesh_frame_in(c2_emesh_frame_in),
-				      .c2_emesh_tran_in	(c2_emesh_tran_in[2*LW-1:0]),
-				      .c3_emesh_frame_in(c3_emesh_frame_in),
-				      .c3_emesh_tran_in	(c3_emesh_tran_in[2*LW-1:0]));
+				      .c3_mesh_ctrlmode_in(c3_mesh_ctrlmode_in[3:0]));
       
 endmodule // link_port
 
@@ -2077,20 +2071,13 @@ module link_rxi_channel (/*AUTOARG*/
 
    /*AUTOINPUT*/
    /*AUTOWIRE*/
-   // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			fifo_empty;		// From link_rxi_fifo of link_rxi_fifo.v
-   wire			fifo_read;		// From link_rxi_launcher of link_rxi_launcher.v
-   wire [14*LW-1:0]	fifo_tran_out;		// From link_rxi_fifo of link_rxi_fifo.v
-   wire			rdmesh_frame;		// From link_rxi_launcher of link_rxi_launcher.v
-   wire [2*LW-1:0]	rdmesh_tran;		// From link_rxi_launcher of link_rxi_launcher.v
-   // End of automatics
 
   
 
 endmodule // link_rxi_channel
 module link_rxi_ctrl(/*AUTOARG*/
    // Outputs
-   lclk, 
+   lclk,
    // Inputs
    io_lclk, rxi_cfg_reg
    );
@@ -2190,9 +2177,6 @@ module link_rxi_double_channel (/*AUTOARG*/
    wire [DW-1:0]	data;			// From link_rxi_mesh_launcher of link_rxi_mesh_launcher.v
    wire [1:0]		datamode;		// From link_rxi_mesh_launcher of link_rxi_mesh_launcher.v
    wire [AW-1:0]	dstaddr;		// From link_rxi_mesh_launcher of link_rxi_mesh_launcher.v
-   wire			emesh_fifo_read;	// From link_rxi_launcher of link_rxi_launcher.v
-   wire			emesh_frame;		// From link_rxi_launcher of link_rxi_launcher.v
-   wire [2*LW-1:0]	emesh_tran;		// From link_rxi_launcher of link_rxi_launcher.v
    wire			emesh_tran_dis;		// From link_rxi_mesh_launcher of link_rxi_mesh_launcher.v
    wire			fifo_empty;		// From link_rxi_fifo of link_rxi_fifo.v
    wire [14*LW-1:0]	fifo_tran_out;		// From link_rxi_fifo of link_rxi_fifo.v
@@ -2281,42 +2265,42 @@ module link_rxi_double_channel (/*AUTOARG*/
                                 );
     */
    e16_mesh_interface mesh_interface(/*AUTOINST*/
-				 // Outputs
-				 .wait_out		(),		 // Templated
-				 .access_out		(mesh_access_out), // Templated
-				 .write_out		(mesh_write_out), // Templated
-				 .datamode_out		(mesh_datamode_out[1:0]), // Templated
-				 .ctrlmode_out		(mesh_ctrlmode_out[3:0]), // Templated
-				 .data_out		(mesh_data_out[DW-1:0]), // Templated
-				 .dstaddr_out		(mesh_dstaddr_out[AW-1:0]), // Templated
-				 .srcaddr_out		(mesh_srcaddr_out[AW-1:0]), // Templated
-				 .access_reg		(),		 // Templated
-				 .write_reg		(),		 // Templated
-				 .datamode_reg		(),		 // Templated
-				 .ctrlmode_reg		(),		 // Templated
-				 .data_reg		(),		 // Templated
-				 .dstaddr_reg		(),		 // Templated
-				 .srcaddr_reg		(),		 // Templated
-				 // Inputs
-				 .clk			(cclk),		 // Templated
-				 .clk_en		(cclk_en),	 // Templated
-				 .reset			(reset),
-				 .wait_in		(mesh_wait_in),	 // Templated
-				 .access_in		(1'b0),		 // Templated
-				 .write_in		(1'b0),		 // Templated
-				 .datamode_in		(2'b00),	 // Templated
-				 .ctrlmode_in		(4'b0000),	 // Templated
-				 .data_in		({(DW){1'b0}}),	 // Templated
-				 .dstaddr_in		({(AW){1'b0}}),	 // Templated
-				 .srcaddr_in		({(AW){1'b0}}),	 // Templated
-				 .wait_int		(1'b0),		 // Templated
-				 .access		(access),
-				 .write			(write),
-				 .datamode		(datamode[1:0]),
-				 .ctrlmode		(ctrlmode[3:0]),
-				 .data			(data[DW-1:0]),
-				 .dstaddr		(dstaddr[AW-1:0]),
-				 .srcaddr		(srcaddr[AW-1:0]));
+				     // Outputs
+				     .wait_out		(),		 // Templated
+				     .access_out	(mesh_access_out), // Templated
+				     .write_out		(mesh_write_out), // Templated
+				     .datamode_out	(mesh_datamode_out[1:0]), // Templated
+				     .ctrlmode_out	(mesh_ctrlmode_out[3:0]), // Templated
+				     .data_out		(mesh_data_out[DW-1:0]), // Templated
+				     .dstaddr_out	(mesh_dstaddr_out[AW-1:0]), // Templated
+				     .srcaddr_out	(mesh_srcaddr_out[AW-1:0]), // Templated
+				     .access_reg	(),		 // Templated
+				     .write_reg		(),		 // Templated
+				     .datamode_reg	(),		 // Templated
+				     .ctrlmode_reg	(),		 // Templated
+				     .data_reg		(),		 // Templated
+				     .dstaddr_reg	(),		 // Templated
+				     .srcaddr_reg	(),		 // Templated
+				     // Inputs
+				     .clk		(cclk),		 // Templated
+				     .clk_en		(cclk_en),	 // Templated
+				     .reset		(reset),
+				     .wait_in		(mesh_wait_in),	 // Templated
+				     .access_in		(1'b0),		 // Templated
+				     .write_in		(1'b0),		 // Templated
+				     .datamode_in	(2'b00),	 // Templated
+				     .ctrlmode_in	(4'b0000),	 // Templated
+				     .data_in		({(DW){1'b0}}),	 // Templated
+				     .dstaddr_in	({(AW){1'b0}}),	 // Templated
+				     .srcaddr_in	({(AW){1'b0}}),	 // Templated
+				     .wait_int		(1'b0),		 // Templated
+				     .access		(access),
+				     .write		(write),
+				     .datamode		(datamode[1:0]),
+				     .ctrlmode		(ctrlmode[3:0]),
+				     .data		(data[DW-1:0]),
+				     .dstaddr		(dstaddr[AW-1:0]),
+				     .srcaddr		(srcaddr[AW-1:0]));
 
 
 endmodule // link_rxi_double_channel
@@ -2805,7 +2789,8 @@ module link_rxi_rd (/*AUTOARG*/
    reset, ext_yid_k, ext_xid_k, vertical_k, who_am_i, cfg_extcomp_dis,
    rxi_data, rxi_lclk, rxi_frame, c0_clk_in, c1_clk_in, c2_clk_in,
    c3_clk_in, c0_rdmesh_wait_in, c1_rdmesh_wait_in, c2_rdmesh_wait_in,
-   c3_rdmesh_wait_in
+   c3_rdmesh_wait_in, c0_fifo_full_rlc, c1_fifo_full_rlc,
+   c2_fifo_full_rlc, c3_fifo_full_rlc
    );
 
    parameter LW   = `CFG_LW;//lvds tranceiver pairs per side
@@ -2855,16 +2840,18 @@ module link_rxi_rd (/*AUTOARG*/
    output [2*LW-1:0] c3_rdmesh_tran_out;  // serialized transaction
 
    /*AUTOINPUT*/
+   // Beginning of automatic inputs (from unused autoinst inputs)
+   input		c0_fifo_full_rlc;	// To link_rxi_buffer of link_rxi_buffer.v
+   input		c1_fifo_full_rlc;	// To link_rxi_buffer of link_rxi_buffer.v
+   input		c2_fifo_full_rlc;	// To link_rxi_buffer of link_rxi_buffer.v
+   input		c3_fifo_full_rlc;	// To link_rxi_buffer of link_rxi_buffer.v
+   // End of automatics
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			c0_fifo_access_rlc;	// From link_rxi_buffer of link_rxi_buffer.v
-   wire			c0_fifo_full_rlc;	// From c0_link_rxi_channel of link_rxi_channel.v
    wire			c1_fifo_access_rlc;	// From link_rxi_buffer of link_rxi_buffer.v
-   wire			c1_fifo_full_rlc;	// From c1_link_rxi_channel of link_rxi_channel.v
    wire			c2_fifo_access_rlc;	// From link_rxi_buffer of link_rxi_buffer.v
-   wire			c2_fifo_full_rlc;	// From c2_link_rxi_channel of link_rxi_channel.v
    wire			c3_fifo_access_rlc;	// From link_rxi_buffer of link_rxi_buffer.v
-   wire			c3_fifo_full_rlc;	// From c3_link_rxi_channel of link_rxi_channel.v
    wire [14*LW-1:0]	rxi_assembled_tran_rlc;	// From link_rxi_buffer of link_rxi_buffer.v
    // End of automatics
 
@@ -3240,16 +3227,16 @@ module link_transmitter (/*AUTOARG*/
    c0_rdmesh_wait_out, c1_rdmesh_wait_out, c2_rdmesh_wait_out,
    c3_rdmesh_wait_out, c0_mesh_wait_out, c3_mesh_wait_out,
    // Inputs
-   c3_emesh_tran_in, c3_emesh_frame_in, c2_emesh_tran_in,
-   c2_emesh_frame_in, c1_emesh_tran_in, c1_emesh_frame_in,
-   c0_emesh_tran_in, c0_emesh_frame_in, reset, ext_yid_k, ext_xid_k,
-   who_am_i, txo_cfg_reg, txo_wr_wait, txo_rd_wait, c0_clk_in,
-   c1_clk_in, c2_clk_in, c3_clk_in, c0_mesh_access_in,
-   c0_mesh_write_in, c0_mesh_dstaddr_in, c0_mesh_srcaddr_in,
-   c0_mesh_data_in, c0_mesh_datamode_in, c0_mesh_ctrlmode_in,
-   c3_mesh_access_in, c3_mesh_write_in, c3_mesh_dstaddr_in,
-   c3_mesh_srcaddr_in, c3_mesh_data_in, c3_mesh_datamode_in,
-   c3_mesh_ctrlmode_in
+   reset, ext_yid_k, ext_xid_k, who_am_i, txo_cfg_reg, txo_wr_wait,
+   txo_rd_wait, c0_clk_in, c1_clk_in, c2_clk_in, c3_clk_in,
+   c0_mesh_access_in, c0_mesh_write_in, c0_mesh_dstaddr_in,
+   c0_mesh_srcaddr_in, c0_mesh_data_in, c0_mesh_datamode_in,
+   c0_mesh_ctrlmode_in, c3_mesh_access_in, c3_mesh_write_in,
+   c3_mesh_dstaddr_in, c3_mesh_srcaddr_in, c3_mesh_data_in,
+   c3_mesh_datamode_in, c3_mesh_ctrlmode_in, c0_emesh_frame_in,
+   c0_emesh_tran_in, c1_emesh_frame_in, c1_emesh_tran_in,
+   c2_emesh_frame_in, c2_emesh_tran_in, c3_emesh_frame_in,
+   c3_emesh_tran_in
    );
 
    parameter LW   = `CFG_LW  ;//lvds tranceiver pairs per side
@@ -3575,14 +3562,14 @@ module link_txo_arbiter(/*AUTOARG*/
                                        );
     */ 
    e16_arbiter_roundrobin #(.ARW(4)) arbiter_roundrobin(/*AUTOINST*/
-						    // Outputs
-						    .grants		(grants[3:0]),	 // Templated
-						    // Inputs
-						    .clk		(txo_lclk),	 // Templated
-						    .clk_en		(1'b1),		 // Templated
-						    .reset		(reset),
-						    .en_rotate		(en_rotate),
-						    .requests		(requests[3:0])); // Templated
+							// Outputs
+							.grants		(grants[3:0]),	 // Templated
+							// Inputs
+							.clk		(txo_lclk),	 // Templated
+							.clk_en		(1'b1),		 // Templated
+							.reset		(reset),
+							.en_rotate	(en_rotate),
+							.requests	(requests[3:0])); // Templated
 
 endmodule // link_txo_arbiter
 module link_txo_buffer(/*AUTOARG*/
@@ -3787,20 +3774,6 @@ module link_txo_channel (/*AUTOARG*/
 
    /*AUTOINPUT*/
    /*AUTOWIRE*/
-   // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			check_next_dstaddr_tlc;	// From link_txo_launcher of link_txo_launcher.v
-   wire [2*LW-1:0]	fifo_out_tlc;		// From link_txo_fifo of link_txo_fifo.v
-   wire			frame_in;		// From emesh_interface of emesh_interface.v
-   wire			next_access_tlc;	// From link_txo_fifo of link_txo_fifo.v
-   wire [3:0]		next_ctrlmode_tlc;	// From link_txo_fifo of link_txo_fifo.v
-   wire [1:0]		next_datamode_tlc;	// From link_txo_fifo of link_txo_fifo.v
-   wire [AW-1:0]	next_dstaddr_tlc;	// From link_txo_fifo of link_txo_fifo.v
-   wire			next_write_tlc;		// From link_txo_fifo of link_txo_fifo.v
-   wire [FAD:0]		rd_read_tlc;		// From link_txo_launcher of link_txo_launcher.v
-   wire [2*LW-1:0]	tran_in;		// From emesh_interface of emesh_interface.v
-   wire			tran_written_tlc;	// From link_txo_fifo of link_txo_fifo.v
-   wire			wr_fifo_full;		// From link_txo_fifo of link_txo_fifo.v
-   // End of automatics
 
 
 
@@ -5349,8 +5322,6 @@ module link_txo_wr (/*AUTOARG*/
    c1_emesh_wait_out, c2_emesh_wait_out, c3_emesh_wait_out,
    c0_mesh_wait_out, c3_mesh_wait_out,
    // Inputs
-   c2_tran_frame_tlc, c2_tran_byte_odd_tlc, c2_tran_byte_even_tlc,
-   c1_tran_frame_tlc, c1_tran_byte_odd_tlc, c1_tran_byte_even_tlc,
    txo_lclk, reset, ext_yid_k, ext_xid_k, who_am_i, cfg_burst_dis,
    cfg_multicast_dis, txo_wr_wait, txo_wr_wait_int, c0_clk_in,
    c1_clk_in, c2_clk_in, c3_clk_in, c0_emesh_tran_in,
@@ -5360,7 +5331,9 @@ module link_txo_wr (/*AUTOARG*/
    c0_mesh_dstaddr_in, c0_mesh_srcaddr_in, c0_mesh_data_in,
    c0_mesh_datamode_in, c0_mesh_ctrlmode_in, c3_mesh_access_in,
    c3_mesh_write_in, c3_mesh_dstaddr_in, c3_mesh_srcaddr_in,
-   c3_mesh_data_in, c3_mesh_datamode_in, c3_mesh_ctrlmode_in
+   c3_mesh_data_in, c3_mesh_datamode_in, c3_mesh_ctrlmode_in,
+   c1_tran_byte_even_tlc, c1_tran_byte_odd_tlc, c1_tran_frame_tlc,
+   c2_tran_byte_even_tlc, c2_tran_byte_odd_tlc, c2_tran_frame_tlc
    );
 
    parameter LW   = `CFG_LW  ;//lvds tranceiver pairs per side
