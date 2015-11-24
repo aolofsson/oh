@@ -19,6 +19,7 @@ module stimulus (/*AUTOARG*/
    parameter MD     = 1<<MAW;         //limit test to 1K transactions
    parameter INDEX  = 1;
    parameter NAME   = "not_declared";
+   parameter WAIT   = 1;
    
    //Inputs
    input           clk;
@@ -51,6 +52,7 @@ module stimulus (/*AUTOARG*/
    integer 	   fd;
    reg [128*8:0]   str;
    reg [31:0] 	   stim_end;
+   wire 	   stall_random;
    
    //Read Stimulus
    initial begin
@@ -137,7 +139,28 @@ module stimulus (/*AUTOARG*/
    //seed from command line?
    //walk through the waits:0,1,2,3,4,5,6,7,8,16,32,64,128 cycles
    //randomize where you start in state machine
-   assign stim_wait = 1'b0;
+   assign stim_wait = stall_random;
+
+   //Random wait generator
+   //TODO: make this a module
+   
+   generate
+      if(WAIT)
+	begin	   
+	   reg [15:0] stall_counter;  
+	   always @ (posedge clk or negedge nreset)
+	     if(!nreset)
+	       stall_counter[15:0] <= 'b0;   
+	     else
+	       stall_counter[15:0] <= stall_counter+1'b1;         
+	   assign stall_random      = (|stall_counter[6:0]);//(|wait_counter[3:0]);//1'b0;
+	end
+      else
+	begin
+	   assign stall_random = 1'b0;
+	end // else: !if(WAIT)
+   endgenerate
+   
    
 endmodule // stimulus
 
