@@ -32,7 +32,7 @@ module dut(/*AUTOARG*/
    input [N*PW-1:0]  packet_in;
    output [N-1:0]    wait_out;
 
-   //DUT driven transactoin
+   //DUT driven transaction
    output [N-1:0]    access_out;
    output [N*PW-1:0] packet_out;
    input [N-1:0]     wait_in;
@@ -226,10 +226,10 @@ module dut(/*AUTOARG*/
 				 .c2e_xmesh_packet_in({(PW){1'b0}}),
 				 .e2c_xmesh_wait_in(1'b0),
 				 .e2c_xmesh_access_out(),
-				 .e2c_xmesh_packet_out(),		      
+				 .e2c_xmesh_packet_out(), 
+				 .c2e_cmesh_wait_out	(elink0_rxrr_wait),		      
 				 /*AUTOINST*/
 				 // Outputs
-				 .c2e_cmesh_wait_out	(),		 // Templated
 				 .e2c_cmesh_access_out	(elink0_txwr_access), // Templated
 				 .e2c_cmesh_packet_out	(elink0_txwr_packet[PW-1:0]), // Templated
 				 .c2e_rmesh_wait_out	(),		 // Templated
@@ -363,14 +363,15 @@ module dut(/*AUTOARG*/
                  .elink_active		(dut_active),
 		 .txrr_access		(1'b0),//not tested
 		 .txrr_packet		({(PW){1'b0}}),	
-		 .txrr_wait		(),    //not tested
+	
 		 .rxwr_access		(),
 		 .rxwr_packet		(),
 		 .rxrd_access		(),
-		 .rxrd_packet		(),
+		 .rxrd_packet		(),	 
+		 .txrr_wait		(),
 		 .rxwr_wait		(1'b0),//not tested
 		 .rxrd_wait		(1'b0),//not tested
-		 .rxrr_wait		(1'b0),//not tested
+		 .rxrr_wait		(elink0_rxrr_wait),
 		 /*AUTOINST*/
 		 // Outputs
 		 .rxo_wr_wait_p		(elink0_rxo_wr_wait_p),	 // Templated
@@ -719,19 +720,20 @@ module dut(/*AUTOARG*/
                         .wait_out	  (emem_wait),
                              );
    */
-
-   ememory emem (.wait_in	        (elink1_rxrr_wait),//pushback on reads
-		 .clk		        (clk),
-		 .wait_out		(emem_wait),
-		 .coreid		(12'h0),
-		 /*AUTOINST*/
-		 // Outputs
-		 .access_out		(elink1_rxrr_access),	 // Templated
-		 .packet_out		(elink1_rxrr_packet[PW-1:0]), // Templated
-		 // Inputs
-		 .nreset		(nreset),
-		 .access_in		(emem_access),		 // Templated
-		 .packet_in		(emem_packet[PW-1:0]));	 // Templated
+   
+   ememory #(.WAIT(1)) 
+   emem (.wait_in	        (elink1_rxrr_wait),//pushback on reads
+	 .clk		        (clk),
+	 .wait_out		(emem_wait),
+	 .coreid		(12'h0),
+	 /*AUTOINST*/
+	 // Outputs
+	 .access_out			(elink1_rxrr_access),	 // Templated
+	 .packet_out			(elink1_rxrr_packet[PW-1:0]), // Templated
+	 // Inputs
+	 .nreset			(nreset),
+	 .access_in			(emem_access),		 // Templated
+	 .packet_in			(emem_packet[PW-1:0]));	 // Templated
 
 endmodule // dv_elink
 // Local Variables:

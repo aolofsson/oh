@@ -138,10 +138,10 @@ module dut(/*AUTOARG*/
 				 .c2e_xmesh_packet_in({(PW){1'b0}}),
 				 .e2c_xmesh_wait_in(1'b0),
 				 .e2c_xmesh_access_out(),
-				 .e2c_xmesh_packet_out(),		      
+				 .e2c_xmesh_packet_out(),
+				 .c2e_cmesh_wait_out  (elink0_rxrr_wait),	
 				 /*AUTOINST*/
 				 // Outputs
-				 .c2e_cmesh_wait_out	(),		 // Templated
 				 .e2c_cmesh_access_out	(elink0_txwr_access), // Templated
 				 .e2c_cmesh_packet_out	(elink0_txwr_packet[PW-1:0]), // Templated
 				 .c2e_rmesh_wait_out	(),		 // Templated
@@ -189,7 +189,7 @@ module dut(/*AUTOARG*/
 		 .rxrd_packet		(),
 		 .rxwr_wait		(1'b0),//not tested
 		 .rxrd_wait		(1'b0),//not tested
-		 .rxrr_wait		(1'b0),//not tested
+		 .rxrr_wait		(elink0_rxrr_wait),
 		 /*AUTOINST*/
 		 // Outputs
 		 .rxo_wr_wait_p		(elink0_rxo_wr_wait_p),	 // Templated
@@ -327,6 +327,7 @@ module dut(/*AUTOARG*/
                              );
    */
 
+   defparam emem.WAIT=1;   
    ememory emem (.wait_in	        (elink1_txrr_wait),//pushback on reads
 		 .clk		        (clk),
 		 .wait_out		(emem_wait),
