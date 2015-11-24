@@ -9,7 +9,6 @@ module etx_remap (/*AUTOARG*/
    parameter AW = 32;
    parameter DW = 32;
    parameter PW = 104;
-   parameter ID = 12'h808;
    
    //Clock
    input          clk;

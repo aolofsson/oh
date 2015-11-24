@@ -177,7 +177,7 @@ module esaxi (/*autoarg*/
 		     // Outputs
 		     .packet_out	(txrd_packet[PW-1:0]),
 		     // Inputs
-		     .write_in		(txrd_write),
+		     .write_in		(1'b0),
 		     .datamode_in	(txrd_datamode[1:0]),
 		     .ctrlmode_in	(4'b0),
 		     .dstaddr_in	(txrd_dstaddr[AW-1:0]),
@@ -270,8 +270,8 @@ module esaxi (/*autoarg*/
 	  if( last_wr_beat )
 	    s_axi_wready <= 1'b0;
 	  else if( write_active )
-	    s_axi_wready <= ~txwr_wait;//this signal needs to be a programmable fifo full to work	  
-       end                             //regular pushback won't work FIX!
+	    s_axi_wready <= ~txwr_wait;
+       end                             
    
    always @( posedge s_axi_aclk )
      if (~s_axi_aresetn) 
@@ -361,7 +361,6 @@ module esaxi (/*autoarg*/
    //###################################################
    //#WRITE REQUEST
    //###################################################  
-   assign txwr_write         = 1'b1;
    
    always @( posedge s_axi_aclk ) 
      if (~s_axi_aresetn) 
@@ -379,7 +378,7 @@ module esaxi (/*autoarg*/
 	  txwr_datamode_reg[1:0]    <= axi_awsize[1:0];	
           txwr_dstaddr_reg[31:2]    <= axi_awaddr[31:2]; //set lsbs of address based on write strobes	 
 	  //What is up with this logic??
-	  if(s_axi_wstrb[0]| (axi_awsize[1:0]==2'b10))//| (axi_awsize[1:0]==2'b10)32-bits
+	  if(s_axi_wstrb[0])//| (axi_awsize[1:0]==2'b10)32-bits
 	    begin
 	       txwr_data_reg[31:0]   <= s_axi_wdata[31:0];
 	       txwr_dstaddr_reg[1:0] <= 2'd0;
@@ -421,7 +420,6 @@ module esaxi (/*autoarg*/
    // -- returned in order, we will only allow
    // -- one at a time.
    //Need to look at txrd_wait signal
-   assign txrd_write         = 1'b0;
    always @( posedge s_axi_aclk )
      if (~s_axi_aresetn) 
        begin
@@ -435,8 +433,8 @@ module esaxi (/*autoarg*/
      else
        begin
           ractive_reg         <= read_active;
-          rnext               <= s_axi_rvalid & s_axi_rready & ~s_axi_rlast;        
-          txrd_access         <= ( ~ractive_reg & read_active ) | rnext;         
+          rnext               <= s_axi_rvalid & s_axi_rready & ~s_axi_rlast;    
+          txrd_access         <= ( ~ractive_reg & read_active ) | rnext;       
 	  txrd_datamode[1:0]  <= axi_arsize[1:0];
 	  txrd_dstaddr[31:0]  <= axi_araddr[31:0];
 	  txrd_srcaddr[31:0]  <= {RETURN_ADDR, 16'd0};

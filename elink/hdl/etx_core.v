@@ -1,6 +1,6 @@
 module etx_core(/*AUTOARG*/
    // Outputs
-   tx_access, tx_burst, tx_packet, txrd_wait, txrr_wait, txwr_wait,
+   tx_data_slow, tx_frame_slow, txrd_wait, txrr_wait, txwr_wait,
    etx_cfg_access, etx_cfg_packet,
    // Inputs
    nreset, clk, tx_rd_wait, tx_wr_wait, txrd_access, txrd_packet,
@@ -17,9 +17,8 @@ module etx_core(/*AUTOARG*/
    input 	   clk;   
   
    //IO interface
-   output 	   tx_access;
-   output 	   tx_burst;
-   output [PW-1:0] tx_packet; 
+   output [63:0]   tx_data_slow;
+   output [3:0]    tx_frame_slow;     
    input 	   tx_rd_wait;
    input 	   tx_wr_wait;
    
@@ -121,7 +120,8 @@ module etx_core(/*AUTOARG*/
                           );
    */
 
-   etx_remap etx_remap (/*AUTOINST*/
+   etx_remap etx_remap (
+			/*AUTOINST*/
 			// Outputs
 			.emesh_access_out(etx_remap_access),	 // Templated
 			.emesh_packet_out(etx_remap_packet[PW-1:0]), // Templated
@@ -154,6 +154,8 @@ module etx_core(/*AUTOARG*/
                           .mi_en	    (mi_mmu_en),
                          );
    */
+
+   //TODO: Remove etx_rr, not needed?
 
    emmu etx_mmu (
 	      /*AUTOINST*/
@@ -194,9 +196,8 @@ module etx_core(/*AUTOARG*/
 			      // Outputs
 			      .etx_rd_wait	(etx_rd_wait),	 // Templated
 			      .etx_wr_wait	(etx_wr_wait),	 // Templated
-			      .tx_packet	(tx_packet[PW-1:0]),
-			      .tx_access	(tx_access),
-			      .tx_burst		(tx_burst),
+			      .tx_data_slow	(tx_data_slow[63:0]),
+			      .tx_frame_slow	(tx_frame_slow[3:0]),
 			      // Inputs
 			      .nreset		(nreset),
 			      .clk		(clk),

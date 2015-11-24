@@ -3,9 +3,8 @@ module etx_io (/*AUTOARG*/
    txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n, txo_data_p,
    txo_data_n, tx_wr_wait, tx_rd_wait,
    // Inputs
-   nreset, tx_lclk_io, tx_lclk_div4, tx_lclk90, txi_wr_wait_p,
-   txi_wr_wait_n, txi_rd_wait_p, txi_rd_wait_n, tx_packet, tx_access,
-   tx_burst
+   tx_lclk_io, tx_lclk_div4, tx_lclk90, txi_wr_wait_p, txi_wr_wait_n,
+   txi_rd_wait_p, txi_rd_wait_n, tx_data_slow, tx_frame_slow
    );
    
    parameter IOSTD_ELINK = "LVDS_25";
@@ -15,7 +14,6 @@ module etx_io (/*AUTOARG*/
    //###########
    //# reset, clocks
    //##########
-   input        nreset;              //sync reset for io  
    input 	tx_lclk_io;	     //fast ODDR
    input 	tx_lclk_div4;	     //slow clock
    input 	tx_lclk90;           //fast 90deg shifted lclk   
@@ -32,168 +30,77 @@ module etx_io (/*AUTOARG*/
    //#############
    //# Fabric interface
    //#############
-   input [PW-1:0] tx_packet;//lclkdiv4 domain
-   input          tx_access;
-   input          tx_burst;
+   input [63:0]   tx_data_slow;    //data for burst or transaction
+   input  [3:0]   tx_frame_slow;   //framing signal
    output 	  tx_wr_wait;
    output 	  tx_rd_wait;
    
    //############
    //# REGS
    //############
-   reg [7:0] 	  tx_pointer;   
-   reg [15:0] 	  tx_data16;
-   reg		  tx_frame;
-   reg [PW-1:0]   tx_packet_reg;
-   reg [2:0] 	  tx_state;   
-   reg 		  tx_access_reg;
+   reg [63:0] 	  tx_data;
+   reg [3:0] 	  tx_frame;
+   wire [15:0] 	  tx_data16;
+   wire  	  tx_frame16;
+   reg 		  tx_wr_wait_sync;
+   reg 		  tx_rd_wait_sync; 
+   reg 		  tx_wr_wait;
+   reg 		  tx_rd_wait;
    
    //############
    //# WIRES
    //############
-   wire 	  new_tran;
-   wire 	  access;
-   wire 	  write;
-   wire [1:0] 	  datamode;   
-   wire [3:0]	  ctrlmode;
-   wire [31:0] 	  dstaddr;
-   wire [31:0] 	  data;
-   wire [31:0] 	  srcaddr;
-   wire [7:0] 	  txo_data;
-   wire 	  txo_frame;   
-   wire 	  txo_lclk90;
-  
-   wire 	  tx_new_frame;
+   wire [15:0] 	  tx_data_mux;   
+   wire 	  txo_frame_ddr;
+   wire 	  txo_lclk90;   
    wire 	  tx_wr_wait_async;
    wire 	  tx_rd_wait_async;
-   wire 	  firstedge;
+   wire [7:0] 	  txo_data_ddr;
    
-`define IDLE    3'b000
-`define CYCLE1  3'b001
-`define CYCLE2  3'b010
-`define CYCLE3  3'b011
-`define CYCLE4  3'b100
-`define CYCLE5  3'b101
-`define CYCLE6  3'b110
-`define CYCLE7  3'b111
-
    //#########################################
-   //# Sample incoming packet with fast clock
-   //#########################################  
+   //# Synchronizatsion to fast domain
+   //#########################################        
 
    //Find the aligned edge
-   edgealign edgealign (.firstedge	(firstedge),
-			.fastclk	(tx_lclk_io),
-			.slowclk	(tx_lclk_div4)
+   edgealign edgealign0 (.firstedge	(firstedge),
+			 .fastclk	(tx_lclk_io),
+			 .slowclk	(tx_lclk_div4)
 			);
-      
-   //Sample on aligned edge
-   reg 		  tx_burst_reg;   
+
+   //Data shift registers
    always @ (posedge tx_lclk_io)
-     if(firstedge)
+     if(firstedge) //"load"
        begin
-	  tx_access_reg    <= tx_access & ~tx_wait;
-	  tx_burst_reg     <= tx_burst;	  //need early indicator for first cycle
+	  tx_data[63:0]   <= tx_data_slow[63:0]; //changes every 4 cycles
+	  tx_frame[3:0]   <= tx_frame_slow[3:0];	
        end
-   //Pushback on wait
-   always @ (posedge tx_lclk_io)
-     if(firstedge & ~tx_wait & ~(~tx_burst_reg & tx_state[2:0]==`CYCLE3))
-       tx_packet_reg[PW-1:0] <= tx_packet[PW-1:0];	 
+     else //"shift"
+       begin
+	  tx_data[63:0]   <= {16'b0,tx_data[63:16]};
+	  tx_frame[3:0]   <= {tx_frame[2:0],1'b0};	  
+       end
 
-   //decode incoming packet
-   packet2emesh p2e_reg (
-			  .write_out	(write),
-			  .datamode_out	(datamode[1:0]),
-			  .ctrlmode_out	(ctrlmode[3:0]),
-			  .dstaddr_out	(dstaddr[31:0]),
-			  .data_out	(data[31:0]),
-			  .srcaddr_out	(srcaddr[31:0]),
-			  .packet_in	(tx_packet_reg[PW-1:0]));
+   assign tx_data16[15:0] = tx_data[15:0];   
+   assign tx_frame16      = tx_frame[3];
 
-   //#########################################
-   //# Transmit state machine
-   //#########################################     
-        
-   always @ (posedge tx_lclk_io)
-     if(!nreset)
-       tx_state[2:0] <= `IDLE;
-     else
-       case (tx_state[2:0])
-	 `IDLE   : tx_state[2:0] <=  tx_access_reg ? `CYCLE1 : `IDLE;
-	 `CYCLE1 : tx_state[2:0] <= `CYCLE2;
-	 `CYCLE2 : tx_state[2:0] <= `CYCLE3;
-	 `CYCLE3 : tx_state[2:0] <= `CYCLE4;	 
-	 `CYCLE4 : tx_state[2:0] <= `CYCLE5;
-	 `CYCLE5 : tx_state[2:0] <= `CYCLE6;
-	 `CYCLE6 : tx_state[2:0] <= `CYCLE7;
-	 //NOTE: Burst jumps into middle of state, except for on end of burst
-	 `CYCLE7 : tx_state[2:0] <= (tx_burst_reg & tx_burst) & ~tx_wait  ? `CYCLE4 : 
-				                                            `IDLE;	
-       endcase // case (tx_state)
-
-   assign tx_new_frame = (tx_state[2:0]==`CYCLE1);
-   
-   //A transaction counter for debugging, might be nice to put this in hardware, but then it should go in div4 domain
-`ifdef TARGET_SIM
-   reg [31:0] trans_counter;
-   always @ (posedge tx_lclk_io)
-     if(!nreset)       
-       trans_counter[31:0]<='b0;   
-     else if(tx_state[2:0]==`CYCLE7)
-       trans_counter[31:0]<=trans_counter[31:0]+1'b1;
-`endif
-   
-   //#############################
-   //# THE ELINK BYTE FORMAT
-   //#############################  
-    always @ (posedge tx_lclk_io)
-      case(tx_state[2:0])
-	`CYCLE1 : tx_data16[15:0]  <= {~write,6'b0,tx_burst,1'b0,ctrlmode[3:0],dstaddr[31:28]};
-	`CYCLE2 : tx_data16[15:0]  <= dstaddr[27:12];
-	`CYCLE3 : tx_data16[15:0]  <= {dstaddr[11:0],datamode[1:0],write,tx_access};
-	`CYCLE4 : tx_data16[15:0]  <= data[31:16];       
-	`CYCLE5 : tx_data16[15:0]  <= data[15:0];       
-	`CYCLE6 : tx_data16[15:0]  <= srcaddr[31:16];       
-	`CYCLE7 : tx_data16[15:0]  <= srcaddr[15:0];       
-	default  tx_data16[15:0] <= 16'b0;
-      endcase // case (tx_state[2:0])
- 	           
-   //Create frame signal
-   always @ (posedge tx_lclk_io)
-     tx_frame   <= (|tx_state[2:0]); 
-      
    //##############################################
    //# Wait signal synchronization
-   //##############################################
-
-   //Stopping pipeline is urgent so synchronization
-   //must be done on fast clock
-   //But this sync makes the timing better for the rest of the logic
-
-   reg tx_wr_wait_sync;
-   reg tx_rd_wait_sync; 
-   reg tx_wr_wait;
-   reg tx_rd_wait;
-   reg tx_wait;   
+   //############################################## 
    always @ (posedge tx_lclk_io)
      begin
 	tx_wr_wait_sync <= tx_wr_wait_async;
 	tx_rd_wait_sync <= tx_rd_wait_async;
      end
 
-   always @ (posedge tx_lclk_io)
-     if(firstedge)
-       tx_wait <= tx_wr_wait_sync | tx_rd_wait_sync;
-   
-   always @ (posedge tx_lclk_div4)
+   always @ (negedge tx_lclk_div4)
      begin
-	tx_wr_wait <= tx_wr_wait_sync;
-	tx_rd_wait <= tx_rd_wait_sync;
+	tx_wr_wait      <= tx_wr_wait_sync;
+	tx_rd_wait      <= tx_rd_wait_sync;
      end
-         
-   //#############################
+             
+   //############################################
    //# IO DRIVER STUFF
-   //#############################  
+   //############################################  
 
    //DATA
    genvar        i;
@@ -201,7 +108,7 @@ module etx_io (/*AUTOARG*/
      begin : gen_oddr
 	ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
 	oddr_data (
-		   .Q  (txo_data[i]),
+		   .Q  (txo_data_ddr[i]),
 		   .C  (tx_lclk_io),
 		   .CE (1'b1),
 		   .D1 (tx_data16[i+8]),
@@ -215,11 +122,11 @@ module etx_io (/*AUTOARG*/
    //FRAME
    ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
    oddr_frame (
-	      .Q  (txo_frame),
+	      .Q  (txo_frame_ddr),
 	      .C  (tx_lclk_io),
 	      .CE (1'b1),
-	      .D1 (tx_frame),
-	      .D2 (tx_frame),
+	      .D1 (tx_frame16),
+	      .D2 (tx_frame16),
 	      .R  (1'b0), //reset
 	      .S  (1'b0)
 	      );
@@ -235,26 +142,23 @@ module etx_io (/*AUTOARG*/
 	      .R  (1'b0),//should be no reason to reset clock, static input
 	      .S  (1'b0)
 	      );
-		  
-  
+		    
    //Buffer drivers
    OBUFDS obufds_data[7:0] (
 			     .O   (txo_data_p[7:0]),
 			     .OB  (txo_data_n[7:0]),
-			     .I   (txo_data[7:0])
+			     .I   (txo_data_ddr[7:0])
 			     );
    
    OBUFDS obufds_frame ( .O   (txo_frame_p),
 			 .OB  (txo_frame_n),
-			 .I   (txo_frame)
+			 .I   (txo_frame_ddr)
 			 );
 
    OBUFDS obufds_lclk ( .O   (txo_lclk_p),
 			.OB  (txo_lclk_n),
 			.I   (txo_lclk90)
 			);
-   
-   
    //Wait inputs
    generate
       if(ETYPE==1)

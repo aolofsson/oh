@@ -98,14 +98,14 @@ module emaxi(/*autoarg*/
    output [M_IDW-1:0]  m_axi_wid;     
    output [63 : 0]     m_axi_wdata;   // master interface write data.
    output [7 : 0]      m_axi_wstrb;   // byte write strobes
-   output 	       m_axi_wlast;   // indicates last transfer in a write burst.
+   output 	       m_axi_wlast;   // last transfer in a write burst.
    output 	       m_axi_wvalid;  // indicates data is ready to go
-   input 	       m_axi_wready;  // indicates that the slave is ready for data
+   input 	       m_axi_wready;  // slave is ready for data
 
    //Write response channel
-   input [M_IDW-1:0]     m_axi_bid;
+   input [M_IDW-1:0]   m_axi_bid;
    input [1 : 0]       m_axi_bresp;   // status of the write transaction.
-   input 	       m_axi_bvalid;  // channel is signaling a valid write response
+   input 	       m_axi_bvalid;  // channel is a valid write response
    output 	       m_axi_bready;  // master can accept write response.
 
    //Read address channel
@@ -114,18 +114,18 @@ module emaxi(/*autoarg*/
    output [7 : 0]      m_axi_arlen;   // burst length
    output [2 : 0]      m_axi_arsize;  // burst size
    output [1 : 0]      m_axi_arburst; // burst type
-   output              m_axi_arlock;  //lock type   
+   output              m_axi_arlock;  // lock type   
    output [3 : 0]      m_axi_arcache; // memory type
    output [2 : 0]      m_axi_arprot;  // protection type
-   output [3 : 0]      m_axi_arqos;   // 
-   output 	       m_axi_arvalid; // valid read address and control information
+   output [3 : 0]      m_axi_arqos;   // quality of service info
+   output 	       m_axi_arvalid; // valid read address
    input 	       m_axi_arready; // slave is ready to accept an address
 
    //Read data channel   
-   input [M_IDW-1:0]     m_axi_rid; 
+   input [M_IDW-1:0]   m_axi_rid;     // read data ID
    input [63 : 0]      m_axi_rdata;   // master read data
    input [1 : 0]       m_axi_rresp;   // status of the read transfer
-   input 	       m_axi_rlast;   // signals last transfer in a read burst
+   input 	       m_axi_rlast;   // last transfer in a read burst
    input 	       m_axi_rvalid;  // signaling the required read data
    output 	       m_axi_rready;  // master can accept the readback data
   
@@ -410,7 +410,7 @@ module emaxi(/*autoarg*/
                 };
    
 
-   //Rest synchronization
+   //Rest synchronization (for safety, assume incoming reset is async)
    wire sync_nreset;   
    dsync dsync(.dout	(sync_nreset),
 	       .clk	(m_axi_aclk),
@@ -418,6 +418,37 @@ module emaxi(/*autoarg*/
 	       );
    
    //Synchronous FIFO for read transactions
+
+   //TODO: We don't have a way of testing this, since we don't have a model that will accept enough
+   //transactions (need an actual axi implementation that doesn't stall on every read)
+   //SOLUTION: Put in the bullet proof async fifo and hope...
+
+
+   wire [PW-1:0] packet_out;   
+   wire 	 fifo_prog_full;
+   
+   defparam fifo.DW    = 104;
+   defparam fifo.DEPTH = 32;
+   defparam fifo.WAIT  = 0;
+
+   fifo_async fifo (.full		(),
+		    .prog_full		(fifo_prog_full),
+		    .dout		(packet_out[PW-1:0]),
+		    .empty		(),
+		    .valid		(),
+		    // Inputs
+		    .rst		(~sync_nreset),
+		    .wr_clk		(m_axi_aclk),
+		    .rd_clk		(m_axi_aclk),
+		    .wr_en		(fifo_wr_en),
+		    .din		({56'b0,readinfo_in[47:0]}),
+		    .rd_en		(fifo_rd_en)
+		    );
+
+     assign readinfo_out[47:0] =  packet_out[47:0];
+
+/*   
+
    fifo_sync 
      #(
        // parameters
@@ -436,26 +467,28 @@ module emaxi(/*autoarg*/
       .wr_en                            (m_axi_arvalid & m_axi_arready),
       .rd_en                            (m_axi_rready & m_axi_rvalid)
       );
-
+*/
+ 
    assign txrr_datamode[1:0]  = readinfo_out[1:0];
    assign txrr_ctrlmode[3:0]  = readinfo_out[5:2];
    assign txrr_dstaddr[31:0]  = readinfo_out[40:9];
 
-   //#########################################################################
+   //###################################################################
    //Read address channel
-   //#########################################################################
+   //###################################################################
    
    assign    m_axi_araddr[31:0]   = rxrd_dstaddr[31:0];
    assign    m_axi_arsize[2:0]    = {1'b0, rxrd_datamode[1:0]};
-   assign    m_axi_arlen[7:0]     = 8'd0;
-   assign    m_axi_arvalid        = rxrd_access & ~readinfo_full;
-   assign    rxrd_wait            = readinfo_full | ~m_axi_arready;
-   
-   //#########################################################################
+   assign    m_axi_arlen[7:0]     = 8'd0;  
+   assign    m_axi_arvalid        = rxrd_access & ~fifo_prog_full;  
+   assign    rxrd_wait            = ~m_axi_arready | fifo_prog_full;
+   assign    fifo_wr_en           = m_axi_arvalid & m_axi_arready;
+   assign    fifo_rd_en           = m_axi_rvalid & ~txrr_wait;
+				      
+   //#################################################################
    //Read response channel
-   //#########################################################################
-
-   assign m_axi_rready  = ~txrr_wait; //pass through
+   //#################################################################
+   assign    m_axi_rready         = ~txrr_wait;
 
    always @( posedge m_axi_aclk )
        if ( ~m_axi_aresetn )
@@ -463,7 +496,6 @@ module emaxi(/*autoarg*/
        else
            m_axi_rdata_reg <= m_axi_rdata;
 
-   
    always @( posedge m_axi_aclk )
      if( ~m_axi_aresetn ) 
        begin      
@@ -474,8 +506,8 @@ module emaxi(/*autoarg*/
       end 
      else 
        begin
-          txrr_access_reg     <= m_axi_rready & m_axi_rvalid;
-	  txrr_access         <= txrr_access_reg;//added pipeline stage for data 
+          txrr_access_reg     <= fifo_rd_en;	  
+	  txrr_access         <= txrr_access_reg;//added pipeline stage for data ???/
 	  // steer read data according to size & host address lsbs
 	  //all data needs to be right aligned
 	  //(this is due to the Epiphany right aligning all words)

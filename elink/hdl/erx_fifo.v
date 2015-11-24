@@ -12,7 +12,6 @@ module erx_fifo (/*AUTOARG*/
    parameter DW      = 32;
    parameter PW      = 104;
    parameter RFAW    = 6;
-   parameter ID      = 12'h800;
 
    //reset & clocks
    input 	   sys_clk;

@@ -13,13 +13,13 @@ module erx_clocks (/*AUTOARG*/
 `endif
 
    //Frequency Settings (Mhz)
-   parameter FREQ_RXCLK      = 200;   
+   parameter FREQ_RXCLK      = 300;   
    parameter FREQ_IDELAY     = 200;   
    parameter RXCLK_PHASE     = 0;   //270;  //-90 deg rxclk phase shift      
    parameter PLL_VCO_MULT    = 4;   //RX
 
    //Don't touch these! (derived parameters)
-   localparam real    RXCLK_PERIOD  = 1000.000000 / FREQ_RXCLK; 
+   localparam real    RXCLK_PERIOD  = 1000.000000 / FREQ_RXCLK; //? Why is the period needed here?
    localparam integer IREF_DIVIDE   = PLL_VCO_MULT * FREQ_RXCLK / FREQ_IDELAY;
    localparam integer RXCLK_DIVIDE  = PLL_VCO_MULT; //1:1
       

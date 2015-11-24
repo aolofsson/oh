@@ -59,6 +59,8 @@ module etx(/*AUTOARG*/
    /*AUTOINPUT*/        
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire [63:0]		tx_data_slow;		// From etx_core of etx_core.v
+   wire [3:0]		tx_frame_slow;		// From etx_core of etx_core.v
    wire			tx_lclk90;		// From etx_clocks of etx_clocks.v
    wire			tx_lclk_io;		// From etx_clocks of etx_clocks.v
    // End of automatics
@@ -83,7 +85,8 @@ module etx(/*AUTOARG*/
    /************************************************************/
    /*Clocks                                                    */
    /************************************************************/
-   etx_clocks etx_clocks (/*AUTOINST*/
+   etx_clocks etx_clocks (.etx_io_nreset	(),
+			   /*AUTOINST*/
 			  // Outputs
 			  .tx_lclk_io		(tx_lclk_io),
 			  .tx_lclk90		(tx_lclk90),
@@ -91,7 +94,6 @@ module etx(/*AUTOARG*/
 			  .cclk_p		(cclk_p),
 			  .cclk_n		(cclk_n),
 			  .etx_nreset		(etx_nreset),
-			  .etx_io_nreset	(etx_io_nreset),
 			  .chip_nreset		(chip_nreset),
 			  .tx_active		(tx_active),
 			  // Inputs
@@ -152,9 +154,8 @@ module etx(/*AUTOARG*/
 		      .nreset		(etx_nreset),
 		      /*AUTOINST*/
 		      // Outputs
-		      .tx_access	(tx_access),		 // Templated
-		      .tx_burst		(tx_burst),		 // Templated
-		      .tx_packet	(tx_packet[PW-1:0]),	 // Templated
+		      .tx_data_slow	(tx_data_slow[63:0]),
+		      .tx_frame_slow	(tx_frame_slow[3:0]),
 		      .txrd_wait	(txrd_fifo_wait),	 // Templated
 		      .txrr_wait	(txrr_fifo_wait),	 // Templated
 		      .txwr_wait	(txwr_fifo_wait),	 // Templated
@@ -193,7 +194,6 @@ module etx(/*AUTOARG*/
 	   .tx_wr_wait			(tx_wr_wait),
 	   .tx_rd_wait			(tx_rd_wait),
 	   // Inputs
-	   .nreset			(etx_io_nreset),	 // Templated
 	   .tx_lclk_io			(tx_lclk_io),
 	   .tx_lclk_div4		(tx_lclk_div4),
 	   .tx_lclk90			(tx_lclk90),
@@ -201,9 +201,8 @@ module etx(/*AUTOARG*/
 	   .txi_wr_wait_n		(txi_wr_wait_n),
 	   .txi_rd_wait_p		(txi_rd_wait_p),
 	   .txi_rd_wait_n		(txi_rd_wait_n),
-	   .tx_packet			(tx_packet[PW-1:0]),
-	   .tx_access			(tx_access),
-	   .tx_burst			(tx_burst));
+	   .tx_data_slow		(tx_data_slow[63:0]),
+	   .tx_frame_slow		(tx_frame_slow[3:0]));
    
    
 endmodule // elink
