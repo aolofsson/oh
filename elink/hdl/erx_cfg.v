@@ -56,24 +56,25 @@ module erx_cfg (/*AUTOARG*/
    /*------------------------CODE BODY---------------------------------------*/
    
    //registers
-   reg [31:0] 	ecfg_rx_reg;
-   reg [31:0] 	ecfg_offset_reg;
-   reg [8:0] 	ecfg_gpio_reg;
-   reg [2:0] 	ecfg_rx_status_reg;   
+   reg [31:0] 	rx_cfg_reg;
+   reg [31:0] 	rx_offset_reg;
+   reg [8:0] 	rx_gpio_reg;
+   reg [15:0] 	rx_status_reg;   
+   reg [31:0] 	rx_testdata_reg;
    reg [44:0] 	idelay;
    reg 		load_taps;   
    reg [31:0] 	mi_dout;
-   reg [31:0] 	ecfg_testdata_reg;
+
    
    //wires
    wire 	ecfg_read;
    wire 	ecfg_write;
-   wire 	ecfg_rx_write;
-   wire  	ecfg_offset_write;
-   wire  	ecfg_remap_write;
-   wire  	ecfg_idelay0_write;
-   wire  	ecfg_idelay1_write;
-   wire         ecfg_testdata_write;
+   wire 	rx_cffg_write;
+   wire  	rx_offset_write;
+   wire  	rx_idelay0_write;
+   wire  	rx_idelay1_write;
+   wire         rx_testdata_write;
+   wire 	rx_status_write;
    
    /*****************************/
    /*ADDRESS DECODE LOGIC       */
@@ -84,62 +85,61 @@ module erx_cfg (/*AUTOARG*/
    assign ecfg_read   = mi_en & ~mi_we;   
 
    //Config write enables
-   assign ecfg_rx_write       = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_CFG);
-   assign ecfg_offset_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_OFFSET);
-   assign ecfg_idelay0_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_IDELAY0);
-   assign ecfg_idelay1_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_IDELAY1);
-   assign ecfg_testdata_write = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_TESTDATA);
+   assign rx_cfg_write      = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_CFG);
+   assign rx_offset_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_OFFSET);
+   assign rx_idelay0_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_IDELAY0);
+   assign rx_idelay1_write  = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_IDELAY1);
+   assign rx_testdata_write = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_TESTDATA);
+   assign rx_status_write   = ecfg_write & (mi_addr[RFAW+1:2]==`ERX_STATUS);
+
    //###########################
    //# RXCFG
    //###########################
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       ecfg_rx_reg[31:0] <= 'b0;
-     else if (ecfg_rx_write)
-       ecfg_rx_reg[31:0] <= mi_din[31:0];
+       rx_cfg_reg[31:0] <= 'b0;
+     else if (rx_cfg_write)
+       rx_cfg_reg[31:0] <= mi_din[31:0];
 
-   assign test_mode           = ecfg_rx_reg[0];
-   assign mmu_enable          = ecfg_rx_reg[1];
-   assign remap_mode[1:0]     = ecfg_rx_reg[3:2];
-   assign remap_sel[11:0]     = ecfg_rx_reg[15:4];
-   assign remap_pattern[11:0] = ecfg_rx_reg[27:16];
-   assign timer_cfg[1:0]      = ecfg_rx_reg[29:28];
+   assign test_mode           = rx_cfg_reg[0];
+   assign mmu_enable          = rx_cfg_reg[1];
+   assign remap_mode[1:0]     = rx_cfg_reg[3:2];
+   assign remap_sel[11:0]     = rx_cfg_reg[15:4];
+   assign remap_pattern[11:0] = rx_cfg_reg[27:16];
+   assign timer_cfg[1:0]      = rx_cfg_reg[29:28];
       
    //###########################
    //# DATAIN
    //###########################
    always @ (posedge clk)
-     ecfg_gpio_reg[8:0] <= gpio_datain[8:0];
+     rx_gpio_reg[8:0] <= gpio_datain[8:0];
    
    //###########################1
    //# DEBUG
    //###########################   
-   always @ (posedge clk or negedge nreset)
-     if(!nreset)
-       ecfg_rx_status_reg[2:0] <= 'b0;   
+   always @ (posedge clk)
+     if (rx_status_write)
+       rx_status_reg[15:0] <= mi_din[15:0];
      else
-       ecfg_rx_status_reg[2:0] <= ecfg_rx_status_reg[2:0] | rx_status[2:0];
+       rx_status_reg[15:0] <= rx_status_reg[15:0] | rx_status[15:0];
 
    //###########################1
    //# DYNAMIC REMAP BASE
    //###########################
    always @ (posedge clk)   
-     if (ecfg_offset_write)
-       ecfg_offset_reg[31:0] <= mi_din[31:0];
+     if (rx_offset_write)
+       rx_offset_reg[31:0] <= mi_din[31:0];
 
-   assign remap_base[31:0] = ecfg_offset_reg[31:0];
+   assign remap_base[31:0] = rx_offset_reg[31:0];
 
    //###########################1
    //# IDELAY TAP VALUES
    //###########################
-   always @ (posedge clk or negedge nreset) 
-     if(!nreset)
-       idelay[44:0]  <= 'b0;   
-     else if (ecfg_idelay0_write)
+   always @ (posedge clk) 
+     if (rx_idelay0_write)
        idelay[31:0]  <= mi_din[31:0];
-     else if(ecfg_idelay1_write)
+     else if(rx_idelay1_write)
        idelay[44:32] <= mi_din[12:0];
-
 
    //Construct delay for io (5*9 bits)   
    assign idelay_value[44:0] = {idelay[44],idelay[35:32],//frame
@@ -153,20 +153,19 @@ module erx_cfg (/*AUTOARG*/
 				idelay[36],idelay[3:0]   //d0
 				};
    always @ (posedge clk)
-     load_taps <= ecfg_idelay1_write;
-
+     load_taps <= rx_idelay1_write;
    
    //###############################
-   //# TESTMODE (ADD OR LFSR
+   //# TESTMODE (ADD OR/LFSR)
    //###############################  
    wire 	testmode_add;
    wire 	testmode_lfsr;
    
    always @ (posedge clk)
-     if(ecfg_testdata_write)
-       ecfg_testdata_reg[31:0] <= mi_din[31:0];
+     if(rx_testdata_write)
+       rx_testdata_reg[31:0] <= mi_din[31:0];
      else if(erx_test_access)   
-       ecfg_testdata_reg[31:0] <= ecfg_testdata_reg[31:0] + erx_test_data[31:0];
+       rx_testdata_reg[31:0] <= rx_testdata_reg[31:0] + erx_test_data[31:0];
    				                    
    //###############################
    //# DATA READBACK MUX
@@ -176,11 +175,11 @@ module erx_cfg (/*AUTOARG*/
    always @ (posedge clk)
      if(ecfg_read)
        case(mi_addr[RFAW+1:2])
-         `ERX_CFG:      mi_dout[31:0] <= {ecfg_rx_reg[31:0]};
-         `ERX_GPIO:     mi_dout[31:0] <= {23'b0, ecfg_gpio_reg[8:0]};
-	 `ERX_STATUS:   mi_dout[31:0] <= {16'b0, rx_status[15:3],ecfg_rx_status_reg[2:0]};
-	 `ERX_OFFSET:   mi_dout[31:0] <= {ecfg_offset_reg[31:0]};
-	 `ERX_TESTDATA: mi_dout[31:0] <= {ecfg_testdata_reg[31:0]};
+         `ERX_CFG:      mi_dout[31:0] <= {rx_cfg_reg[31:0]};
+         `ERX_GPIO:     mi_dout[31:0] <= {23'b0, rx_gpio_reg[8:0]};
+	 `ERX_STATUS:   mi_dout[31:0] <= {16'b0, rx_status_reg[15:0]};
+	 `ERX_OFFSET:   mi_dout[31:0] <= {rx_offset_reg[31:0]};
+	 `ERX_TESTDATA: mi_dout[31:0] <= {rx_testdata_reg[31:0]};
          default:       mi_dout[31:0] <= 32'd0;
        endcase // case (mi_addr[RFAW+1:2])
      else

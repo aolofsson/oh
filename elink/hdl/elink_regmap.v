@@ -24,6 +24,7 @@
 `define ETX_CFG        6'd4 //F0210-config
 `define ETX_STATUS     6'd5 //F0214-tx status
 `define ETX_GPIO       6'd6 //F0218-direct data for tx pins
+`define ETX_MONITOR    6'd7 //F021C-transaction monitor
 
 //ERX-REGS
 `define ERX_CFG        6'd0 //F0300-config
