@@ -287,9 +287,11 @@ FIELD    | DESCRIPTION
  [8]     | Control mode select for TXRD/TXWR channels
          | 0: ctrlmode field taken from incoming transmit packet
          | 1: ctrlmode field taken E_TXCFG
- [11:9]  | 00: Normal transmit mode
+ [10:9]  | 00: Normal transmit mode
          | 01: GPIO direct drive mode
-
+ [11]    | 0: Burst mode disabled
+         | 1: Burst mode enabled
+	 
 -------------------------------
 
 ## ELINK_TXSTATUS (0xF0214)
@@ -297,6 +299,17 @@ TX status register
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
+[0]      | TXWR FIFO was full
+[1]      | TXRD FIFO was full
+[2]      | TXRR FIFO was full
+[3]      | TXWR stalled
+[4]      | TXRD stalled
+[5]      | TXRR stalled
+[6]      | WR_WAIT input pin was high
+[7]      | RD_WAIT input pin was high
+[8]      | Burst occured
+
+
 [15:0]  | TBD
 
 -------------------------------
@@ -350,11 +363,15 @@ FIELD    | DESCRIPTION
 -------------------------------
 
 ## ELINK_RXSTATUS (0xF0304)
-RX status register
+RX status register. All bits are sticky.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
- [15:0]  | TBD
+[0]      | RXWR wait went high
+[1]      | RXRD wait went high
+[2]      | RXRR wait went high
+[3]      | WR_WAIT output pin went high
+[4]      | RD_WAIT output pin went high
 
 ## ELINK_RXGPIO (0xF0308)
 RX status register. Data sampled on  rxi_data and rxi_frame pins in gpio mode
