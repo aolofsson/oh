@@ -187,6 +187,8 @@ ELINK_VERSION   | RW     | 0xF020C | Version number (static)
 ELINK_TXCFG     | RW     | 0xF0210 | TX configuration
 ELINK_TXSTATUS  | R-     | 0xF0214 | TX status
 ELINK_TXGPIO    | RW     | 0xF0218 | TX data in GPIO mode
+ELINK_TXMONITOR | RW     | 0xF021C | TX transaction monitor
+ELINK_TXPACKET  | RW     | 0xF0220 | TX packet sampler
 ELINK_TXMMU     | -W     | 0xE0000 | TX MMU table 
 ****************|******* |*********|********************
 ELINK_RXCFG     | RW     | 0xF0300 | RX configuration
@@ -321,6 +323,24 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [7:0]   | Data for txo_data pins
  [8]     | Data for txo_frame pin
+
+-------------------------------
+
+## ELINK_TXMONITOR (0xF021C)
+Counts outgoing TX transactions
+ 
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | Counter value
+
+-------------------------------
+
+## ELINK_TXPACKET (0xF0220)
+Captures address of last TX packet
+ 
+FIELD    | DESCRIPTION 
+-------- |---------------------------------------------------
+ [31:0]  | Packet address
 
 -------------------------------
 
