@@ -138,7 +138,7 @@ module emaxi(/*autoarg*/
    reg [2:0] 	       m_axi_awsize;
    reg 		       m_axi_awvalid;
    reg [63 : 0]        m_axi_wdata;
-   reg [63 : 0]     m_axi_rdata_reg;
+   reg [63 : 0]        m_axi_rdata_reg;
    reg [7 : 0] 	       m_axi_wstrb;
    reg 		       m_axi_wlast;
    reg 		       m_axi_wvalid;
@@ -153,7 +153,6 @@ module emaxi(/*autoarg*/
    reg [7 : 0] 	       wstrb_aligned;
    
    reg 		       txrr_access;
-   reg 		       txrr_access_reg;
    reg [31:0] 	       txrr_data;
    reg [31:0] 	       txrr_srcaddr;
    
@@ -177,10 +176,6 @@ module emaxi(/*autoarg*/
    wire [AW-1:0]       rxrd_dstaddr;
    wire [AW-1:0]       rxrd_srcaddr;
 
-   wire [1:0] 	       txrr_datamode;
-   wire [3:0] 	       txrr_ctrlmode;
-   wire [31:0] 	       txrr_dstaddr;
-   
    //#########################################################################
    //EMESH 2 PACKET CONVERSION
    //#########################################################################
@@ -231,7 +226,7 @@ module emaxi(/*autoarg*/
    //AW
    assign m_axi_awid[M_IDW-1:0]  = {(M_IDW){1'b0}};
    assign m_axi_awburst[1:0]	= 2'b01; //only increment burst supported
-   assign m_axi_awcache[3:0]	= 4'b0000;//TODO: correct value??
+   assign m_axi_awcache[3:0]	= 4'b0000; //TODO: should this be 0000 or 0010???
    assign m_axi_awprot[2:0]	= 3'b000;
    assign m_axi_awqos[3:0]	= 4'b0000;
    assign m_axi_awlock          = 1'b0;
@@ -406,7 +401,7 @@ module emaxi(/*autoarg*/
                 rxrd_srcaddr[31:0],//40:9
                 rxrd_dstaddr[2:0], //8:6
                 rxrd_ctrlmode[3:0],//5:2
-                rxrd_datamode[1:0]
+                rxrd_datamode[1:0] //1:0
                 };
    
 
@@ -426,12 +421,12 @@ module emaxi(/*autoarg*/
 
    wire [PW-1:0] packet_out;   
    wire 	 fifo_prog_full;
-   
+   wire 	 fifo_full;   		 
    defparam fifo.DW    = 104;
    defparam fifo.DEPTH = 32;
    defparam fifo.WAIT  = 0;
 
-   fifo_async fifo (.full		(),
+   fifo_async fifo (.full		(fifo_full),
 		    .prog_full		(fifo_prog_full),
 		    .dout		(packet_out[PW-1:0]),
 		    .empty		(),
@@ -469,9 +464,7 @@ module emaxi(/*autoarg*/
       );
 */
  
-   assign txrr_datamode[1:0]  = readinfo_out[1:0];
-   assign txrr_ctrlmode[3:0]  = readinfo_out[5:2];
-   assign txrr_dstaddr[31:0]  = readinfo_out[40:9];
+ 
 
    //###################################################################
    //Read address channel
@@ -480,69 +473,92 @@ module emaxi(/*autoarg*/
    assign    m_axi_araddr[31:0]   = rxrd_dstaddr[31:0];
    assign    m_axi_arsize[2:0]    = {1'b0, rxrd_datamode[1:0]};
    assign    m_axi_arlen[7:0]     = 8'd0;  
-   assign    m_axi_arvalid        = rxrd_access & ~fifo_prog_full;  
-   assign    rxrd_wait            = ~m_axi_arready | fifo_prog_full;
-   assign    fifo_wr_en           = m_axi_arvalid & m_axi_arready;
-   assign    fifo_rd_en           = m_axi_rvalid & ~txrr_wait;
+   assign    m_axi_arvalid        = rxrd_access & ~fifo_prog_full; //BUG& ~txrr_wait & ~fifo_prog_full; //remove 
+   assign    rxrd_wait            = ~m_axi_arready | fifo_prog_full;//BUG| txrr_wait
+   assign    fifo_wr_en           = m_axi_arvalid & m_axi_arready ;
+   assign    fifo_rd_en           = m_axi_rready & m_axi_rvalid;//BUG & ~txrr_wait
 				      
    //#################################################################
    //Read response channel
    //#################################################################
-   assign    m_axi_rready         = ~txrr_wait;
+   assign    m_axi_rready         = ~txrr_wait; //BUG!: 1'b1
 
-   always @( posedge m_axi_aclk )
-       if ( ~m_axi_aresetn )
-           m_axi_rdata_reg <= 'b0;
-       else
-           m_axi_rdata_reg <= m_axi_rdata;
+   wire [1:0] 	 txrr_datamode_fifo;
+   wire [3:0] 	 txrr_ctrlmode_fifo;
+   wire [31:0] 	 txrr_dstaddr_fifo;
+   wire [2:0] 	 txrr_srcaddr_fifo;
+   reg [1:0] 	 txrr_datamode;
+   reg [3:0] 	 txrr_ctrlmode;
+   reg [31:0] 	 txrr_dstaddr;
+   
+   assign  txrr_datamode_fifo[1:0] = readinfo_out[1:0];
+   assign  txrr_ctrlmode_fifo[3:0] = readinfo_out[5:2];
+   assign  txrr_srcaddr_fifo[2:0]  = readinfo_out[8:6];
+   assign  txrr_dstaddr_fifo[31:0] = readinfo_out[40:9];
 
-   always @( posedge m_axi_aclk )
-     if( ~m_axi_aresetn ) 
-       begin      
-	  txrr_data[31:0]     <= 32'b0;
-	  txrr_srcaddr[31:0]  <= 32'b0;
-	  txrr_access_reg     <= 1'b0;
-	  txrr_access         <= 1'b0;         
-      end 
-     else 
+   //Pipeline axi transaction to account for FIFO read latency   
+   reg [63:0] 	 m_axi_rdata_fifo;
+   reg 		 txrr_access_fifo;   
+   always @( posedge m_axi_aclk)
+     if(!m_axi_aresetn) 
        begin
-          txrr_access_reg     <= fifo_rd_en;	  
-	  txrr_access         <= txrr_access_reg;//added pipeline stage for data ???/
-	  // steer read data according to size & host address lsbs
+	  txrr_access_fifo      <= 1'b0;	  
+       end
+     else	 
+       begin
+	  txrr_access_fifo       <= fifo_rd_en;
+	  m_axi_rdata_fifo[63:0] <= m_axi_rdata[63:0];      
+       end
+
+   //Alignment Mux (one cycle)
+   always @ (posedge m_axi_aclk )
+     if(!m_axi_aresetn)
+       begin
+	  txrr_access  <= 1'b0;	  
+       end
+     else
+       begin
+	  txrr_access        <= txrr_access_fifo;	  
+	  txrr_datamode[1:0] <= txrr_datamode_fifo[1:0];
+	  txrr_ctrlmode[3:0] <= txrr_ctrlmode_fifo[3:0];
+	  txrr_dstaddr[31:0] <= txrr_dstaddr_fifo[31:0];	  
 	  //all data needs to be right aligned
 	  //(this is due to the Epiphany right aligning all words)
-	  case(readinfo_out[1:0])//datamode
+	  case(txrr_datamode_fifo[1:0])//datamode
             2'd0:  // byte read
-              case(readinfo_out[8:6])
-		3'd0:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[7:0]};
-		3'd1:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[15:8]};
-		3'd2:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[23:16]};
-		3'd3:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[31:24]};
-		3'd4:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[39:32]};
-		3'd5:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[47:40]};
-		3'd6:     txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[55:48]};
-		default:  txrr_data[31:0] <= {24'b0,m_axi_rdata_reg[63:56]};
+              case(txrr_srcaddr_fifo[2:0])
+		3'd0:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[7:0]};
+		3'd1:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[15:8]};
+		3'd2:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[23:16]};
+		3'd3:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[31:24]};
+		3'd4:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[39:32]};
+		3'd5:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[47:40]};
+		3'd6:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[55:48]};
+		3'd7:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[63:56]};
+		default:  txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[7:0]};
               endcase	    
             2'd1:  // 16b hword
-              case( readinfo_out[8:7] )
-		2'd0:    txrr_data[31:0] <= {16'b0,m_axi_rdata_reg[15:0]};
-		2'd1:    txrr_data[31:0] <= {16'b0,m_axi_rdata_reg[31:16]};
-		2'd2:    txrr_data[31:0] <= {16'b0,m_axi_rdata_reg[47:32]};
-		default: txrr_data[31:0] <= {16'b0,m_axi_rdata_reg[63:48]};
+              case(txrr_srcaddr_fifo[2:1])
+		2'd0:    txrr_data[31:0] <= {16'b0,m_axi_rdata_fifo[15:0]};
+		2'd1:    txrr_data[31:0] <= {16'b0,m_axi_rdata_fifo[31:16]};
+		2'd2:    txrr_data[31:0] <= {16'b0,m_axi_rdata_fifo[47:32]};
+		2'd3:    txrr_data[31:0] <= {16'b0,m_axi_rdata_fifo[63:48]};
+		default: txrr_data[31:0] <= {16'b0,m_axi_rdata_fifo[15:0]};
               endcase
             2'd2:  // 32b word
-              if( readinfo_out[8] )
-               txrr_data[31:0] <= m_axi_rdata_reg[63:32];
-             else
-               txrr_data[31:0] <= m_axi_rdata_reg[31:0];
+              if(txrr_srcaddr_fifo[2])
+		txrr_data[31:0] <= m_axi_rdata_fifo[63:32];
+              else
+		txrr_data[31:0] <= m_axi_rdata_fifo[31:0];
            // 64b word already defined by defaults above
            2'd3: 
 	     begin // 64b dword
-		txrr_data[31:0]  <= m_axi_rdata_reg[31:0];
-		txrr_srcaddr[31:0]  <= m_axi_rdata_reg[63:32];
+		txrr_data[31:0]     <= m_axi_rdata_fifo[31:0];
+		txrr_srcaddr[31:0]  <= m_axi_rdata_fifo[63:32];
              end
          endcase         
        end // else: !if( ~m_axi_aresetn )
+
    
 endmodule // emaxi
 // Local Variables:
