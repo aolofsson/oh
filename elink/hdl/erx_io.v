@@ -74,8 +74,8 @@ module erx_io (/*AUTOARG*/
    reg 		 rx_burst;
    wire [8:0] 	 rxi_delay_in;
    wire [8:0] 	 rxi_delay_out;
-   reg 		 burst_detect;
-   
+   reg 		 burst_detect;   
+   reg [3:0] 	 valid;
    
    //#######################################
    //#Register DDR inputs for better timing
@@ -127,10 +127,7 @@ module erx_io (/*AUTOARG*/
    //#DATA VALID SIGNAL 
    //####################
    always @ (posedge rx_lclk)
-     begin     
 	access       <= rx_pointer[6];
-	valid_packet <= access;//data pipeline
-     end
  
    always @ (posedge rx_lclk or negedge erx_io_nreset)
      if(!erx_io_nreset)
@@ -186,12 +183,21 @@ module erx_io (/*AUTOARG*/
    //###################################
    //#SYNCHRONIZE TO SLOW CLK
    //################################### 
+
    //stretch access pulse to 4 cycles
-   //TODO: Multi cycle path for STA???   
-   pulse_stretcher #(.DW(3)) ps0 (.out(access_wide),
-				  .in(valid_packet),
-				  .clk(rx_lclk));
-     
+   //use shift register for speed
+   
+   always @ (posedge rx_lclk)
+     if(!erx_io_nreset)
+       valid[3:0] <=4'b0000;   
+     else if(access)
+       valid[3:0] <=4'b1111;   
+     else
+       valid[3:0] <={valid[2:0],1'b0};
+
+   assign access_wide = valid[3];
+
+   //clock handoff
    always @ (posedge rx_lclk_div4)
      rx_access <= access_wide;
         
