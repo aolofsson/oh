@@ -85,8 +85,7 @@ module dut(/*AUTOARG*/
    //memory wires
    wire 	     emem_access;
    wire [PW-1:0]     emem_packet;
-   wire 	     elink1_rxrd_wait;
-   wire 	     elink1_rxwr_wait;
+  
 
    // Beginning of automatic outputs (from unused autoinst outputs)
 
@@ -294,10 +293,7 @@ module dut(/*AUTOARG*/
    assign emem_access           = elink1_rcv_access;
 
    assign emem_packet[PW-1:0]   = elink1_rcv_packet;
-   
-
-   assign elink1_rxrd_wait       = 1'b0;   
-   assign elink1_rxwr_wait       = 1'b0;
+      
     
    /*ememory AUTO_TEMPLATE ( 
                         // Outputs
