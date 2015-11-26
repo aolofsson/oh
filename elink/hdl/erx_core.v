@@ -144,8 +144,7 @@ module erx_core (/*AUTOARG*/
 			.remap_pattern	(remap_pattern[11:0]),
 			.remap_base	(remap_base[31:0]));
    
- 
-   
+    
    /************************************************************/
    /*ELINK MEMORY MANAGEMENT UNIT                              */
    /************************************************************/
@@ -265,7 +264,14 @@ module erx_core (/*AUTOARG*/
     );
         */   
    
-   assign rx_status[15:0] = {16'b0};
+   assign rx_status[15:0] = {11'b0,
+			     rx_rd_wait,
+			     rx_wr_wait,
+			     rxrr_wait,
+			     rxrd_wait,
+			     rxwr_wait
+			     };
+   
    assign gpio_datain[8:0]=9'b0;
    
   /*

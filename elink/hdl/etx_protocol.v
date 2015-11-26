@@ -13,10 +13,11 @@
 
 module etx_protocol (/*AUTOARG*/
    // Outputs
-   etx_rd_wait, etx_wr_wait, tx_data_slow, tx_frame_slow,
+   etx_rd_wait, etx_wr_wait, tx_burst, tx_access, tx_data_slow,
+   tx_frame_slow,
    // Inputs
-   nreset, clk, etx_access, etx_packet, tx_enable, gpio_data,
-   gpio_enable, tx_rd_wait, tx_wr_wait
+   nreset, clk, etx_access, etx_packet, tx_enable, burst_enable,
+   gpio_data, gpio_enable, tx_rd_wait, tx_wr_wait
    );
 
    parameter PW = 104;
@@ -36,10 +37,13 @@ module etx_protocol (/*AUTOARG*/
    output         etx_rd_wait;
    output         etx_wr_wait;
 
-   //Enble transmit
-   input 	  tx_enable;   //transmit enable
-   input [8:0]    gpio_data;   //TODO
-   input    	  gpio_enable; //TODO
+   //Config interface
+   input 	  tx_enable;    //transmit enable
+   input    	  burst_enable; //Enables bursting
+   input [8:0]    gpio_data;    //TODO
+   input    	  gpio_enable;  //TODO
+   output 	  tx_burst;     //for TXSTATUS
+   output 	  tx_access;    //for TXMON
    
    //Interface to IO
    output [63:0]  tx_data_slow;
@@ -47,9 +51,9 @@ module etx_protocol (/*AUTOARG*/
    input          tx_rd_wait; 
    input 	  tx_wr_wait; 
 
-   //###################################################################
+   //################################################################
    //# Local regs & wires
-   //###################################################################
+   //################################################################
    reg [2:0] 	  tx_state;   
    reg [PW-1:0]   tx_packet; 
    wire 	  etx_write;
@@ -110,16 +114,17 @@ module etx_protocol (/*AUTOARG*/
    assign burst_addr_match  = ((tx_dstaddr[31:0]+32'h8) == etx_dstaddr[31:0]);
 
    assign current_match     = tx_access & 
-			       tx_write &
+			      tx_write &
 		              (tx_datamode[1:0]==2'b11) &		       
 			      (tx_ctrlmode[3:0]==4'b0000);
 
-   assign next_match       =  etx_access &
+   assign next_match       =  etx_access & //BUG: should be valid? 
 			      etx_write &
 		              (etx_datamode[1:0]==2'b11) &		       
 			      (etx_ctrlmode[3:0]==4'b0000);
      
-   assign tx_burst        =  ~tx_wait         &
+   assign tx_burst        =   burst_enable     &
+                              ~tx_wait         &
 		   	      current_match    &
 			      next_match       &
 			      burst_addr_match;
@@ -131,7 +136,10 @@ module etx_protocol (/*AUTOARG*/
    //############################################################
    //# TRANSMIT STATE MACHINE
    //#############################################################
-   assign etx_valid = tx_enable & etx_access & ~tx_wait;
+   assign etx_valid = tx_enable & 
+		      etx_access &
+		      ~(etx_dstaddr[31:20]==ID) & 
+		       ~tx_wait;
    
 `define TX_IDLE  3'b000
 `define TX_START 3'b001
@@ -147,21 +155,22 @@ module etx_protocol (/*AUTOARG*/
 	 `TX_IDLE:  tx_state[2:0] <= etx_valid ? `TX_START : `TX_IDLE;
 	 `TX_START: tx_state[2:0] <= `TX_ACK;
 	 `TX_ACK:   tx_state[2:0] <= tx_burst  ? `TX_BURST :
-				      etx_valid ? `TX_START :
-                                      `TX_IDLE;
+				     etx_valid ? `TX_START :
+                                     `TX_IDLE;
  	 `TX_BURST: tx_state[2:0] <= tx_burst  ? `TX_BURST : `TX_IDLE;	   
        endcase // case (tx_state[2:0])
    
    assign tx_ack_wait = (tx_state[1:0]==`TX_START);
-   assign tx_access   = (tx_state[1:0]==`TX_START);
-			
+   assign tx_access   = (tx_state[1:0]==`TX_START) |
+			(tx_state[1:0]==`TX_BURST);
+   
+
    //#######################################
    //# Wait propagation circuit backwards
    //########################################	  
    wire [63:0] 	  tx_cycle1;
    wire [63:0] 	  tx_cycle2;
    
-
    assign tx_frame_slow[3:0] = (tx_state[1:0]==`TX_START) ? 4'b0111 :
 			       (tx_state[1:0]!=`TX_IDLE)  ? 4'b1111 :
 			                                    4'b0000;
@@ -189,23 +198,10 @@ module etx_protocol (/*AUTOARG*/
    //immediate wait for state machine
    assign tx_wait     = tx_wr_wait  | tx_rd_wait;
 
-   //used to detect rising edge of wait signal
-   reg 	     tx_wait_reg;   
-   always @ (posedge clk)
-     tx_wait_reg <=tx_wait;
-
-   //simplify??
-//   assign adjust     =  //sage to sample new value on acknowledge
-//			((tx_state[1:0]==`TX_ACK) & tx_wait);
-   
-			//don't wait if there is nothing to wait for
-//		        ((tx_state[1:0]==`TX_IDLE) & tx_wait & ~tx_wait_reg);
-
    //wait for data
-   assign etx_wr_wait = (tx_wr_wait | tx_ack_wait );// & ~adjust ;//& ~adjust
-   assign etx_rd_wait = (tx_rd_wait | tx_ack_wait );// & ~adjust  ;//& ~adjust
+   assign etx_wr_wait = (tx_wr_wait | tx_ack_wait );
+   assign etx_rd_wait = (tx_rd_wait | tx_ack_wait );
    assign etx_wait    = etx_wr_wait | etx_rd_wait;   
-
            
 endmodule // etx_protocol
 // Local Variables:

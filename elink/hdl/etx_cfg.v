@@ -9,7 +9,8 @@ module etx_cfg (/*AUTOARG*/
    mi_dout, tx_enable, mmu_enable, gpio_enable, remap_enable,
    burst_enable, gpio_data, ctrlmode, ctrlmode_bypass,
    // Inputs
-   nreset, clk, mi_en, mi_we, mi_addr, mi_din, tx_status, tx_access
+   nreset, clk, mi_en, mi_we, mi_addr, mi_din, tx_status, etx_access,
+   etx_packet
    );
 
    /******************************/
@@ -18,6 +19,7 @@ module etx_cfg (/*AUTOARG*/
    parameter PW               = 104;   
    parameter RFAW             = 6;
    parameter DEFAULT_VERSION  = 16'h0000;
+   parameter ID               = 999;
 
    /******************************/
    /*HARDWARE RESET (EXTERNAL)   */
@@ -45,8 +47,9 @@ module etx_cfg (/*AUTOARG*/
    output 	   burst_enable;   // enables bursting
    
    input [15:0]    tx_status;      // etx status signals
-   input 	   tx_access;      // for transaction counter
-   //    
+   input 	   etx_access;     // for transaction counter
+   input [PW-1:0]  etx_packet;     // for transaction sampler
+   
    //sampled by tx_lclk (test)
    output [8:0]    gpio_data;      // data for elink outputs (static)   
 
@@ -60,6 +63,7 @@ module etx_cfg (/*AUTOARG*/
    reg [8:0] 	   tx_gpio_reg;
    reg [15:0] 	   tx_status_reg;
    reg [31:0] 	   tx_monitor_reg;
+   reg [31:0] 	   tx_packet_reg;
    reg [31:0] 	   mi_dout;
    reg 		   ecfg_access;
    
@@ -139,8 +143,15 @@ module etx_cfg (/*AUTOARG*/
      if (tx_monitor_write)
        tx_monitor_reg[31:0] <= mi_din[31:0];       
      else
-       tx_monitor_reg[31:0] <=  tx_monitor_reg[31:0] + tx_access;
-      
+       tx_monitor_reg[31:0] <=  tx_monitor_reg[31:0] + (etx_access & ~(etx_packet[39:28]==ID) & ~(|tx_status[7:6]));
+
+   //###########################
+   //# PACKET
+   //###########################     
+   always @ (posedge clk)  
+     if(etx_access & ~(etx_packet[39:28]==ID))
+       tx_packet_reg[31:0] <= etx_packet[39:8];
+   
    //###############################
    //# DATA READBACK MUX
    //###############################
@@ -153,6 +164,7 @@ module etx_cfg (/*AUTOARG*/
          `ETX_GPIO:    mi_dout[31:0] <= {23'b0, tx_gpio_reg[8:0]};
 	 `ETX_STATUS:  mi_dout[31:0] <= {16'b0, tx_status_reg[15:0]};
 	 `ETX_MONITOR: mi_dout[31:0] <= {tx_monitor_reg[31:0]};
+	 `ETX_PACKET:  mi_dout[31:0] <= {tx_packet_reg[31:0]};	 
          default:     mi_dout[31:0] <= 32'd0;
        endcase // case (mi_addr[RFAW+1:2])
      else
