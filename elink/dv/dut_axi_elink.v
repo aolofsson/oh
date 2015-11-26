@@ -721,7 +721,7 @@ module dut(/*AUTOARG*/
                              );
    */
    
-   ememory #(.WAIT(1)) 
+   ememory #(.WAIT(0)) 
    emem (.wait_in	        (elink1_rxrr_wait),//pushback on reads
 	 .clk		        (clk),
 	 .wait_out		(emem_wait),
