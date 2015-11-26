@@ -44,9 +44,10 @@ module etx_io (/*AUTOARG*/
    wire  	  tx_frame16;
    reg 		  tx_wr_wait_sync;
    reg 		  tx_rd_wait_sync; 
-   reg 		  tx_wr_wait;
-   reg 		  tx_rd_wait;
-   
+   reg 		  tx_wr_wait_reg;
+   reg 		  tx_rd_wait_reg;
+   reg 		  tx_wr_wait_reg2;
+   reg 		  tx_rd_wait_reg2;
    //############
    //# WIRES
    //############
@@ -86,17 +87,24 @@ module etx_io (/*AUTOARG*/
    //##############################################
    //# Wait signal synchronization
    //############################################## 
-   always @ (posedge tx_lclk_io)
+   always @ (negedge tx_lclk_io)
      begin
 	tx_wr_wait_sync <= tx_wr_wait_async;
 	tx_rd_wait_sync <= tx_rd_wait_async;
      end
 
-   always @ (negedge tx_lclk_div4)
+   //Looks like legacy elink puts out short wait pulses.
+   //Let's make sure they don't sneak through
+ 
+   always @ (posedge tx_lclk_div4)
      begin
-	tx_wr_wait      <= tx_wr_wait_sync;
-	tx_rd_wait      <= tx_rd_wait_sync;
+	tx_wr_wait_reg  <= tx_wr_wait_sync; 
+	tx_wr_wait_reg2 <= tx_wr_wait_reg;
+	tx_rd_wait_reg  <= tx_rd_wait_sync;
+	tx_rd_wait_reg2 <= tx_rd_wait_reg;	
      end
+   assign tx_wr_wait = tx_wr_wait_reg | tx_wr_wait_reg2;
+   assign tx_rd_wait = tx_rd_wait_reg | tx_rd_wait_reg2;
              
    //############################################
    //# IO DRIVER STUFF
