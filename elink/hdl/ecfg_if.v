@@ -96,7 +96,7 @@ module ecfg_if (/*AUTOARG*/
 		    );
 
    //ENABLE SIGNALS
-   assign mi_match   = access_in & (dstaddr[31:20]==ID);
+   assign mi_match   = access_in & (dstaddr[31:20]==ID);//TODP:REMOVE
 
    //config select (group 2 and 3)
    assign mi_cfg_en = mi_match & 

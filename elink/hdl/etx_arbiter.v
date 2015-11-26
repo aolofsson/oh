@@ -16,7 +16,7 @@
 
 module etx_arbiter (/*AUTOARG*/
    // Outputs
-   txwr_wait, txrd_wait, txrr_wait, etx_access, etx_packet, etx_rr,
+   txwr_wait, txrd_wait, txrr_wait, etx_access, etx_rr, etx_packet,
    // Inputs
    clk, nreset, txwr_access, txwr_packet, txrd_access, txrd_packet,
    txrr_access, txrr_packet, etx_rd_wait, etx_wr_wait, etx_cfg_wait,
@@ -56,8 +56,8 @@ module etx_arbiter (/*AUTOARG*/
    
    //Transaction for IO protocol
    output          etx_access;
-   output [PW-1:0] etx_packet;
    output 	   etx_rr;      //bypass translation on read response
+   output [PW-1:0] etx_packet;
     
    //regs
    reg 		   etx_access;
@@ -78,7 +78,6 @@ module etx_arbiter (/*AUTOARG*/
    wire [PW-1:0]   txrd_splice_packet;
    wire [PW-1:0]   txwr_splice_packet;
    wire [PW-1:0]   etx_mux;
-   wire            write_in;
 
    //##########################################################################
    //# Insert special control mode in packet (UGLY)
@@ -121,6 +120,7 @@ module etx_arbiter (/*AUTOARG*/
 			   ({(PW){txrd_grant}} & txrd_splice_packet[PW-1:0]) |
 			   ({(PW){txrr_grant}} & txrr_packet[PW-1:0]);
  
+   
    //######################################################################
    //Pushback (stall) Signals
    //######################################################################
@@ -148,16 +148,8 @@ module etx_arbiter (/*AUTOARG*/
 		      (txrd_grant & ~txrd_wait) |
 		      (txrr_grant & ~txrr_wait);
 
-   packet2emesh p2e (// Outputs
-		     .write_out		(write_in),
-		     .datamode_out	(),
-		     .ctrlmode_out	(),
-		     .data_out		(),
-		     .dstaddr_out	(),
-		     .srcaddr_out	(),
-		     // Inputs
-		     .packet_in		(etx_mux[PW-1:0]));
-      
+
+   
    //access
     always @ (posedge clk)
       if (!nreset)
@@ -167,11 +159,9 @@ module etx_arbiter (/*AUTOARG*/
 	end
       else if (~(etx_wr_wait | etx_rd_wait))
 	begin
-	   etx_access         <= access_in;
-	   etx_rr             <= txrr_grant;
+	   etx_access         <= access_in ;
+	   etx_rr             <= txrr_grant & ~txrr_wait;
 	end	   
-
-   
    
    //packet
    always @ (posedge clk)

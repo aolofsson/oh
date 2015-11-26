@@ -299,6 +299,7 @@ module esaxi (/*autoarg*/
    //#READ REQUEST CHANNEL
    //###################################################  
 
+   //No
    assign  last_rd_beat = s_axi_rvalid & s_axi_rlast & s_axi_rready;
 
    always @( posedge s_axi_aclk ) 

@@ -82,6 +82,7 @@ module etx(/*AUTOARG*/
    wire [PW-1:0]	txwr_fifo_packet;	// From etx_fifo of etx_fifo.v
    wire			txwr_fifo_wait;		// From etx_core of etx_core.v
    wire 		etx_io_nreset;
+
    /************************************************************/
    /*Clocks                                                    */
    /************************************************************/
@@ -142,8 +143,8 @@ module etx(/*AUTOARG*/
                                 .etx_cfg_access	(etx_cfg_access),
 		                .etx_cfg_packet	(etx_cfg_packet[PW-1:0]),
                                 .etx_cfg_wait	(etx_cfg_wait),
-                               
-    			        .\(.*\)_packet   (\1_fifo_packet[PW-1:0]),
+                                .\(.*\)_full	(\1_wait),
+      			        .\(.*\)_packet   (\1_fifo_packet[PW-1:0]),
     			        .\(.*\)_access   (\1_fifo_access),
        			        .\(.*\)_wait     (\1_fifo_wait),
     );
@@ -166,10 +167,13 @@ module etx(/*AUTOARG*/
 		      .tx_wr_wait	(tx_wr_wait),		 // Templated
 		      .txrd_access	(txrd_fifo_access),	 // Templated
 		      .txrd_packet	(txrd_fifo_packet[PW-1:0]), // Templated
+		      .txrd_full	(txrd_wait),		 // Templated
 		      .txrr_access	(txrr_fifo_access),	 // Templated
 		      .txrr_packet	(txrr_fifo_packet[PW-1:0]), // Templated
+		      .txrr_full	(txrr_wait),		 // Templated
 		      .txwr_access	(txwr_fifo_access),	 // Templated
 		      .txwr_packet	(txwr_fifo_packet[PW-1:0]), // Templated
+		      .txwr_full	(txwr_wait),		 // Templated
 		      .etx_cfg_wait	(etx_cfg_wait));		 // Templated
    
    
