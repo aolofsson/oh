@@ -55,8 +55,8 @@ module emailbox (/*AUTOARG*/
    input 	    mi_en;
    input  	    mi_we;      
    input [RFAW+1:0] mi_addr;
-   input [63:0]     mi_din;  //assumes write interface is 64 bits
-   output [63:0]    mi_dout;   
+   input [2*DW-1:0]     mi_din;  //assumes write interface is 64 bits
+   output [2*DW-1:0]    mi_dout;   
    
    /*****************************/
    /*MAILBOX OUTPUTS            */
@@ -67,18 +67,20 @@ module emailbox (/*AUTOARG*/
    /*****************************/
    /*REGISTERS                  */
    /*****************************/
-   reg [63:0]     mi_dout;
+   reg 		   mi_rdHi_pipe;
+   reg 		   mi_rdLo_pipe;
 
    /*****************************/
    /*WIRES                      */
    /*****************************/
+   wire [DW*2-1:0]     mi_dout;
    wire 	    mailbox_read;
    wire 	    mi_rd;
    wire [WIDTH-1:0] mailbox_fifo_data;
    wire 	    mailbox_empty; 
    wire 	    mailbox_pop;
-   wire [31:0] 	    emesh_addr;
-   wire [63:0] 	    emesh_din;
+   wire [AW-1:0] 	    emesh_addr;
+   wire [AW+DW-1:0] 	    emesh_din;
    wire 	    emesh_write;
    
    /*****************************/
@@ -106,18 +108,28 @@ module emailbox (/*AUTOARG*/
 
    assign mi_rd =  mi_en & ~mi_we;
    
-   wire emailbox_read  = mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI); //fifo read
-
-   always @ (posedge rd_clk)
-     if(mi_rd)
-       case(mi_addr[RFAW+1:2])	 
-	 `E_MAILBOXLO:   mi_dout[63:0] <= mailbox_fifo_data[63:0];	 
-	 `E_MAILBOXHI:   mi_dout[63:0] <= {mailbox_fifo_data[2*DW-1:DW],
-					   mailbox_fifo_data[2*DW-1:DW]};	 
-	 default:        mi_dout[63:0] <= 64'd0;
-       endcase // case (mi_addr[RFAW-1:2])
+   always @ (posedge rd_clk or negedge nreset)
+     if(!nreset)
+       begin
+	  mi_rdLo_pipe <= 1'b0;
+	  mi_rdHi_pipe <= 1'b0;
+       end
      else
-       mi_dout[63:0] <= 64'd0;
+       case(mi_addr[RFAW+1:2])
+	 `E_MAILBOXLO:   mi_rdLo_pipe <= mi_rd;
+	 `E_MAILBOXHI:   mi_rdHi_pipe <= mi_rd;
+	 default:
+	   begin
+	      mi_rdLo_pipe <= 1'b0;
+	      mi_rdHi_pipe <= 1'b0;
+	   end
+       endcase // case (mi_addr[RFAW-1:2])
+
+   wire emailbox_read = mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI); //fifo read
+
+   assign mi_dout[2*DW-1:0] = {(2*DW){mi_rdHi_pipe}} & {mailbox_fifo_data[2*DW-1:DW],
+						     mailbox_fifo_data[2*DW-1:DW]} |
+			      {(2*DW){mi_rdLo_pipe}} & mailbox_fifo_data[2*DW-1:0];
 
    /*****************************/
    /*FIFO (64bit wide)          */
