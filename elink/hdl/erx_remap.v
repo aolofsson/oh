@@ -60,12 +60,11 @@ module erx_remap (/*AUTOARG*/
 			     + remap_base[31:0]  //adding back base
                              - (addr_in[31:26]<<$clog2(colid));
      			     
-
    //Static, dynamic, or no remap
-   assign remap_mux[31:0]  = (remap_mode[1:0]==2'b00) ? addr_in[31:0] :
+   assign remap_mux[31:0]  = (addr_in[31:20]==ID)     ? addr_in[31:0] : //for write to mailbox
+			     (remap_mode[1:0]==2'b00) ? addr_in[31:0] :
 			     (remap_mode[1:0]==2'b01) ? static_remap[31:0] :
 	  		                                dynamic_remap[31:0];
-
 
    //Access pipeline
    always @ (posedge clk)
