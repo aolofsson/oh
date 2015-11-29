@@ -22,7 +22,13 @@ module esaxi (/*autoarg*/
    parameter [15:0]  RETURN_ADDR         = {ID,`EGROUP_RR};
    parameter         AW                  = 32;
    parameter         DW                  = 32;
-   
+
+`ifdef TARGET_SIM
+   parameter         TW                  = 8;   //timeout counter width
+`else
+   parameter         TW                  = 16;  //timeout counter width
+`endif
+ 
    /*****************************/
    /*Write request for TX fifo  */
    /*****************************/  
@@ -154,6 +160,8 @@ module esaxi (/*autoarg*/
   
    wire [31:0] 	      rxrr_mux_data;
    wire [DW-1:0]      rxrr_data;
+   wire [31:0] 	      rxrr_return_data;
+   reg [TW-1:0]       timeout_counter;
    
    //###################################################
    //#PACKET TO MESH
@@ -409,7 +417,6 @@ module esaxi (/*autoarg*/
         txwr_datamode[1:0]  <= txwr_datamode_reg[1:0];	  
      end
    
-   
    //###################################################
    //#READ REQUEST (DATA CHANNEL)
    //###################################################  
@@ -421,6 +428,7 @@ module esaxi (/*autoarg*/
    // -- returned in order, we will only allow
    // -- one at a time.
    //Need to look at txrd_wait signal
+   
    always @( posedge s_axi_aclk )
      if (~s_axi_aresetn) 
        begin
@@ -441,6 +449,7 @@ module esaxi (/*autoarg*/
 	  txrd_srcaddr[31:0]  <= {RETURN_ADDR, 16'd0};
 	  //TODO: use arid+srcaddr for out of order ?
        end
+
    //###################################################
    //#READ RESPONSE (DATA CHANNEL)
    //###################################################  
@@ -448,6 +457,11 @@ module esaxi (/*autoarg*/
    //Only one outstanding read
 
    assign rxrr_wait = 1'b0;
+
+
+   assign rxrr_return_access     = rxrr_access | rxrr_timeout_access;
+   assign rxrr_return_data[31:0] = rxrr_timeout_access ? 32'hDEADBEEF :
+				                         rxrr_data[31:0];
    
    always @( posedge s_axi_aclk ) 
       if (!s_axi_aresetn) 
@@ -458,20 +472,53 @@ module esaxi (/*autoarg*/
 	end 
       else 
 	begin
-         if( rxrr_access ) 
+         if( rxrr_return_access ) 
 	   begin
               s_axi_rvalid <= 1'b1;
               s_axi_rresp  <= 2'd0;
             case( axi_arsize[1:0] )
-              2'b00:   s_axi_rdata[31:0] <= {4{rxrr_data[7:0]}};  //8-bit
-              2'b01:   s_axi_rdata[31:0] <= {2{rxrr_data[15:0]}}; //16-bit
-              default: s_axi_rdata[31:0] <= rxrr_data[31:0];      //32-bit
+              2'b00:   s_axi_rdata[31:0] <= {4{rxrr_return_data[7:0]}};  //8-bit
+              2'b01:   s_axi_rdata[31:0] <= {2{rxrr_return_data[15:0]}}; //16-bit
+              default: s_axi_rdata[31:0] <= rxrr_return_data[31:0];      //32-bit
             endcase // case ( axi_arsize[1:0] )
            end 
 	 else if( s_axi_rready ) 
            s_axi_rvalid <= 1'b0;
 	end // else: !if( s_axi_aresetn == 1'b0 )
 
+   //###################################################
+   //#TIMEOUT CIRCUIT
+   //###################################################  
+
+   reg [1:0] timeout_state;     
+`define TIMEOUT_IDLE    2'b00
+`define TIMEOUT_ARMED   2'b01
+`define TIMEOUT_EXPIRED 2'b10
+  
+   always @ (posedge s_axi_aclk)
+     if(!s_axi_aresetn)
+       timeout_state[1:0] <= `TIMEOUT_IDLE;
+     else
+       case(timeout_state[1:0])
+	 `TIMEOUT_IDLE    : timeout_state[1:0] <= (s_axi_arvalid & s_axi_arready ) ? `TIMEOUT_ARMED : 
+						                                     `TIMEOUT_IDLE;
+	 `TIMEOUT_ARMED   : timeout_state[1:0] <=  rxrr_access     ? `TIMEOUT_IDLE    :
+						   counter_expired ? `TIMEOUT_EXPIRED : 
+						                     `TIMEOUT_ARMED;
+	 `TIMEOUT_EXPIRED : timeout_state[1:0] <= `TIMEOUT_IDLE;	 
+	 default : timeout_state[1:0]          <= `TIMEOUT_IDLE;
+       endcase // case (timeout_state[1:0])
+   	   
+   //release bus after 64K clock cycles (seems reasonable?)   
+   always @ (posedge s_axi_aclk)
+     if(timeout_state[1:0]==`TIMEOUT_IDLE)
+       timeout_counter[TW-1:0] <= {(TW){1'b1}};   
+     else if (timeout_state[1:0]==`TIMEOUT_ARMED)  //decrement while counter > 0
+       timeout_counter[TW-1:0] <= timeout_counter[TW-1:0] - 1'b1;
+
+   assign counter_expired     = ~(|timeout_counter[TW-1:0]);
+   assign rxrr_timeout_access = (timeout_state[1:0]==`TIMEOUT_EXPIRED);
+        
 endmodule // esaxi
 
 
