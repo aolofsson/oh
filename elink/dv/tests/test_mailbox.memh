@@ -1,0 +1,12 @@
+00000000_11111111_80000000_05_0020 // Write to EMEM (just for sim)
+00000000_22222222_80000004_05_0020 // 
+00000000_33333333_80000008_05_0020 // Write to EMEM (just for sim)
+00000000_44444444_8000000c_05_0020 // 
+810f0310_DEADBEEF_80000000_06_0080 // Crazy readback (just for sim)
+810f0310_DEADBEEF_80000008_06_0080 // Crazy readback (just for sim)
+81D00000_DEADBEEF_810f0310_04_0010 // Read from lo mailbox (from host)
+81D00004_DEADFEEF_810f0314_04_0010 // Read from hi mailbox (from host)
+81D00000_DEADBEEF_810f0310_04_0010 // Read from lo mailbox (from host)
+81D00004_DEADFEEF_810f0314_04_0010 // Read from hi mailbox (from host)
+
+
