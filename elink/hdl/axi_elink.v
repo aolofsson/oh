@@ -1,17 +1,17 @@
 module axi_elink(/*AUTOARG*/
    // Outputs
-   timeout, elink_active, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
+   elink_active, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n,
    txo_data_p, txo_data_n, chipid, chip_nreset, cclk_p, cclk_n,
-   mailbox_not_empty, mailbox_full, m_axi_awid, m_axi_awaddr,
-   m_axi_awlen, m_axi_awsize, m_axi_awburst, m_axi_awlock,
-   m_axi_awcache, m_axi_awprot, m_axi_awqos, m_axi_awvalid, m_axi_wid,
-   m_axi_wdata, m_axi_wstrb, m_axi_wlast, m_axi_wvalid, m_axi_bready,
-   m_axi_arid, m_axi_araddr, m_axi_arlen, m_axi_arsize, m_axi_arburst,
-   m_axi_arlock, m_axi_arcache, m_axi_arprot, m_axi_arqos,
-   m_axi_arvalid, m_axi_rready, s_axi_arready, s_axi_awready,
-   s_axi_bid, s_axi_bresp, s_axi_bvalid, s_axi_rid, s_axi_rdata,
-   s_axi_rlast, s_axi_rresp, s_axi_rvalid, s_axi_wready,
+   mailbox_irq, m_axi_awid, m_axi_awaddr, m_axi_awlen, m_axi_awsize,
+   m_axi_awburst, m_axi_awlock, m_axi_awcache, m_axi_awprot,
+   m_axi_awqos, m_axi_awvalid, m_axi_wid, m_axi_wdata, m_axi_wstrb,
+   m_axi_wlast, m_axi_wvalid, m_axi_bready, m_axi_arid, m_axi_araddr,
+   m_axi_arlen, m_axi_arsize, m_axi_arburst, m_axi_arlock,
+   m_axi_arcache, m_axi_arprot, m_axi_arqos, m_axi_arvalid,
+   m_axi_rready, s_axi_arready, s_axi_awready, s_axi_bid, s_axi_bresp,
+   s_axi_bvalid, s_axi_rid, s_axi_rdata, s_axi_rlast, s_axi_rresp,
+   s_axi_rvalid, s_axi_wready,
    // Inputs
    sys_nreset, sys_clk, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
    rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
@@ -70,8 +70,7 @@ module axi_elink(/*AUTOARG*/
    /*****************************/
    /*MAILBOX (interrupts)       */
    /*****************************/
-   output        mailbox_not_empty;   
-   output        mailbox_full;
+   output        mailbox_irq;
 
    //########################
    //AXI MASTER INTERFACE
@@ -185,11 +184,7 @@ module axi_elink(/*AUTOARG*/
    /*#############################################*/
    
    /*AUTOINPUT*/
-   /*AUTOOUTPUT*/
-   // Beginning of automatic outputs (from unused autoinst outputs)
-   output		timeout;		// From elink of elink.v
-   // End of automatics
-  
+   /*AUTOOUTPUT*/  
    // End of automatics
 
    /*AUTOWIRE*/
@@ -241,9 +236,7 @@ module axi_elink(/*AUTOARG*/
 	       .cclk_p			(cclk_p),
 	       .cclk_n			(cclk_n),
 	       .chip_nreset		(chip_nreset),
-	       .mailbox_not_empty	(mailbox_not_empty),
-	       .mailbox_full		(mailbox_full),
-	       .timeout			(timeout),
+	       .mailbox_irq		(mailbox_irq),
 	       .rxwr_access		(rxwr_access),
 	       .rxwr_packet		(rxwr_packet[PW-1:0]),
 	       .rxrd_access		(rxrd_access),

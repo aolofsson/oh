@@ -21,10 +21,10 @@
 `include "emailbox_regmap.v" // is there a better way?
 module emailbox (/*AUTOARG*/
    // Outputs
-   mi_dout, mailbox_full, mailbox_not_empty,
+   mi_dout, mailbox_irq,
    // Inputs
    nreset, wr_clk, rd_clk, emesh_access, emesh_packet, mi_en, mi_we,
-   mi_addr
+   mi_addr, mailbox_irq_en
    );
 
    parameter DW     = 32;        //data width of fifo
@@ -42,7 +42,7 @@ module emailbox (/*AUTOARG*/
    input           nreset;      //asynchronous active low reset
    input 	   wr_clk;      //write clock
    input 	   rd_clk;      //read clock
-
+   
    /*****************************/
    /*WRITE INTERFACE            */
    /*****************************/
@@ -58,10 +58,10 @@ module emailbox (/*AUTOARG*/
    output [63:0]    mi_dout;   
    
    /*****************************/
-   /*MAILBOX OUTPUTS            */
+   /*MAILBOX CONTROl            */
    /*****************************/
-   output 	   mailbox_full;
-   output 	   mailbox_not_empty;   
+   input 	    mailbox_irq_en; 	    
+   output 	    mailbox_irq;   
    
    /*****************************/
    /*REGISTERS                  */
@@ -69,6 +69,7 @@ module emailbox (/*AUTOARG*/
    reg 		  mi_rd_reg;   
    reg [RFAW+1:2] mi_addr_reg;
    reg 		  read_hi;
+   reg 		  read_status;
    
    /*****************************/
    /*WIRES                      */
@@ -108,16 +109,18 @@ module emailbox (/*AUTOARG*/
    assign mailbox_read  = mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXLO); //fifo read
 
    always @ (posedge rd_clk)
-     read_hi <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI);
-   
-   assign mi_dout[31:0]  = read_hi ? mailbox_data[63:32] : mailbox_data[31:0];
+     begin
+	read_hi     <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI);
+	read_status <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXSTAT);
+     end
+   assign mi_dout[31:0]  = read_status ? {30'b0,mailbox_full, mailbox_not_empty} :
+			   read_hi     ? mailbox_data[63:32]                     : 
+			                 mailbox_data[31:0];
    assign mi_dout[63:32] = mailbox_data[63:32];
    
    /*****************************/
    /*FIFO (64bit wide)          */
    /*****************************/
-   assign mailbox_not_empty         = ~mailbox_empty;
-
    defparam fifo.DW    = MW;
    defparam fifo.DEPTH = DEPTH;
    //TODO: fix the width and depth
@@ -136,6 +139,14 @@ module emailbox (/*AUTOARG*/
 		   .wr_en    (mailbox_write),
 		   .wr_clk   (wr_clk)  			     
 		   ); 
+
+
+   /*****************************/
+   /*FIFO (64bit wide)          */
+   /*****************************/
+   assign mailbox_not_empty         = ~mailbox_empty;
+   assign mailbox_irq = mailbox_irq_en & ( mailbox_not_empty | mailbox_full);
+   
    
 endmodule // emailbox
 

@@ -79,6 +79,7 @@ module dut(/*AUTOARG*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			elink0_chip_nreset;	// From elink0 of elink.v
+   wire			elink0_mailbox_irq;	// From elink0 of elink.v
    wire			elink0_rxo_rd_wait_n;	// From elink0 of elink.v
    wire			elink0_rxo_rd_wait_p;	// From elink0 of elink.v
    wire			elink0_rxo_wr_wait_n;	// From elink0 of elink.v
@@ -137,6 +138,7 @@ module dut(/*AUTOARG*/
    wire			elink1_m_axi_wready;	// From esaxi of esaxi.v
    wire [7:0]		elink1_m_axi_wstrb;	// From elink1 of axi_elink.v
    wire			elink1_m_axi_wvalid;	// From elink1 of axi_elink.v
+   wire			elink1_mailbox_irq;	// From elink1 of axi_elink.v
    wire			elink1_rxo_rd_wait_n;	// From elink1 of axi_elink.v
    wire			elink1_rxo_rd_wait_p;	// From elink1 of axi_elink.v
    wire			elink1_rxo_wr_wait_n;	// From elink1 of axi_elink.v
@@ -388,9 +390,7 @@ module dut(/*AUTOARG*/
 		 .cclk_p		(elink0_cclk_p),	 // Templated
 		 .cclk_n		(elink0_cclk_n),	 // Templated
 		 .chip_nreset		(elink0_chip_nreset),	 // Templated
-		 .mailbox_not_empty	(elink0_mailbox_not_empty), // Templated
-		 .mailbox_full		(elink0_mailbox_full),	 // Templated
-		 .timeout		(elink0_timeout),	 // Templated
+		 .mailbox_irq		(elink0_mailbox_irq),	 // Templated
 		 .rxrr_access		(elink0_rxrr_access),	 // Templated
 		 .rxrr_packet		(elink0_rxrr_packet[PW-1:0]), // Templated
 		 .txwr_wait		(elink0_txwr_wait),	 // Templated
@@ -465,8 +465,7 @@ module dut(/*AUTOARG*/
 		     .chip_nreset	(elink1_chip_nreset),	 // Templated
 		     .cclk_p		(elink1_cclk_p),	 // Templated
 		     .cclk_n		(elink1_cclk_n),	 // Templated
-		     .mailbox_not_empty	(elink1_mailbox_not_empty), // Templated
-		     .mailbox_full	(elink1_mailbox_full),	 // Templated
+		     .mailbox_irq	(elink1_mailbox_irq),	 // Templated
 		     .m_axi_awid	(elink1_m_axi_awid[M_IDW-1:0]), // Templated
 		     .m_axi_awaddr	(elink1_m_axi_awaddr[31:0]), // Templated
 		     .m_axi_awlen	(elink1_m_axi_awlen[7:0]), // Templated
@@ -505,7 +504,6 @@ module dut(/*AUTOARG*/
 		     .s_axi_rresp	(stub_m_axi_rresp[1:0]), // Templated
 		     .s_axi_rvalid	(stub_m_axi_rvalid),	 // Templated
 		     .s_axi_wready	(stub_m_axi_wready),	 // Templated
-		     .timeout		(elink1_timeout),	 // Templated
 		     // Inputs
 		     .sys_clk		(clk),			 // Templated
 		     .m_axi_awready	(elink1_m_axi_awready),	 // Templated

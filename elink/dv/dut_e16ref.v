@@ -94,6 +94,7 @@ module dut(/*AUTOARG*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			elink0_chip_nreset;	// From elink0 of elink.v
+   wire			elink0_mailbox_irq;	// From elink0 of elink.v
    wire			elink0_rxo_rd_wait_n;	// From elink0 of elink.v
    wire			elink0_rxo_rd_wait_p;	// From elink0 of elink.v
    wire			elink0_rxo_wr_wait_n;	// From elink0 of elink.v
@@ -209,9 +210,7 @@ module dut(/*AUTOARG*/
 		 .cclk_p		(elink0_cclk_p),	 // Templated
 		 .cclk_n		(elink0_cclk_n),	 // Templated
 		 .chip_nreset		(elink0_chip_nreset),	 // Templated
-		 .mailbox_not_empty	(elink0_mailbox_not_empty), // Templated
-		 .mailbox_full		(elink0_mailbox_full),	 // Templated
-		 .timeout		(elink0_timeout),	 // Templated
+		 .mailbox_irq		(elink0_mailbox_irq),	 // Templated
 		 .rxrr_access		(elink0_rxrr_access),	 // Templated
 		 .rxrr_packet		(elink0_rxrr_packet[PW-1:0]), // Templated
 		 .txwr_wait		(elink0_txwr_wait),	 // Templated

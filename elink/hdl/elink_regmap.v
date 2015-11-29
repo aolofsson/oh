@@ -25,24 +25,22 @@
 `define ETX_STATUS     6'd5 //F0214-tx status
 `define ETX_GPIO       6'd6 //F0218-direct data for tx pins
 `define ETX_MONITOR    6'd7 //F021C-transaction monitor
-`define ETX_PACKET     6'd8 //F0220-packet sampler
+`define ETX_PACKET     6'd8 //F0220-outgoing packet sampler
 
 //ERX-REGS
 `define ERX_CFG        6'd0 //F0300-config
 `define ERX_STATUS     6'd1 //F0304-status register
 `define ERX_GPIO       6'd2 //F0308-sampled data
 `define ERX_OFFSET     6'd3 //F030C-memory base for remap
+`define ERX_IDELAY0    6'd4 //F0310-tap delay for d[5:0]
+`define ERX_IDELAY1    6'd5 //F0314-tap delays for {frame,d[7:6]}
+`define ERX_TESTDATA   6'd6 //F0318-received test data
 
-`define ERX_IDELAY0    6'd6 //F0318-tap delay for d[5:0]
-`define ERX_IDELAY1    6'd7 //F031c-tap delays for {frame,d[7:6]}
-`define ERX_TESTDATA   6'd8 //F0320-
-
-//MAILBOX 
-`ifndef E_MAILBOXLO	
- `define E_MAILBOXLO    6'd4 //F0310-reserved
-`endif
-`ifndef E_MAILBOXHI	
- `define E_MAILBOXHI    6'd5 //F0314-reserved
+//MAILBOX  REGS
+`ifndef  E_MAILBOXLO	
+ `define E_MAILBOXLO    6'd8  //F0320-reserved
+ `define E_MAILBOXHI    6'd9  //F0324-reserved
+ `define E_MAILBOXSTAT  6'd10 //F0328-reserved
 `endif
 
 //DMA (same numbering as in Epiphany, limit to 4 channels)

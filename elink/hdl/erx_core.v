@@ -2,7 +2,7 @@ module erx_core (/*AUTOARG*/
    // Outputs
    rx_rd_wait, rx_wr_wait, idelay_value, load_taps, rxrd_access,
    rxrd_packet, rxrr_access, rxrr_packet, rxwr_access, rxwr_packet,
-   erx_cfg_wait, mailbox_full, mailbox_not_empty,
+   erx_cfg_wait, mailbox_irq,
    // Inputs
    nreset, clk, rx_packet, rx_access, rx_burst, rxrd_wait, rxrr_wait,
    rxwr_wait, erx_cfg_access, erx_cfg_packet
@@ -46,8 +46,7 @@ module erx_core (/*AUTOARG*/
    output 		erx_cfg_wait;
 
    //mailbox outputs
-   output		mailbox_full;           //need to sync to sys_clk
-   output		mailbox_not_empty;      //need to sync to sys_clk
+   output		mailbox_irq;    
    
    /*AUTOINPUT*/
    /*AUTOOUTPUT*/
@@ -66,6 +65,7 @@ module erx_core (/*AUTOARG*/
    wire			erx_rr_access;		// From erx_protocol of erx_protocol.v
    wire			erx_test_access;	// From erx_protocol of erx_protocol.v
    wire [31:0]		erx_test_data;		// From erx_protocol of erx_protocol.v
+   wire			mailbox_irq_en;		// From erx_cfg of erx_cfg.v
    wire [14:0]		mi_addr;		// From erx_cfgif of ecfg_if.v
    wire [DW-1:0]	mi_cfg_dout;		// From erx_cfg of erx_cfg.v
    wire			mi_cfg_en;		// From erx_cfgif of ecfg_if.v
@@ -203,8 +203,7 @@ module erx_core (/*AUTOARG*/
 			/*AUTOINST*/
 			// Outputs
 			.mi_dout	(mi_mailbox_dout[63:0]), // Templated
-			.mailbox_full	(mailbox_full),
-			.mailbox_not_empty(mailbox_not_empty),
+			.mailbox_irq	(mailbox_irq),
 			// Inputs
 			.nreset		(nreset),
 			.wr_clk		(clk),			 // Templated
@@ -213,9 +212,9 @@ module erx_core (/*AUTOARG*/
 			.emesh_packet	(emmu_packet[PW-1:0]),	 // Templated
 			.mi_en		(mi_cfg_en),		 // Templated
 			.mi_we		(mi_we),
-			.mi_addr	(mi_addr[RFAW+1:0]));
-   
-   
+			.mi_addr	(mi_addr[RFAW+1:0]),
+			.mailbox_irq_en	(mailbox_irq_en));
+      
    /************************************************************/
    /* CONFIGURATION INTERFACE                                  */
    /************************************************************/
@@ -268,7 +267,7 @@ module erx_core (/*AUTOARG*/
 			     rx_wr_wait,
 			     rxrr_wait,
 			     rxrd_wait,
-			     rxwr_wait
+			     rxwr_wait		       
 			     };
    
    assign gpio_datain[8:0]=9'b0;
@@ -299,6 +298,7 @@ module erx_core (/*AUTOARG*/
 		    .idelay_value	(idelay_value[44:0]),
 		    .load_taps		(load_taps),
 		    .test_mode		(test_mode),
+		    .mailbox_irq_en	(mailbox_irq_en),
 		    // Inputs
 		    .nreset		(nreset),
 		    .clk		(clk),

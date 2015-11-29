@@ -7,6 +7,7 @@ module erx_cfg (/*AUTOARG*/
    // Outputs
    mi_dout, mmu_enable, remap_mode, remap_base, remap_pattern,
    remap_sel, timer_cfg, idelay_value, load_taps, test_mode,
+   mailbox_irq_en,
    // Inputs
    nreset, clk, mi_en, mi_we, mi_addr, mi_din, erx_test_access,
    erx_test_data, gpio_datain, rx_status
@@ -41,9 +42,7 @@ module erx_cfg (/*AUTOARG*/
    /*CONFIG SIGNALS             */
    /*****************************/
    //rx
-   output 	 mmu_enable;     // enables MMU on rx path (static)  
-   input [8:0] 	 gpio_datain;    // frame and data inputs (static)        
-   input [15:0]  rx_status;      // etx status signals
+   output 	 mmu_enable;     // enables MMU on rx path (static)     
    output [1:0]  remap_mode;     // remap mode (static)       
    output [31:0] remap_base;     // base for dynamic remap (static) 
    output [11:0] remap_pattern;  // patter for static remap (static)
@@ -52,6 +51,13 @@ module erx_cfg (/*AUTOARG*/
    output [44:0] idelay_value;   // tap values for erx idelay
    output        load_taps;      // loads the idelay_value into IDELAY prim
    output 	 test_mode;      // testmode blocks all rx ports to fifo
+   output 	 mailbox_irq_en; // irq enable for mailbox
+   
+   /*****************************/
+   /*STATUS SIGNALS             */
+   /*****************************/   
+   input [8:0] 	 gpio_datain;    // frame and data inputs (static)        
+   input [15:0]  rx_status;      // etx status signals
    
    /*------------------------CODE BODY---------------------------------------*/
    
@@ -106,22 +112,22 @@ module erx_cfg (/*AUTOARG*/
    assign remap_mode[1:0]     = rx_cfg_reg[3:2];
    assign remap_sel[11:0]     = rx_cfg_reg[15:4];
    assign remap_pattern[11:0] = rx_cfg_reg[27:16];
-   assign timer_cfg[1:0]      = rx_cfg_reg[29:28];
+   assign mailbox_irq_en      = rx_cfg_reg[28];
       
-   //###########################
-   //# DATAIN
-   //###########################
-   always @ (posedge clk)
-     rx_gpio_reg[8:0] <= gpio_datain[8:0];
-   
    //###########################1
-   //# DEBUG
+   //# STATUS
    //###########################   
-   always @ (posedge clk)
+   always @ (posedge clk)     
      if (rx_status_write)
        rx_status_reg[15:0] <= mi_din[15:0];
      else
        rx_status_reg[15:0] <= rx_status_reg[15:0] | rx_status[15:0];
+     
+   //###########################
+   //# GPIO-DATAIN
+   //###########################
+   always @ (posedge clk)
+     rx_gpio_reg[8:0] <= gpio_datain[8:0];
 
    //###########################1
    //# DYNAMIC REMAP BASE

@@ -3,7 +3,7 @@ module erx (/*AUTOARG*/
    rx_active, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, rxwr_access, rxwr_packet, rxrd_access, rxrd_packet,
    rxrr_access, rxrr_packet, erx_cfg_wait, rx_lclk_div4, erx_nreset,
-   timeout, mailbox_full, mailbox_not_empty,
+   mailbox_irq,
    // Inputs
    soft_reset, sys_nreset, sys_clk, tx_active, rxi_lclk_p, rxi_lclk_n,
    rxi_frame_p, rxi_frame_n, rxi_data_p, rxi_data_n, rxwr_wait,
@@ -55,14 +55,9 @@ module erx (/*AUTOARG*/
    output 	   erx_nreset;
   
    
-   //Readback timeout (synchronized to sys_c
-   output 	   timeout;
-   output 	   mailbox_full;
-   output 	   mailbox_not_empty;
+   //Mailbox interrupt
+   output 	   mailbox_irq;	
 
-   //hack up for now
-   assign timeout = 1'b0;
-   
    /*AUTOOUTPUT*/
    /*AUTOINPUT*/
 
@@ -168,8 +163,7 @@ module erx (/*AUTOARG*/
 		      .rxwr_access	(rxwr_fifo_access),	 // Templated
 		      .rxwr_packet	(rxwr_fifo_packet[PW-1:0]), // Templated
 		      .erx_cfg_wait	(erx_cfg_wait),		 // Templated
-		      .mailbox_full	(mailbox_full),
-		      .mailbox_not_empty(mailbox_not_empty),
+		      .mailbox_irq	(mailbox_irq),
 		      // Inputs
 		      .rx_packet	(rx_packet[PW-1:0]),	 // Templated
 		      .rx_access	(rx_access),		 // Templated

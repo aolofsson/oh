@@ -3,9 +3,8 @@ module elink (/*AUTOARG*/
    elink_active, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,
    rxo_rd_wait_n, txo_lclk_p, txo_lclk_n, txo_frame_p, txo_frame_n,
    txo_data_p, txo_data_n, chipid, cclk_p, cclk_n, chip_nreset,
-   mailbox_not_empty, mailbox_full, timeout, rxwr_access, rxwr_packet,
-   rxrd_access, rxrd_packet, rxrr_access, rxrr_packet, txwr_wait,
-   txrd_wait, txrr_wait,
+   mailbox_irq, rxwr_access, rxwr_packet, rxrd_access, rxrd_packet,
+   rxrr_access, rxrr_packet, txwr_wait, txrd_wait, txrr_wait,
    // Inputs
    sys_nreset, sys_clk, rxi_lclk_p, rxi_lclk_n, rxi_frame_p,
    rxi_frame_n, rxi_data_p, rxi_data_n, txi_wr_wait_p, txi_wr_wait_n,
@@ -55,14 +54,8 @@ module elink (/*AUTOARG*/
    /*****************************/
    /*MAILBOX INTERRUPTS         */
    /*****************************/
-   output       mailbox_not_empty;   
-   output       mailbox_full;
+   output 	   mailbox_irq;
 
-   /*****************************/
-   /*TIMEOUT                    */
-   /*****************************/
-   output 	timeout;
-   
    /*****************************/
    /*SYSTEM SIDE INTERFACE      */
    /*****************************/   
@@ -173,9 +166,7 @@ module elink (/*AUTOARG*/
 	   .erx_cfg_wait		(erx_cfg_wait),
 	   .rx_lclk_div4		(rx_lclk_div4),
 	   .erx_nreset			(erx_nreset),
-	   .timeout			(timeout),
-	   .mailbox_full		(mailbox_full),
-	   .mailbox_not_empty		(mailbox_not_empty),
+	   .mailbox_irq			(mailbox_irq),
 	   // Inputs
 	   .soft_reset			(erx_soft_reset),	 // Templated
 	   .sys_nreset			(sys_nreset),
