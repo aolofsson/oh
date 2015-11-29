@@ -144,11 +144,17 @@ module PLLE2_ADV #(
 
    reg [5:0] CLKOUT_DIV_LOCK;   
 
+`ifdef TARGET_VERILATOR
+   initial
+     begin
+	$display("ERROR: PLL divider not implemented");	
+     end
+`else   
    always @ (posedge (CLKIN1 & vco_clk) or negedge (CLKIN1&~vco_clk))
      begin
 	CLKOUT_DIV_LOCK[5:0] <= CLKOUT_DIV[5:0];	
      end
-
+`endif
    
    //##############
    //#SUB PHASE DELAY

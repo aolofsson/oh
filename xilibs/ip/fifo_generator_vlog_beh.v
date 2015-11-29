@@ -1,3 +1,9 @@
+
+/*verilator lint_off IMPLICIT*/
+/*verilator lint_off WIDTH*/
+/*verilator lint_off LITENDIAN*/
+/* verilator lint_off COMBDLY*/
+
 /*
  *******************************************************************************
  *
