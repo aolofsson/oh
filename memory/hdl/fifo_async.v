@@ -1,5 +1,4 @@
-module fifo_async 
-   (/*AUTOARG*/
+module fifo_async (/*AUTOARG*/
    // Outputs
    full, prog_full, dout, empty, valid,
    // Inputs
@@ -9,7 +8,7 @@ module fifo_async
    parameter DW    = 104;     //FIFO width
    parameter DEPTH = 32;      //FIFO depth
    parameter TYPE  = "XILINX";//"BASIC" or "XILINX" or "ALTERA"
-   parameter WAIT  = 1;       //assert random prog_full wait
+   parameter WAIT  = 0;       //assert random prog_full wait
 
    //##########
    //# RESET/CLOCK
@@ -85,7 +84,7 @@ endgenerate
 
  //Random wait generator
    generate
-      if(WAIT)
+      if(WAIT>0)
 	begin	   
 	   reg [7:0] wait_counter;  
 	   always @ (posedge wr_clk or posedge rst)
