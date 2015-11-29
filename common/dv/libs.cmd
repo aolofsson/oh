@@ -9,6 +9,7 @@
 -y ../../emesh/hdl
 -y ../../emmu/hdl
 -y ../../emailbox/hdl
+-y ../../etrace/hdl
 -y ../../memory/hdl
 -y ../../xilibs/hdl
 -y ../../xilibs/ip
@@ -18,3 +19,4 @@
 +incdir+../../edma/hdl
 +incdir+../../emmu/hdl
 +incdir+../../emailbox/hdl
++incdir+../../etrace/hdl

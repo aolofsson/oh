@@ -1,5 +1,12 @@
-//NOTE: module name differs from file name to simplify Vivado block design
-//Many verilog versions to one block design...
+/*
+ * This is the top level module for the parallella base design:
+ * -
+ * 
+ * 
+ * 
+ * 
+ */ 
+
 module parallella_base(/*AUTOARG*/
    // Outputs
    s_axi_wready, s_axi_rvalid, s_axi_rresp, s_axi_rlast, s_axi_rid,
@@ -11,10 +18,10 @@ module parallella_base(/*AUTOARG*/
    m_axi_arvalid, m_axi_arsize, m_axi_arqos, m_axi_arprot,
    m_axi_arlock, m_axi_arlen, m_axi_arid, m_axi_arcache,
    m_axi_arburst, m_axi_araddr, cclk_n, cclk_p, chip_nreset, chipid,
-   elink_active, mailbox_not_empty, timeout, i2c_scl_i, i2c_sda_i,
-   ps_gpio_i, txo_data_n, txo_data_p, txo_frame_n, txo_frame_p,
-   txo_lclk_n, txo_lclk_p, rxo_rd_wait_n, rxo_rd_wait_p,
-   rxo_wr_wait_n, rxo_wr_wait_p,
+   elink_active, mailbox_irq, i2c_scl_i, i2c_sda_i, ps_gpio_i,
+   txo_data_n, txo_data_p, txo_frame_n, txo_frame_p, txo_lclk_n,
+   txo_lclk_p, rxo_rd_wait_n, rxo_rd_wait_p, rxo_wr_wait_n,
+   rxo_wr_wait_p,
    // Inouts
    i2c_scl, i2c_sda, gpio_n, gpio_p,
    // Inputs
@@ -44,143 +51,142 @@ module parallella_base(/*AUTOARG*/
    parameter NPS         = 64;       //Number of PS signals
 
    //RESET+CLK
-   input		sys_clk;		// To axe_elink of axi_elink.v
-   input		sys_nreset;		// To axe_elink of axi_elink.v
+   input		sys_clk;
+   input		sys_nreset;
 
    //MISC
-   output		cclk_n;			// From axe_elink of axi_elink.v
-   output		cclk_p;			// From axe_elink of axi_elink.v
-   output		chip_nreset;		// From axe_elink of axi_elink.v
-   output [11:0]	chipid;			// From axe_elink of axi_elink.v
-   output		elink_active;		// From axe_elink of axi_elink.v
-   output		mailbox_not_empty;	// From axe_elink of axi_elink.v
-   output		timeout;		// From axe_elink of axi_elink.v
+   output		cclk_n;	
+   output		cclk_p;	
+   output		chip_nreset;
+   output [11:0]	chipid;	
+   output		elink_active;
+   output		mailbox_irq;
    
    //I2C
-   output		i2c_scl_i;		// From pi2c of pi2c.v
-   output		i2c_sda_i;		// From pi2c of pi2c.v
-   input		i2c_scl_o;		// To pi2c of pi2c.v
-   input		i2c_scl_t;		// To pi2c of pi2c.v
-   input		i2c_sda_o;		// To pi2c of pi2c.v
-   input		i2c_sda_t;		// To pi2c of pi2c.v
-    inout		i2c_scl;		// To/From pi2c of pi2c.v
-   inout		i2c_sda;		// To/From pi2c of pi2c.v
+   output		i2c_scl_i;
+   output		i2c_sda_i;
+   input		i2c_scl_o;
+   input		i2c_scl_t;
+   input		i2c_sda_o;
+   input		i2c_sda_t;
+    inout		i2c_scl;
+   inout		i2c_sda;
 
    //GPIO
-   input [NPS-1:0]	ps_gpio_o;		// To pgpio of pgpio.v
-   input [NPS-1:0]	ps_gpio_t;		// To pgpio of pgpio.v
-   output [NPS-1:0] 	ps_gpio_i;		// From pgpio of pgpio.v
-   inout [NGPIO-1:0] 	gpio_n;			// To/From pgpio of pgpio.v
-   inout [NGPIO-1:0]	gpio_p;			// To/From pgpio of pgpio.v
+   input [NPS-1:0]	ps_gpio_o;
+   input [NPS-1:0]	ps_gpio_t;
+   output [NPS-1:0] 	ps_gpio_i;
+   inout [NGPIO-1:0] 	gpio_n;	
+   inout [NGPIO-1:0]	gpio_p;	
 
    //TX
-   output [7:0] 	txo_data_n;		// From axe_elink of axi_elink.v
-   output [7:0]		txo_data_p;		// From axe_elink of axi_elink.v
-   output		txo_frame_n;		// From axe_elink of axi_elink.v
-   output		txo_frame_p;		// From axe_elink of axi_elink.v
-   output		txo_lclk_n;		// From axe_elink of axi_elink.v
-   output		txo_lclk_p;		// From axe_elink of axi_elink.v
-   input		txi_rd_wait_n;		// To axe_elink of axi_elink.v
-   input		txi_rd_wait_p;		// To axe_elink of axi_elink.v
-   input		txi_wr_wait_n;		// To axe_elink of axi_elink.v
-   input		txi_wr_wait_p;		// To axe_elink of axi_elink.v
+   output [7:0] 	txo_data_n;
+   output [7:0]		txo_data_p;
+   output		txo_frame_n;
+   output		txo_frame_p;
+   output		txo_lclk_n;
+   output		txo_lclk_p;
+   input		txi_rd_wait_n;
+   input		txi_rd_wait_p;
+   input		txi_wr_wait_n;
+   input		txi_wr_wait_p;
 
    //RX
-   input [7:0] 		rxi_data_n;		// To axe_elink of axi_elink.v
-   input [7:0]		rxi_data_p;		// To axe_elink of axi_elink.v
-   input		rxi_frame_n;		// To axe_elink of axi_elink.v
-   input		rxi_frame_p;		// To axe_elink of axi_elink.v
-   input		rxi_lclk_n;		// To axe_elink of axi_elink.v
-   input		rxi_lclk_p;		// To axe_elink of axi_elink.v
-   output		rxo_rd_wait_n;		// From axe_elink of axi_elink.v
-   output		rxo_rd_wait_p;		// From axe_elink of axi_elink.v
-   output		rxo_wr_wait_n;		// From axe_elink of axi_elink.v
-   output		rxo_wr_wait_p;		// From axe_elink of axi_elink.v
+   input [7:0] 		rxi_data_n;
+   input [7:0]		rxi_data_p;
+   input		rxi_frame_n;
+   input		rxi_frame_p;
+   input		rxi_lclk_n;
+   input		rxi_lclk_p;
+   output		rxo_rd_wait_n;
+   output		rxo_rd_wait_p;
+   output		rxo_wr_wait_n;
+   output		rxo_wr_wait_p;
    
    /*AUTOINOUT*/
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output [31:0]	m_axi_araddr;		// From axe_elink of axi_elink.v
-   output [1:0]		m_axi_arburst;		// From axe_elink of axi_elink.v
-   output [3:0]		m_axi_arcache;		// From axe_elink of axi_elink.v
-   output [M_IDW-1:0]	m_axi_arid;		// From axe_elink of axi_elink.v
-   output [7:0]		m_axi_arlen;		// From axe_elink of axi_elink.v
-   output		m_axi_arlock;		// From axe_elink of axi_elink.v
-   output [2:0]		m_axi_arprot;		// From axe_elink of axi_elink.v
-   output [3:0]		m_axi_arqos;		// From axe_elink of axi_elink.v
-   output [2:0]		m_axi_arsize;		// From axe_elink of axi_elink.v
-   output		m_axi_arvalid;		// From axe_elink of axi_elink.v
-   output [31:0]	m_axi_awaddr;		// From axe_elink of axi_elink.v
-   output [1:0]		m_axi_awburst;		// From axe_elink of axi_elink.v
-   output [3:0]		m_axi_awcache;		// From axe_elink of axi_elink.v
-   output [M_IDW-1:0]	m_axi_awid;		// From axe_elink of axi_elink.v
-   output [7:0]		m_axi_awlen;		// From axe_elink of axi_elink.v
-   output		m_axi_awlock;		// From axe_elink of axi_elink.v
-   output [2:0]		m_axi_awprot;		// From axe_elink of axi_elink.v
-   output [3:0]		m_axi_awqos;		// From axe_elink of axi_elink.v
-   output [2:0]		m_axi_awsize;		// From axe_elink of axi_elink.v
-   output		m_axi_awvalid;		// From axe_elink of axi_elink.v
-   output		m_axi_bready;		// From axe_elink of axi_elink.v
-   output		m_axi_rready;		// From axe_elink of axi_elink.v
-   output [63:0]	m_axi_wdata;		// From axe_elink of axi_elink.v
-   output [M_IDW-1:0]	m_axi_wid;		// From axe_elink of axi_elink.v
-   output		m_axi_wlast;		// From axe_elink of axi_elink.v
-   output [7:0]		m_axi_wstrb;		// From axe_elink of axi_elink.v
-   output		m_axi_wvalid;		// From axe_elink of axi_elink.v
-   output		s_axi_arready;		// From axe_elink of axi_elink.v
-   output		s_axi_awready;		// From axe_elink of axi_elink.v
-   output [S_IDW-1:0]	s_axi_bid;		// From axe_elink of axi_elink.v
-   output [1:0]		s_axi_bresp;		// From axe_elink of axi_elink.v
-   output		s_axi_bvalid;		// From axe_elink of axi_elink.v
-   output [31:0]	s_axi_rdata;		// From axe_elink of axi_elink.v
-   output [S_IDW-1:0]	s_axi_rid;		// From axe_elink of axi_elink.v
-   output		s_axi_rlast;		// From axe_elink of axi_elink.v
-   output [1:0]		s_axi_rresp;		// From axe_elink of axi_elink.v
-   output		s_axi_rvalid;		// From axe_elink of axi_elink.v
-   output		s_axi_wready;		// From axe_elink of axi_elink.v
+   output [31:0]	m_axi_araddr;		// From axi_elink of axi_elink.v
+   output [1:0]		m_axi_arburst;		// From axi_elink of axi_elink.v
+   output [3:0]		m_axi_arcache;		// From axi_elink of axi_elink.v
+   output [M_IDW-1:0]	m_axi_arid;		// From axi_elink of axi_elink.v
+   output [7:0]		m_axi_arlen;		// From axi_elink of axi_elink.v
+   output		m_axi_arlock;		// From axi_elink of axi_elink.v
+   output [2:0]		m_axi_arprot;		// From axi_elink of axi_elink.v
+   output [3:0]		m_axi_arqos;		// From axi_elink of axi_elink.v
+   output [2:0]		m_axi_arsize;		// From axi_elink of axi_elink.v
+   output		m_axi_arvalid;		// From axi_elink of axi_elink.v
+   output [31:0]	m_axi_awaddr;		// From axi_elink of axi_elink.v
+   output [1:0]		m_axi_awburst;		// From axi_elink of axi_elink.v
+   output [3:0]		m_axi_awcache;		// From axi_elink of axi_elink.v
+   output [M_IDW-1:0]	m_axi_awid;		// From axi_elink of axi_elink.v
+   output [7:0]		m_axi_awlen;		// From axi_elink of axi_elink.v
+   output		m_axi_awlock;		// From axi_elink of axi_elink.v
+   output [2:0]		m_axi_awprot;		// From axi_elink of axi_elink.v
+   output [3:0]		m_axi_awqos;		// From axi_elink of axi_elink.v
+   output [2:0]		m_axi_awsize;		// From axi_elink of axi_elink.v
+   output		m_axi_awvalid;		// From axi_elink of axi_elink.v
+   output		m_axi_bready;		// From axi_elink of axi_elink.v
+   output		m_axi_rready;		// From axi_elink of axi_elink.v
+   output [63:0]	m_axi_wdata;		// From axi_elink of axi_elink.v
+   output [M_IDW-1:0]	m_axi_wid;		// From axi_elink of axi_elink.v
+   output		m_axi_wlast;		// From axi_elink of axi_elink.v
+   output [7:0]		m_axi_wstrb;		// From axi_elink of axi_elink.v
+   output		m_axi_wvalid;		// From axi_elink of axi_elink.v
+   output		s_axi_arready;		// From axi_elink of axi_elink.v
+   output		s_axi_awready;		// From axi_elink of axi_elink.v
+   output [S_IDW-1:0]	s_axi_bid;		// From axi_elink of axi_elink.v
+   output [1:0]		s_axi_bresp;		// From axi_elink of axi_elink.v
+   output		s_axi_bvalid;		// From axi_elink of axi_elink.v
+   output [31:0]	s_axi_rdata;		// From axi_elink of axi_elink.v
+   output [S_IDW-1:0]	s_axi_rid;		// From axi_elink of axi_elink.v
+   output		s_axi_rlast;		// From axi_elink of axi_elink.v
+   output [1:0]		s_axi_rresp;		// From axi_elink of axi_elink.v
+   output		s_axi_rvalid;		// From axi_elink of axi_elink.v
+   output		s_axi_wready;		// From axi_elink of axi_elink.v
    // End of automatics
    /*AUTOINPUT*/   
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input		m_axi_aresetn;		// To axe_elink of axi_elink.v
-   input		m_axi_arready;		// To axe_elink of axi_elink.v
-   input		m_axi_awready;		// To axe_elink of axi_elink.v
-   input [M_IDW-1:0]	m_axi_bid;		// To axe_elink of axi_elink.v
-   input [1:0]		m_axi_bresp;		// To axe_elink of axi_elink.v
-   input		m_axi_bvalid;		// To axe_elink of axi_elink.v
-   input [63:0]		m_axi_rdata;		// To axe_elink of axi_elink.v
-   input [M_IDW-1:0]	m_axi_rid;		// To axe_elink of axi_elink.v
-   input		m_axi_rlast;		// To axe_elink of axi_elink.v
-   input [1:0]		m_axi_rresp;		// To axe_elink of axi_elink.v
-   input		m_axi_rvalid;		// To axe_elink of axi_elink.v
-   input		m_axi_wready;		// To axe_elink of axi_elink.v
-   input [31:0]		s_axi_araddr;		// To axe_elink of axi_elink.v
-   input [1:0]		s_axi_arburst;		// To axe_elink of axi_elink.v
-   input [3:0]		s_axi_arcache;		// To axe_elink of axi_elink.v
-   input		s_axi_aresetn;		// To axe_elink of axi_elink.v
-   input [S_IDW-1:0]	s_axi_arid;		// To axe_elink of axi_elink.v
-   input [7:0]		s_axi_arlen;		// To axe_elink of axi_elink.v
-   input		s_axi_arlock;		// To axe_elink of axi_elink.v
-   input [2:0]		s_axi_arprot;		// To axe_elink of axi_elink.v
-   input [3:0]		s_axi_arqos;		// To axe_elink of axi_elink.v
-   input [2:0]		s_axi_arsize;		// To axe_elink of axi_elink.v
-   input		s_axi_arvalid;		// To axe_elink of axi_elink.v
-   input [31:0]		s_axi_awaddr;		// To axe_elink of axi_elink.v
-   input [1:0]		s_axi_awburst;		// To axe_elink of axi_elink.v
-   input [3:0]		s_axi_awcache;		// To axe_elink of axi_elink.v
-   input [S_IDW-1:0]	s_axi_awid;		// To axe_elink of axi_elink.v
-   input [7:0]		s_axi_awlen;		// To axe_elink of axi_elink.v
-   input		s_axi_awlock;		// To axe_elink of axi_elink.v
-   input [2:0]		s_axi_awprot;		// To axe_elink of axi_elink.v
-   input [3:0]		s_axi_awqos;		// To axe_elink of axi_elink.v
-   input [2:0]		s_axi_awsize;		// To axe_elink of axi_elink.v
-   input		s_axi_awvalid;		// To axe_elink of axi_elink.v
-   input		s_axi_bready;		// To axe_elink of axi_elink.v
-   input		s_axi_rready;		// To axe_elink of axi_elink.v
-   input [31:0]		s_axi_wdata;		// To axe_elink of axi_elink.v
-   input [S_IDW-1:0]	s_axi_wid;		// To axe_elink of axi_elink.v
-   input		s_axi_wlast;		// To axe_elink of axi_elink.v
-   input [3:0]		s_axi_wstrb;		// To axe_elink of axi_elink.v
-   input		s_axi_wvalid;		// To axe_elink of axi_elink.v
+   input		m_axi_aresetn;		// To axi_elink of axi_elink.v
+   input		m_axi_arready;		// To axi_elink of axi_elink.v
+   input		m_axi_awready;		// To axi_elink of axi_elink.v
+   input [M_IDW-1:0]	m_axi_bid;		// To axi_elink of axi_elink.v
+   input [1:0]		m_axi_bresp;		// To axi_elink of axi_elink.v
+   input		m_axi_bvalid;		// To axi_elink of axi_elink.v
+   input [63:0]		m_axi_rdata;		// To axi_elink of axi_elink.v
+   input [M_IDW-1:0]	m_axi_rid;		// To axi_elink of axi_elink.v
+   input		m_axi_rlast;		// To axi_elink of axi_elink.v
+   input [1:0]		m_axi_rresp;		// To axi_elink of axi_elink.v
+   input		m_axi_rvalid;		// To axi_elink of axi_elink.v
+   input		m_axi_wready;		// To axi_elink of axi_elink.v
+   input [31:0]		s_axi_araddr;		// To axi_elink of axi_elink.v
+   input [1:0]		s_axi_arburst;		// To axi_elink of axi_elink.v
+   input [3:0]		s_axi_arcache;		// To axi_elink of axi_elink.v
+   input		s_axi_aresetn;		// To axi_elink of axi_elink.v
+   input [S_IDW-1:0]	s_axi_arid;		// To axi_elink of axi_elink.v
+   input [7:0]		s_axi_arlen;		// To axi_elink of axi_elink.v
+   input		s_axi_arlock;		// To axi_elink of axi_elink.v
+   input [2:0]		s_axi_arprot;		// To axi_elink of axi_elink.v
+   input [3:0]		s_axi_arqos;		// To axi_elink of axi_elink.v
+   input [2:0]		s_axi_arsize;		// To axi_elink of axi_elink.v
+   input		s_axi_arvalid;		// To axi_elink of axi_elink.v
+   input [31:0]		s_axi_awaddr;		// To axi_elink of axi_elink.v
+   input [1:0]		s_axi_awburst;		// To axi_elink of axi_elink.v
+   input [3:0]		s_axi_awcache;		// To axi_elink of axi_elink.v
+   input [S_IDW-1:0]	s_axi_awid;		// To axi_elink of axi_elink.v
+   input [7:0]		s_axi_awlen;		// To axi_elink of axi_elink.v
+   input		s_axi_awlock;		// To axi_elink of axi_elink.v
+   input [2:0]		s_axi_awprot;		// To axi_elink of axi_elink.v
+   input [3:0]		s_axi_awqos;		// To axi_elink of axi_elink.v
+   input [2:0]		s_axi_awsize;		// To axi_elink of axi_elink.v
+   input		s_axi_awvalid;		// To axi_elink of axi_elink.v
+   input		s_axi_bready;		// To axi_elink of axi_elink.v
+   input		s_axi_rready;		// To axi_elink of axi_elink.v
+   input [31:0]		s_axi_wdata;		// To axi_elink of axi_elink.v
+   input [S_IDW-1:0]	s_axi_wid;		// To axi_elink of axi_elink.v
+   input		s_axi_wlast;		// To axi_elink of axi_elink.v
+   input [3:0]		s_axi_wstrb;		// To axi_elink of axi_elink.v
+   input		s_axi_wvalid;		// To axi_elink of axi_elink.v
    // End of automatics
    /*AUTOWIRE*/
    
@@ -191,7 +197,7 @@ module parallella_base(/*AUTOARG*/
                        );
    */
    defparam axi_elink.ID=ID;   
-   axi_elink axi_elink (.mailbox_full	(),
+   axi_elink axi_elink (
 			/*AUTOINST*/
 			// Outputs
 			.elink_active	(elink_active),
@@ -209,7 +215,7 @@ module parallella_base(/*AUTOARG*/
 			.chip_nreset	(chip_nreset),
 			.cclk_p		(cclk_p),
 			.cclk_n		(cclk_n),
-			.mailbox_not_empty(mailbox_not_empty),
+			.mailbox_irq	(mailbox_irq),
 			.m_axi_awid	(m_axi_awid[M_IDW-1:0]), // Templated
 			.m_axi_awaddr	(m_axi_awaddr[31:0]),	 // Templated
 			.m_axi_awlen	(m_axi_awlen[7:0]),	 // Templated
@@ -248,7 +254,6 @@ module parallella_base(/*AUTOARG*/
 			.s_axi_rresp	(s_axi_rresp[1:0]),	 // Templated
 			.s_axi_rvalid	(s_axi_rvalid),		 // Templated
 			.s_axi_wready	(s_axi_wready),		 // Templated
-			.timeout	(timeout),
 			// Inputs
 			.sys_nreset	(sys_nreset),
 			.sys_clk	(sys_clk),

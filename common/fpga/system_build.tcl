@@ -26,9 +26,15 @@ wait_on_run impl_1
 #report_timing_summary -file impl_timing_summary.rpt
 
 ###########################################################
+# CREATE NETLIST + REPORTS
+###########################################################
+#write_verilog ./system.v
+
+###########################################################
 # Write Bitstream
 ###########################################################
 launch_runs impl_1 -to_step write_bitstream
 wait_on_run impl_1
+
 
 
