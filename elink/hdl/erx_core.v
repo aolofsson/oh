@@ -213,8 +213,7 @@ module erx_core (/*AUTOARG*/
 			.emesh_packet	(emmu_packet[PW-1:0]),	 // Templated
 			.mi_en		(mi_cfg_en),		 // Templated
 			.mi_we		(mi_we),
-			.mi_addr	(mi_addr[RFAW+1:0]),
-			.mi_din		(mi_din[63:0]));
+			.mi_addr	(mi_addr[RFAW+1:0]));
    
    
    /************************************************************/
