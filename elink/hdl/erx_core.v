@@ -21,6 +21,8 @@ module erx_core (/*AUTOARG*/
    //IO Interface
    input [PW-1:0] 	rx_packet;
    input 		rx_access;
+ 
+
    input 		rx_burst;
    output 		rx_rd_wait;
    output 		rx_wr_wait;
@@ -60,11 +62,8 @@ module erx_core (/*AUTOARG*/
    wire [PW-1:0]	emesh_remap_packet;	// From erx_remap of erx_remap.v
    wire			emmu_access;		// From erx_mmu of emmu.v
    wire [PW-1:0]	emmu_packet;		// From erx_mmu of emmu.v
+   wire			erx_access;		// From erx_protocol of erx_protocol.v
    wire [PW-1:0]	erx_packet;		// From erx_protocol of erx_protocol.v
-   wire			erx_rdwr_access;	// From erx_protocol of erx_protocol.v
-   wire			erx_rr_access;		// From erx_protocol of erx_protocol.v
-   wire			erx_test_access;	// From erx_protocol of erx_protocol.v
-   wire [31:0]		erx_test_data;		// From erx_protocol of erx_protocol.v
    wire			mailbox_irq_en;		// From erx_cfg of erx_cfg.v
    wire [14:0]		mi_addr;		// From erx_cfgif of ecfg_if.v
    wire [DW-1:0]	mi_cfg_dout;		// From erx_cfg of erx_cfg.v
@@ -104,10 +103,7 @@ module erx_core (/*AUTOARG*/
    defparam erx_protocol.ID=ID;     
    erx_protocol erx_protocol (/*AUTOINST*/
 			      // Outputs
-			      .erx_test_access	(erx_test_access),
-			      .erx_test_data	(erx_test_data[31:0]),
-			      .erx_rdwr_access	(erx_rdwr_access),
-			      .erx_rr_access	(erx_rr_access),
+			      .erx_access	(erx_access),
 			      .erx_packet	(erx_packet[PW-1:0]),
 			      // Inputs
 			      .clk		(clk),
@@ -123,7 +119,7 @@ module erx_core (/*AUTOARG*/
    /*erx_remap AUTO_TEMPLATE ( 
                         .emesh_\(.*\)_out	(emesh_remap_\1[]),   
                          //Inputs
-                        .emesh_access_in        (erx_rdwr_access),
+                        .emesh_access_in        (erx_access),
                         .emesh_\(.*\)_in	(erx_\1[]),   
                         .mmu_en			(ecfg_rx_mmu_enable),
                         .emesh_packet_hi_out	(),
@@ -137,7 +133,7 @@ module erx_core (/*AUTOARG*/
 			.emesh_packet_out(emesh_remap_packet[PW-1:0]), // Templated
 			// Inputs
 			.clk		(clk),
-			.emesh_access_in(erx_rdwr_access),	 // Templated
+			.emesh_access_in(erx_access),		 // Templated
 			.emesh_packet_in(erx_packet[PW-1:0]),	 // Templated
 			.remap_mode	(remap_mode[1:0]),
 			.remap_sel	(remap_sel[11:0]),
@@ -306,8 +302,8 @@ module erx_core (/*AUTOARG*/
 		    .mi_we		(mi_we),
 		    .mi_addr		(mi_addr[14:0]),
 		    .mi_din		(mi_din[31:0]),
-		    .erx_test_access	(erx_test_access),
-		    .erx_test_data	(erx_test_data[31:0]),
+		    .erx_access		(erx_access),
+		    .erx_packet		(erx_packet[PW-1:0]),
 		    .gpio_datain	(gpio_datain[8:0]));
    
    /************************************************************/
@@ -344,6 +340,8 @@ module erx_core (/*AUTOARG*/
                         //Inputs
                         .mmu_en		(ecfg_rx_mmu_enable),
                         .ecfg_wait	(erx_cfg_wait),
+                        .erx_access	(emmu_access),
+			.erx_packet	(emmu_packet[PW-1:0]),
     )
     */
 
@@ -362,10 +360,8 @@ module erx_core (/*AUTOARG*/
 			    .rxrr_access	(rxrr_access),
 			    .rxrr_packet	(rxrr_packet[PW-1:0]),
 			    // Inputs
-			    .erx_rr_access	(erx_rr_access),
-			    .erx_packet		(erx_packet[PW-1:0]),
-			    .emmu_access	(emmu_access),
-			    .emmu_packet	(emmu_packet[PW-1:0]),
+			    .erx_access		(emmu_access),	 // Templated
+			    .erx_packet		(emmu_packet[PW-1:0]), // Templated
 			    .edma_access	(edma_access),
 			    .edma_packet	(edma_packet[PW-1:0]),
 			    .ecfg_access	(ecfg_access),

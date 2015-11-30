@@ -9,8 +9,8 @@ module erx_cfg (/*AUTOARG*/
    remap_sel, timer_cfg, idelay_value, load_taps, test_mode,
    mailbox_irq_en,
    // Inputs
-   nreset, clk, mi_en, mi_we, mi_addr, mi_din, erx_test_access,
-   erx_test_data, gpio_datain, rx_status
+   nreset, clk, mi_en, mi_we, mi_addr, mi_din, erx_access, erx_packet,
+   gpio_datain, rx_status
    );
 
    /******************************/
@@ -18,6 +18,7 @@ module erx_cfg (/*AUTOARG*/
    /******************************/
    parameter RFAW            = 6;         // 32 registers for now
    parameter GROUP           = 4'h0;
+   parameter PW              = 104;
    
    /******************************/
    /*HARDWARE RESET (EXTERNAL)   */
@@ -35,8 +36,8 @@ module erx_cfg (/*AUTOARG*/
    output [31:0] mi_dout;   
 
    //test interface
-   input 	 erx_test_access;
-   input [31:0]  erx_test_data;
+   input 	 erx_access;
+   input [PW-1:0]erx_packet;
    
    /*****************************/
    /*CONFIG SIGNALS             */
@@ -170,8 +171,8 @@ module erx_cfg (/*AUTOARG*/
    always @ (posedge clk)
      if(rx_testdata_write)
        rx_testdata_reg[31:0] <= mi_din[31:0];
-     else if(erx_test_access)   
-       rx_testdata_reg[31:0] <= rx_testdata_reg[31:0] + erx_test_data[31:0];
+     else if(erx_access)   
+       rx_testdata_reg[31:0] <= rx_testdata_reg[31:0] + erx_packet[71:40];
    				                    
    //###############################
    //# DATA READBACK MUX
