@@ -112,11 +112,22 @@ module etx_cfg (/*AUTOARG*/
    //###########################
    //# STATUS REGISTER
    //###########################   
+   wire [15:0] 	   tx_status_sync;   
+
+   //Synchronize to make easy regular
+   oh_dsync #(.DW(16))     
+   dsync (// Outputs
+	  .dout		(tx_status_sync[15:0]),
+	  // Inputs
+	  .clk		(clk),
+	  .din		(tx_status[15:0])
+	  );
+
    always @ (posedge clk)
      if (tx_status_write)
        tx_status_reg[15:0] <= mi_din[15:0];   
      else
-       tx_status_reg[15:0]<= tx_status_reg[15:0] | tx_status[15:0];
+       tx_status_reg[15:0]<= tx_status_reg[15:0] | {tx_status_sync[15:0]};
 
    //###########################
    //# GPIO DATA

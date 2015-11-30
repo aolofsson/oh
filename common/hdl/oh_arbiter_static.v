@@ -3,7 +3,7 @@
  *
  */
 
-module arbiter_priority(/*AUTOARG*/
+module oh_arbiter_static(/*AUTOARG*/
    // Outputs
    grant, await,
    // Inputs
@@ -26,5 +26,6 @@ module arbiter_priority(/*AUTOARG*/
    //grant circuit
    assign grant[ARW-1:0] = request[ARW-1:0] & ~await[ARW-1:0];
 
-endmodule // arbiter_priority
+endmodule // oh_arbiter_priority
+
 

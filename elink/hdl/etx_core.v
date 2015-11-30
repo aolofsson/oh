@@ -265,20 +265,7 @@ module etx_core(/*AUTOARG*/
     );
         */
 
-   //synchronizing signals from sys_clk fifo
-   dsync #(.DW(3))     
-     dsync (// Outputs
-		.dout			({txrr_full_sync,
-					 txrd_full_sync,
-					 txwr_full_sync}),
-	    // Inputs
-	    .clk			(clk),
-	    .din			({txrr_full,
-					  txrd_full,
-					  txwr_full})
-	    );
-   
-   
+   //synchronizing signals from sys_clk fifo    
 
    assign tx_status[15:0] = {5'b0,
                              tx_burst,     
@@ -289,9 +276,9 @@ module etx_core(/*AUTOARG*/
 			     txrr_wait,
 			     txrd_wait,
 			     txwr_wait,
-			     txrr_full_sync,
-			     txrd_full_sync,
-			     txwr_full_sync
+			     txrr_full,
+			     txrd_full,
+			     txwr_full
 			     };
    
  

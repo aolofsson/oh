@@ -6,7 +6,7 @@
  ############################################################################
  */
 
-module memory_sp(/*AUTOARG*/
+module oh_memory_sp(/*AUTOARG*/
    // Outputs
    dout,
    // Inputs

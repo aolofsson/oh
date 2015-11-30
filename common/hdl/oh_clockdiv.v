@@ -1,7 +1,7 @@
 // ###############################################################
 // # FUNCTION: Synchronous clock divider that divides by integer
 // ############################################################### 
-module clock_divider(/*AUTOARG*/
+module oh_clockdiv(/*AUTOARG*/
    // Outputs
    clkout,
    // Inputs
@@ -61,5 +61,6 @@ module clock_divider(/*AUTOARG*/
    assign div_bp  = (divcfg[3:0]==4'b0000);
    assign clkout  = div_bp ? clkin : clkout_reg;
  
-endmodule // clock_divider
+endmodule // oh_clockdiv
+
     

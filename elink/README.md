@@ -551,16 +551,16 @@ The following table shows the rough resource usage of the elink synthesized with
 
 Instance             |Module                   | FPGA Cells 
 ---------------------|-------------------------|------------
-  elink              |elink                    |  9809
-  --ecfg_cdc         |fifo_cdc                 |   994
-  --erx              |erx                      |  5200
-  ----erx_core       |erx_core                 |  2450
-  ----erx_fifo       |erx_fifo                 |  2711
-  ----erx_io         |erx_io                   |    34
-  --etx              |etx                      |  3596
-  ----etx_core       |etx_core                 |   890
-  ----etx_fifo       |etx_fifo                 |  2685
-  ----etx_io         |etx_io                   |    21
+  elink              | elink                   |  9809
+  --ecfg_cdc         | fifo_cdc                |   994
+  --erx              | erx                     |  5200
+  ----erx_core       | erx_core                |  2450
+  ----erx_fifo       | erx_fifo                |  2711
+  ----erx_io         | erx_io                  |    34
+  --etx              | etx                     |  3596
+  ----etx_core       | etx_core                |   890
+  ----etx_fifo       | etx_fifo                |  2685
+  ----etx_io         | etx_io                  |    21
   
 ## Synthesis scripts
 The following example shows how to build a display-less (ie headless) FPGA bitstream for the Parallella board. You will need to install Vivado 2015.2 on your own.

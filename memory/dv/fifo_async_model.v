@@ -1,7 +1,7 @@
 /* Parametrized fifo model*/
 /* UGLY hacks, needs to be cleaned up!!!*/
 
-module fifo_async_model
+module oh_fifo_async_model
    (/*AUTOARG*/
    // Outputs
    full, prog_full, dout, empty, valid,
@@ -58,7 +58,7 @@ module fifo_async_model
      else
        valid <= rd_en;
    
-   memory_dp #(.DW(DW),.AW(AW)) memory_dp (
+   oh_memory_dp #(.DW(DW),.AW(AW)) memory_dp (
 					   // Outputs
 					   .rd_data	(dout[DW-1:0]),
 					   // Inputs
@@ -71,7 +71,7 @@ module fifo_async_model
 					   .rd_addr	(rd_addr[AW-1:0]));
 
    //Read State Machine
-   fifo_empty_block #(.AW(AW)) fifo_empty_block(
+   oh_fifo_empty_block #(.AW(AW)) fifo_empty_block(
 						// Outputs
 						.rd_fifo_empty	(empty),
                                                 .rd_gray_pointer(rd_gray_pointer[AW:0]),	
@@ -83,7 +83,7 @@ module fifo_async_model
 						.rd_read	(rd_en));
    
    //Write circuit (and full indicator)
-   fifo_full_block #(.AW(AW)) full_block (
+   oh_fifo_full_block #(.AW(AW)) full_block (
 					      // Outputs
 					      .wr_fifo_almost_full(),
 					      .wr_fifo_full	(full),				      
@@ -102,7 +102,7 @@ module fifo_async_model
    
    assign hack_addr = wr_addr[AW-1:0]+AW/4;
    
-   fifo_full_block #(.AW(AW)) half_full_block (
+   oh_fifo_full_block #(.AW(AW)) half_full_block (
 					      // Outputs
 					      .wr_fifo_almost_full(),
 					      .wr_fifo_full	(prog_full),			      
@@ -117,20 +117,20 @@ module fifo_async_model
 
    
    //Read pointer sync
-   synchronizer #(.DW(AW+1)) rd2wr_sync (.out		(rd_gray_pointer_sync[AW:0]),
-					 .in		(rd_gray_pointer[AW:0]),
-                                         .reset		(rst),
-					 .clk		(wr_clk));
+   oh_dsync #(.DW(AW+1)) rd2wr_sync (.dout		(rd_gray_pointer_sync[AW:0]),
+				     .din		(rd_gray_pointer[AW:0]),
+				     .clk		(wr_clk));
    
    //Write pointer sync
-   synchronizer #(.DW(AW+1)) wr2rd_sync (.out		(wr_gray_pointer_sync[AW:0]),
-					 .in		(wr_gray_pointer[AW:0]),
-                                         .reset		(rst),
-					 .clk		(rd_clk));
+   oh_dsync #(.DW(AW+1)) wr2rd_sync (.dout		(wr_gray_pointer_sync[AW:0]),
+				     .din		(wr_gray_pointer[AW:0]),
+				     .clk		(rd_clk));
    
       
 endmodule // fifo_async
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")
 // End:
+
+
 

@@ -20,7 +20,7 @@
  * 
  */
 
-module edgealign (/*AUTOARG*/
+module oh_edgealign (/*AUTOARG*/
    // Outputs
    firstedge,
    // Inputs
@@ -44,9 +44,12 @@ module edgealign (/*AUTOARG*/
 	firstedge <= ~clk45 & clk90;
      end
    
-  //TODO: parametrized based on 1/N ratios?
+   //TODO: parametrized based on 1/N ratios?
+   //TODO: can we do this without using clock as data input?
    
-endmodule // edgealign
+   
+endmodule // oh_edgealign
+
 
 
 

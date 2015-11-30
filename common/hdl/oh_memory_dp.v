@@ -6,7 +6,7 @@
  ############################################################################
  */
 
-module memory_dp(/*AUTOARG*/
+module oh_memory_dp(/*AUTOARG*/
    // Outputs
    rd_data,
    // Inputs

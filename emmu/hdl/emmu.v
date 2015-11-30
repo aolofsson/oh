@@ -108,7 +108,7 @@ module emmu (/*AUTOARG*/
 		     //inputs
 		     .packet_in		(emesh_packet_in[PW-1:0]));
          
-   memory_dp #(.DW(MW),.AW(MAW)) memory_dp (
+   oh_memory_dp #(.DW(MW),.AW(MAW)) memory_dp (
 					   // Outputs
 					   .rd_data		(emmu_lookup_data[MW-1:0]),
 					   // Inputs

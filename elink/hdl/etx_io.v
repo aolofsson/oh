@@ -63,10 +63,10 @@ module etx_io (/*AUTOARG*/
    //#########################################        
 
    //Find the aligned edge
-   edgealign edgealign0 (.firstedge	(firstedge),
-			 .fastclk	(tx_lclk_io),
-			 .slowclk	(tx_lclk_div4)
-			);
+   oh_edgealign edgealign0 (.firstedge	(firstedge),
+  			    .fastclk	(tx_lclk_io),
+			    .slowclk	(tx_lclk_div4)
+			   );
 
    //Data shift registers
    always @ (posedge tx_lclk_io)

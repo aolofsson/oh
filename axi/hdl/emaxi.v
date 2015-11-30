@@ -55,21 +55,20 @@ module emaxi(/*autoarg*/
    parameter DW     = 32;
 
    //########################
-   //ELINK INTERFACE
+   //EMESH INTERFACE
    //########################
 
-   
-   //Write request from erx
+   //Write request
    input 	       rxwr_access;
    input [PW-1:0]      rxwr_packet;   
    output 	       rxwr_wait;
    
-   //Read request from erx
+   //Read request
    input 	       rxrd_access;
    input [PW-1:0]      rxrd_packet;
    output 	       rxrd_wait;
    
-   //Read respoonse for etx
+   //Read response
    output 	       txrr_access;
    output [PW-1:0]     txrr_packet;
    input 	       txrr_wait;

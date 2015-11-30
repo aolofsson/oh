@@ -118,19 +118,19 @@ module erx_clocks (/*AUTOARG*/
    //#############################
    //#RESET SYNCING
    //#############################
-   rsync rsync_io (// Outputs
-		   .nrst_out		(erx_io_nreset),
-		   // Inputs
-		   .clk			(rx_lclk),
-		   .nrst_in		(rx_nreset)
-		   );
+   oh_rsync rsync_io (// Outputs
+		      .nrst_out		(erx_io_nreset),
+		      // Inputs
+		      .clk		(rx_lclk),
+		      .nrst_in		(rx_nreset)
+		      );
    
-   rsync rsync_core (// Outputs
-		     .nrst_out		(erx_nreset),
-		     // Inputs
-		     .clk		(rx_lclk_div4),
-		     .nrst_in		(rx_nreset)
-		     );
+   oh_rsync rsync_core (// Outputs
+			.nrst_out	(erx_nreset),
+			// Inputs
+			.clk		(rx_lclk_div4),
+			.nrst_in	(rx_nreset)
+			);
       	   
 `ifdef TARGET_XILINX	
 
@@ -197,10 +197,10 @@ module erx_clocks (/*AUTOARG*/
    BUFG i_idelay__bufg  (.I(idelay_ref_clk_pll),.O(idelay_ref_clk));//idelay ctrl clock
 
    //two clock synchronizer for lock signal
-   dsync dsync (.dout			(pll_locked_sync),
-	       .clk			(sys_clk),
-	       .din			(pll_locked)
-	       );
+   oh_dsync dsync (.dout (pll_locked_sync),
+		   .clk	 (sys_clk),
+		   .din	 (pll_locked)
+		   );
       
    //###########################
    // Idelay controller

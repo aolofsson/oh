@@ -29,30 +29,31 @@ module esaxi (/*autoarg*/
    parameter         TW                  = 16;  //timeout counter width
 `endif
  
-   /*****************************/
-   /*Write request for TX fifo  */
-   /*****************************/  
+   //#############################
+   //# Write request (outbound)
+   //#############################
    output 	   txwr_access;   
    output [PW-1:0] txwr_packet;
    input 	   txwr_wait;
    
-   /*****************************/
-   /*Read request for TX fifo   */
-   /*****************************/  
+   //#############################
+   //# Read request (outbound)
+   //#############################
    output 	   txrd_access;   
    output [PW-1:0] txrd_packet;
    input 	   txrd_wait;
    
-   /*****************************/
-   /*Read response from RX fifo */
-   /*****************************/  
+   //#############################
+   //# Read response (inbound)
+   //#############################
    input 	   rxrr_access;         
    input [PW-1:0]  rxrr_packet;
    output 	   rxrr_wait;
 
-   /*****************************/
-   /*AXI slave interface        */
-   /*****************************/  
+   //#############################
+   //# AXI Slave Interface
+   //#############################
+ 
    //Clock and reset
    input 	  s_axi_aclk;
    input 	  s_axi_aresetn;

@@ -162,7 +162,7 @@ module MMCME2_ADV # (
    genvar i;
    generate for(i=0; i<7; i=i+1)
      begin : gen_clkdiv
-	clock_divider clkdiv (// Outputs
+	oh_clockdiv clkdiv (// Outputs
 			      .clkout		(CLKOUT_DIV[i]),
 			      // Inputs
 			      .clkin		(vco_clk),

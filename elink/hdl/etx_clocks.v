@@ -152,13 +152,13 @@ module etx_clocks (/*AUTOARG*/
    //#RESET SYNCING
    //#############################
    
-   rsync rsync_io (// Outputs
+   oh_rsync rsync_io (// Outputs
 		   .nrst_out		(etx_io_nreset),
 		   // Inputs
 		   .clk			(tx_lclk_io),
 		   .nrst_in		(tx_nreset));
    
-   rsync rsync_core (// Outputs
+   oh_rsync rsync_core (// Outputs
 		     .nrst_out		(etx_nreset),
 		     // Inputs
 		     .clk		(tx_lclk_div4),

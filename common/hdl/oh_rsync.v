@@ -1,7 +1,7 @@
 /* A synchronization circuit for reset signals
  * Async reset assertion and sync reset deassertion on otput
  */ 
-module rsync (/*AUTOARG*/
+module oh_rsync (/*AUTOARG*/
    // Outputs
    nrst_out,
    // Inputs
@@ -51,4 +51,5 @@ module rsync (/*AUTOARG*/
    
    assign nrst_out[DW-1:0] = sync_pipe[PS-1][DW-1:0];
    		    	
-endmodule // rsync
+endmodule // oh_rsync
+

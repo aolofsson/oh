@@ -1,7 +1,7 @@
 /* A control signal synchronizer with "PS" number of stages 
  */
 
-module dsync (/*AUTOARG*/
+module oh_dsync (/*AUTOARG*/
    // Outputs
    dout,
    // Inputs
@@ -40,5 +40,6 @@ module dsync (/*AUTOARG*/
    assign dout[DW-1:0] = sync_pipe[PS-1][DW-1:0];
  
    
-endmodule // dsync
+endmodule // oh_dsync
+
 

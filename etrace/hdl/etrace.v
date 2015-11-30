@@ -1,10 +1,10 @@
 `include "etrace_regmap.v"
 module etrace (/*AUTOARG*/
    // Outputs
-   mi_dout,
+   data_access_out, data_packet_out, cfg_access_out, cfg_packet_out,
    // Inputs
-   trace_clk, trace_trigger, trace_vector, nreset, mi_clk, mi_en,
-   mi_we, mi_addr, mi_din
+   trace_clk, trace_trigger, trace_vector, cfg_access_in,
+   cfg_packet_in
    );
 
    parameter VW     = 32;           //width of vector to sample
@@ -19,21 +19,23 @@ module etrace (/*AUTOARG*/
    parameter MAW    = $clog2(DEPTH);// 
    parameter LSB    = $clog2(MW/32);//address lsb for memory
    
-   //sample interface
+   //Logic analyzer interface
    input 	    trace_clk;
    input 	    trace_trigger;   
    input [VW-1:0]   trace_vector;
-   
-   //memory access interface   
-   input            nreset;
-   input 	    mi_clk;   
-   input 	    mi_en;   //TODO: change to read/write??
-   input   	    mi_we;      
-   input [AW-1:0]   mi_addr;
-   input [DW-1:0]   mi_din;
-   output [DW-1:0]  mi_dout;   
-   
-   
+
+   //Data streaming interface
+   output	    data_access_out;
+   output [PW-1:0]  data_packet_out;
+
+   //Config interface
+   input 	    cfg_access_in;
+   input [PW-1:0]   cfg_packet_in;
+   output	    cfg_access_out;
+   output [PW-1:0]  cfg_packet_out;
+
+  
+      
    //local regs
    reg [15:0] 	    cfg_reg;   
    reg [DW-1:0]     cycle_counter;
@@ -46,8 +48,60 @@ module etrace (/*AUTOARG*/
    wire [MW-1:0]    mem_data;   
    wire 	    trace_enable_sync;
 
+
+   wire [3:0] 	    ctrlmode_out;
+   wire [DW-1:0]    data_out;
+   wire [1:0] 	    datamode_out;
+   wire [AW-1:0]    dstaddr_out;
+   wire [AW-1:0]    srcaddr_out;
+   wire 	    write_out;
+
+   /*AUTOWIRE*/
+   // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire [PW-1:0]	packet_out;		// From e2p of emesh2packet.v
+   // End of automatics
    
- 
+   //###########################
+   //# PACKET PARSING
+   //###########################
+
+   //Config
+   packet2emesh p2e0 (/*AUTOINST*/
+		      // Outputs
+		      .write_out	(write_out),
+		      .datamode_out	(datamode_out[1:0]),
+		      .ctrlmode_out	(ctrlmode_out[3:0]),
+		      .data_out		(data_out[DW-1:0]),
+		      .dstaddr_out	(dstaddr_out[AW-1:0]),
+		      .srcaddr_out	(srcaddr_out[AW-1:0]),
+		      // Inputs
+		      .packet_in	(packet_in[PW-1:0]));
+   
+   //Readback
+   emesh2packet e2p0 (/*AUTOINST*/
+		     // Outputs
+		     .packet_out	(packet_out[PW-1:0]),
+		     // Inputs
+		     .write_in		(write_in),
+		     .datamode_in	(datamode_in[1:0]),
+		     .ctrlmode_in	(ctrlmode_in[3:0]),
+		     .dstaddr_in	(dstaddr_in[AW-1:0]),
+		     .data_in		(data_in[DW-1:0]),
+		     .srcaddr_in	(srcaddr_in[AW-1:0]));
+
+   //Data
+   emesh2packet e2p0 (/*AUTOINST*/
+		     // Outputs
+		     .packet_out	(packet_out[PW-1:0]),
+		     // Inputs
+		     .write_in		(write_in),
+		     .datamode_in	(datamode_in[1:0]),
+		     .ctrlmode_in	(ctrlmode_in[3:0]),
+		     .dstaddr_in	(dstaddr_in[AW-1:0]),
+		     .data_in		(data_in[DW-1:0]),
+		     .srcaddr_in	(srcaddr_in[AW-1:0]));
+   
+   
    
    //###########################
    //# REGISTER INTERFACE
@@ -74,14 +128,38 @@ module etrace (/*AUTOARG*/
    //###########################
    //# CONFIG
    //###########################
+   //Destination start address ETRACE_BASEADDR [32 bit]
+   //Destination samples       ETRACE_SAMPLES [32 bit]
+   
    always @ (posedge mi_clk)
      if(!nreset)
        cfg_reg[15:0] <= 'b0;
      else if (mi_cfg_write)
        cfg_reg[15:0] <= mi_din[15:0];
 
-   assign mi_trace_enable = cfg_reg[0];
-
+   assign mi_trace_enable  = cfg_reg[0];
+   assign mi_loop_enable   = cfg_reg[1];//runs forever as circular buffer
+   assign mi_async_mode    = cfg_reg[2];//treats input signals as async/sync
+   assign mi_samplerate    = cfg_reg[7:4];
+   /*
+    * 100MS/s
+    * 50MS/s
+    * 25MS/s
+    * 12.5MS/s
+    * 6.25MS/s
+    * 3.125Ms/s
+    * 1.0Ms/s
+    * 0.5Ms/s
+    */
+    
+   
+   //###########################
+   //# "DMA"
+   //###########################
+   //With 64 channels + 32 bit timer (==96 bits) 
+   //Max sample rate??
+   
+  
    //################################
    //# SYNC CFG SIGNALS TO SAMPLE CLK
    //#################################
@@ -127,27 +205,20 @@ module etrace (/*AUTOARG*/
        trace_addr[MAW-1:0] <= 'b0;
      else if (trace_sample)
        trace_addr[MAW-1:0] <= trace_addr[MAW-1:0] + 1'b1;
-
-   //###########################
-   //# TRACE MEMORY
-   //###########################   
-   memory_dp 
-     #(.DW(MW),
-       .WED(MW/8),
-       .AW(MAW))     
-   memory (// Outputs
-	   .rd_data	(mem_data[MW-1:0]),
-	   // write interface
-	   .wr_clk	(trace_clk),
-	   .wr_en	({(MW/8){trace_sample}}),
-	   .wr_addr	(trace_addr[MAW-1:0]),
-	   .wr_data	({cycle_counter[DW-1:0],trace_vector[VW-1:0]}),
-	   // read interface
-	   .rd_clk	(mi_clk),
-	   .rd_en	(mi_rd),
-	   .rd_addr	(mi_addr[MAW+2:3])
-	   );
-
+   
+   //Trace memory
+   fifo_cdc fifo (// Outputs
+		  .wait_out		(),
+		  .access_out		(access_out),
+		  .packet_out		(packet_out[DW-1:0]),
+		  // Inputs
+		  .nreset		(nreset),
+		  .clk_in		(clk_in),
+		  .access_in		(access_in),
+		  .packet_in		(packet_in[DW-1:0]),
+		  .clk_out		(clk_out),
+		  .wait_in		(wait_in));
+   
 `ifdef TARGET_SIM
    reg [31:0] 	    ftrace;
    reg [255:0] 	    tracefile;

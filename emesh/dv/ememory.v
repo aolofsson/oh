@@ -116,7 +116,7 @@ module ememory(/*AUTOARG*/
    //Single ported memory
    defparam mem.DW=2*DW;//TODO: really fixed to 64 bits
    defparam mem.AW=MAW;		   
-   memory_sp mem(
+   oh_memory_sp mem(
 		 // Inputs
 		 .clk	(clk),
 		 .en	(en),
