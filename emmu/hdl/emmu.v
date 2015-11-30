@@ -118,7 +118,7 @@ module emmu (/*AUTOARG*/
 					   .wr_data		(mi_wr_data[MW-1:0]),
 					   .rd_clk		(rd_clk),
 					   .rd_en		(emesh_access_in),
-					   .rd_addr		(emmu_rd_addr[MAW-1:0])
+					   .rd_addr		(emmu_rd_addr[31:20])
 					   );
    		       
    /*****************************/
