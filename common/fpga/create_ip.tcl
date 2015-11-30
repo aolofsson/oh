@@ -3,6 +3,7 @@
 ###########################################################
 create_project -force $design $projdir -part $partname 
 set_property target_language Verilog [current_project]
+set_property source_mgmt_mode None [current_project]
 
 ###########################################################
 # Create filesets and add files to project
@@ -14,6 +15,8 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 }
 
 add_files -norecurse -fileset [get_filesets sources_1] $hdl_files
+
+set_property top $design [get_filesets sources_1]
 
 #CONSTRAINTS
 if {[string equal [get_filesets -quiet constraints_1] ""]} {

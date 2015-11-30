@@ -51,7 +51,7 @@ if(TYPE=="BASIC") begin : basic
    fifo_model (
 	       // Outputs
 	       .full			(full),
-	       .prog_full		(prog_full),
+	       .prog_full		(fifo_prog_full),
 	       .dout			(dout[DW-1:0]),
 	       .empty			(empty),
 	       .valid			(valid),
@@ -69,7 +69,7 @@ else if (TYPE=="XILINX") begin : xilinx
 	fifo_async_104x32 fifo (
 	       // Outputs
 	       .full			(full),
-	       .prog_full		(prog_full),
+	       .prog_full		(fifo_prog_full),
 	       .dout			(dout[DW-1:0]),
 	       .empty			(empty),
 	       .valid			(valid),

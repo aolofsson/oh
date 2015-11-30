@@ -77,7 +77,7 @@ module etx_fifo(/*AUTOARG*/
     */
 
    //Write fifo (from slave)
-   fifo_cdc #(.DW(104), .DEPTH(32)) txwr_fifo(
+   oh_fifo_cdc #(.DW(104), .DEPTH(32)) txwr_fifo(
 			                  /*AUTOINST*/
 					      // Outputs
 					      .wait_out		(txwr_wait),	 // Templated
@@ -92,7 +92,7 @@ module etx_fifo(/*AUTOARG*/
 					      .wait_in		(txwr_fifo_wait)); // Templated
    
    //Read request fifo (from slave)
-   fifo_cdc  #(.DW(104), .DEPTH(32)) txrd_fifo(
+   oh_fifo_cdc  #(.DW(104), .DEPTH(32)) txrd_fifo(
 				             /*AUTOINST*/
 					       // Outputs
 					       .wait_out	(txrd_wait),	 // Templated
@@ -109,7 +109,7 @@ module etx_fifo(/*AUTOARG*/
 
   
    //Read response fifo (from master)
-   fifo_cdc  #(.DW(104), .DEPTH(32)) txrr_fifo(
+   oh_fifo_cdc  #(.DW(104), .DEPTH(32)) txrr_fifo(
 					    
 					     /*AUTOINST*/
 					       // Outputs

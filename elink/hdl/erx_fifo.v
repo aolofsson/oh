@@ -76,7 +76,7 @@ module erx_fifo (/*AUTOARG*/
 
       
    //Read request fifo (from Epiphany)
-   fifo_cdc #(.DW(104), .DEPTH(32)) 
+   oh_fifo_cdc #(.DW(104), .DEPTH(32)) 
    rxrd_fifo   (
 		/*AUTOINST*/
 		// Outputs
@@ -94,7 +94,7 @@ module erx_fifo (/*AUTOARG*/
  
 
    //Write fifo (from Epiphany)
-   fifo_cdc #(.DW(104), .DEPTH(32)) 
+   oh_fifo_cdc #(.DW(104), .DEPTH(32)) 
    rxwr_fifo(
 	     /*AUTOINST*/
 	     // Outputs
@@ -111,7 +111,7 @@ module erx_fifo (/*AUTOARG*/
    
  
    //Read response fifo (for host)
-   fifo_cdc #(.DW(104), .DEPTH(32))  
+   oh_fifo_cdc #(.DW(104), .DEPTH(32))  
    rxrr_fifo(
 	     /*AUTOINST*/
 	     // Outputs

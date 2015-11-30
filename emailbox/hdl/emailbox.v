@@ -124,7 +124,7 @@ module emailbox (/*AUTOARG*/
    defparam fifo.DW    = MW;
    defparam fifo.DEPTH = DEPTH;
    //TODO: fix the width and depth
-   fifo_async fifo(.rst       (~nreset),  
+   oh_fifo_async fifo(.rst       (~nreset),  
 		    // Outputs
 		   .dout      (mailbox_data[MW-1:0]),
 		   .empty     (mailbox_empty),

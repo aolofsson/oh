@@ -1,12 +1,3 @@
-/*
- * This is the top level module for the parallella base design:
- * -
- * 
- * 
- * 
- * 
- */ 
-
 module parallella_base(/*AUTOARG*/
    // Outputs
    s_axi_wready, s_axi_rvalid, s_axi_rresp, s_axi_rlast, s_axi_rid,

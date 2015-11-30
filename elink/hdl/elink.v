@@ -241,7 +241,7 @@ module elink (/*AUTOARG*/
    defparam ecfg_cdc.DW=104;
    defparam ecfg_cdc.DEPTH=32;
    
-   fifo_cdc ecfg_cdc (.nreset   	(erx_nreset),
+   oh_fifo_cdc ecfg_cdc (.nreset   	(erx_nreset),
 		      // Outputs
 		      .wait_out		(etx_cfg_wait),	
 		      .access_out	(erx_cfg_access),	
