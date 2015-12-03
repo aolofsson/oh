@@ -1,31 +1,35 @@
 /* Simple combinatorial priority arbiter
- * (lowest position has highest priority)
+ * bit[0] has highest priority
  *
  */
 
 module oh_arbiter_static(/*AUTOARG*/
    // Outputs
-   grant, await,
+   grants, waits,
    // Inputs
-   request
+   requests
    );
    
-   parameter ARW=99;
+   parameter N=99;
        
-   input  [ARW-1:0] request;  //request vector
-   output [ARW-1:0] grant;    //grant (one hot)
-   output [ARW-1:0] await;    //wait mask!
+   input  [N-1:0] requests;  //request vector
+   output [N-1:0] grants;    //grant (one hot)
+   output [N-1:0] waits;     //wait mask!
    
-   genvar j;
-   assign await[0]   = 1'b0;   
-   generate for (j=ARW-1; j>=1; j=j-1) begin : gen_arbiter     
-      assign await[j] = |request[j-1:0];
-   end
+   genvar 	  j;
+   wire [N-1:0]   waitmask;
+      
+   assign waitmask[0]   = 1'b0;   
+   generate for (j=N-1; j>=1; j=j-1) 
+     begin : gen_arbiter     
+	assign waitmask[j] = |requests[j-1:0];
+     end
    endgenerate
 
    //grant circuit
-   assign grant[ARW-1:0] = request[ARW-1:0] & ~await[ARW-1:0];
-
+   assign grants[N-1:0] = requests[N-1:0] & ~waitmask[N-1:0];
+   assign waits[N-1:0]  = requests[N-1:0] & ~grants[N-1:0];
+   
 endmodule // oh_arbiter_priority
 
 
