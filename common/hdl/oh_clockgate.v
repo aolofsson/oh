@@ -5,28 +5,32 @@ module oh_clockgate(/*AUTOARG*/
    nrst, clk, en, se
    );
 
+   parameter DW=1;
+
    input  nrst;//active low reset   
    input  clk; //clock input 
-   input  en;  //enable
    input  se;  //scan enable   
-   output eclk;//enabled clock
+   input  [DW-1:0] en;  //enable (from positive edge FF)
+   output [DW-1:0] eclk;//enabled clock
      
 `ifdef CFG_ASIC
 
 `else
-   wire   en_sh;
-   wire   en_sl;
+   wire [DW-1:0]   en_sh;
+   wire [DW-1:0]   en_sl;
 
    //Turn on clock if in scan mode or if enabled
-   assign   en_sl = en | se | ~nrst;
+   assign   en_sl[DW-1:0] = en[DW-1:0]   | 
+			    {(DW){se}}   |
+			    {(DW){~nrst}}; 
 
    //making signal stable
-   oh_lat0 #(.DW(1)) lat0 (.out_sh (en_sh),
-                           .in_sl  (en_sl),
+   oh_lat0 #(.DW(1)) lat0 (.out_sh (en_sh[DW-1:0]),
+                           .in_sl  (en_sl[DW-1:0]),
                            .clk    (clk)
 			  );
 
-   assign eclk =  clk & en_sh;
+   assign eclk[DW-1:0] =  {(DW){clk}} & en_sh[DW-1:0];
    
 `endif
    
