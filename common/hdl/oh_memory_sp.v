@@ -10,44 +10,48 @@ module oh_memory_sp(/*AUTOARG*/
    // Outputs
    dout,
    // Inputs
-   clk, en, wen, addr, din
+   clk, en, we, wem, addr, din
    );
 
-   parameter AW      = 14;   
+   //parameters
+   parameter DEPTH   = 14;   
    parameter DW      = 32;
-   parameter WED     = DW/8; //one write enable per byte  
-   parameter MD      = 1<<AW;//memory depth
-
-   //write-port
-   input               clk; //clock
-   input               en;  //memory access   
-   input [WED-1:0]     wen; //write enable vector
-   input [AW-1:0]      addr;//address
-   input [DW-1:0]      din; //data input
-   output [DW-1:0]     dout;//data output
-      
-   reg [DW-1:0]        ram    [MD-1:0];  
-   reg [DW-1:0]        rd_data;
-   reg [DW-1:0]        dout;
+   parameter AW      = $clog2(DEPTH);
    
-   //read port
+   //interface
+   input               clk;  //clock
+   input               en;   //memory access   
+   input 	       we;   //write enable global signal   
+   input [DW-1:0]      wem;  //write enable vector
+   input [AW-1:0]      addr; //address
+   input [DW-1:0]      din;  //data input
+   output [DW-1:0]     dout; //data output
+      
+`ifdef CFG_ASIC
+
+   initial  
+     $display("Need to instantiate process specific macro here");
+   
+`else
+   reg [DW-1:0]        ram    [DEPTH-1:0];  
+   reg [DW-1:0]        dout;
+   integer 	       i;
+   
+   //read port (one cycle latency)
    always @ (posedge clk)
      if(en)       
        dout[DW-1:0] <= ram[addr[AW-1:0]];
 
    //write port
-   generate
-      genvar 	     i;
-      for (i = 0; i < WED; i = i+1) begin: gen_ram
-	 always @(posedge clk)
-           begin  
-              if (wen[i] & en) 
-                ram[addr[AW-1:0]][(i+1)*8-1:i*8] <= din[(i+1)*8-1:i*8];
-           end
-      end
-   endgenerate
-   
-endmodule // memory_dp
+   always @ (posedge clk)
+     for(i=0;i<DW;i=i+1)	   
+       if(en & wem[i] & we)	       
+ 	 ram[addr[AW-1:0]][i] <= din[i];
+     
+`endif
+  
+endmodule // oh_memory_sp
+
 
 
   
