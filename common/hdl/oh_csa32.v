@@ -1,4 +1,3 @@
-/CSA3:2 Compressor
 module oh_csa32 (/*AUTOARG*/
    // Outputs
    c, s,
