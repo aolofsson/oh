@@ -39,6 +39,7 @@ module oh_standby (/*AUTOARG*/
    oh_clockgate clockgate  (.eclk(clk_out),
 			    .clk(clk),
 			    .en(clk_en),
+			    .nrst(nreset),
      			    .se(1'b0)
 			    );
     
