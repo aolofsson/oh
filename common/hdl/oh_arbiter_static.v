@@ -5,7 +5,7 @@
 
 module oh_arbiter_static(/*AUTOARG*/
    // Outputs
-   grants, waits,
+   grants,
    // Inputs
    requests
    );
@@ -14,7 +14,6 @@ module oh_arbiter_static(/*AUTOARG*/
        
    input  [N-1:0] requests;  //request vector
    output [N-1:0] grants;    //grant (one hot)
-   output [N-1:0] waits;     //wait mask!
    
    genvar 	  j;
    wire [N-1:0]   waitmask;
@@ -28,7 +27,6 @@ module oh_arbiter_static(/*AUTOARG*/
 
    //grant circuit
    assign grants[N-1:0] = requests[N-1:0] & ~waitmask[N-1:0];
-   assign waits[N-1:0]  = requests[N-1:0] & ~grants[N-1:0];
    
 endmodule // oh_arbiter_priority
 

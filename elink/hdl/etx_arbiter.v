@@ -71,10 +71,7 @@ module etx_arbiter (/*AUTOARG*/
    wire [PW-1:0]   etx_packet_mux;
    wire 	   txrr_grant;
    wire 	   txrd_grant;
-   wire 	   txwr_grant;
-   wire 	   txrr_arb_wait;
-   wire 	   txrd_arb_wait;
-   wire 	   txwr_arb_wait;
+   wire 	   txwr_grant;  
    wire [PW-1:0]   txrd_splice_packet;
    wire [PW-1:0]   txwr_splice_packet;
    wire [PW-1:0]   etx_mux;
@@ -106,10 +103,6 @@ module etx_arbiter (/*AUTOARG*/
 						txrd_grant,
 						txwr_grant //highest priority
 						}),
-				       .waits({txrr_arb_wait,	
-						txrd_arb_wait,
-						txwr_arb_wait
-						}),	
 				       .requests({txrr_access,	
 						  txrd_access,
 						  txwr_access
@@ -130,17 +123,19 @@ module etx_arbiter (/*AUTOARG*/
 		      etx_rd_wait |
 		      etx_cfg_wait;
    
-   //Host read request (self throttling, one read at a time)
-   assign txrd_wait = etx_rd_wait |
-		      etx_wr_wait |
-		      etx_cfg_wait | 
-		      txrd_arb_wait;
    //Read response
    assign txrr_wait = etx_wr_wait  |
 		      etx_rd_wait  |
 		      etx_cfg_wait |
-		      txrr_arb_wait;
- 
+		      txwr_access;
+
+   //Host read request (self throttling, one read at a time)
+   assign txrd_wait = etx_rd_wait  |
+		      etx_wr_wait  |
+		      etx_cfg_wait |
+		      txrr_access  |
+		      txwr_access;
+   
    //#####################################################################
    //# Pipeline stage (arbiter+mux takes time..)
    //#####################################################################
