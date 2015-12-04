@@ -102,15 +102,15 @@ module etx_arbiter (/*AUTOARG*/
    //# Arbiter
    //##########################################################################
    
-   oh_arbiter_static #(.ARW(3)) arbiter (.grant({txrr_grant,	
+   oh_arbiter_static #(.N(3)) arbiter (.grants({txrr_grant,	
 						txrd_grant,
 						txwr_grant //highest priority
 						}),
-				        .await({txrr_arb_wait,	
+				       .waits({txrr_arb_wait,	
 						txrd_arb_wait,
 						txwr_arb_wait
 						}),	
-					.request({txrr_access,	
+				       .requests({txrr_access,	
 						  txrd_access,
 						  txwr_access
 						  })	

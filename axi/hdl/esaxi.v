@@ -1,4 +1,3 @@
-`include "elink_regmap.v"
 module esaxi (/*autoarg*/
    // Outputs
    txwr_access, txwr_packet, txrd_access, txrd_packet, rxrr_wait,

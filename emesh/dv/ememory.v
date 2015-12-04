@@ -117,14 +117,25 @@ module ememory(/*AUTOARG*/
    defparam mem.DW=2*DW;//TODO: really fixed to 64 bits
    defparam mem.AW=MAW;		   
    oh_memory_sp mem(
-		 // Inputs
-		 .clk	(clk),
-		 .en	(en),
-		 .wen	(wen[7:0]),
-		 .addr	(addr[MAW-1:0]),
-		 .din	(din[63:0]),
-		 .dout	(dout[63:0])
-		 );
+		    // Inputs
+		    .clk (clk),
+		    .en	 (en),
+		    .we  (write_in),
+		    .wem ({
+			   {(8){wen[7]}},
+			   {(8){wen[6]}},
+			   {(8){wen[5]}},
+			   {(8){wen[4]}},
+			   {(8){wen[3]}},
+			   {(8){wen[2]}},
+			   {(8){wen[1]}},
+			   {(8){wen[0]}}
+			   }
+			  ),
+		    .addr	(addr[MAW-1:0]),
+		    .din	(din[63:0]),
+		    .dout	(dout[63:0])
+		    );
 
    //Outgoing transaction     
    always @ (posedge  clk or negedge nreset)
