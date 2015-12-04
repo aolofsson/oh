@@ -9,7 +9,8 @@ module ememory(/*AUTOARG*/
    parameter IDW   = 12;
    parameter DW    = 32;   
    parameter AW    = 32;   
-   parameter MAW   = 16;    //64K words
+   parameter DEPTH = 65536;   
+   parameter MAW   = $clog2(DEPTH);
    parameter NAME  = "emem";
    parameter WAIT  = 0;     //turns on random wait circuit
   
@@ -114,8 +115,8 @@ module ememory(/*AUTOARG*/
      endcase // casez ({write, datamode_in[1:0],addr_in[2:0]})
 
    //Single ported memory
-   defparam mem.DW=2*DW;//TODO: really fixed to 64 bits
-   defparam mem.AW=MAW;		   
+   defparam mem.DW=2*DW;
+   defparam mem.DEPTH=DEPTH;		   
    oh_memory_sp mem(
 		    // Inputs
 		    .clk (clk),
