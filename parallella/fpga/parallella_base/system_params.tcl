@@ -9,7 +9,6 @@ set root "../../.."
 set partname "xc7z020clg400-1"
 
 set hdl_files [list \
-                   $root/parallella/hdl/parallella_base.v \
 	           $root/parallella/hdl \
 		   $root/common/hdl/ \
 		   $root/emesh/hdl \

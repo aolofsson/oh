@@ -12,6 +12,7 @@
 -y ../../etrace/hdl
 -y ../../memory/hdl
 -y ../../xilibs/hdl
+-y ../../axi/hdl
 -y ../../xilibs/ip
 -y ../../parallella/hdl
 +incdir+../../emesh/hdl
