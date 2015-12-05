@@ -15,14 +15,13 @@ module oh_lat1 (/*AUTOARG*/
    // Outputs
    out_sl,
    // Inputs
-   in_sh, clk, lat_clk
+   in_sh, clk
    );
 
    parameter DW=99;
 
    input  [DW-1:0] in_sh; 
    input 	   clk;
-   input 	   lat_clk;
    output [DW-1:0] out_sl;
 
    // # lat_clk is created in the following way:
@@ -34,9 +33,9 @@ module oh_lat1 (/*AUTOARG*/
 
    /* verilator lint_off COMBDLY */
    // # Real lat1
-   always @ (/*AUTOSENSE*/in_sh or lat_clk)
-	if (lat_clk)
-	  out_real_sl[DW-1:0] <= in_sh[DW-1:0];
+   always @ (clk or in_sh)
+     if (clk)
+       out_real_sl[DW-1:0] <= in_sh[DW-1:0];
    /* verilator lint_on COMBDLY */
 
 `ifdef DV_FAKELAT

@@ -30,7 +30,7 @@ module oh_lat0 (/*AUTOARG*/
  
    /* verilator lint_off COMBDLY */
    // # Real lat0
-   always @ (/*AUTOSENSE*/clk or in_sl)
+   always @ (clk or in_sl)
      if (~clk)
        out_real_sh[DW-1:0] <= in_sl[DW-1:0];
    /* verilator lint_on COMBDLY */
