@@ -1,40 +1,69 @@
-/*
- * This module performs a mux operation between a read and a write operation
- */
-
-module emesh_mux (/*AUTOARG*/
+//#################################################################
+//# MUXES BETWEEN PACKETS
+//#################################################################
+module emesh_arbiter (/*AUTOARG*/
    // Outputs
-   rd_wait, wr_wait, emesh_access, emesh_packet,
+   wait_out, packet_out, wait_in,
    // Inputs
-   rd_access, rd_packet, wr_access, wr_packet, emesh_wait
+   access_in, packet_in, access_out
    );
 
-   parameter PW = 99;  
+   parameter PW      = 99;
+   parameter N       = 99; 
+   parameter CFG     = "STATIC"; //Arbitration configuration
+                                 //"STATIC" fixed priority, [0] has highest priority
+                                 //"DYNAMIC" round robin
+   //Incoming transaction
+   input [N-1:0]    access_in;
+   input [N*PW-1:0] packet_in;
+   output [N-1:0]   wait_out;
 
-   //Read mesh transaction
-   input 	  rd_access;
-   input [PW-1:0] rd_packet;
-   output 	  rd_wait;
+   //Outgoing transaction
+   input 	    access_out;
+   output [PW-1:0]   packet_out;
+   output 	    wait_in;
 
-   //Read mesh transaction
-   input 	  wr_access;
-   input [PW-1:0] wr_packet;
-   output 	  wr_wait;
+   wire [N-1:0]     grants;
+   reg [PW-1:0]     packet_out;
 
-   //Muxed emesh transacton
-   output 	   emesh_access;
-   output [PW-1:0] emesh_packet;
-   input 	   emesh_wait;
-
-   assign emesh_access = rd_access | wr_access;
-
-   assign wr_wait = emesh_wait;
-   assign rd_wait = emesh_wait | wr_access;
-
-   assign emesh_packet[PW-1:0] = wr_access ? wr_packet[PW-1:0] :
-				             rd_packet[PW-1:0];
+   //Keep static for now
+   generate
+      if(CFG=="STATIC")		
+	oh_arbiter_static arbiter(// Outputs
+				  .grants   (grants[N-1:0]),
+				  // Inputs
+				  .requests (access_in[N-1:0])
+				  );      
+   endgenerate
    
+
+   //######################################
+   //# ACCESS SIGNAL
+   //######################################
+   assign access_out = |(access_in[N-1:0]);
+
+   //######################################
+   //# PUSHBACK
+   //######################################
+   assign wait_out = access_in[N-1:0] & ~grants[N-1:0];
+
+   //######################################
+   //# DATA MUX
+   //######################################
+   
+   integer   i;
+   
+   always @*
+     begin
+	packet_out[PW-1:0] = 'b0;
+	for(i=0;i<N;i=i+1)
+	  packet_out[PW-1:0] |= {(PW){grants[i]}} & packet_in[PW-1:0];
+     end
+
 endmodule // emesh_mux
 
+// Local Variables:
+// verilog-library-directories:("." "../../common/hdl")
+// End:
 
 
