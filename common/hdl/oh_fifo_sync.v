@@ -1,6 +1,6 @@
 module oh_fifo_sync (/*AUTOARG*/
    // Outputs
-   dout, empty, full, almost_full,
+   dout, empty, full, almost_full, count,
    // Inputs
    clk, nreset, din, wr_en, rd_en
    );
@@ -34,6 +34,7 @@ module oh_fifo_sync (/*AUTOARG*/
    output 	   empty;   
    output 	   full;
    output 	   almost_full;
+   output [AW:0]   count;
   
    //#####################################################################
    //# BODY
@@ -52,28 +53,31 @@ module oh_fifo_sync (/*AUTOARG*/
        begin	   
           wr_addr[AW-1:0] <= 'd0;
           rd_addr[AW-1:0] <= 'b0;
-          count[AW-1:0]   <= 'b0;
+          count[AW:0]     <= 'b0;
        end 
      else if(wr_en & rd_en) 
        begin
-	  wr_addr <= wr_addr + 'd1;
-	  rd_addr <= rd_addr + 'd1;	      
+	  wr_addr[AW-1:0] <= wr_addr[AW-1:0] + 'd1;
+	  rd_addr[AW-1:0] <= rd_addr[AW-1:0] + 'd1;	      
        end 
      else if(wr_en) 
        begin
-	  wr_addr <= wr_addr + 'd1;
-	  count   <= count   + 'd1;	
+	  wr_addr[AW-1:0] <= wr_addr[AW-1:0] + 'd1;
+	  count[AW:0]     <= count[AW:0]     + 'd1;	
        end 
      else if(rd_en) 
        begin	      
-          rd_addr <= rd_addr + 'd1;
-          count   <= count   - 'd1;
+          rd_addr[AW-1:0] <= rd_addr[AW-1:0] + 'd1;
+          count[AW:0]     <= count[AW:0]     - 'd1;
        end
    
    // GENERIC DUAL PORTED MEMORY
    defparam mem.DW=DW;
    defparam mem.AW=AW;   
-   oh_memory_dp mem (
+   oh_memory_dp 
+     #(.DW(DW),
+       .AW(AW))
+   mem (
 			// Outputs
 			.rd_data	(dout[DW-1:0]),
 			// Inputs
