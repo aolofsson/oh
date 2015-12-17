@@ -57,7 +57,7 @@ module ecfg_if (/*AUTOARG*/
    wire [31:0] 	 data;   
    wire [31:0]   srcaddr;
    wire [1:0] 	 datamode;
-   wire [3:0] 	 ctrlmode;
+   wire [4:0] 	 ctrlmode;
    wire [63:0] 	 mi_dout_mux;
    wire 	 mi_rd;
    wire 	 access_forward;
@@ -85,15 +85,16 @@ module ecfg_if (/*AUTOARG*/
    wire [11:0]   myid = ID;
    
    //splicing packet
-   packet2emesh p2e (
-		     .write_out	   (write),
-		     .datamode_out (datamode[1:0] ),
-		     .ctrlmode_out (ctrlmode[3:0]),
-		     .dstaddr_out  (dstaddr[31:0]),
-		     .data_out	   (data[31:0]),
-		     .srcaddr_out  (srcaddr[31:0]),
-		     .packet_in	   (packet_in[PW-1:0])
-		    );
+   packet2emesh #(.AW(AW))
+   p2e (
+	.write_in    (write),
+	.datamode_in (datamode[1:0] ),
+	.ctrlmode_in (ctrlmode[4:0]),
+	.dstaddr_in  (dstaddr[31:0]),
+	.data_in     (data[31:0]),
+	.srcaddr_in  (srcaddr[31:0]),
+	.packet_in   (packet_in[PW-1:0])
+	);
 
    //ENABLE SIGNALS
    assign mi_match   = access_in & (dstaddr[31:20]==ID);//TODP:REMOVE
@@ -165,14 +166,15 @@ module ecfg_if (/*AUTOARG*/
    assign data_out[31:0] = readback_reg ? mi_dout_mux[31:0] : data_reg[31:0];
    
    //Create packet
-   emesh2packet e2p (.packet_out	(packet_out[PW-1:0]),
-		     .write_in		(write_reg),
-		     .datamode_in       (datamode_reg[1:0]),
-		     .ctrlmode_in   	(ctrlmode_reg[3:0]),
-		     .dstaddr_in   	(dstaddr_reg[AW-1:0]),
-		     .data_in		(data_out[31:0]),
-		     .srcaddr_in        (srcaddr_reg[AW-1:0])
-		     );
+   emesh2packet #(.AW(AW))
+   e2p (.packet_out	(packet_out[PW-1:0]),
+	.write_out	(write_reg),
+	.datamode_out   (datamode_reg[1:0]),
+	.ctrlmode_out   ({1'b0,ctrlmode_reg[3:0]}),
+	.dstaddr_out   	(dstaddr_reg[AW-1:0]),
+	.data_out	(data_out[31:0]),
+	.srcaddr_out    (srcaddr_reg[AW-1:0])
+	);
    
    
 endmodule // ecfg_if

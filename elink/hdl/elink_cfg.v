@@ -65,12 +65,12 @@ module elink_cfg (/*AUTOARG*/
    
    packet2emesh pe2 (
 		     // Outputs
-		     .write_out		(mi_we),
-		     .datamode_out	(),
-		     .ctrlmode_out	(),
-		     .dstaddr_out	(mi_addr[31:0]),
-		     .data_out		(mi_din[31:0]),
-		     .srcaddr_out	(),
+		     .write_in		(mi_we),
+		     .datamode_in	(),
+		     .ctrlmode_in	(),
+		     .dstaddr_in	(mi_addr[31:0]),
+		     .data_in		(mi_din[31:0]),
+		     .srcaddr_in	(),
 		     // Inputs
 		     .packet_in		(txwr_packet[PW-1:0])
 		     );   

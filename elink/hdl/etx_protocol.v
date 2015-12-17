@@ -58,12 +58,12 @@ module etx_protocol (/*AUTOARG*/
    reg [PW-1:0]   tx_packet; 
    wire 	  etx_write;
    wire [1:0] 	  etx_datamode;
-   wire [3:0] 	  etx_ctrlmode;
+   wire [4:0] 	  etx_ctrlmode;
    wire [AW-1:0]  etx_dstaddr;
    wire [DW-1:0]  etx_data;
    wire 	  tx_write;
    wire [1:0] 	  tx_datamode;
-   wire [3:0] 	  tx_ctrlmode;
+   wire [4:0] 	  tx_ctrlmode;
    wire [AW-1:0]  tx_dstaddr;
    wire [DW-1:0]  tx_data;
    wire [AW-1:0]  tx_srcaddr;   
@@ -82,14 +82,15 @@ module etx_protocol (/*AUTOARG*/
    //##############################################################
    //# Packet Pipeline
    //##############################################################
-   packet2emesh p2m0 (
-		      .write_out	(etx_write),
-		      .datamode_out	(etx_datamode[1:0]),
-		      .ctrlmode_out	(etx_ctrlmode[3:0]),
-		      .dstaddr_out	(etx_dstaddr[31:0]),
-		      .data_out		(),
-		      .srcaddr_out	(),
-		      .packet_in	(etx_packet[PW-1:0]));//input
+   packet2emesh #(.AW(AW))
+   p2m0 (
+	 .write_in	(etx_write),
+	 .datamode_in	(etx_datamode[1:0]),
+	 .ctrlmode_in	(etx_ctrlmode[4:0]),
+	 .dstaddr_in	(etx_dstaddr[31:0]),
+	 .data_in	(),
+	 .srcaddr_in	(),
+	 .packet_in	(etx_packet[PW-1:0]));//input
    
    //Hold transaction while waiting
    always @ (posedge clk)
@@ -97,15 +98,16 @@ module etx_protocol (/*AUTOARG*/
        tx_packet[PW-1:0] <= etx_packet[PW-1:0];
   
    //the IO pipeline flushes out
-   packet2emesh p2m1 (
-		     .write_out		(tx_write),
-		     .datamode_out	(tx_datamode[1:0]),
-		     .ctrlmode_out	(tx_ctrlmode[3:0]),
-		     .dstaddr_out	(tx_dstaddr[31:0]),
-		     .data_out		(tx_data[31:0]),
-		     .srcaddr_out	(tx_srcaddr[31:0]),
-		     .packet_in		(tx_packet[PW-1:0]));//input
-
+   packet2emesh #(.AW(AW))
+   p2m1 (
+	 .write_in	(tx_write),
+	 .datamode_in	(tx_datamode[1:0]),
+	 .ctrlmode_in	(tx_ctrlmode[4:0]),
+	 .dstaddr_in	(tx_dstaddr[31:0]),
+	 .data_in	(tx_data[31:0]),
+	 .srcaddr_in	(tx_srcaddr[31:0]),
+	 .packet_in	(tx_packet[PW-1:0]));//input
+   
 
    //#############################
    //# Burst Detection

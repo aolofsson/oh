@@ -36,12 +36,12 @@ module etx_remap (/*AUTOARG*/
    reg [PW-1:0]    emesh_packet_out;
 
    packet2emesh p2e (// Outputs
-		     .write_out		(write_in),
-		     .datamode_out	(),
-		     .ctrlmode_out	(),
-		     .data_out		(),
-		     .dstaddr_out	(addr_in[31:0]),
-		     .srcaddr_out	(),
+		     .write_in		(write_in),
+		     .datamode_in	(),
+		     .ctrlmode_in	(),
+		     .data_in		(),
+		     .dstaddr_in	(addr_in[31:0]),
+		     .srcaddr_in	(),
 		     // Inputs
 		     .packet_in		(emesh_packet_in[PW-1:0]));
          
