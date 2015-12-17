@@ -6,12 +6,16 @@ module dv_driver (/*AUTOARG*/
    );
 
    //Parameters
-   parameter PW       = 99;
-   parameter N        = 1;
-   parameter IDW      = 12;     //ID width
+   parameter N        = 1;      // "N" packets wide
+   parameter AW       = 32;     // address width
+   parameter IDW      = 12;     // id width
    parameter NAME     = "none"; // north, south etc
    parameter STIMS    = 1;      // number of stimulus
-   
+
+   //derived parameters
+   localparam DW      = AW;     //always the same
+   localparam PW      = 2*AW+40;//packet width   
+
    //Control signals
    input		clk;
    input		nreset;
@@ -29,25 +33,31 @@ module dv_driver (/*AUTOARG*/
    output [N-1:0] 	stim_wait;
    output 		stim_done;
 
+ 
    wire [N*32-1:0] 	stim_count;
    wire [N-1:0] 	stim_vec_done;  
    wire [N*IDW-1:0] 	coreid_array;
    reg [IDW-1:0] 	offset;
+
+   wire [N*PW-1:0] 	mem_packet_out;	
+   wire [N-1:0] 	mem_access_out;
+   wire [N-1:0] 	mem_wait_out;
    
-   assign stim_done = &(stim_vec_done[N-1:0]);
-      
+   /*AUTOWIRE*/   
    //###########################################
    //STIMULUS
    //###########################################
+
+   assign stim_done = &(stim_vec_done[N-1:0]);
+   
    genvar 		i;
    generate
       for(i=0;i<N;i=i+1) begin : stim
 	 if(i<STIMS) begin
-	    //AT LEAST ONE STIMULUS
-	    defparam stimulus.PW    = PW;
-	    defparam stimulus.INDEX = i;
-	    defparam stimulus.NAME  = NAME;	 
-	    stimulus  stimulus (// Outputs
+	    stimulus  #(.PW(PW),
+			.INDEX(i),
+			.NAME(NAME))
+	    stimulus (// Outputs
 				.stim_access   (stim_access[0]),
 				.stim_packet   (stim_packet[(i+1)*PW-1:i*PW]),
 				.stim_count    (stim_count[(i+1)*32-1:i*32]),
@@ -66,7 +76,7 @@ module dv_driver (/*AUTOARG*/
 	      assign stim_packet[(i+1)*PW-1:i*PW] = 'b0;
               assign stim_count[(i+1)*32-1:i*32]  = 'b0;
 	      assign stim_vec_done[i]             = 'b1;
-	      assign stim_wait[i]                 = 'b0;	      			
+	      assign stim_wait[i]                 = 'b0; 
 	   end
 	    
       end // block: stim
@@ -107,7 +117,41 @@ module dv_driver (/*AUTOARG*/
 	 
       end // for (i=0;i<N;i=i+1)	 
    endgenerate
-   
-endmodule // dv_side
 
+   //###########################################
+   //MEMORY
+   //###########################################
+   genvar k;
+   generate
+      for(j=0;j<N;j=j+1) begin : mem	 
+	 ememory #(.NAME(NAME),
+		   .IDW(IDW),
+		   .AW(AW)
+		   )
+	 ememory(// Outputs
+		 .wait_out		(mem_wait_out[j]),
+		 .access_out		(mem_access_out[j]),
+		 .packet_out		(mem_packet_out[(j+1)*PW-1:j*PW]),
+		 // Inputs
+		 .clk			(clk),
+		 .nreset		(nreset),
+		 .coreid		(coreid[IDW-1:0]),
+		 .access_in		(dut_access[j]),
+		 .packet_in		(dut_packet[(j+1)*PW-1:j*PW]),
+		 .wait_in		(wait_in));
+      end	 
+	 
+   endgenerate
+   
+   //###########################################
+   //MUX BETWEEN STIMULUS AND MEMORY
+   //###########################################
+   //stimulus has higher priority
+   //TODO: Implement
+   
+endmodule // dv_driver
+
+// Local Variables:
+// verilog-library-directories:("." "../../emesh/hdl")
+// End:
 
