@@ -15,12 +15,11 @@ module oh_memory_dp(/*AUTOARG*/
 
    parameter AW      = 14;   
    parameter DW      = 32;
-   parameter WED     = DW/8; //one per byte  
    parameter MD      = 1<<AW;//memory depth
 
    //write-port
    input               wr_clk; //write clock
-   input [WED-1:0]     wr_en;  //write enable vector
+   input [DW/8-1:0]    wr_en;  //write enable vector
    input [AW-1:0]      wr_addr;//write address
    input [DW-1:0]      wr_data;//write data
 
@@ -45,7 +44,7 @@ module oh_memory_dp(/*AUTOARG*/
    //write port
    generate
       genvar 	     i;
-      for (i = 0; i < WED; i = i+1) begin: gen_ram
+      for (i = 0; i < DW/8; i = i+1) begin: gen_ram
 	 always @(posedge wr_clk)
            begin  
               if (wr_en[i]) 
