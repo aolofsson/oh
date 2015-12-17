@@ -99,12 +99,12 @@ module emmu (/*AUTOARG*/
    /*MMU READ  LOGIC            */
    /*****************************/
    packet2emesh p2e (//outputs
-		     .write_out		(write_in),
-		     .datamode_out	(),
-		     .ctrlmode_out	(),
-		     .data_out		(),
-		     .dstaddr_out	(emmu_rd_addr[AW-1:0]),
-		     .srcaddr_out	(),
+		     .write_in		(write_in),
+		     .datamode_in	(),
+		     .ctrlmode_in	(),
+		     .data_in		(),
+		     .dstaddr_in	(emmu_rd_addr[AW-1:0]),
+		     .srcaddr_in	(),
 		     //inputs
 		     .packet_in		(emesh_packet_in[PW-1:0]));
          

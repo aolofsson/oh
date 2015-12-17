@@ -86,12 +86,12 @@ module emailbox (/*AUTOARG*/
    /*WRITE TO FIFO              */
    /*****************************/  
    packet2emesh pe2 (// Outputs
-		     .write_out		(emesh_write),
-		     .datamode_out	(),
-		     .ctrlmode_out	(),
-		     .data_out		(emesh_din[31:0]),
-		     .dstaddr_out	(emesh_addr[31:0]),
-		     .srcaddr_out	(emesh_din[63:32]),
+		     .write_in		(emesh_write),
+		     .datamode_in	(),
+		     .ctrlmode_in	(),
+		     .data_in		(emesh_din[31:0]),
+		     .dstaddr_in	(emesh_addr[31:0]),
+		     .srcaddr_in	(emesh_din[63:32]),
 		     // Inputs
 		     .packet_in		(emesh_packet[PW-1:0]));
    
