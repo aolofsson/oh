@@ -70,6 +70,7 @@ module emailbox (/*AUTOARG*/
    reg [RFAW+1:2] mi_addr_reg;
    reg 		  read_hi;
    reg 		  read_status;
+   reg 		  mi_rd_mailbox;
    
    /*****************************/
    /*WIRES                      */
@@ -112,11 +113,15 @@ module emailbox (/*AUTOARG*/
      begin
 	read_hi     <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI);
 	read_status <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXSTAT);
+
+	// mi_en (mi_cfg_en) is active for all ERX_CFG accesses 
+	// generate a filter for just mailbox accesses
+	mi_rd_mailbox  <= mailbox_read | mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI) | mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXSTAT);
      end
    assign mi_dout[31:0]  = read_status ? {30'b0,mailbox_full, mailbox_not_empty} :
 			   read_hi     ? mailbox_data[63:32]                     : 
-			                 mailbox_data[31:0];
-   assign mi_dout[63:32] = mailbox_data[63:32];
+			                 {{(DW){mi_rd_mailbox}} & mailbox_data[31:0]};
+   assign mi_dout[63:32] = {{(DW){mi_rd_mailbox}} & mailbox_data[63:32]};
    
    /*****************************/
    /*FIFO (64bit wide)          */
