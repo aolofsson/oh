@@ -79,7 +79,8 @@ module etx_clocks (/*AUTOARG*/
    //###########################
   
    reg [RCW:0] reset_counter = 'b0; //works b/c of free running counter!
-   reg 	       heartbeat;   
+   reg 	       heartbeat; 
+   reg 	       heartbeat_double;
    reg [2:0]   reset_state;
    reg [1:0]   reset_pipe_lclkb;    
    reg [1:0]   reset_pipe_lclk_div4b;   
@@ -108,28 +109,37 @@ module etx_clocks (/*AUTOARG*/
 
    //Reset sequence state machine      
    always @ (posedge sys_clk or negedge sys_nreset)
-     if(!sys_nreset)
-       reset_state[2:0]        <= `TX_RESET_ALL;   
-     else if(heartbeat)
-       case(reset_state[2:0])
-	 `TX_RESET_ALL :
-	   if(~soft_reset)
-	     reset_state[2:0]  <= `TX_START_CCLK;	 
-	 `TX_START_CCLK :
-	   if(mmcm_locked_sync)
-	     reset_state[2:0]  <= `TX_STOP_CCLK; 
-	 `TX_STOP_CCLK :
-	   reset_state[2:0]    <= `TX_DEASSERT_RESET;
-	 `TX_DEASSERT_RESET :
-	   reset_state[2:0]    <= `TX_HOLD_IT;
-	 `TX_HOLD_IT :
-	   if(mmcm_locked_sync)
-	     reset_state[2:0]  <= `TX_ACTIVE;
-	 `TX_ACTIVE:
-	   if(soft_reset)
-	     reset_state[2:0]    <= `TX_RESET_ALL; //stay there until nex reset
-
-       endcase // case (reset_state[2:0])
+     if(!sys_nreset & ~(heartbeat | heartbeat_double))
+       begin
+	  // stay in state TX_START_CCLK for one more beat during reset
+	  // ensures that etx_fifo.txrd_fifo.clk_out has at least one
+	  // beat during reset
+	  heartbeat_double <= 1'b0;
+	  reset_state[2:0]        <= `TX_RESET_ALL;
+       end
+     else
+       begin
+	  heartbeat_double <= heartbeat;
+	  if(heartbeat)
+	    case(reset_state[2:0])
+	      `TX_RESET_ALL :
+		if(~soft_reset)
+		  reset_state[2:0]  <= `TX_START_CCLK;
+	      `TX_START_CCLK :
+		if(mmcm_locked_sync)
+		  reset_state[2:0]  <= `TX_STOP_CCLK;
+	      `TX_STOP_CCLK :
+		reset_state[2:0]    <= `TX_DEASSERT_RESET;
+	      `TX_DEASSERT_RESET :
+		reset_state[2:0]    <= `TX_HOLD_IT;
+	      `TX_HOLD_IT :
+		if(mmcm_locked_sync)
+		  reset_state[2:0]  <= `TX_ACTIVE;
+	      `TX_ACTIVE:
+		if(soft_reset)
+		  reset_state[2:0]    <= `TX_RESET_ALL; //stay there until nex reset
+	    endcase // case (reset_state[2:0])
+	  end
    
    //reset mmcm (async)
    assign mmcm_reset =  (reset_state[2:0]==`TX_RESET_ALL)      |
