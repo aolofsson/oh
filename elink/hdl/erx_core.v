@@ -168,6 +168,7 @@ module erx_core (/*AUTOARG*/
 		 .emesh_packet_out	(emmu_packet[PW-1:0]),	 // Templated
 		 .emesh_packet_hi_out	(),			 // Templated
 		 // Inputs
+		 .nreset		(nreset),
 		 .rd_clk		(clk),			 // Templated
 		 .wr_clk		(clk),			 // Templated
 		 .mmu_en		(mmu_enable),		 // Templated

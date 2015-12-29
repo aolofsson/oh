@@ -202,7 +202,12 @@ module erx_io (/*AUTOARG*/
      rx_access <= access_wide;
         
    always @ (posedge rx_lclk_div4)
-     if(access_wide)
+     if(!erx_io_nreset)
+       begin
+	  rx_burst <= 'b0;
+	  rx_packet[PW-1:0] <= 'b0;
+       end
+     else if(access_wide)
        begin
 	  rx_packet[PW-1:0] <= rx_packet_lclk[PW-1:0];
 	  rx_burst          <= burst;	  
