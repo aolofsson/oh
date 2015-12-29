@@ -19,8 +19,9 @@ module emmu (/*AUTOARG*/
    // Outputs
    mi_dout, emesh_access_out, emesh_packet_out, emesh_packet_hi_out,
    // Inputs
-   rd_clk, wr_clk, mmu_en, mmu_bp, mi_en, mi_we, mi_addr, mi_din,
-   emesh_access_in, emesh_packet_in, emesh_rd_wait, emesh_wr_wait
+   nreset, rd_clk, wr_clk, mmu_en, mmu_bp, mi_en, mi_we, mi_addr,
+   mi_din, emesh_access_in, emesh_packet_in, emesh_rd_wait,
+   emesh_wr_wait
    );
    parameter DW     = 32;         //data width
    parameter AW     = 32;         //address width 
@@ -30,6 +31,11 @@ module emmu (/*AUTOARG*/
    parameter MAW    = 12;         //memory addres width (entries = 1<<MAW)   
    parameter GROUP  = 0;
    
+   /*****************************/
+   /*Reset                      */
+   /*****************************/
+   input nreset;
+
    /*****************************/
    /*DATAPATH CLOCk             */
    /*****************************/  
@@ -129,7 +135,12 @@ module emmu (/*AUTOARG*/
    //the pushback is needed stall async transmit path      
 
    always @ (posedge  rd_clk)
-     if(~(emesh_wr_wait | emesh_rd_wait))
+     if (~nreset)
+       begin
+	  emesh_access_out <= 1'b0;
+	  emesh_packet_reg[PW-1:0] <= {(PW){1'b0}};
+       end
+     else if(~(emesh_wr_wait | emesh_rd_wait))
        begin
 	  emesh_access_out         <=  emesh_access_in;
 	  emesh_packet_reg[PW-1:0] <=  emesh_packet_in[PW-1:0];	  
