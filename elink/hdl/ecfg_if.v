@@ -65,7 +65,8 @@ module ecfg_if (/*AUTOARG*/
    wire 	 mi_en;
    
    //regs;
-   reg 		 access_out;   
+   reg 		 access_forward_reg;
+   reg 		 access_out_reg;   
    reg [31:0] 	 dstaddr_reg;
    reg [31:0] 	 srcaddr_reg;
    reg [1:0] 	 datamode_reg;
@@ -146,10 +147,22 @@ module ecfg_if (/*AUTOARG*/
 
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       access_out <= 1'b0;   
-     else if(~wait_in)
-       access_out   <= access_forward;
-   
+       access_forward_reg <= 1'b0;
+     else
+       access_forward_reg <= access_forward;
+
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       access_out_reg <= 1'b0;
+     else if(!wait_in)
+       access_out_reg <= access_forward;
+
+   // Ensure access_out is correctly terminated when wait_in
+   // occurs after the start of a sequence of accesses
+   // wait_in eventually propagates further back in the channel
+   // and stops the source of the access
+   assign access_out = access_out_reg & access_forward_reg;
+
    always @ (posedge clk)
      if(~wait_in)
        begin
