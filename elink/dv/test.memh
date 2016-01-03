@@ -1,0 +1,71 @@
+00000000_00000003_810f0200_05_0040 //WRITE (E_RESET): assert reset (and wait!!!)
+00000000_00000000_810f0200_05_0100 //      (E_RESET): deassert reset (and wait more!!)
+00000000_00000810_810Ec880_05_0000 // E: EGROUP_MMU, 8 (c): RX, 4880: address 910, 0: mi_wr_vec = f lower four bytes - Writing to entry "910" lower
+00000000_00000000_810Ec884_05_0000 // E: EGROUP_MMU, 8 (c): RX, 4884: address 910, 4: mi_wr_vec = 30 upper two bytes - Writing to entry "910" upper ie 910 -> 810
+00000000_00000808_810Ec040_05_0000 // E: EGROUP_MMU, 8 (c): RX, 4040: 100 0 000 01address 808, 0: mi_wr_vec = f lower - Writing to entry "808"
+00000000_00000000_810Ec044_05_0000 // E: EGROUP_MMU, 8 (c): RX, 4044: address 808, 4: mi_wr_vec = 30 upper - ie 808 -> 808
+00000000_00000810_810Ec080_05_0000 // E: EGROUP_MMU, 8 (c): RX, 4080: address 810, 0: mi_wr_vec = f lower - Writing to entry "810"
+00000000_00000000_810Ec084_05_0000 // E: EGROUP_MMU, 8 (c): RX, 4084: address 810, 4: mi_wr_vec = 30 upper - ie 810 -> 808
+00000000_00000002_810f0300_05_0020 // Enable MMU
+00000000_00000820_820Ec900_05_0000 // E: EGROUP_MMU, 8 (c): RX, 4880: address 920, 0: mi_wr_vec = f lower four bytes - Writing to entry "920" lower
+00000000_00000000_820Ec904_05_0000 // E: EGROUP_MMU, 8 (c): RX, 4884: address 920, 4: mi_wr_vec = 30 upper two bytes - Writing to entry "920" upper ie 920 -> 820
+00000000_00000808_820Ec040_05_0000 // E: EGROUP_MMU, 8 (c): RX, 4040: 100 0 000 01address 808, 0: mi_wr_vec = f lower - Writing to entry "808"
+00000000_00000000_820Ec044_05_0000 // E: EGROUP_MMU, 8 (c): RX, 4044: address 808, 4: mi_wr_vec = 30 upper - ie 808 -> 808
+00000000_00000002_820f0300_05_0000 // Enable MMU 
+810D0204_00000001_810f0204_05_0000 //      (E_CLK): configure clock
+00000000_00000002_810f0208_05_0000 //      (E_CHIPID): write chipid
+00000000_0000AABB_810f020c_05_0000 //      (E_VERSION): write version
+00000000_00000000_810f0210_05_0000 //      (ETX_CFG): write TX config
+00000000_00000000_810f0214_05_0000 //      (ETX_STATUS): clear TX status
+00000000_810f1234_810f0218_05_0000 //      (ETX_GPIO): write tx gpio
+00000000_00000000_810F021c_05_0010 //zero out monitor
+00000000_00000000_810f0304_05_0000 //      (ERX_STATUS): clear RX status
+00000000_00000000_810f030C_05_0000 //      (ERX_OFFSET): offset register
+00000000_810f4321_810f0318_05_0000 //      (ERX_TESTDATA):test data
+00000000_808a5a51_80800000_05_0000 //32-bit write
+00000000_8085a5a2_80800004_05_0000 //32-bit write
+00000000_808a5a53_80800008_05_0000 //32-bit write
+00000000_80801014_8080000c_05_0000 //32-bit write
+00000000_80812125_80800010_05_0000 //32-bit write
+00000000_80823236_80800014_05_0000 //32-bit write
+00000000_80898397_80800018_05_0000 //32-bit write
+00000000_808ecec8_8080001c_05_0000 //32-bit write
+81000000_ff0a5a5a_910f0320_05_0000 // write mailbox 64bit: control mode 0; data mode 2'b10; write & ext_access
+810D0000_DEADBEEF_80800000_04_00f0 // dummy read?? - wait for all the Emem writes
+810D0000_DEADBEEF_80800000_04_0020 // cheat and allow multiple reads at once!
+810D0004_DEADBEEF_80800004_04_0020 //
+81000000_ff15a5a5_910f0320_05_0000 // write mailbox 64bit: control mode 0; data mode 2'b10; write & ext_access
+00000000_00000000_820f0304_05_0000 //      (elink1:ERX_STATUS): clear RX status
+82000000_EE145678_920f0320_05_0000 // elink1:write mailbox 64bit: control mode 0; data mode 2'b10; write & ext_access
+810D0008_DEADBEEF_80800008_04_0020 //
+00000000_FEDABEE1_810f0318_05_0000 //      (ERX_TESTDATA):test data
+810D000c_DEADBEEF_8080000c_04_0002 //
+82000000_EE287654_920f0320_05_0000 // elink1:write mailbox 64bit: control mode 0; data mode 2'b10; write & ext_access
+00000000_808cece9_80800020_05_0000 //32-bit write
+00000000_820f1111_820f0218_05_0000 //      (elink1:ETX_GPIO): write tx gpio
+810D0320_DEADBEEF_810f0320_04_0020 //      (E_MAILBOXLO): read from lo mailbox
+82000000_EE3a5a5a_920f0320_05_0000 // write mailbox 64bit: control mode 0; data mode 2'b10; write & ext_access
+00000000_808cecea_80800024_05_0000 //32-bit write
+810D0010_DEADBEEF_80800010_04_0020 //
+81000000_ff245678_910f0320_05_0000 // write mailbox 64bit: control mode 0; data mode 2'b10; write & ext_access
+82000000_EE145678_920f0320_05_0000 // elink1:write mailbox 64bit: control mode 0; data mode 2'b10; write & ext_access
+00000000_810f3292_810f0318_05_0000 //      (ERX_TESTDATA):test data
+810D0014_DEADBEEF_80800014_04_0020 //
+00000000_808abcdb_80800028_05_0000 //32-bit write
+810D0018_DEADBEEF_80800018_04_0020 //
+00000000_808dbcac_8080002c_05_0000 //32-bit write
+00000000_820f2222_820f0318_05_0000 //      (elink1:ERX_TESTDATA):test data
+810D001c_DEADBEEF_8080001c_04_0020 //
+810D0324_DEADFEEF_810f0324_04_0020 //      (E_MAILBOXHI): read from hi mailbox
+810D020C_DEADBEEF_810f020c_04_0020 //READ  (E_VERSION): read version
+810D0210_DEADBEEF_810f0210_04_0020 //      (ETX_CFG): read config
+810D0320_DEADBEEF_810f0320_04_0020 //      (E_MAILBOXLO): read from lo mailbox
+810D0324_DEADFEEF_810f0324_04_0020 //      (E_MAILBOXHI): read from hi mailbox
+810D0214_DEADBEEF_810f0214_04_0020 //      (ETX_STATUS): read status
+810D0218_DEADBEEF_810f0218_04_0020 //      (ETX_GPIO): read from tx gpio
+810D0300_DEADBEEF_810f0300_04_0020 //      (ERX_CFG): read from RX config
+810D0304_DEADBEEF_810f0304_04_0020 //      (ERX_STATUS): read from RX status
+810D0320_DEADBEEF_810f0320_04_0020 //      (E_MAILBOXLO): read from lo mailbox
+810D0324_DEADFEEF_810f0324_04_0020 //      (E_MAILBOXHI): read from hi mailbox
+810D0308_DEADFEEF_810f0308_04_0020 //      (ERX_GPIO): read from RX GPIO
+
