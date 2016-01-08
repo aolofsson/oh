@@ -69,13 +69,13 @@ module dut(/*AUTOARG*/
    wire 	     elink1_rxwr_wait;
    wire 	     emem_txwr_wait;
    wire 	     emem_txrd_wait;
-   
+
    // Beginning of automatic outputs (from unused autoinst outputs)
 
    // End of automatics
-   
+
    wire			elink0_rxrr_wait;
-   
+
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			e2c_xmesh_access_out;	// From emesh_if of emesh_if.v
@@ -271,17 +271,17 @@ module dut(/*AUTOARG*/
    // Provide an easy way to send mailbox messages to elink0 via the 0x910 address
    wire 		elink0_mux_txwr_access;
    wire 		elink1_mux_rxwr_access;
-   
-   assign elink0_mux_txwr_access = elink0_txwr_access & 
-				   (e2c_xmesh_packet_out[39:28]==12'h810  | 
+
+   assign elink0_mux_txwr_access = elink0_txwr_access &
+				   (e2c_xmesh_packet_out[39:28]==12'h810  |
 				    e2c_xmesh_packet_out[39:28]==12'h808 |
 				    e2c_xmesh_packet_out[39:28]==12'h920);
    
-   assign elink1_mux_rxwr_access = elink0_txwr_access & 
-				   (e2c_xmesh_packet_out[39:28]==12'h820 | 
+   assign elink1_mux_rxwr_access = elink0_txwr_access &
+				   (e2c_xmesh_packet_out[39:28]==12'h820 |
 				    e2c_xmesh_packet_out[39:28]==12'h910);
-   
-     
+
+
    //######################################################################
    //1ST ELINK
    //######################################################################
@@ -310,7 +310,9 @@ module dut(/*AUTOARG*/
 
    defparam elink0.ID    = 12'h810;   
    defparam elink0.ETYPE = 0;
-   //defparam elink0.WAIT  = 0;
+   defparam elink0.WAIT_CFG = 1;
+   defparam elink0.WAIT_RR = 0;
+   
    elink elink0 (.sys_nreset		(nreset),
                  .elink_active		(dut_active),
 		 .txrr_access		(1'b0),//not tested
@@ -379,7 +381,7 @@ module dut(/*AUTOARG*/
                .rxwr_packet 		(e2c_xmesh_packet_out[PW-1:0]),
                .rxwr_wait   		(e2c_xmesh_wait_in),
                .m_\(.*\)           	(m_\1[]),
-     );          
+     );
      */
 
 
@@ -436,7 +438,7 @@ module dut(/*AUTOARG*/
 	  .m_axi_rresp			(m_axi_rresp[1:0]),	 // Templated
 	  .m_axi_rlast			(m_axi_rlast),		 // Templated
 	  .m_axi_rvalid			(m_axi_rvalid));		 // Templated
-   
+
    //######################################################################
    //2ND ELINK 
    //######################################################################
@@ -457,7 +459,7 @@ module dut(/*AUTOARG*/
    defparam elink1.ETYPE = 0; 
    defparam elink1.S_IDW = S_IDW;
    defparam elink1.M_IDW = M_IDW;
-   //defparam elink1.WAIT = 1;
+   defparam elink1.WAIT_WRRD = 0;
    axi_elink elink1 ( .m_axi_rdata	({elink1_m_axi_rdata[31:0],elink1_m_axi_rdata[31:0]}),
 		      .m_axi_aresetn	(nreset), 
 		     .s_axi_aresetn	(nreset), 
@@ -577,11 +579,10 @@ module dut(/*AUTOARG*/
                           .m_\(.*\)           (stub_m_\1[]),
                          );
     */
-   /*aximaster_stub 
+   /*aximaster_stub
      #(.M_IDW(M_IDW)) 
    aximaster_stub (.m_axi_aclk		(aclk),
 		   .m_axi_aresetn	(nreset),
-		  
    );*/
 
    //######################################################################

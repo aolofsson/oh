@@ -35,6 +35,9 @@ module axi_elink(/*AUTOARG*/
    parameter M_IDW       = 6;        //ID width for M_AXI
    parameter IOSTD_ELINK = "LVDS_25";
    parameter ETYPE       = 0;
+   parameter WAIT_RR     = 0;
+   parameter WAIT_WRRD   = 0;
+   parameter WAIT_CFG    = 0;
    
    /****************************/
    /*CLK AND RESET             */
@@ -217,6 +220,9 @@ module axi_elink(/*AUTOARG*/
    defparam elink.IOSTD_ELINK = IOSTD_ELINK;
    defparam elink.ETYPE       = ETYPE;
    defparam elink.ID          = ID;
+   defparam elink.WAIT_RR     = WAIT_RR;
+   defparam elink.WAIT_WRRD   = WAIT_WRRD;
+   defparam elink.WAIT_CFG    = WAIT_CFG;
 
    elink elink(
 	       /*AUTOINST*/

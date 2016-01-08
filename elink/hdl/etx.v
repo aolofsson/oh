@@ -14,7 +14,9 @@ module etx(/*AUTOARG*/
    parameter PW          = 104;
    parameter RFAW        = 6;
    parameter ID          = 12'h000;
-   parameter ETYPE       = 0;   
+   parameter ETYPE       = 0;
+   parameter WAIT_RR     = 0;
+   parameter WAIT_WRRD   = 0;
 
    //Reset and clocks
    input 	  sys_clk;                      // clock for fifos      
@@ -106,6 +108,8 @@ module etx(/*AUTOARG*/
    /************************************************************/
    /*FIFOs                                                     */
    /************************************************************/
+   defparam etx_fifo.WAIT_RR = WAIT_RR;
+   defparam etx_fifo.WAIT_WRRD = WAIT_WRRD;
    etx_fifo etx_fifo (/*AUTOINST*/
 		      // Outputs
 		      .txrd_wait	(txrd_wait),

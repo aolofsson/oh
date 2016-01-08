@@ -18,7 +18,10 @@ module elink (/*AUTOARG*/
    parameter ID          = 12'h810;  //epiphany ID for elink (ie addr[31:20])
    parameter IOSTD_ELINK = "LVDS_25";
    parameter ETYPE       = 1;
-   
+   parameter WAIT_RR     = 0;
+   parameter WAIT_WRRD   = 0;
+   parameter WAIT_CFG    = 0;
+
    /****************************/
    /*MAIN CLOCK AND RESET      */
    /****************************/
@@ -149,7 +152,8 @@ module elink (/*AUTOARG*/
    
    defparam erx.ID          = ID;
    defparam erx.ETYPE       = ETYPE;
-   
+   defparam erx.WAIT_RR     = WAIT_RR;
+   defparam erx.WAIT_WRRD   = WAIT_WRRD;
    erx erx(.rx_active			(elink_active),
 	   /*AUTOINST*/
 	   // Outputs
@@ -198,7 +202,8 @@ module elink (/*AUTOARG*/
 
    defparam etx.ID          = ID;
    defparam etx.ETYPE       = ETYPE;
-
+   defparam etx.WAIT_RR     = WAIT_RR;
+   defparam etx.WAIT_WRRD   = WAIT_WRRD;
    etx etx(
 	   /*AUTOINST*/
 	   // Outputs
@@ -240,6 +245,7 @@ module elink (/*AUTOARG*/
    /***********************************************************/
    defparam ecfg_cdc.DW=104;
    defparam ecfg_cdc.DEPTH=32;
+   defparam ecfg_cdc.WAIT = WAIT_CFG;
    
    oh_fifo_cdc ecfg_cdc (.nreset   	(erx_nreset),
 		      // Outputs
