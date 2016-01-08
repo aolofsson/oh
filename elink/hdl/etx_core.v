@@ -230,7 +230,7 @@ module etx_core(/*AUTOARG*/
     .\(.*\)_out         (etx_cfg_\1[]),
     .mi_dout0		({32'b0,mi_cfg_dout[31:0]}),
     .mi_dout2		({32'b0,mi_mmu_dout[31:0]}),
-    .wait_in		(etx_cfg_wait),
+    .wait_in		(txwr_wait),
     );
         */
    
@@ -255,7 +255,7 @@ module etx_core(/*AUTOARG*/
 		      .packet_in	(etx_packet[PW-1:0]),	 // Templated
 		      .mi_dout0		({32'b0,mi_cfg_dout[31:0]}), // Templated
 		      .mi_dout2		({32'b0,mi_mmu_dout[31:0]}), // Templated
-		      .wait_in		(etx_cfg_wait));		 // Templated
+		      .wait_in		(txwr_wait));		 // Templated
    
    /************************************************************/
    /* ETX CONFIGURATION REGISTERS                              */

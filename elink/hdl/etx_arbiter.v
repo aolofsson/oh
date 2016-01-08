@@ -152,7 +152,7 @@ module etx_arbiter (/*AUTOARG*/
 	   etx_access        <= 1'b0;   
 	   etx_rr            <= 1'b0;	   
 	end
-      else if (~(etx_wr_wait | etx_rd_wait))
+      else if (~txwr_wait)
 	begin
 	   etx_access         <= access_in ;
 	   etx_rr             <= txrr_grant & ~txrr_wait;
@@ -160,8 +160,10 @@ module etx_arbiter (/*AUTOARG*/
    
    //packet
    always @ (posedge clk)
-     if (access_in & ~(etx_wr_wait | etx_rd_wait))
-	  etx_packet[PW-1:0] <= etx_mux[PW-1:0];	 
+     if (!nreset)
+       etx_packet[PW-1:0] <= 'b0;
+     else if (access_in & ~txwr_wait)
+       etx_packet[PW-1:0] <= etx_mux[PW-1:0];	 
    
 endmodule // etx_arbiter
 // Local Variables:

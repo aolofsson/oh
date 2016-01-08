@@ -50,7 +50,7 @@ module ecfg_if (/*AUTOARG*/
    /********************************/
    output 	     access_out;
    output [PW-1:0]   packet_out;
-   input 	     wait_in;       //incoming wait 
+   input 	     wait_in;       //incoming wait
    
    //wires
    wire [31:0] 	 dstaddr;
@@ -65,8 +65,7 @@ module ecfg_if (/*AUTOARG*/
    wire 	 mi_en;
    
    //regs;
-   reg 		 access_forward_reg;
-   reg 		 access_out_reg;   
+   reg 		 access_out_reg;
    reg [31:0] 	 dstaddr_reg;
    reg [31:0] 	 srcaddr_reg;
    reg [1:0] 	 datamode_reg;
@@ -100,7 +99,7 @@ module ecfg_if (/*AUTOARG*/
    assign mi_match   = access_in & (dstaddr[31:20]==ID);//TODP:REMOVE
 
    //config select (group 2 and 3)
-   assign mi_cfg_en = mi_match & 
+   assign mi_cfg_en = mi_match &
 		      (dstaddr[19:16]==`EGROUP_MMR) &
 		      (dstaddr[10:8]=={2'b01,rxsel});  
    
@@ -140,16 +139,9 @@ module ecfg_if (/*AUTOARG*/
 			      mi_dout1[63:0] |
 			      mi_dout2[63:0] |
 			      mi_dout3[63:0];
-     
 
-   //Access out packet  
+   //Access out packet
    assign access_forward = (mi_rx_en | mi_rd);
-
-   always @ (posedge clk or negedge nreset)
-     if(!nreset)
-       access_forward_reg <= 1'b0;
-     else
-       access_forward_reg <= access_forward;
 
    always @ (posedge clk or negedge nreset)
      if(!nreset)
@@ -159,9 +151,11 @@ module ecfg_if (/*AUTOARG*/
 
    // Ensure access_out is correctly terminated when wait_in
    // occurs after the start of a sequence of accesses
+   // If not terminated the rxrr fifo or the ecfg_cdc fifo will
+   // continue to fill up with duplicate transactions
    // wait_in eventually propagates further back in the channel
    // and stops the source of the access
-   assign access_out = access_out_reg & access_forward_reg;
+   assign access_out = access_out_reg & ~wait_in;
 
    always @ (posedge clk)
      if(~wait_in)
