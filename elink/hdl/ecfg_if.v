@@ -6,8 +6,8 @@
 `include "elink_regmap.v"
 module ecfg_if (/*AUTOARG*/
    // Outputs
-   mi_mmu_en, mi_dma_en, mi_cfg_en, mi_we, mi_addr, mi_din,
-   access_out, packet_out,
+   mi_mmu_en, mi_dma_en, mi_cfg_en, mi_cfg_ug_en, mi_we, mi_addr,
+   mi_din, access_out, packet_out,
    // Inputs
    clk, nreset, access_in, packet_in, mi_dout0, mi_dout1, mi_dout2,
    mi_dout3, wait_in
@@ -36,7 +36,8 @@ module ecfg_if (/*AUTOARG*/
    /********************************/
    output 	 mi_mmu_en;     
    output 	 mi_dma_en;
-   output 	 mi_cfg_en;      
+   output 	 mi_cfg_en;
+   output 	 mi_cfg_ug_en;
    output        mi_we;  
    output [14:0] mi_addr;
    output [63:0] mi_din;   
@@ -63,7 +64,10 @@ module ecfg_if (/*AUTOARG*/
    wire 	 access_forward;
    wire 	 rxsel;
    wire 	 mi_en;
-   
+   wire 	 mi_cfg_en_local;
+   wire 	 mi_dma_en_local;
+   wire 	 mi_mmu_en_local;
+
    //regs;
    reg 		 access_out_reg;
    reg [31:0] 	 dstaddr_reg;
@@ -99,24 +103,28 @@ module ecfg_if (/*AUTOARG*/
    assign mi_match   = access_in & (dstaddr[31:20]==ID);//TODP:REMOVE
 
    //config select (group 2 and 3)
-   assign mi_cfg_en = mi_match &
+   assign mi_cfg_en_local = mi_match &
 		      (dstaddr[19:16]==`EGROUP_MMR) &
-		      (dstaddr[10:8]=={2'b01,rxsel});  
+		      (dstaddr[10:8]=={2'b01,rxsel});
+   assign mi_cfg_en = mi_cfg_en_local & ~wait_in;
+   assign mi_cfg_ug_en = mi_cfg_en_local;
    
    //dma select (group 5)
-   assign mi_dma_en = mi_match &
+   assign mi_dma_en_local = mi_match &
 		      (dstaddr[19:16]==`EGROUP_MMR) & 
 		      (dstaddr[10:8]==3'h5)  & 
 		      (dstaddr[5]==rxsel);
-
+   assign mi_dma_en = mi_dma_en_local & ~wait_in;
+   
    //mmu select
-   assign mi_mmu_en = mi_match & 
+   assign mi_mmu_en_local = mi_match & 
 		      (dstaddr[19:16]==`EGROUP_MMU) &
 		      (dstaddr[15]==rxsel);
-
+   assign mi_mmu_en = mi_mmu_en_local & ~wait_in;
+   
    //read/write indicator
-   assign mi_en = (mi_mmu_en | mi_cfg_en | mi_dma_en);   
-   assign mi_rd = ~write & mi_en;   
+   assign mi_en = (mi_mmu_en_local | mi_cfg_en_local | mi_dma_en_local);   
+   assign mi_rd = ~write & mi_en;
    assign mi_we = write  & mi_en;
    
    //signal to carry transaction from ETX to ERX block through fifo_cdc

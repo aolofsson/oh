@@ -23,8 +23,8 @@ module emailbox (/*AUTOARG*/
    // Outputs
    mi_dout, mailbox_irq,
    // Inputs
-   nreset, wr_clk, rd_clk, emesh_access, emesh_packet, mi_en, mi_we,
-   mi_addr, mailbox_irq_en
+   nreset, wr_clk, rd_clk, emesh_access, emesh_packet, wait_in,
+   mi_ug_en, mi_we, mi_addr, mailbox_irq_en
    );
 
    parameter DW     = 32;        //data width of fifo
@@ -51,9 +51,10 @@ module emailbox (/*AUTOARG*/
    
    /*****************************/
    /*32 BIT READ INTERFACE      */
-   /*****************************/   
-   input 	    mi_en;
-   input  	    mi_we;      
+   /*****************************/
+   input 	    wait_in;   
+   input 	    mi_ug_en;
+   input 	    mi_we;      
    input [RFAW+1:0] mi_addr;
    output [63:0]    mi_dout;   
    
@@ -69,6 +70,7 @@ module emailbox (/*AUTOARG*/
    reg 		  mi_rd_reg;   
    reg [RFAW+1:2] mi_addr_reg;
    reg 		  read_hi;
+   reg 		  read_lo;
    reg 		  read_status;
    reg 		  mi_rd_mailbox;
    
@@ -106,22 +108,43 @@ module emailbox (/*AUTOARG*/
    /*READ BACK DATA (32BIT)     */
    /*****************************/  
 
-   assign mi_rd         = mi_en & ~mi_we;   
+   assign mi_rd         = mi_ug_en & ~mi_we;   
    assign mailbox_read  = mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXLO); //fifo read
 
    always @ (posedge rd_clk)
-     begin
-	read_hi     <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI);
-	read_status <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXSTAT);
-
-	// mi_en (mi_cfg_en) is active for all ERX_CFG accesses 
-	// generate a filter for just mailbox accesses
-	mi_rd_mailbox  <= mailbox_read | mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI) | mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXSTAT);
-     end
-   assign mi_dout[31:0]  = read_status ? {30'b0,mailbox_full, mailbox_not_empty} :
-			   read_hi     ? mailbox_data[63:32]                     : 
-			                 {{(DW){mi_rd_mailbox}} & mailbox_data[31:0]};
-   assign mi_dout[63:32] = {{(DW){mi_rd_mailbox}} & mailbox_data[63:32]};
+     if (mi_rd & ~wait_in)
+       case(mi_addr[RFAW+1:2])
+	 `E_MAILBOXHI:
+	   begin
+	      read_hi     <= 1'b1;
+	      read_lo     <= 1'b0;
+	      read_status <= 1'b0;
+	   end
+	 `E_MAILBOXLO:
+	   begin
+	      read_hi     <= 1'b0;
+	      read_lo     <= 1'b1;
+	      read_status <= 1'b0;
+	   end
+	 `E_MAILBOXSTAT:
+	   begin
+	      read_hi     <= 1'b0;
+	      read_lo     <= 1'b0;
+	      read_status <= 1'b1;
+	   end
+	 default:
+	   begin
+	      read_hi     <= 1'b0;
+	      read_lo     <= 1'b0;
+	      read_status <= 1'b0;
+	   end
+       endcase // case (mi_addr[RFAW+1:2])
+   
+   assign mi_dout[31:0]  = ({(32){read_status}} & {30'b0,mailbox_full, mailbox_not_empty} |
+			    {(32){read_hi}} & mailbox_data[63:32] |
+			    {(32){read_lo}} & mailbox_data[31:0]);
+   assign mi_dout[63:32] = ({(32){read_hi}} & mailbox_data[63:32] |
+			    {(32){read_lo}} & mailbox_data[63:32]);
    
    /*****************************/
    /*FIFO (64bit wide)          */
@@ -137,7 +160,7 @@ module emailbox (/*AUTOARG*/
      		   .prog_full (),
 		   .valid     (dout_valid),
 		   //Read Port
-		   .rd_en    (mailbox_read), 
+		   .rd_en    (mailbox_read & ~wait_in), 
 		   .rd_clk   (rd_clk),  
 		   //Write Port 
 		   .din      ({40'b0,emesh_din[63:0]}),

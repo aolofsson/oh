@@ -239,6 +239,7 @@ module etx_core(/*AUTOARG*/
    ecfg_if etx_cfgif (.mi_dout3		(64'b0),
 		      .mi_dout1		(64'b0), 
 		      .mi_dma_en	(),
+		      .mi_cfg_ug_en	(),
 		      /*AUTOINST*/
 		      // Outputs
 		      .mi_mmu_en	(mi_mmu_en),

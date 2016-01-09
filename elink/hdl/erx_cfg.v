@@ -189,8 +189,6 @@ module erx_cfg (/*AUTOARG*/
 	 `ERX_TESTDATA: mi_dout[31:0] <= {rx_testdata_reg[31:0]};
          default:       mi_dout[31:0] <= 32'd0;
        endcase // case (mi_addr[RFAW+1:2])
-     else
-       mi_dout[31:0] <= 32'd0;
    
 endmodule // ecfg_rx
 
