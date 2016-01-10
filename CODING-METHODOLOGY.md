@@ -29,20 +29,22 @@ CODING METHODOLOGY
 * Use `include files for constants
 * Use `ifndef _CONSTANTS_V to include file only once
 * No timescales in design files (only in testbench)
-* No delay statements (not even in flops/latches)
+* No delay statements in design
 * No logic statements in top level design structures
 * One module per file
 * Prefer parameters in place of global defines
 * Do not use casex
 * Use active low reset
 * Avoid redundant resets
-* Don't use defparams
+* Avoid heavily nested if, else statements
+* Don't use defparams, place #(.DW(DW)) in module instantation
+* Always use connection by name (not by order) in module instantiatoin
 * Parametrize as much as possible but not more
 * Place a useful comment every 5-20 lines
 * If you are going to use async reset, use oh_rsync.v
 * Use for loops to reduce bloat and to improve readability
 * If you have to mix clock edges, isolate to discrete modules
-* Only use nonblocking assignments in always stataments
+* Use nonblocking (<=) in all sequential statements
 * Use default statements in all case statements
 * Don't use proprietary EDA tool pragmas (use parameters)
 * Only use synthesizable constructs
