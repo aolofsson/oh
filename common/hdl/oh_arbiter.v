@@ -19,12 +19,12 @@ module oh_arbiter(/*AUTOARG*/
        
    input  [N-1:0] requests;  //request vector
    output [N-1:0] grants;    //grant (one hot)
-              
-   genvar 	  j;  
+
+   wire [N-1:0]   waitmask; 
+   genvar 	  j;     
    generate       
       if(TYPE=="FIXED")
 	begin
-	   wire [N-1:0]   waitmask; 
 	   assign waitmask[0]   = 1'b0;      
 	   for (j=N-1; j>=1; j=j-1) 
 	     begin : gen_arbiter     
