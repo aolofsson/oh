@@ -52,7 +52,7 @@ module emailbox (/*AUTOARG*/
    /*****************************/
    /*32 BIT READ INTERFACE      */
    /*****************************/
-   input 	    wait_in;   
+   input 	    wait_in;
    input 	    mi_ug_en;
    input 	    mi_we;      
    input [RFAW+1:0] mi_addr;
@@ -108,7 +108,7 @@ module emailbox (/*AUTOARG*/
    /*READ BACK DATA (32BIT)     */
    /*****************************/  
 
-   assign mi_rd         = mi_ug_en & ~mi_we;   
+   assign mi_rd         = mi_ug_en & ~mi_we;
    assign mailbox_read  = mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXLO); //fifo read
 
    always @ (posedge rd_clk)
@@ -139,6 +139,13 @@ module emailbox (/*AUTOARG*/
 	      read_status <= 1'b0;
 	   end
        endcase // case (mi_addr[RFAW+1:2])
+     else if(~wait_in)
+       //Only clear when wait is not active
+       begin
+	  read_hi     <= 1'b0;
+	  read_lo     <= 1'b0;
+	  read_status <= 1'b0;
+       end
    
    assign mi_dout[31:0]  = ({(32){read_status}} & {30'b0,mailbox_full, mailbox_not_empty} |
 			    {(32){read_hi}} & mailbox_data[63:32] |
@@ -160,8 +167,8 @@ module emailbox (/*AUTOARG*/
      		   .prog_full (),
 		   .valid     (dout_valid),
 		   //Read Port
-		   .rd_en    (mailbox_read & ~wait_in), 
-		   .rd_clk   (rd_clk),  
+		   .rd_en    (mailbox_read & ~wait_in),
+		   .rd_clk   (rd_clk),
 		   //Write Port 
 		   .din      ({40'b0,emesh_din[63:0]}),
 		   .wr_en    (mailbox_write),

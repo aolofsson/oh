@@ -286,6 +286,7 @@ module etx_core(/*AUTOARG*/
    //configer register file
    defparam etx_cfg.ID = ID;   
    etx_cfg etx_cfg (
+		    .wait_in		(txwr_wait),
 		    /*AUTOINST*/
 		    // Outputs
 		    .mi_dout		(mi_cfg_dout[DW-1:0]),	 // Templated

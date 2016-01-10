@@ -9,8 +9,8 @@ module erx_cfg (/*AUTOARG*/
    remap_sel, timer_cfg, idelay_value, load_taps, test_mode,
    mailbox_irq_en,
    // Inputs
-   nreset, clk, mi_en, mi_we, mi_addr, mi_din, erx_access, erx_packet,
-   gpio_datain, rx_status
+   nreset, clk, wait_in, mi_en, mi_we, mi_addr, mi_din, erx_access,
+   erx_packet, gpio_datain, rx_status
    );
 
    /******************************/
@@ -28,7 +28,8 @@ module erx_cfg (/*AUTOARG*/
 
    /*****************************/
    /*SIMPLE MEMORY INTERFACE    */
-   /*****************************/    
+   /*****************************/
+   input 	 wait_in;
    input 	 mi_en;         
    input 	 mi_we;            // single we, must write 32 bit words
    input [14:0]  mi_addr;          // complete physical address (no shifting!)
@@ -189,7 +190,10 @@ module erx_cfg (/*AUTOARG*/
 	 `ERX_TESTDATA: mi_dout[31:0] <= {rx_testdata_reg[31:0]};
          default:       mi_dout[31:0] <= 32'd0;
        endcase // case (mi_addr[RFAW+1:2])
-   
+     else if(~wait_in)
+       //Only clear when wait not active
+       mi_dout[31:0] <= 32'd0;
+
 endmodule // ecfg_rx
 
 
