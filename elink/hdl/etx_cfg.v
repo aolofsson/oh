@@ -9,8 +9,8 @@ module etx_cfg (/*AUTOARG*/
    mi_dout, tx_enable, mmu_enable, gpio_enable, remap_enable,
    burst_enable, gpio_data, ctrlmode, ctrlmode_bypass,
    // Inputs
-   nreset, clk, mi_en, mi_we, mi_addr, mi_din, tx_status, etx_access,
-   etx_packet
+   nreset, clk, wait_in, mi_en, mi_we, mi_addr, mi_din, tx_status,
+   etx_access, etx_packet
    );
 
    /******************************/
@@ -29,7 +29,8 @@ module etx_cfg (/*AUTOARG*/
 
    /*****************************/
    /*SIMPLE MEMORY INTERFACE    */
-   /*****************************/    
+   /*****************************/
+   input 	     wait_in;
    input 	     mi_en;         
    input 	     mi_we;            
    input [RFAW+1:0]  mi_addr;       // complete address (no shifting!)
@@ -178,7 +179,8 @@ module etx_cfg (/*AUTOARG*/
 	 `ETX_PACKET:  mi_dout[31:0] <= {tx_packet_reg[31:0]};	 
          default:     mi_dout[31:0] <= 32'd0;
        endcase // case (mi_addr[RFAW+1:2])
-     else
+     else if(~wait_in)
+       //Only clear when wait not active
        mi_dout[31:0] <= 32'd0;
 
 endmodule // ecfg_tx

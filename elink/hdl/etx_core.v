@@ -230,7 +230,7 @@ module etx_core(/*AUTOARG*/
     .\(.*\)_out         (etx_cfg_\1[]),
     .mi_dout0		({32'b0,mi_cfg_dout[31:0]}),
     .mi_dout2		({32'b0,mi_mmu_dout[31:0]}),
-    .wait_in		(etx_cfg_wait),
+    .wait_in		(txwr_wait),
     );
         */
    
@@ -239,6 +239,7 @@ module etx_core(/*AUTOARG*/
    ecfg_if etx_cfgif (.mi_dout3		(64'b0),
 		      .mi_dout1		(64'b0), 
 		      .mi_dma_en	(),
+		      .mi_cfg_ug_en	(),
 		      /*AUTOINST*/
 		      // Outputs
 		      .mi_mmu_en	(mi_mmu_en),
@@ -255,7 +256,7 @@ module etx_core(/*AUTOARG*/
 		      .packet_in	(etx_packet[PW-1:0]),	 // Templated
 		      .mi_dout0		({32'b0,mi_cfg_dout[31:0]}), // Templated
 		      .mi_dout2		({32'b0,mi_mmu_dout[31:0]}), // Templated
-		      .wait_in		(etx_cfg_wait));		 // Templated
+		      .wait_in		(txwr_wait));		 // Templated
    
    /************************************************************/
    /* ETX CONFIGURATION REGISTERS                              */
@@ -285,6 +286,7 @@ module etx_core(/*AUTOARG*/
    //configer register file
    defparam etx_cfg.ID = ID;   
    etx_cfg etx_cfg (
+		    .wait_in		(txwr_wait),
 		    /*AUTOINST*/
 		    // Outputs
 		    .mi_dout		(mi_cfg_dout[DW-1:0]),	 // Templated
