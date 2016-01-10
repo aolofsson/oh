@@ -1,7 +1,6 @@
 /*
- ###########################################################################
- # Function: A mailbox FIFO with a FIFO empty/full flags that can be used as   
- #           interrupts.
+ #########################################################################
+ # Function: Mailbox FIFO with a FIFO empty/full flag interrupts.
  #
  #           E_MAILBOXLO    = lower 32 bits of FIFO entry
  #           E_MAILBOXHI    = upper 32 bits of FIFO entry
@@ -16,7 +15,7 @@
  #                 -reads E_MAILBOXHI, then
  #                 -finishes ISR
  #
- ###########################################################################
+ #########################################################################
  */
 `include "emailbox_regmap.v" // is there a better way?
 module emailbox (/*AUTOARG*/
@@ -85,15 +84,16 @@ module emailbox (/*AUTOARG*/
    /*****************************/
    /*WRITE TO FIFO              */
    /*****************************/  
-   packet2emesh pe2 (// Outputs
-		     .write_in		(emesh_write),
-		     .datamode_in	(),
-		     .ctrlmode_in	(),
-		     .data_in		(emesh_din[31:0]),
-		     .dstaddr_in	(emesh_addr[31:0]),
-		     .srcaddr_in	(emesh_din[63:32]),
-		     // Inputs
-		     .packet_in		(emesh_packet[PW-1:0]));
+   packet2emesh #(.AW(32))
+   pe2 (// Outputs
+	.write_in	(emesh_write),
+	.datamode_in	(),
+	.ctrlmode_in	(),
+	.data_in	(emesh_din[31:0]),
+	.dstaddr_in	(emesh_addr[31:0]),
+	.srcaddr_in	(emesh_din[63:32]),
+	// Inputs
+	.packet_in	(emesh_packet[PW-1:0]));
    
    assign mailbox_write  = emesh_access &
 	                  emesh_write  &

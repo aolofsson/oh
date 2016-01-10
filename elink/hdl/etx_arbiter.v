@@ -10,7 +10,7 @@
  Arbitration Priority:
  1) host writes (highest)
  2) read requests from host
- 3) read responses
+ 3) read responses (lowest)
 
  */
 
@@ -76,9 +76,9 @@ module etx_arbiter (/*AUTOARG*/
    wire [PW-1:0]   txwr_splice_packet;
    wire [PW-1:0]   etx_mux;
 
-   //##########################################################################
+   //#########################################################################
    //# Insert special control mode in packet (UGLY)
-   //##########################################################################
+   //#########################################################################
    assign txrd_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
 				                   txrd_packet[6:3];
      
@@ -95,19 +95,19 @@ module etx_arbiter (/*AUTOARG*/
 					txwr_ctrlmode[3:0], 
 					txwr_packet[2:0]};
  
-   //##########################################################################
+   //########################################################################
    //# Arbiter
-   //##########################################################################
+   //########################################################################
    
-   oh_arbiter_static #(.N(3)) arbiter (.grants({txrr_grant,	
-						txrd_grant,
-						txwr_grant //highest priority
-						}),
-				       .requests({txrr_access,	
-						  txrd_access,
-						  txwr_access
-						  })	
-				  );
+   oh_arbiter #(.N(3)) arbiter (.grants({txrr_grant,	
+					 txrd_grant,
+					 txwr_grant //highest priority
+					 }),
+				.requests({txrr_access,	
+					   txrd_access,
+					   txwr_access
+					   })	
+				);
    //Priority Mux
    assign etx_mux[PW-1:0] =({(PW){txwr_grant}} & txwr_splice_packet[PW-1:0]) |
 			   ({(PW){txrd_grant}} & txrd_splice_packet[PW-1:0]) |
@@ -142,7 +142,6 @@ module etx_arbiter (/*AUTOARG*/
    assign access_in = (txwr_grant & ~txwr_wait) |
 		      (txrd_grant & ~txrd_wait) |
 		      (txrr_grant & ~txrr_wait);
-
 
    
    //access

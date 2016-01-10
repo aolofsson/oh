@@ -63,18 +63,19 @@ module elink_cfg (/*AUTOARG*/
    wire [31:0] 	mi_din;
    wire 	mi_we;
    
-   packet2emesh pe2 (
-		     // Outputs
-		     .write_in		(mi_we),
-		     .datamode_in	(),
-		     .ctrlmode_in	(),
-		     .dstaddr_in	(mi_addr[31:0]),
-		     .data_in		(mi_din[31:0]),
-		     .srcaddr_in	(),
-		     // Inputs
-		     .packet_in		(txwr_packet[PW-1:0])
-		     );   
-         
+   packet2emesh #(.AW(32))
+   pe2 (
+	// Outputs
+	.write_in	(mi_we),
+	.datamode_in	(),
+	.ctrlmode_in	(),
+	.dstaddr_in	(mi_addr[31:0]),
+	.data_in	(mi_din[31:0]),
+	.srcaddr_in	(),
+	// Inputs
+	.packet_in	(txwr_packet[PW-1:0])
+	);   
+   
    /*****************************/
    /*ADDRESS DECODE LOGIC       */
    /*****************************/

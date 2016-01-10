@@ -55,15 +55,16 @@ module erx_arbiter (/*AUTOARG*/
    wire [AW-1:0]   erx_dstaddr;
    wire 	   erx_read;
    
-   packet2emesh p2e (// Outputs
-		     .write_in		(erx_write),
-		     .datamode_in	(),
-		     .ctrlmode_in	(),
-		     .data_in		(),
-		     .dstaddr_in	(erx_dstaddr[AW-1:0]),
-		     .srcaddr_in	(),
-		     // Inputs
-		     .packet_in		(erx_packet[PW-1:0]));
+   packet2emesh #(.AW(AW))
+   p2e (// Outputs
+	.write_in	(erx_write),
+	.datamode_in	(),
+	.ctrlmode_in	(),
+	.data_in	(),
+	.dstaddr_in	(erx_dstaddr[AW-1:0]),
+	.srcaddr_in	(),
+	// Inputs
+	.packet_in	(erx_packet[PW-1:0]));
    
    //#######################################################
    //Read response path (from IO or elink register readback)
@@ -72,10 +73,9 @@ module erx_arbiter (/*AUTOARG*/
    assign rxrr_access         = (erx_access & (erx_dstaddr[31:20]==ID))  |
 				 ecfg_access;
    
-   assign rxrr_packet[PW-1:0] = ecfg_access ? ecfg_packet[PW-1:0] :		    
+   assign rxrr_packet[PW-1:0] = ecfg_access ? ecfg_packet[PW-1:0] :	    
                                               erx_packet[PW-1:0];
 
-   
    //####################################
    //Write Path (from IO through MMU)
    //####################################

@@ -35,15 +35,16 @@ module etx_remap (/*AUTOARG*/
    reg 		   emesh_access_out;
    reg [PW-1:0]    emesh_packet_out;
 
-   packet2emesh p2e (// Outputs
-		     .write_in		(write_in),
-		     .datamode_in	(),
-		     .ctrlmode_in	(),
-		     .data_in		(),
-		     .dstaddr_in	(addr_in[31:0]),
-		     .srcaddr_in	(),
-		     // Inputs
-		     .packet_in		(emesh_packet_in[PW-1:0]));
+   packet2emesh #(.AW(AW))
+   p2e (// Outputs
+	.write_in	(write_in),
+	.datamode_in	(),
+	.ctrlmode_in	(),
+	.data_in	(),
+	.dstaddr_in	(addr_in[31:0]),
+	.srcaddr_in	(),
+	// Inputs
+	.packet_in	(emesh_packet_in[PW-1:0]));
          
    assign addr_remap[31:0] = {addr_in[29:18],//ID
 			      addr_in[17:16],//SPECIAL GROUP
