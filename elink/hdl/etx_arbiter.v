@@ -160,9 +160,7 @@ module etx_arbiter (/*AUTOARG*/
    
    //packet
    always @ (posedge clk)
-     if (!nreset)
-       etx_packet[PW-1:0] <= 'b0;
-     else if (access_in & ~txwr_wait)
+     if (access_in & ~txwr_wait)
        etx_packet[PW-1:0] <= etx_mux[PW-1:0];	 
    
 endmodule // etx_arbiter
