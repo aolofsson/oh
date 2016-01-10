@@ -53,8 +53,7 @@ module etx_core(/*AUTOARG*/
      
    // End of automatics
    /*AUTOINPUT*/
-     
-   
+        
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			burst_enable;		// From etx_cfg of etx_cfg.v
@@ -85,42 +84,39 @@ module etx_core(/*AUTOARG*/
    wire			tx_enable;		// From etx_cfg of etx_cfg.v
    // End of automatics
         
-   /************************************************************/
-   /*ELINK TRANSMIT ARBITER                                    */
-   /*-arbitrates between the wr,rr, and rd packets             */
-   /*                                                          */
-   /************************************************************/
+   //##################################################################
+   //# ARBITER (SELECT BETWEEN TX, RX, RR)
+   //##################################################################
 
-   defparam etx_arbiter.ID=ID;   
-   etx_arbiter etx_arbiter (
-			      /*AUTOINST*/
-			    // Outputs
-			    .txwr_wait		(txwr_wait),
-			    .txrd_wait		(txrd_wait),
-			    .txrr_wait		(txrr_wait),
-			    .etx_access		(etx_access),
-			    .etx_rr		(etx_rr),
-			    .etx_packet		(etx_packet[PW-1:0]),
-			    // Inputs
-			    .clk		(clk),
-			    .nreset		(nreset),
-			    .txwr_access	(txwr_access),
-			    .txwr_packet	(txwr_packet[PW-1:0]),
-			    .txrd_access	(txrd_access),
-			    .txrd_packet	(txrd_packet[PW-1:0]),
-			    .txrr_access	(txrr_access),
-			    .txrr_packet	(txrr_packet[PW-1:0]),
-			    .etx_rd_wait	(etx_rd_wait),
-			    .etx_wr_wait	(etx_wr_wait),
-			    .etx_cfg_wait	(etx_cfg_wait),
-			    .ctrlmode_bypass	(ctrlmode_bypass),
-			    .ctrlmode		(ctrlmode[3:0]));
-       
-      
-   /************************************************************/
-   /* REMAPPING (SHIFT) DESTINATION ADDRESS                    */
-   /************************************************************/
-    /*etx_remap  AUTO_TEMPLATE (	
+   etx_arbiter #(.ID(ID))
+   etx_arbiter (
+		/*AUTOINST*/
+		// Outputs
+		.txwr_wait		(txwr_wait),
+		.txrd_wait		(txrd_wait),
+		.txrr_wait		(txrr_wait),
+		.etx_access		(etx_access),
+		.etx_rr			(etx_rr),
+		.etx_packet		(etx_packet[PW-1:0]),
+		// Inputs
+		.clk			(clk),
+		.nreset			(nreset),
+		.txwr_access		(txwr_access),
+		.txwr_packet		(txwr_packet[PW-1:0]),
+		.txrd_access		(txrd_access),
+		.txrd_packet		(txrd_packet[PW-1:0]),
+		.txrr_access		(txrr_access),
+		.txrr_packet		(txrr_packet[PW-1:0]),
+		.etx_rd_wait		(etx_rd_wait),
+		.etx_wr_wait		(etx_wr_wait),
+		.etx_cfg_wait		(etx_cfg_wait),
+		.ctrlmode_bypass	(ctrlmode_bypass),
+		.ctrlmode		(ctrlmode[3:0]));
+   
+   //##################################################################
+   //# REMAPPING DESTINATION ADDRESS
+   //##################################################################
+   /*etx_remap  AUTO_TEMPLATE (	
                           .emesh_\(.*\)_in  (etx_\1[]),
                           .emesh_\(.*\)_out (etx_remap_\1[]),
                           .remap_en	    (remap_enable),
@@ -143,10 +139,11 @@ module etx_core(/*AUTOARG*/
 			.etx_rd_wait	(etx_rd_wait),
 			.etx_wr_wait	(etx_wr_wait));
    
- 
-   /************************************************************/
-   /* EMMU                                                     */
-   /************************************************************/
+
+   //##################################################################
+   //# TABLE LOOKUP ADDRESS TRANSLATION
+   //##################################################################
+  
    /*emmu  AUTO_TEMPLATE (	
                           .emesh_\(.*\)_in  (etx_remap_\1[]),
                           .emesh_\(.*\)_out (emmu_\1[]),
@@ -163,8 +160,6 @@ module etx_core(/*AUTOARG*/
                           .mi_en	    (mi_mmu_en),
                          );
    */
-
-   //TODO: Remove etx_rr, not needed?
 
    emmu etx_mmu (
 	      /*AUTOINST*/
@@ -188,9 +183,10 @@ module etx_core(/*AUTOARG*/
 		 .emesh_wr_wait		(etx_wr_wait));		 // Templated
    
 
-   /************************************************************/
-   /*ELINK PROTOCOL LOGIC                                      */
-   /************************************************************/
+   //##################################################################
+   //# ELINK PROTOCOL CONVERTER (104 bit-->64 bits)
+   //##################################################################
+
    /*etx_protocol  AUTO_TEMPLATE (			       
                                   .etx_rd_wait     (etx_rd_wait),
                                   .etx_wr_wait     (etx_wr_wait),
@@ -198,33 +194,33 @@ module etx_core(/*AUTOARG*/
                                   .etx_wait	   (etx_wait),    
                              );
    */
-
-   defparam etx_protocol.ID=ID;   
-   etx_protocol etx_protocol (
+  
+   etx_protocol #(.ID(ID))
+   etx_protocol (
 			      /*AUTOINST*/
-			      // Outputs
-			      .etx_rd_wait	(etx_rd_wait),	 // Templated
-			      .etx_wr_wait	(etx_wr_wait),	 // Templated
-			      .tx_burst		(tx_burst),
-			      .tx_access	(tx_access),
-			      .tx_data_slow	(tx_data_slow[63:0]),
-			      .tx_frame_slow	(tx_frame_slow[3:0]),
-			      // Inputs
-			      .nreset		(nreset),
-			      .clk		(clk),
-			      .etx_access	(emmu_access),	 // Templated
-			      .etx_packet	(emmu_packet[PW-1:0]), // Templated
-			      .tx_enable	(tx_enable),
-			      .burst_enable	(burst_enable),
-			      .gpio_data	(gpio_data[8:0]),
-			      .gpio_enable	(gpio_enable),
-			      .tx_rd_wait	(tx_rd_wait),
-			      .tx_wr_wait	(tx_wr_wait));
+		 // Outputs
+		 .etx_rd_wait		(etx_rd_wait),		 // Templated
+		 .etx_wr_wait		(etx_wr_wait),		 // Templated
+		 .tx_burst		(tx_burst),
+		 .tx_access		(tx_access),
+		 .tx_data_slow		(tx_data_slow[63:0]),
+		 .tx_frame_slow		(tx_frame_slow[3:0]),
+		 // Inputs
+		 .nreset		(nreset),
+		 .clk			(clk),
+		 .etx_access		(emmu_access),		 // Templated
+		 .etx_packet		(emmu_packet[PW-1:0]),	 // Templated
+		 .tx_enable		(tx_enable),
+		 .burst_enable		(burst_enable),
+		 .gpio_data		(gpio_data[8:0]),
+		 .gpio_enable		(gpio_enable),
+		 .tx_rd_wait		(tx_rd_wait),
+		 .tx_wr_wait		(tx_wr_wait));
    
-
-     /************************************************************/
-   /* CONFIGURATOIN PACKET                                     */
-   /************************************************************/
+   //##################################################################
+   //# Register interface for TX (or forward to RX)
+   //##################################################################
+  
    /*ecfg_if AUTO_TEMPLATE ( 
     .\(.*\)_in          (etx_\1[]),
     .\(.*\)_out         (etx_cfg_\1[]),
@@ -233,58 +229,53 @@ module etx_core(/*AUTOARG*/
     .wait_in		(etx_cfg_wait),
     );
         */
+    
+   ecfg_if #(.ID(ID),
+	     .RX(0))
    
-   defparam etx_cfgif.RX = 0;
-   defparam etx_cfgif.ID = ID;   
-   ecfg_if etx_cfgif (.mi_dout3		(64'b0),
-		      .mi_dout1		(64'b0), 
-		      .mi_dma_en	(),
-		      /*AUTOINST*/
-		      // Outputs
-		      .mi_mmu_en	(mi_mmu_en),
-		      .mi_cfg_en	(mi_cfg_en),
-		      .mi_we		(mi_we),
-		      .mi_addr		(mi_addr[14:0]),
-		      .mi_din		(mi_din[63:0]),
-		      .access_out	(etx_cfg_access),	 // Templated
-		      .packet_out	(etx_cfg_packet[PW-1:0]), // Templated
-		      // Inputs
-		      .clk		(clk),
-		      .nreset		(nreset),
-		      .access_in	(etx_access),		 // Templated
-		      .packet_in	(etx_packet[PW-1:0]),	 // Templated
-		      .mi_dout0		({32'b0,mi_cfg_dout[31:0]}), // Templated
-		      .mi_dout2		({32'b0,mi_mmu_dout[31:0]}), // Templated
-		      .wait_in		(etx_cfg_wait));		 // Templated
+   etx_cfgif (.mi_dout3		(64'b0),
+	      .mi_dout1		(64'b0), 
+	      .mi_dma_en	(),
+	      /*AUTOINST*/
+	      // Outputs
+	      .mi_mmu_en		(mi_mmu_en),
+	      .mi_cfg_en		(mi_cfg_en),
+	      .mi_we			(mi_we),
+	      .mi_addr			(mi_addr[14:0]),
+	      .mi_din			(mi_din[63:0]),
+	      .access_out		(etx_cfg_access),	 // Templated
+	      .packet_out		(etx_cfg_packet[PW-1:0]), // Templated
+	      // Inputs
+	      .clk			(clk),
+	      .nreset			(nreset),
+	      .access_in		(etx_access),		 // Templated
+	      .packet_in		(etx_packet[PW-1:0]),	 // Templated
+	      .mi_dout0			({32'b0,mi_cfg_dout[31:0]}), // Templated
+	      .mi_dout2			({32'b0,mi_mmu_dout[31:0]}), // Templated
+	      .wait_in			(etx_cfg_wait));		 // Templated
    
-   /************************************************************/
-   /* ETX CONFIGURATION REGISTERS                              */
-   /************************************************************/
+
+   //##################################################################
+   //# TX CONFIGURATION
+   //##################################################################  
     /*etx_cfg AUTO_TEMPLATE (.mi_dout       (mi_cfg_dout[DW-1:0]), 
                              .mi_en	    (mi_cfg_en),
     );
         */
-
-   //synchronizing signals from sys_clk fifo    
-
-   assign tx_status[15:0] = {5'b0,
-                             tx_burst,     
-			     tx_rd_wait,
-			     tx_wr_wait,
-			     etx_rd_wait,
-                             etx_wr_wait,
-			     txrr_wait,
-			     txrd_wait,
-			     txwr_wait,
-			     txrr_full,
-			     txrd_full,
-			     txwr_full
-			     };
-   
  
-   //configer register file
-   defparam etx_cfg.ID = ID;   
-   etx_cfg etx_cfg (
+   etx_cfg etx_cfg (.tx_status	({5'b0,
+				  tx_burst,     
+				  tx_rd_wait,
+				  tx_wr_wait,
+				  etx_rd_wait,
+				  etx_wr_wait,
+				  txrr_wait,
+				  txrd_wait,
+				  txwr_wait,
+				  txrr_full,
+				  txrd_full,
+				  txwr_full
+				  }),
 		    /*AUTOINST*/
 		    // Outputs
 		    .mi_dout		(mi_cfg_dout[DW-1:0]),	 // Templated
@@ -303,7 +294,6 @@ module etx_core(/*AUTOARG*/
 		    .mi_we		(mi_we),
 		    .mi_addr		(mi_addr[RFAW+1:0]),
 		    .mi_din		(mi_din[31:0]),
-		    .tx_status		(tx_status[15:0]),
 		    .etx_access		(etx_access),
 		    .etx_packet		(etx_packet[PW-1:0]));
 
