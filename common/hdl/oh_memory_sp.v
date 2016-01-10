@@ -17,6 +17,7 @@ module oh_memory_sp(/*AUTOARG*/
    parameter DEPTH   = 14;   
    parameter DW      = 32;
    parameter AW      = $clog2(DEPTH);
+   parameter NAME   = "not_declared";
    
    //interface
    input               clk;  //clock
