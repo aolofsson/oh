@@ -68,6 +68,7 @@ module erx_core (/*AUTOARG*/
    wire [14:0]		mi_addr;		// From erx_cfgif of ecfg_if.v
    wire [DW-1:0]	mi_cfg_dout;		// From erx_cfg of erx_cfg.v
    wire			mi_cfg_en;		// From erx_cfgif of ecfg_if.v
+   wire			mi_cfg_ug_en;		// From erx_cfgif of ecfg_if.v
    wire [63:0]		mi_din;			// From erx_cfgif of ecfg_if.v
    wire [DW-1:0]	mi_dma_dout;		// From erx_dma of edma.v
    wire			mi_dma_en;		// From erx_cfgif of ecfg_if.v
@@ -182,8 +183,9 @@ module erx_core (/*AUTOARG*/
    /************************************************************/
    /*EMAILBOX                                                  */
    /************************************************************/
-   /*emailbox AUTO_TEMPLATE ( 
-    .mi_en              (mi_cfg_en),
+   /*emailbox AUTO_TEMPLATE (
+    .wait_in            (erx_cfg_wait),
+    .mi_ug_en           (mi_cfg_ug_en),
     .mi_dout            (mi_mailbox_dout[]),
     .wr_clk		(clk),
     .rd_clk		(clk),
@@ -206,7 +208,8 @@ module erx_core (/*AUTOARG*/
 			.rd_clk		(clk),			 // Templated
 			.emesh_access	(emmu_access),		 // Templated
 			.emesh_packet	(emmu_packet[PW-1:0]),	 // Templated
-			.mi_en		(mi_cfg_en),		 // Templated
+			.wait_in	(erx_cfg_wait),		 // Templated
+			.mi_ug_en	(mi_cfg_ug_en),		 // Templated
 			.mi_we		(mi_we),
 			.mi_addr	(mi_addr[RFAW+1:0]),
 			.mailbox_irq_en	(mailbox_irq_en));
@@ -233,6 +236,7 @@ module erx_core (/*AUTOARG*/
 		      .mi_mmu_en	(mi_mmu_en),
 		      .mi_dma_en	(mi_dma_en),
 		      .mi_cfg_en	(mi_cfg_en),
+		      .mi_cfg_ug_en	(mi_cfg_ug_en),
 		      .mi_we		(mi_we),
 		      .mi_addr		(mi_addr[14:0]),
 		      .mi_din		(mi_din[63:0]),
@@ -283,6 +287,7 @@ module erx_core (/*AUTOARG*/
    
    erx_cfg erx_cfg (.rx_status    	(rx_status[15:0]),
 		    .timer_cfg		(),
+		    .wait_in	(erx_cfg_wait),
 		     /*AUTOINST*/
 		    // Outputs
 		    .mi_dout		(mi_cfg_dout[DW-1:0]),	 // Templated
