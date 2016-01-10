@@ -1,8 +1,3 @@
-/*
- ########################################################################
- 
- ########################################################################
- */
 `include "elink_regmap.v"
 module ecfg_if (/*AUTOARG*/
    // Outputs
@@ -76,7 +71,7 @@ module ecfg_if (/*AUTOARG*/
    wire [31:0] 	 data_out;
    wire 	 write;
    wire 	 mi_match;
-   wire 	 mi_rx_en;
+   wire 	 mi_rx_sel;
    
    //parameter didn't seem to work
    //this module used in rx and tx, parameter used to make address decode work out
@@ -121,7 +116,7 @@ module ecfg_if (/*AUTOARG*/
    assign mi_we = write  & mi_en;
    
    //signal to carry transaction from ETX to ERX block through fifo_cdc
-   assign mi_rx_en = mi_match & 
+   assign mi_rx_sel = mi_match & 
 		     ~mi_en & 
 		     ((dstaddr[19:16]==`EGROUP_RR)  | 
 		      (dstaddr[19:16]==`EGROUP_MMR) |
@@ -143,7 +138,7 @@ module ecfg_if (/*AUTOARG*/
      
 
    //Access out packet  
-   assign access_forward = (mi_rx_en | mi_rd);
+   assign access_forward = (mi_rx_sel | mi_rd);
 
    always @ (posedge clk or negedge nreset)
      if(!nreset)
@@ -155,12 +150,12 @@ module ecfg_if (/*AUTOARG*/
      if(~wait_in)
        begin
 	  readback_reg      <= mi_rd;
-	  write_reg         <= (mi_rx_en & write) | mi_rd;	  
+	  write_reg         <= (mi_rx_sel & write) | mi_rd;	  
 	  datamode_reg[1:0] <= datamode[1:0];
 	  ctrlmode_reg[3:0] <= ctrlmode[3:0];
-	  dstaddr_reg[31:0] <= mi_rx_en ? dstaddr[31:0] : srcaddr[31:0];
+	  dstaddr_reg[31:0] <= mi_rx_sel ? dstaddr[31:0] : srcaddr[31:0];
 	  data_reg[31:0]    <= data[31:0];	  
-	  srcaddr_reg[31:0] <= mi_rx_en ? srcaddr[31:0] : mi_dout_mux[63:32];
+	  srcaddr_reg[31:0] <= mi_rx_sel ? srcaddr[31:0] : mi_dout_mux[63:32];
        end
    
    assign data_out[31:0] = readback_reg ? mi_dout_mux[31:0] : data_reg[31:0];

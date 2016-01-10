@@ -15,12 +15,12 @@ module esaxi (/*autoarg*/
    s_axi_wstrb, s_axi_wvalid
    );
    
-   parameter         ID                  = 12'h999;   
-   parameter         S_IDW               = 12;
-   parameter         PW                  = 104;
-   parameter [15:0]  RETURN_ADDR         = {ID,`EGROUP_RR};
-   parameter         AW                  = 32;
-   parameter         DW                  = 32;
+   parameter          ID                  = 12'h999;   
+   parameter          S_IDW               = 12;
+   parameter          PW                  = 104;
+   parameter [AW-1:0] RETURN_ADDR         = {ID,20'h0};
+   parameter          AW                  = 32;
+   parameter          DW                  = 32;
 
 `ifdef TARGET_SIM
    parameter         TW                  = 8;   //timeout counter width
@@ -172,12 +172,12 @@ module esaxi (/*autoarg*/
 		     // Outputs
 		     .packet_out	(txwr_packet[PW-1:0]),
 		     // Inputs
-		     .write_in		(1'b1),
-		     .datamode_in	(txwr_datamode[1:0]),
-		     .ctrlmode_in	(4'b0),
-		     .dstaddr_in	(txwr_dstaddr[AW-1:0]),
-		     .data_in		(txwr_data[DW-1:0]),
-		     .srcaddr_in	(32'b0)//only 32b slave write supported
+		     .write_out		(1'b1),
+		     .datamode_out	(txwr_datamode[1:0]),
+		     .ctrlmode_out	(5'b0),
+		     .dstaddr_out	(txwr_dstaddr[AW-1:0]),
+		     .data_out		(txwr_data[DW-1:0]),
+		     .srcaddr_out	(32'b0)//only 32b slave write supported
 		     );
 
    //TXRD
@@ -185,22 +185,22 @@ module esaxi (/*autoarg*/
 		     // Outputs
 		     .packet_out	(txrd_packet[PW-1:0]),
 		     // Inputs
-		     .write_in		(1'b0),
-		     .datamode_in	(txrd_datamode[1:0]),
-		     .ctrlmode_in	(4'b0),
-		     .dstaddr_in	(txrd_dstaddr[AW-1:0]),
-		     .data_in		(32'b0),
-		     .srcaddr_in	(txrd_srcaddr[AW-1:0])
+		     .write_out		(1'b0),
+		     .datamode_out	(txrd_datamode[1:0]),
+		     .ctrlmode_out	(5'b0),
+		     .dstaddr_out	(txrd_dstaddr[AW-1:0]),
+		     .data_out		(32'b0),
+		     .srcaddr_out	(txrd_srcaddr[AW-1:0])
 		     );   
    //RXRR
    packet2emesh p2e_rxrr (
 			  // Outputs
-			  .write_out		(),
-			  .datamode_out		(),
-			  .ctrlmode_out		(),
-			  .dstaddr_out		(),
-			  .data_out		(rxrr_data[DW-1:0]),
-			  .srcaddr_out		(),
+			  .write_in		(),
+			  .datamode_in		(),
+			  .ctrlmode_in		(),
+			  .dstaddr_in		(),
+			  .data_in		(rxrr_data[DW-1:0]),
+			  .srcaddr_in		(),
 			  // Inputs
 			  .packet_in		(rxrr_packet[PW-1:0])
 			  );
@@ -446,7 +446,7 @@ module esaxi (/*autoarg*/
           txrd_access         <= ( ~ractive_reg & read_active ) | rnext;       
 	  txrd_datamode[1:0]  <= axi_arsize[1:0];
 	  txrd_dstaddr[31:0]  <= axi_araddr[31:0];
-	  txrd_srcaddr[31:0]  <= {RETURN_ADDR, 16'd0};
+	  txrd_srcaddr[31:0]  <= RETURN_ADDR;
 	  //TODO: use arid+srcaddr for out of order ?
        end
 

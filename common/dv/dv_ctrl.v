@@ -7,7 +7,7 @@ module dv_ctrl(/*AUTOARG*/
 
    parameter CLK_PERIOD = 10;
    parameter CLK_PHASE  = CLK_PERIOD/2;
-   parameter TIMEOUT    = 100000;
+   parameter TIMEOUT    = 1000;
 
    output nreset;     // async active low reset
    output clk;        // main clock
@@ -22,39 +22,37 @@ module dv_ctrl(/*AUTOARG*/
    reg 	  clk    = 1'b0;
    reg 	  start;
    
-   //init
+   //RESET
    initial
      begin	
 	#(CLK_PERIOD*20)   //hold reset for 20 cycles
-	  nreset   = 'b1;
+	nreset   = 'b1;
      end
 
+   //START TEST
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        start = 1'b0;
      else if(dut_active)       
        start = 1'b1;
 
+   //STOP SIMULATION
    always @ (posedge clk)
      if(stim_done & test_done)       
        #(TIMEOUT) $finish;	  
-   
-	   
-   //Clock generator
+   	   
+   //CLOCK GENERATOR
    always
      #(CLK_PHASE) clk = ~clk;
    
-   //Waveform dump
+   //WAVEFORM DUMP
    //Better solution?
-`ifdef NOVCD
-`else
    initial
      begin
-        $dumpfile("waveform.vcd");
-        $dumpvars(0, dv_top);
+	$dumpfile("waveform.vcd");
+	//$dumpvars(0, dv_top);
      end
-`endif
-               
+   
 endmodule // dv_ctrl
 
 

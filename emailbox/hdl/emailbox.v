@@ -65,22 +65,19 @@ module emailbox (/*AUTOARG*/
    /*****************************/
    /*REGISTERS                  */
    /*****************************/
-   reg 		  mi_rd_reg;   
-   reg [RFAW+1:2] mi_addr_reg;
-   reg 		  read_hi;
-   reg 		  read_status;
-   
-   /*****************************/
-   /*WIRES                      */
-   /*****************************/
-   wire 	    mi_rd;  
-   wire [31:0] 	    emesh_addr;
-   wire [63:0] 	    emesh_din;
-   wire 	    emesh_write;
-   wire 	    mailbox_read;
-   wire 	    mailbox_write;
-   wire [MW-1:0]    mailbox_data;
-   wire 	    mailbox_empty; 
+   reg 		   mi_rd_reg;   
+   reg [RFAW+1:2]  mi_addr_reg;
+   reg 		   read_hi;
+   reg 		   read_status;     
+   wire 	   mi_rd;  
+   wire [31:0] 	   emesh_addr;
+   wire [63:0] 	   emesh_din;
+   wire 	   emesh_write;
+   wire 	   mailbox_read;
+   wire 	   mailbox_write;
+   wire [MW-1:0]   mailbox_data;
+   wire 	   mailbox_empty; 
+
    /*****************************/
    /*WRITE TO FIFO              */
    /*****************************/  
@@ -113,9 +110,11 @@ module emailbox (/*AUTOARG*/
 	read_hi     <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI);
 	read_status <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXSTAT);
      end
+
    assign mi_dout[31:0]  = read_status ? {30'b0,mailbox_full, mailbox_not_empty} :
 			   read_hi     ? mailbox_data[63:32]                     : 
 			                 mailbox_data[31:0];
+
    assign mi_dout[63:32] = mailbox_data[63:32];
    
    /*****************************/
