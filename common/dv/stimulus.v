@@ -1,6 +1,6 @@
 /*
- * module that reads in a memh file and outputs it on stim_packet vector
- * NOTE: MSB of vector is the left most character 
+ * Reads transctions from file in Epiphany Memory Format (EMF) and drives
+ * packet output.
  * 
  * NOTE: wait comes in one next cycle, this block adjusts for that!
  * 
@@ -14,12 +14,12 @@ module stimulus (/*AUTOARG*/
    );
 
    //stimulus 
-   parameter PW     = 99;            //size of packet
+   parameter PW     = 32;             //size of packet
    parameter MAW    = 15;    
    parameter MD     = 1<<MAW;         //limit test to 1K transactions
    parameter INDEX  = 1;
    parameter NAME   = "not_declared";
-   parameter WAIT   = 1;
+   parameter WAIT   = 0;
    
    //Inputs
    input           clk;
@@ -56,7 +56,7 @@ module stimulus (/*AUTOARG*/
    
    //Read Stimulus
    initial begin
-      $sformat(testfile[255:0],"%0s_%0d%s",NAME,INDEX,".memh");
+      $sformat(testfile[255:0],"%0s_%0d%s",NAME,INDEX,".emf");
       fd = $fopen(testfile, "r");
       if(!fd)
 	begin
