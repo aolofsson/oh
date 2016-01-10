@@ -63,11 +63,12 @@ module emailbox (/*AUTOARG*/
    output 	    mailbox_irq;   
    
    /*****************************/
-   /*REGISTERS                  */
+   /*REGISTERS/WIRES            */
    /*****************************/
    reg 		   mi_rd_reg;   
    reg [RFAW+1:2]  mi_addr_reg;
    reg 		   read_hi;
+   reg 		   read_lo;
    reg 		   read_status;     
    wire 	   mi_rd;  
    wire [31:0] 	   emesh_addr;
@@ -78,9 +79,10 @@ module emailbox (/*AUTOARG*/
    wire [MW-1:0]   mailbox_data;
    wire 	   mailbox_empty; 
 
-   /*****************************/
-   /*WRITE TO FIFO              */
-   /*****************************/  
+   //###########################################
+   // WRITE PORT
+   //###########################################
+
    packet2emesh #(.AW(32))
    pe2 (// Outputs
 	.write_in	(emesh_write),
@@ -92,61 +94,69 @@ module emailbox (/*AUTOARG*/
 	// Inputs
 	.packet_in	(emesh_packet[PW-1:0]));
    
-   assign mailbox_write  = emesh_access &
+   assign mailbox_write = emesh_access &
 	                  emesh_write  &
 	                  (emesh_addr[31:20]==ID) & 
 			  (emesh_addr[19:16]==`EGROUP_MMR) & 
                           (emesh_addr[RFAW+1:2]==`E_MAILBOXLO); 
    
-   /*****************************/
-   /*READ BACK DATA (32BIT)     */
-   /*****************************/  
+
+   //###########################################
+   // READ PORT
+   //###########################################  
 
    assign mi_rd         = mi_en & ~mi_we;   
    assign mailbox_read  = mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXLO); //fifo read
 
    always @ (posedge rd_clk)
      begin
-	read_hi     <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI);
-	read_status <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXSTAT);
+	read_lo      <= mailbox_read;
+	read_hi      <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI);	
+	read_status  <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXSTAT);
      end
 
-   assign mi_dout[31:0]  = read_status ? {30'b0,mailbox_full, mailbox_not_empty} :
-			   read_hi     ? mailbox_data[63:32]                     : 
-			                 mailbox_data[31:0];
+   oh_mux3 #(.DW(64))
+   oh_mux3 (// Outputs
+	     .out (mi_dout[63:0]),
+	     // Inputs
+	     .in0 ({62'b0,mailbox_full, mailbox_not_empty}),   .sel0 (read_status),
+	     .in1 ({mailbox_data[63:32],mailbox_data[63:32]}), .sel1 (read_hi),
+     	     .in2 (mailbox_data[63:0]),                        .sel2 (read_lo)
+	     );
 
-   assign mi_dout[63:32] = mailbox_data[63:32];
-   
-   /*****************************/
-   /*FIFO (64bit wide)          */
-   /*****************************/
-   defparam fifo.DW    = MW;
-   defparam fifo.DEPTH = DEPTH;
-   //TODO: fix the width and depth
-   oh_fifo_async fifo(.rst       (~nreset),  
-		    // Outputs
-		   .dout      (mailbox_data[MW-1:0]),
-		   .empty     (mailbox_empty),
-		   .full      (mailbox_full),
-     		   .prog_full (),
-		   .valid     (dout_valid),
-		   //Read Port
-		   .rd_en    (mailbox_read), 
-		   .rd_clk   (rd_clk),  
-		   //Write Port 
-		   .din      ({40'b0,emesh_din[63:0]}),
-		   .wr_en    (mailbox_write),
-		   .wr_clk   (wr_clk)  			     
-		   ); 
+  
+   //###########################################
+   // FIFO
+   //###########################################  
+   oh_fifo_async #(.DW(MW),
+		   .DEPTH(DEPTH)
+		   )
+   fifo(// Outputs
+	.dout      (mailbox_data[MW-1:0]),
+	.empty     (mailbox_empty),
+	.full      (mailbox_full),
+     	.prog_full (),
+	.valid     (dout_valid),
+	//Common async reset
+	.rst       (~nreset),  
+	//Read Port
+	.rd_en     (mailbox_read), 
+	.rd_clk    (rd_clk),  
+	//Write Port 
+	.din       ({40'b0,emesh_din[63:0]}),
+	.wr_en     (mailbox_write),
+	.wr_clk    (wr_clk)  			     
+	); 
 
+   //###########################################
+   // INTERRUPT OUTPUTS
+   //###########################################  
 
-   /*****************************/
-   /*FIFO (64bit wide)          */
-   /*****************************/
-   assign mailbox_not_empty         = ~mailbox_empty;
-   assign mailbox_irq = mailbox_irq_en & ( mailbox_not_empty | mailbox_full);
-   
-   
+   assign mailbox_not_empty  = ~mailbox_empty;
+
+   assign mailbox_irq        = mailbox_irq_en & 
+			       (mailbox_not_empty | mailbox_full);
+      
 endmodule // emailbox
 
 // Local Variables:
