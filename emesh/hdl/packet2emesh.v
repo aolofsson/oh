@@ -27,7 +27,7 @@ module packet2emesh(/*AUTOARG*/
    packet_in
    );
 
-   parameter AW     = 64;   
+   parameter AW     = 32;   
    parameter PW     = (2*AW+40); 
 
    //Input packet
