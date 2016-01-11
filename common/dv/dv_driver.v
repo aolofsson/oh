@@ -1,3 +1,4 @@
+/* verilator lint_off STMTDLY */
 module dv_driver (/*AUTOARG*/
    // Outputs
    stim_access, stim_packet, stim_wait, stim_done,
@@ -6,15 +7,13 @@ module dv_driver (/*AUTOARG*/
    );
 
    //Parameters
-   parameter N        = 1;      // "N" packets wide
-   parameter AW       = 32;     // address width
-   parameter IDW      = 12;     // id width
-   parameter NAME     = "none"; // north, south etc
-   parameter STIMS    = 1;      // number of stimulus
-
-   //derived parameters
-   localparam DW      = AW;     //always the same
-   localparam PW      = 2*AW+40;//packet width   
+   parameter  N        = 1;      // "N" packets wide
+   parameter  AW       = 32;     // address width
+   parameter  IDW      = 12;     // id width
+   parameter  NAME     = "none"; // north, south etc
+   parameter  STIMS    = 1;      // number of stimulus
+   parameter  MAW      = 16;     // 64KB memory address width
+   localparam PW       =2*AW+40; // packet width (derived)
 
    //Control signals
    input		clk;
@@ -138,7 +137,8 @@ module dv_driver (/*AUTOARG*/
 		 .coreid		(coreid[IDW-1:0]),
 		 .access_in		(dut_access[j]),
 		 .packet_in		(dut_packet[(j+1)*PW-1:j*PW]),
-		 .wait_in		(wait_in));
+		 .wait_in		(dut_wait[i])
+		 );
       end	 
 	 
    endgenerate

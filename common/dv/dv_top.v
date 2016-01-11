@@ -2,9 +2,10 @@
 module dv_top();
    
    //static variables
-   parameter PW  = 104;
    parameter N   = 1;
    parameter IDW = 12;
+   parameter AW  = 32;   
+   parameter PW  = 2*AW+40;
 
    //local variables
    integer r;   
@@ -94,7 +95,7 @@ module dv_top();
             );
     */
    
-   dv_driver #(.PW(PW), 
+   dv_driver #(.AW(AW), 
 	       .N(N), 
 	       .NAME("test"),
 	       .IDW(IDW)

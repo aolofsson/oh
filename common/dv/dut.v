@@ -39,7 +39,6 @@ module dut (/*AUTOARG*/
    assign access_out  ='b0;
    assign packet_out  ='b0;
    assign wait_out    ='b0;
-   assign reset_done  = 1'b1;
    
 endmodule // dut
 

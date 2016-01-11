@@ -1,3 +1,4 @@
+/* verilator lint_off STMTDLY */
 module dv_ctrl(/*AUTOARG*/
    // Outputs
    nreset, clk, start,
@@ -47,11 +48,13 @@ module dv_ctrl(/*AUTOARG*/
    
    //WAVEFORM DUMP
    //Better solution?
+`ifndef VERILATOR 
    initial
      begin
 	$dumpfile("waveform.vcd");
 	//$dumpvars(0, dv_top);
      end
+`endif
    
 endmodule // dv_ctrl
 
