@@ -49,7 +49,7 @@ module oh_memory_dp(/*AUTOARG*/
    always @(posedge wr_clk)    
      for (i=0;i<DW;i=i+1)
        if (wr_en & wr_wem[i]) 
-         ram[wr_addr[AW-1:0][i]] <= wr_din[i];
+         ram[wr_addr[AW-1:0]][i] <= wr_din[i];
    
 `endif // !`ifdef CFG_ASIC
    
