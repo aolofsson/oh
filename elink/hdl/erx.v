@@ -16,7 +16,9 @@ module erx (/*AUTOARG*/
    parameter RFAW        = 6;
    parameter ID          = 12'h800;
    parameter IOSTD_ELINK = "LVDS_25";
-   parameter ETYPE       = 1;   
+   parameter ETYPE       = 1;
+   parameter WAIT_RR     = 0;
+   parameter WAIT_WRRD   = 0;
 
    //Synched resets, clock
    input          soft_reset;                   // sw driven reset
@@ -176,7 +178,9 @@ module erx (/*AUTOARG*/
 
    /************************************************************/
    /*FIFOs                                                     */
-   /************************************************************/      
+   /************************************************************/
+   defparam erx_fifo.WAIT_RR = WAIT_RR;
+   defparam erx_fifo.WAIT_WRRD = WAIT_WRRD;
    erx_fifo erx_fifo   (
 		/*AUTOINST*/
 			// Outputs

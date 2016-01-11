@@ -12,6 +12,8 @@ module erx_fifo (/*AUTOARG*/
    parameter DW      = 32;
    parameter PW      = 104;
    parameter RFAW    = 6;
+   parameter WAIT_RR = 0;
+   parameter WAIT_WRRD = 0;
 
    //reset & clocks
    input 	   sys_clk;
@@ -76,8 +78,11 @@ module erx_fifo (/*AUTOARG*/
 
       
    //Read request fifo (from Epiphany)
-   oh_fifo_cdc #(.DW(104), .DEPTH(32)) 
-   rxrd_fifo   (
+   defparam rxrd_fifo.DW    = 104;
+   defparam rxrd_fifo.DEPTH = 32;
+   defparam rxrd_fifo.WAIT = WAIT_WRRD;
+   
+   oh_fifo_cdc rxrd_fifo   (
 		/*AUTOINST*/
 		// Outputs
 		.wait_out		(rxrd_fifo_wait),	 // Templated
@@ -94,8 +99,11 @@ module erx_fifo (/*AUTOARG*/
  
 
    //Write fifo (from Epiphany)
-   oh_fifo_cdc #(.DW(104), .DEPTH(32)) 
-   rxwr_fifo(
+   defparam rxwr_fifo.DW    = 104;
+   defparam rxwr_fifo.DEPTH = 32;
+   defparam rxwr_fifo.WAIT  = WAIT_WRRD;
+   
+   oh_fifo_cdc rxwr_fifo(
 	     /*AUTOINST*/
 	     // Outputs
 	     .wait_out			(rxwr_fifo_wait),	 // Templated
@@ -111,8 +119,11 @@ module erx_fifo (/*AUTOARG*/
    
  
    //Read response fifo (for host)
-   oh_fifo_cdc #(.DW(104), .DEPTH(32))  
-   rxrr_fifo(
+   defparam rxrr_fifo.DW    = 104;
+   defparam rxrr_fifo.DEPTH = 32;
+   defparam rxrr_fifo.WAIT  = WAIT_RR;
+   
+   oh_fifo_cdc rxrr_fifo(
 	     /*AUTOINST*/
 	     // Outputs
 	     .wait_out			(rxrr_fifo_wait),	 // Templated
