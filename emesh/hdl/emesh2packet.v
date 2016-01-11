@@ -27,7 +27,7 @@ module emesh2packet(/*AUTOARG*/
    srcaddr_out
    );
    parameter AW   = 32;   
-   parameter PW   = (2*AW+40); 
+   parameter PW   = 2*AW+40; 
    
    //Emesh signal bundle
    input 	    write_out;   

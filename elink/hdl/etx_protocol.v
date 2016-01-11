@@ -1,5 +1,3 @@
-`include "elink_regmap.v"
-
 /*
  *
  * This module converts the packet interface to a 64bit wide format 
@@ -10,14 +8,15 @@
  * 
  * 
  */ 
-
+`include "elink_regmap.v"
 module etx_protocol (/*AUTOARG*/
    // Outputs
-   etx_rd_wait, etx_wr_wait, tx_burst, tx_access, tx_data_slow,
-   tx_frame_slow,
+   etx_rd_wait, etx_wr_wait, etx_wait, tx_burst, tx_access,
+   tx_data_slow, tx_frame_slow,
    // Inputs
    nreset, clk, etx_access, etx_packet, tx_enable, burst_enable,
-   gpio_data, gpio_enable, tx_rd_wait, tx_wr_wait
+   gpio_data, gpio_enable, ctrlmode_bypass, ctrlmode, tx_rd_wait,
+   tx_wr_wait
    );
 
    parameter PW = 104;
@@ -36,7 +35,8 @@ module etx_protocol (/*AUTOARG*/
    //Pushback signals
    output         etx_rd_wait;
    output         etx_wr_wait;
-
+   output 	  etx_wait;
+   
    //Config interface
    input 	  tx_enable;    //transmit enable
    input    	  burst_enable; //Enables bursting
@@ -44,7 +44,11 @@ module etx_protocol (/*AUTOARG*/
    input    	  gpio_enable;  //TODO
    output 	  tx_burst;     //for TXSTATUS
    output 	  tx_access;    //for TXMON
-   
+
+   //ctrlmode for rd/wr transactions
+   input 	   ctrlmode_bypass;
+   input [3:0] 	   ctrlmode;
+
    //Interface to IO
    output [63:0]  tx_data_slow;
    output [3:0]   tx_frame_slow;
@@ -56,29 +60,19 @@ module etx_protocol (/*AUTOARG*/
    //################################################################
    reg [2:0] 	  tx_state;   
    reg [PW-1:0]   tx_packet; 
-   wire 	  etx_write;
+   reg 		  tx_burst_reg;   
+ 
    wire [1:0] 	  etx_datamode;
    wire [4:0] 	  etx_ctrlmode;
    wire [AW-1:0]  etx_dstaddr;
    wire [DW-1:0]  etx_data;
-   wire 	  tx_write;
    wire [1:0] 	  tx_datamode;
    wire [4:0] 	  tx_ctrlmode;
    wire [AW-1:0]  tx_dstaddr;
    wire [DW-1:0]  tx_data;
    wire [AW-1:0]  tx_srcaddr;   
-   wire 	  burst_match;
-   wire 	  burst_type_match;
-   wire [31:0] 	  burst_addr;
-   wire 	  burst_addr_match;
-   wire 	  burst_in;
-   wire 	  adjust;
-   wire 	  current_match;
-   wire 	  next_match;
-   wire 	  tx_burst_in;
+   wire [3:0] 	  ctrlmode_mux;
 
-   
-   
    //##############################################################
    //# Packet Pipeline
    //##############################################################
@@ -92,10 +86,17 @@ module etx_protocol (/*AUTOARG*/
 	 .srcaddr_in	(),
 	 .packet_in	(etx_packet[PW-1:0]));//input
    
+   //ctrlmode bypass
+   assign ctrlmode_mux[3:0] = ctrlmode_bypass ?  ctrlmode[3:0] : 
+				                 etx_ctrlmode[3:0];
+
    //Hold transaction while waiting
    always @ (posedge clk)
      if(~etx_wait)
-       tx_packet[PW-1:0] <= etx_packet[PW-1:0];
+       tx_packet[PW-1:0] <= {etx_packet[PW-1:8],   
+			     1'b0,			     
+			     ctrlmode_mux[3:0], 
+			     etx_packet[2:0]};
   
    //the IO pipeline flushes out
    packet2emesh #(.AW(AW))
@@ -131,7 +132,7 @@ module etx_protocol (/*AUTOARG*/
 			      next_match       &
 			      burst_addr_match;
    
-   reg 		  tx_burst_reg;   
+ 
    always @ (posedge clk)
      tx_burst_reg <=tx_burst;
 
@@ -154,17 +155,19 @@ module etx_protocol (/*AUTOARG*/
        tx_state[2:0] <= `TX_IDLE;
      else
        case (tx_state[2:0])
-	 `TX_IDLE:  tx_state[2:0] <= etx_valid ? `TX_START : `TX_IDLE;
+	 `TX_IDLE:  tx_state[2:0] <= etx_valid ? `TX_START : 
+				                 `TX_IDLE;
 	 `TX_START: tx_state[2:0] <= `TX_ACK;
 	 `TX_ACK:   tx_state[2:0] <= tx_burst  ? `TX_BURST :
 				     etx_valid ? `TX_START :
-                                     `TX_IDLE;
- 	 `TX_BURST: tx_state[2:0] <= tx_burst  ? `TX_BURST : `TX_IDLE;	   
+                                                 `TX_IDLE;
+ 	 `TX_BURST: tx_state[2:0] <= tx_burst  ? `TX_BURST : 
+				                 `TX_IDLE;	   
        endcase // case (tx_state[2:0])
    
-   assign tx_ack_wait = (tx_state[1:0]==`TX_START);
-   assign tx_access   = (tx_state[1:0]==`TX_START) |
-			(tx_state[1:0]==`TX_BURST);
+   assign tx_ack_wait = (tx_state[2:0]==`TX_START);
+   assign tx_access   = (tx_state[2:0]==`TX_START) |
+			(tx_state[2:0]==`TX_BURST);
    
 
    //#######################################
@@ -177,17 +180,17 @@ module etx_protocol (/*AUTOARG*/
 			       (tx_state[1:0]!=`TX_IDLE)  ? 4'b1111 :
 			                                    4'b0000;
    
-   assign tx_cycle1[63:0]    = {tx_dstaddr[11:0],tx_datamode[1:0],tx_write,tx_access, //47:32
-			        tx_dstaddr[27:12],                                    //31:16
-			        ~tx_write,5'b0,tx_burst_reg,1'b0,                     //8-15
-			        tx_ctrlmode[3:0],tx_dstaddr[31:28],                   //0-7
-			        16'b0 				                      //garbage
-			        };
+   assign tx_cycle1[63:0] = {tx_dstaddr[11:0],tx_datamode[1:0],tx_write,tx_access, //47:32
+			     tx_dstaddr[27:12],                                    //31:16
+			    ~tx_write,5'b0,tx_burst_reg,1'b0,                      //8-15
+			     tx_ctrlmode[3:0],tx_dstaddr[31:28],                   //0-7
+			     16'b0 				                   //garbage
+			    };
    
-   assign tx_cycle2[63:0]   = {tx_srcaddr[15:0],                                      //48-63
-			       tx_srcaddr[31:16],                                     //32-47
-			       tx_data[15:0],                                         //16-31
-			       tx_data[31:16]			                      //0-15
+   assign tx_cycle2[63:0]   = {tx_srcaddr[15:0],                                   //48-63
+			       tx_srcaddr[31:16],                                  //32-47
+			       tx_data[15:0],                                      //16-31
+			       tx_data[31:16]			                   //0-15
 			       };
 			       
    assign tx_data_slow[63:0]  = (tx_state[2:0]==`TX_START) ? tx_cycle1[63:0] : 

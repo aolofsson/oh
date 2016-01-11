@@ -5,7 +5,7 @@ module erx_arbiter (/*AUTOARG*/
    rxwr_packet, rxrd_access, rxrd_packet, rxrr_access, rxrr_packet,
    // Inputs
    erx_access, erx_packet, edma_access, edma_packet, ecfg_access,
-   ecfg_packet, timeout, rxwr_wait, rxrd_wait, rxrr_wait
+   ecfg_packet, rxwr_wait, rxrd_wait, rxrr_wait
    );
 
    parameter AW   = 32;
@@ -30,9 +30,6 @@ module erx_arbiter (/*AUTOARG*/
    input [PW-1:0]  ecfg_packet;
    output 	   ecfg_wait;
 
-   //From timeout circuit
-   input 	   timeout;
-   
    //To Master Write FIFO
    output 	   rxwr_access;
    output [PW-1:0] rxwr_packet;   

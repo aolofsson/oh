@@ -8,22 +8,22 @@
  the result to the transmit output pins.
  
  Arbitration Priority:
- 1) host writes (highest)
- 2) read requests from host
- 3) read responses (lowest)
-
+ 1) read responses (highest)
+ 2) host writes
+ 3) read requests from host (lowest)
  */
 
 module etx_arbiter (/*AUTOARG*/
    // Outputs
-   txwr_wait, txrd_wait, txrr_wait, etx_access, etx_rr, etx_packet,
+   txwr_wait, txrd_wait, txrr_wait, etx_access, cfg_access,
+   etx_packet,
    // Inputs
    clk, nreset, txwr_access, txwr_packet, txrd_access, txrd_packet,
-   txrr_access, txrr_packet, etx_rd_wait, etx_wr_wait, etx_cfg_wait,
-   ctrlmode_bypass, ctrlmode
+   txrr_access, txrr_packet, etx_wait, etx_cfg_wait
    );
 
-   parameter PW = 104;
+   parameter AW = 32;   
+   parameter PW = 2*AW+40;
    parameter ID = 0;
    
    //tx clock and reset
@@ -46,23 +46,18 @@ module etx_arbiter (/*AUTOARG*/
    output          txrr_wait;
 
    //Wait signal inputs
-   input           etx_rd_wait;
-   input           etx_wr_wait;
+   input 	   etx_wait;   
    input 	   etx_cfg_wait;
    
-   //ctrlmode for rd/wr transactions
-   input 	   ctrlmode_bypass;
-   input [3:0] 	   ctrlmode;
-   
-   //Transaction for IO protocol
-   output          etx_access;
-   output 	   etx_rr;      //bypass translation on read response
+   //Outgoing transaction
+   output          etx_access;      //for IO
+   output 	   cfg_access;      //for RX/RX configuration
    output [PW-1:0] etx_packet;
     
    //regs
    reg 		   etx_access;
    reg [PW-1:0]    etx_packet;
-   reg 		   etx_rr;     //bypass translation on read response
+   reg 		   cfg_access;  //bypass translation on read response
    
    //wires  
    wire [3:0] 	   txrd_ctrlmode;
@@ -72,67 +67,44 @@ module etx_arbiter (/*AUTOARG*/
    wire 	   txrr_grant;
    wire 	   txrd_grant;
    wire 	   txwr_grant;  
-   wire [PW-1:0]   txrd_splice_packet;
-   wire [PW-1:0]   txwr_splice_packet;
    wire [PW-1:0]   etx_mux;
-
-   //#########################################################################
-   //# Insert special control mode in packet (UGLY)
-   //#########################################################################
-   assign txrd_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
-				                   txrd_packet[6:3];
-     
-   assign txwr_ctrlmode[3:0] =  ctrlmode_bypass ?  ctrlmode[3:0] : 
-				                   txwr_packet[6:3];
-
-   assign txrd_splice_packet[PW-1:0] = {txrd_packet[PW-1:8],   
-					1'b0,
-					txrd_ctrlmode[3:0], 
-					txrd_packet[2:0]};
-
-   assign txwr_splice_packet[PW-1:0] = {txwr_packet[PW-1:8],   
-					1'b0,
-					txwr_ctrlmode[3:0], 
-					txwr_packet[2:0]};
- 
+   wire [31:0] 	   dstaddr_mux;
+   
    //########################################################################
    //# Arbiter
    //########################################################################
+   //TODO: change to round robin!!! (live lock hazard)
    
-   oh_arbiter #(.N(3)) arbiter (.grants({txrr_grant,	
-					 txrd_grant,
-					 txwr_grant //highest priority
+   oh_arbiter #(.N(3)) arbiter (.grants({txrd_grant,
+					 txwr_grant, //highest priority
+					 txrr_grant	
 					 }),
-				.requests({txrr_access,	
-					   txrd_access,
-					   txwr_access
-					   })	
+				.requests({txrd_access,
+					   txwr_access,
+					   txrr_access	
+					   })
 				);
-   //Priority Mux
-   assign etx_mux[PW-1:0] =({(PW){txwr_grant}} & txwr_splice_packet[PW-1:0]) |
-			   ({(PW){txrd_grant}} & txrd_splice_packet[PW-1:0]) |
-			   ({(PW){txrr_grant}} & txrr_packet[PW-1:0]);
- 
-   
+   oh_mux3 #(.DW(PW))
+   mux3(.out	(etx_mux[PW-1:0]),
+	.in0	(txwr_packet[PW-1:0]),.sel0 (txwr_grant),
+	.in1	(txrd_packet[PW-1:0]),.sel1 (txrd_grant),
+	.in2	(txrr_packet[PW-1:0]),.sel2 (txrr_grant)
+	);
+
    //######################################################################
    //Pushback (stall) Signals
    //######################################################################
-   
-   //Write waits on pin wr wait or cfg_wait
-   assign txwr_wait = etx_wr_wait |
-		      etx_rd_wait |
-		      etx_cfg_wait;
+   assign etx_all_wait = etx_wait  | etx_cfg_wait;
    
    //Read response
-   assign txrr_wait = etx_wr_wait  |
-		      etx_rd_wait  |
-		      etx_cfg_wait |
-		      txwr_access;
+   assign txrr_wait = etx_all_wait;
+
+   //Write waits on pin wr wait or cfg_wait
+   assign txwr_wait = etx_all_wait |
+		      txrr_access;
 
    //Host read request (self throttling, one read at a time)
-   assign txrd_wait = etx_rd_wait  |
-		      etx_wr_wait  |
-		      etx_cfg_wait |
+   assign txrd_wait = etx_all_wait |
 		      txrr_access  |
 		      txwr_access;
    
@@ -143,28 +115,38 @@ module etx_arbiter (/*AUTOARG*/
 		      (txrd_grant & ~txrd_wait) |
 		      (txrr_grant & ~txrr_wait);
 
+   packet2emesh #(.AW(AW))
+   p2e (.write_in	(),
+	.datamode_in	(),
+	.ctrlmode_in	(),
+	.dstaddr_in	(dstaddr_mux[31:0]),
+	.srcaddr_in	(),
+	.data_in	(),
+	.packet_in	(etx_mux[PW-1:0]));
    
-   //access
+   assign cfg_match = (dstaddr_mux[31:20]==ID);
+
+   //access decode
     always @ (posedge clk)
       if (!nreset)
 	begin
-	   etx_access        <= 1'b0;   
-	   etx_rr            <= 1'b0;	   
+	   etx_access    <= 1'b0;   
+	   cfg_access    <= 1'b0;	   
 	end
-      else if (~(etx_wr_wait | etx_rd_wait))
+      else if (~etx_all_wait)
 	begin
-	   etx_access         <= access_in ;
-	   etx_rr             <= txrr_grant & ~txrr_wait;
+	   etx_access   <= access_in & ~cfg_match;
+	   cfg_access   <= access_in & cfg_match;
 	end	   
    
    //packet
    always @ (posedge clk)
-     if (access_in & ~(etx_wr_wait | etx_rd_wait))
-	  etx_packet[PW-1:0] <= etx_mux[PW-1:0];	 
+     if (access_in & ~etx_all_wait)
+       etx_packet[PW-1:0] <= etx_mux[PW-1:0];	 
    
 endmodule // etx_arbiter
 // Local Variables:
-// verilog-library-directories:("." "../../emesh/hdl")
+// verilog-library-directories:("." "../../emesh/hdl" "../../common/hdl")
 // End:
 
 

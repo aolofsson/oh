@@ -4,14 +4,10 @@ module emesh_monitor(/*AUTOARG*/
    clk, nreset, dut_access, dut_packet, wait_in, coreid
    );
 
-   parameter AW     = 32;
+   parameter PW     = 104;
    parameter IDW    = 12;
    parameter INDEX  = 0;
    parameter NAME   = "not_declared";
-
-   //derived parameters
-   localparam DW      = AW;     //always the same
-   localparam PW      = 2*AW+40;//packet width   
    
    //clock and reset
    input            clk;

@@ -1,8 +1,8 @@
 module edma (/*AUTOARG*/
    // Outputs
-   mi_dout, edma_access, edma_packet,
+   reg_rdata, access_out, packet_out,
    // Inputs
-   nreset, clk, mi_en, mi_we, mi_addr, mi_din, edma_wait
+   nreset, clk, reg_access, reg_packet, wait_in
    );
 
    /******************************/
@@ -22,23 +22,20 @@ module edma (/*AUTOARG*/
    /*****************************/
    /*REGISTER INTERFACE         */
    /*****************************/      
-   input 	     mi_en;         
-   input 	     mi_we; 
-   input [RFAW+1:0]  mi_addr;
-   input [63:0]      mi_din;
-   output [31:0]     mi_dout;   
+   input 	     reg_access;
+   input [PW-1:0]    reg_packet;
+   output [31:0]     reg_rdata;
   
    /*****************************/
    /*DMA TRANSACTION            */
    /*****************************/
-   output 	     edma_access;
-   output [PW-1:0]   edma_packet;
-   input 	     edma_wait;
+   output 	     access_out;
+   output [PW-1:0]   packet_out;
+   input 	     wait_in;
 
    //Tieoffs for now
-   assign edma_access = 'b0;
-   assign edma_packet = 'd0;
-   assign mi_dout     = 'd0;
+   assign access_out = 'b0;
+   assign packet_out = 'd0;
    
 endmodule // edma
 // Local Variables:

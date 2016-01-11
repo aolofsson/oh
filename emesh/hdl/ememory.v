@@ -154,7 +154,7 @@ module ememory(/*AUTOARG*/
 	  write_out           <= 1'b1;
           align_addr[2:0]     <= dstaddr_in[2:0];
 	  datamode_out[1:0]   <= datamode_in[1:0];
-	  ctrlmode_out[4:0]   <= ctrlmode_in[3:0];                  
+	  ctrlmode_out[4:0]   <= ctrlmode_in[4:0];                  
           dstaddr_out[AW-1:0] <= srcaddr_in[AW-1:0];
        end
                       

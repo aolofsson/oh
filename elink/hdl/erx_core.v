@@ -21,8 +21,6 @@ module erx_core (/*AUTOARG*/
    //IO Interface
    input [PW-1:0] 	rx_packet;
    input 		rx_access;
- 
-
    input 		rx_burst;
    output 		rx_rd_wait;
    output 		rx_wr_wait;
@@ -54,9 +52,11 @@ module erx_core (/*AUTOARG*/
    /*AUTOOUTPUT*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			ecfg_access;		// From erx_cfgif of ecfg_if.v
-   wire [PW-1:0]	ecfg_packet;		// From erx_cfgif of ecfg_if.v
+   wire			dma_access;		// From erx_cfg of erx_cfg.v
+   wire			ecfg_access;		// From erx_cfg of erx_cfg.v
+   wire [PW-1:0]	ecfg_packet;		// From erx_cfg of erx_cfg.v
    wire			edma_access;		// From erx_dma of edma.v
+   wire [31:0]		edma_rdata;		// From erx_dma of edma.v
    wire			edma_wait;		// From erx_arbiter of erx_arbiter.v
    wire			emesh_remap_access;	// From erx_remap of erx_remap.v
    wire [PW-1:0]	emesh_remap_packet;	// From erx_remap of erx_remap.v
@@ -64,17 +64,9 @@ module erx_core (/*AUTOARG*/
    wire [PW-1:0]	emmu_packet;		// From erx_mmu of emmu.v
    wire			erx_access;		// From erx_protocol of erx_protocol.v
    wire [PW-1:0]	erx_packet;		// From erx_protocol of erx_protocol.v
+   wire			mailbox_access;		// From erx_cfg of erx_cfg.v
    wire			mailbox_irq_en;		// From erx_cfg of erx_cfg.v
-   wire [14:0]		mi_addr;		// From erx_cfgif of ecfg_if.v
-   wire [DW-1:0]	mi_cfg_dout;		// From erx_cfg of erx_cfg.v
-   wire			mi_cfg_en;		// From erx_cfgif of ecfg_if.v
-   wire [63:0]		mi_din;			// From erx_cfgif of ecfg_if.v
-   wire [DW-1:0]	mi_dma_dout;		// From erx_dma of edma.v
-   wire			mi_dma_en;		// From erx_cfgif of ecfg_if.v
-   wire [63:0]		mi_mailbox_dout;	// From erx_mailbox of emailbox.v
-   wire [DW-1:0]	mi_mmu_dout;		// From erx_mmu of emmu.v
-   wire			mi_mmu_en;		// From erx_cfgif of ecfg_if.v
-   wire			mi_we;			// From erx_cfgif of ecfg_if.v
+   wire [31:0]		mailbox_rdata;		// From erx_mailbox of emailbox.v
    wire			mmu_enable;		// From erx_cfg of erx_cfg.v
    wire [31:0]		remap_base;		// From erx_cfg of erx_cfg.v
    wire [1:0]		remap_mode;		// From erx_cfg of erx_cfg.v
@@ -82,35 +74,34 @@ module erx_core (/*AUTOARG*/
    wire [11:0]		remap_sel;		// From erx_cfg of erx_cfg.v
    wire			test_mode;		// From erx_cfg of erx_cfg.v
    // End of automatics
-
      
    //regs
-    wire [8:0] 	gpio_datain;		// To erx_cfg of erx_cfg.v
-   wire [15:0] 	rx_status;
-   wire 	rxwr_full;
-   wire 	rxrr_full;
-   wire 	rxrd_full;
-   wire 	rxrd_empty;
-   wire 	rxwr_empty;
-   wire 	rxrr_empty;
-   wire [103:0] edma_packet;		// From edma of edma.v, ...
+   wire [8:0] 		gpio_datain;
+   wire [15:0] 		rx_status;
+   wire 		rxwr_full;
+   wire 		rxrr_full;
+   wire 		rxrd_full;
+   wire 		rxrd_empty;
+   wire 		rxwr_empty;
+   wire 		rxrr_empty;
+   wire [103:0] 	edma_packet;
    
 
    /**************************************************************/
    /*ELINK PROTOCOL LOGIC                                        */
    /**************************************************************/
 
-   defparam erx_protocol.ID=ID;     
-   erx_protocol erx_protocol (/*AUTOINST*/
-			      // Outputs
-			      .erx_access	(erx_access),
-			      .erx_packet	(erx_packet[PW-1:0]),
-			      // Inputs
-			      .clk		(clk),
-			      .test_mode	(test_mode),
-			      .rx_packet	(rx_packet[PW-1:0]),
-			      .rx_burst		(rx_burst),
-			      .rx_access	(rx_access));
+   erx_protocol #(.ID(ID))
+   erx_protocol (/*AUTOINST*/
+		 // Outputs
+		 .erx_access		(erx_access),
+		 .erx_packet		(erx_packet[PW-1:0]),
+		 // Inputs
+		 .clk			(clk),
+		 .test_mode		(test_mode),
+		 .rx_packet		(rx_packet[PW-1:0]),
+		 .rx_burst		(rx_burst),
+		 .rx_access		(rx_access));
 
    /**************************************************************/
    /*ADDRESS REMPAPPING                                          */
@@ -126,55 +117,45 @@ module erx_core (/*AUTOARG*/
                            );
    */
 
-   defparam erx_remap.ID = ID;
-   erx_remap erx_remap (/*AUTOINST*/
-			// Outputs
-			.emesh_access_out(emesh_remap_access),	 // Templated
-			.emesh_packet_out(emesh_remap_packet[PW-1:0]), // Templated
-			// Inputs
-			.clk		(clk),
-			.emesh_access_in(erx_access),		 // Templated
-			.emesh_packet_in(erx_packet[PW-1:0]),	 // Templated
-			.remap_mode	(remap_mode[1:0]),
-			.remap_sel	(remap_sel[11:0]),
-			.remap_pattern	(remap_pattern[11:0]),
-			.remap_base	(remap_base[31:0]));
+   erx_remap #(.ID(ID))
+   erx_remap (/*AUTOINST*/
+	      // Outputs
+	      .emesh_access_out		(emesh_remap_access),	 // Templated
+	      .emesh_packet_out		(emesh_remap_packet[PW-1:0]), // Templated
+	      // Inputs
+	      .clk			(clk),
+	      .emesh_access_in		(erx_access),		 // Templated
+	      .emesh_packet_in		(erx_packet[PW-1:0]),	 // Templated
+	      .remap_mode		(remap_mode[1:0]),
+	      .remap_sel		(remap_sel[11:0]),
+	      .remap_pattern		(remap_pattern[11:0]),
+	      .remap_base		(remap_base[31:0]));
    
     
    /************************************************************/
    /*ELINK MEMORY MANAGEMENT UNIT                              */
    /************************************************************/
-   /*emmu AUTO_TEMPLATE ( 
-                        .emesh_\(.*\)_out	(emmu_\1[]),   
-                         //Inputs
-                        .emesh_\(.*\)_in	(emesh_remap_\1[]),   
-                        .mmu_en			(mmu_enable),
-                        .rd_clk	        	(clk),
-                        .wr_clk	        	(clk),
-                        .mi_dout   	        (mi_mmu_dout[DW-1:0]),
-                        .emesh_packet_hi_out	(),
-                        .mi_en	                (mi_mmu_en),
-                        
-                           );
+   /*emmu AUTO_TEMPLATE (.reg_access	       (erx_cfg_access),
+		         .reg_packet	       (erx_packet[PW-1:0]), 
+                         .emesh_\(.*\)_out     (emmu_\1[]),   
+                         .emesh_\(.*\)_in      (emesh_remap_\1[]),   
+                         .mmu_en	       (mmu_enable),
+                         .\(.*\)_clk           (clk),
+                         );
    */
 
-   emmu erx_mmu (.mmu_bp		(1'b0),	//why is this zero??
-		 .emesh_rd_wait		(1'b0),
-		 .emesh_wr_wait		(1'b0),//plenty of room at rx fifos...
+   emmu erx_mmu (.emesh_wait_in		(1'b0),
+		 .reg_rdata		(),
 		 /*AUTOINST*/
 		 // Outputs
-		 .mi_dout		(mi_mmu_dout[DW-1:0]),	 // Templated
 		 .emesh_access_out	(emmu_access),		 // Templated
 		 .emesh_packet_out	(emmu_packet[PW-1:0]),	 // Templated
-		 .emesh_packet_hi_out	(),			 // Templated
 		 // Inputs
-		 .rd_clk		(clk),			 // Templated
 		 .wr_clk		(clk),			 // Templated
+		 .rd_clk		(clk),			 // Templated
 		 .mmu_en		(mmu_enable),		 // Templated
-		 .mi_en			(mi_mmu_en),		 // Templated
-		 .mi_we			(mi_we),
-		 .mi_addr		(mi_addr[14:0]),
-		 .mi_din		(mi_din[DW-1:0]),
+		 .reg_access		(erx_cfg_access),	 // Templated
+		 .reg_packet		(erx_packet[PW-1:0]),	 // Templated
 		 .emesh_access_in	(emesh_remap_access),	 // Templated
 		 .emesh_packet_in	(emesh_remap_packet[PW-1:0])); // Templated
    
@@ -185,71 +166,30 @@ module erx_core (/*AUTOARG*/
    /*emailbox AUTO_TEMPLATE ( 
     .mi_en              (mi_cfg_en),
     .mi_dout            (mi_mailbox_dout[]),
-    .wr_clk		(clk),
-    .rd_clk		(clk),
-    .emesh_access	(emmu_access),
-    .emesh_packet	(emmu_packet[PW-1:0]),
-    .rd_nreset	        (nreset),
-    .wr_nreset	        (nreset),
+    .\(.*\)_clk		(clk),
+    .emesh_\(.*\)	(emmu_\1[]),
+    .reg_access		(mailbox_access),
+    .reg_rdata		(mailbox_rdata[31:0]),
+    .reg_packet		(erx_cfg_packet[PW-1:0]),
     );
         */
 
-   defparam  erx_mailbox.ID=ID;   
-   emailbox erx_mailbox(
-			/*AUTOINST*/
-			// Outputs
-			.mi_dout	(mi_mailbox_dout[63:0]), // Templated
-			.mailbox_irq	(mailbox_irq),
-			// Inputs
-			.nreset		(nreset),
-			.wr_clk		(clk),			 // Templated
-			.rd_clk		(clk),			 // Templated
-			.emesh_access	(emmu_access),		 // Templated
-			.emesh_packet	(emmu_packet[PW-1:0]),	 // Templated
-			.mi_en		(mi_cfg_en),		 // Templated
-			.mi_we		(mi_we),
-			.mi_addr	(mi_addr[RFAW+1:0]),
-			.mailbox_irq_en	(mailbox_irq_en));
+   emailbox #(.ID(ID))
+   erx_mailbox(
+	       /*AUTOINST*/
+	       // Outputs
+	       .reg_rdata		(mailbox_rdata[31:0]),	 // Templated
+	       .mailbox_irq		(mailbox_irq),
+	       // Inputs
+	       .nreset			(nreset),
+	       .wr_clk			(clk),			 // Templated
+	       .rd_clk			(clk),			 // Templated
+	       .emesh_access		(emmu_access),		 // Templated
+	       .emesh_packet		(emmu_packet[PW-1:0]),	 // Templated
+	       .reg_access		(mailbox_access),	 // Templated
+	       .reg_packet		(erx_cfg_packet[PW-1:0]), // Templated
+	       .mailbox_irq_en		(mailbox_irq_en));
       
-   /************************************************************/
-   /* CONFIGURATION INTERFACE                                  */
-   /************************************************************/
-   /*ecfg_if AUTO_TEMPLATE ( 
-    .wait_in		(erx_cfg_wait),
-    .\(.*\)_in          (erx_cfg_\1[]),
-    .\(.*\)_out         (ecfg_\1[]),
-    .mi_dout0		({32'b0,mi_cfg_dout[31:0]}),
-    .mi_dout1		({32'b0,mi_dma_dout[31:0]}),
-    .mi_dout2		({32'b0,mi_mmu_dout[31:0]}),
-    .mi_dout3		(mi_mailbox_dout[63:0]),
-    );
-    */
-   
-   defparam erx_cfgif.RX=1;
-   defparam erx_cfgif.ID=ID;
-   
-   ecfg_if erx_cfgif (/*AUTOINST*/
-		      // Outputs
-		      .mi_mmu_en	(mi_mmu_en),
-		      .mi_dma_en	(mi_dma_en),
-		      .mi_cfg_en	(mi_cfg_en),
-		      .mi_we		(mi_we),
-		      .mi_addr		(mi_addr[14:0]),
-		      .mi_din		(mi_din[63:0]),
-		      .access_out	(ecfg_access),		 // Templated
-		      .packet_out	(ecfg_packet[PW-1:0]),	 // Templated
-		      // Inputs
-		      .clk		(clk),
-		      .nreset		(nreset),
-		      .access_in	(erx_cfg_access),	 // Templated
-		      .packet_in	(erx_cfg_packet[PW-1:0]), // Templated
-		      .mi_dout0		({32'b0,mi_cfg_dout[31:0]}), // Templated
-		      .mi_dout1		({32'b0,mi_dma_dout[31:0]}), // Templated
-		      .mi_dout2		({32'b0,mi_mmu_dout[31:0]}), // Templated
-		      .mi_dout3		(mi_mailbox_dout[63:0]), // Templated
-		      .wait_in		(erx_cfg_wait));		 // Templated
-   
-   
    /************************************************************/
    /* ERX CONFIGURATION                                        */
    /************************************************************/
@@ -258,17 +198,7 @@ module erx_core (/*AUTOARG*/
     );
         */   
    
-   assign rx_status[15:0] = {11'b0,
-			     rx_rd_wait,
-			     rx_wr_wait,
-			     rxrr_wait,
-			     rxrd_wait,
-			     rxwr_wait		       
-			     };
-   
-   assign gpio_datain[8:0]=9'b0;
-   
-  /*
+   /*
    assign gpio_datain[8:0]= {rx_frame_par[0],
 			     rx_data_par[7],
 			     rx_data_par[6],
@@ -281,11 +211,20 @@ module erx_core (/*AUTOARG*/
 			     };
    */
    
-   erx_cfg erx_cfg (.rx_status    	(rx_status[15:0]),
-		    .timer_cfg		(),
+   erx_cfg erx_cfg (.rx_status    	({11'b0,
+					  rx_rd_wait,
+					  rx_wr_wait,
+					  rxrr_wait,
+					  rxrd_wait,
+					  rxwr_wait		       
+					 }
+					),
 		     /*AUTOINST*/
 		    // Outputs
-		    .mi_dout		(mi_cfg_dout[DW-1:0]),	 // Templated
+		    .dma_access		(dma_access),
+		    .mailbox_access	(mailbox_access),
+		    .ecfg_access	(ecfg_access),
+		    .ecfg_packet	(ecfg_packet[PW-1:0]),
 		    .mmu_enable		(mmu_enable),
 		    .remap_mode		(remap_mode[1:0]),
 		    .remap_base		(remap_base[31:0]),
@@ -298,10 +237,10 @@ module erx_core (/*AUTOARG*/
 		    // Inputs
 		    .nreset		(nreset),
 		    .clk		(clk),
-		    .mi_en		(mi_cfg_en),		 // Templated
-		    .mi_we		(mi_we),
-		    .mi_addr		(mi_addr[14:0]),
-		    .mi_din		(mi_din[31:0]),
+		    .erx_cfg_access	(erx_cfg_access),
+		    .erx_cfg_packet	(erx_cfg_packet[PW-1:0]),
+		    .edma_rdata		(edma_rdata[31:0]),
+		    .mailbox_rdata	(mailbox_rdata[31:0]),
 		    .erx_access		(erx_access),
 		    .erx_packet		(erx_packet[PW-1:0]),
 		    .gpio_datain	(gpio_datain[8:0]));
@@ -310,26 +249,24 @@ module erx_core (/*AUTOARG*/
    /*ELINK DMA                                                 */
    /************************************************************/
    
-   /*edma AUTO_TEMPLATE (
-                         .mi_en		(mi_dma_en),
+   /*edma AUTO_TEMPLATE (.reg_access	(dma_access),
+                         .reg_\(.*\)	(erx_cfg_\1[]),
+                         .reg_rdata	(edma_rdata[31:0]),
                          .edma_access	(edma_access),   
-                         .mi_dout       (mi_dma_dout[DW-1:0]),
-                             
-                               );
+                         .\(.*\)_\(.*\) (edma_\1),      
+                         );
    */   
    edma erx_dma(/*AUTOINST*/
 		// Outputs
-		.mi_dout		(mi_dma_dout[DW-1:0]),	 // Templated
-		.edma_access		(edma_access),		 // Templated
-		.edma_packet		(edma_packet[PW-1:0]),
+		.reg_rdata		(edma_rdata[31:0]),	 // Templated
+		.access_out		(edma_access),		 // Templated
+		.packet_out		(edma_packet),		 // Templated
 		// Inputs
 		.nreset			(nreset),
 		.clk			(clk),
-		.mi_en			(mi_dma_en),		 // Templated
-		.mi_we			(mi_we),
-		.mi_addr		(mi_addr[RFAW+1:0]),
-		.mi_din			(mi_din[63:0]),
-		.edma_wait		(edma_wait));
+		.reg_access		(dma_access),		 // Templated
+		.reg_packet		(erx_cfg_packet[PW-1:0]), // Templated
+		.wait_in		(edma_wait));		 // Templated
    
 				 
    /************************************************************/
@@ -345,30 +282,29 @@ module erx_core (/*AUTOARG*/
     )
     */
 
-   defparam erx_arbiter.ID    = ID;
-   erx_arbiter erx_arbiter (.timeout	(1'b0),//TODO
-			    /*AUTOINST*/
-			    // Outputs
-			    .rx_rd_wait		(rx_rd_wait),
-			    .rx_wr_wait		(rx_wr_wait),
-			    .edma_wait		(edma_wait),
-			    .ecfg_wait		(erx_cfg_wait),	 // Templated
-			    .rxwr_access	(rxwr_access),
-			    .rxwr_packet	(rxwr_packet[PW-1:0]),
-			    .rxrd_access	(rxrd_access),
-			    .rxrd_packet	(rxrd_packet[PW-1:0]),
-			    .rxrr_access	(rxrr_access),
-			    .rxrr_packet	(rxrr_packet[PW-1:0]),
-			    // Inputs
-			    .erx_access		(emmu_access),	 // Templated
-			    .erx_packet		(emmu_packet[PW-1:0]), // Templated
-			    .edma_access	(edma_access),
-			    .edma_packet	(edma_packet[PW-1:0]),
-			    .ecfg_access	(ecfg_access),
-			    .ecfg_packet	(ecfg_packet[PW-1:0]),
-			    .rxwr_wait		(rxwr_wait),
-			    .rxrd_wait		(rxrd_wait),
-			    .rxrr_wait		(rxrr_wait));
+   erx_arbiter #(.ID(ID))
+   erx_arbiter (/*AUTOINST*/
+		// Outputs
+		.rx_rd_wait		(rx_rd_wait),
+		.rx_wr_wait		(rx_wr_wait),
+		.edma_wait		(edma_wait),
+		.ecfg_wait		(erx_cfg_wait),		 // Templated
+		.rxwr_access		(rxwr_access),
+		.rxwr_packet		(rxwr_packet[PW-1:0]),
+		.rxrd_access		(rxrd_access),
+		.rxrd_packet		(rxrd_packet[PW-1:0]),
+		.rxrr_access		(rxrr_access),
+		.rxrr_packet		(rxrr_packet[PW-1:0]),
+		// Inputs
+		.erx_access		(emmu_access),		 // Templated
+		.erx_packet		(emmu_packet[PW-1:0]),	 // Templated
+		.edma_access		(edma_access),
+		.edma_packet		(edma_packet[PW-1:0]),
+		.ecfg_access		(ecfg_access),
+		.ecfg_packet		(ecfg_packet[PW-1:0]),
+		.rxwr_wait		(rxwr_wait),
+		.rxrd_wait		(rxrd_wait),
+		.rxrr_wait		(rxrr_wait));
    
 endmodule // erx_core
 

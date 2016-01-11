@@ -1,72 +1,55 @@
-/*
- #########################################################################
- # Function: Mailbox FIFO with a FIFO empty/full flag interrupts.
- #
- #           E_MAILBOXLO    = lower 32 bits of FIFO entry
- #           E_MAILBOXHI    = upper 32 bits of FIFO entry
- #
- # Notes:    1.) System should take care of not overflowing the FIFO
- #           2.) Reading the E_MAILBOXHI causes a fifo rd pointer update
- #           3.) The "embox_not_empty" is a "level" interrupt signal.
- #
- # How to use: 1.) Connect "embox_not_empty" to interrupt input line
- #             2.) Write an ISR to respond to interrupt line::
- #                 -reads E_MAILBOXLO, then
- #                 -reads E_MAILBOXHI, then
- #                 -finishes ISR
- #
- #########################################################################
- */
+//####################################################################
+//# Function: Mailbox FIFO with a FIFO empty/full flag interrupts.
+//#
+//#           E_MAILBOXLO    = lower 32 bits of FIFO entry
+//#           E_MAILBOXHI    = upper 32 bits of FIFO entry
+//#           E_MAILBOXSTAT  = {30'b0,fifo_full, ~fifo_empty}
+//#
+//# Notes:    1.) System should take care of not overflowing the FIFO
+//#           2.) Reading E_MAILBOXLO causes a fifo rd pointer update
+//#           3.) The "embox_not_empty" is a "level" interrupt signal
+//#
+//#####################################################################
 `include "emailbox_regmap.v" // is there a better way?
 module emailbox (/*AUTOARG*/
    // Outputs
-   mi_dout, mailbox_irq,
+   reg_rdata, mailbox_irq,
    // Inputs
-   nreset, wr_clk, rd_clk, emesh_access, emesh_packet, mi_en, mi_we,
-   mi_addr, mailbox_irq_en
+   nreset, wr_clk, rd_clk, emesh_access, emesh_packet, reg_access,
+   reg_packet, mailbox_irq_en
    );
 
-   parameter DW     = 32;        //data width of fifo
-   parameter AW     = 32;        //data width of fifo
-   parameter PW     = 104;       //packet size
-   parameter RFAW   = 6;         //address bus width
-   parameter ID     = 12'h000;   //link id
+   //##################################################################
+   //# INTERFACE
+   //##################################################################
+   parameter AW     = 32;          // data width of fifo
+   parameter ID     = 12'h000;     // link id
+   parameter RFAW   = 6;           // address bus width
+   parameter DEPTH  = 32;          // fifo depth
+   parameter PW     = 2*AW+40;     // packet size
+   parameter MW     = PW;          // fifo memory width
 
-   parameter MW     = 104;       //fifo memory width
-   parameter DEPTH  = 32;        //fifo depth
+   //clk+reset
+   input           nreset;         // asynchronous active low reset
+   input 	   wr_clk;         // write clock
+   input 	   rd_clk;         // read clock
    
-   /*****************************/
-   /*RESET                      */
-   /*****************************/
-   input           nreset;      //asynchronous active low reset
-   input 	   wr_clk;      //write clock
-   input 	   rd_clk;      //read clock
+   //message interface
+   input 	   emesh_access;   // message access (write only)
+   input [PW-1:0]  emesh_packet;   // message packet
    
-   /*****************************/
-   /*WRITE INTERFACE            */
-   /*****************************/
-   input 	   emesh_access;
-   input [PW-1:0]  emesh_packet;
+   //register interface
+   input 	   reg_access;     // register access (read only)
+   input [PW-1:0]  reg_packet;     // data/address
+   output [31:0]   reg_rdata;      // readback dataa
+
+   //mailbox flags
+   input 	   mailbox_irq_en; // interupt enable 	    
+   output 	   mailbox_irq;    // interrupt
    
-   /*****************************/
-   /*32 BIT READ INTERFACE      */
-   /*****************************/   
-   input 	    mi_en;
-   input  	    mi_we;      
-   input [RFAW+1:0] mi_addr;
-   output [63:0]    mi_dout;   
-   
-   /*****************************/
-   /*MAILBOX CONTROl            */
-   /*****************************/
-   input 	    mailbox_irq_en; 	    
-   output 	    mailbox_irq;   
-   
-   /*****************************/
-   /*REGISTERS/WIRES            */
-   /*****************************/
-   reg 		   mi_rd_reg;   
-   reg [RFAW+1:2]  mi_addr_reg;
+   //##################################################################
+   //# BODY
+   //##################################################################  
    reg 		   read_hi;
    reg 		   read_lo;
    reg 		   read_status;     
@@ -79,12 +62,22 @@ module emailbox (/*AUTOARG*/
    wire [MW-1:0]   mailbox_data;
    wire 	   mailbox_empty; 
 
+   /*AUTOWIRE*/
+   // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire [4:0]		reg_ctrlmode;		// From p2e1 of packet2emesh.v
+   wire [AW-1:0]	reg_data;		// From p2e1 of packet2emesh.v
+   wire [1:0]		reg_datamode;		// From p2e1 of packet2emesh.v
+   wire [AW-1:0]	reg_dstaddr;		// From p2e1 of packet2emesh.v
+   wire [AW-1:0]	reg_srcaddr;		// From p2e1 of packet2emesh.v
+   wire			reg_write;		// From p2e1 of packet2emesh.v
+   // End of automatics
+   
    //###########################################
    // WRITE PORT
    //###########################################
 
    packet2emesh #(.AW(32))
-   pe2 (// Outputs
+   p2e0 (// Outputs
 	.write_in	(emesh_write),
 	.datamode_in	(),
 	.ctrlmode_in	(),
@@ -100,31 +93,44 @@ module emailbox (/*AUTOARG*/
 			  (emesh_addr[19:16]==`EGROUP_MMR) & 
                           (emesh_addr[RFAW+1:2]==`E_MAILBOXLO); 
    
-
    //###########################################
    // READ PORT
    //###########################################  
 
-   assign mi_rd         = mi_en & ~mi_we;   
-   assign mailbox_read  = mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXLO); //fifo read
+   /*packet2emesh  AUTO_TEMPLATE ( .\(.*\)_in  (reg_\1[]));*/   
+
+   packet2emesh #(.AW(AW))
+   p2e1 (/*AUTOINST*/
+	 // Outputs
+	 .write_in			(reg_write),		 // Templated
+	 .datamode_in			(reg_datamode[1:0]),	 // Templated
+	 .ctrlmode_in			(reg_ctrlmode[4:0]),	 // Templated
+	 .dstaddr_in			(reg_dstaddr[AW-1:0]),	 // Templated
+	 .srcaddr_in			(reg_srcaddr[AW-1:0]),	 // Templated
+	 .data_in			(reg_data[AW-1:0]),	 // Templated
+	 // Inputs
+	 .packet_in			(reg_packet[PW-1:0]));	 // Templated
+   
+   assign reg_read      = reg_access & ~reg_write;
+   assign mailbox_read  = reg_read & (reg_dstaddr[RFAW+1:2]==`E_MAILBOXLO);
 
    always @ (posedge rd_clk)
      begin
 	read_lo      <= mailbox_read;
-	read_hi      <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXHI);	
-	read_status  <= mi_rd & (mi_addr[RFAW+1:2]==`E_MAILBOXSTAT);
+	read_hi      <= reg_read & (reg_dstaddr[RFAW+1:2]==`E_MAILBOXHI);	
+	read_status  <= reg_read & (reg_dstaddr[RFAW+1:2]==`E_MAILBOXSTAT);
      end
 
-   oh_mux3 #(.DW(64))
+   //TODO: check that high bits stay high
+   oh_mux3 #(.DW(32))
    oh_mux3 (// Outputs
-	     .out (mi_dout[63:0]),
+	     .out (reg_rdata[31:0]),
 	     // Inputs
-	     .in0 ({62'b0,mailbox_full, mailbox_not_empty}),   .sel0 (read_status),
-	     .in1 ({mailbox_data[63:32],mailbox_data[63:32]}), .sel1 (read_hi),
-     	     .in2 (mailbox_data[63:0]),                        .sel2 (read_lo)
+	     .in0 ({30'h0,mailbox_full, mailbox_not_empty}), .sel0 (read_status),
+	     .in1 (mailbox_data[63:32]),                     .sel1 (read_hi),
+     	     .in2 (mailbox_data[31:0]),                      .sel2 (read_lo)
 	     );
 
-  
    //###########################################
    // FIFO
    //###########################################  
@@ -158,7 +164,6 @@ module emailbox (/*AUTOARG*/
 			       (mailbox_not_empty | mailbox_full);
       
 endmodule // emailbox
-
 // Local Variables:
 // verilog-library-directories:("." "../../emesh/hdl")
 // End:

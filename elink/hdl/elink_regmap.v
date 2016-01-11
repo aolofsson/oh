@@ -13,8 +13,13 @@
 
 //Link register groups addr[19:16]
 `define EGROUP_MMR     4'hF // reserved for registers
-`define EGROUP_MMU     4'hE // RX & TX MMU
+`define EGROUP_MMU     4'hE // MMU RX([15]==1), TX([15]==0)
 `define EGROUP_RR      4'hD // read response block
+
+//Register blocks[10:8]
+`define EGROUP_TX      3'd2 //0200
+`define EGROUP_RX      3'd3 //0300
+`define EGROUP_DMA     3'd5 //0500
 
 //ETX-REGS
 `define E_RESET        6'd0 //F0200-reset

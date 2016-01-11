@@ -47,7 +47,11 @@ module emesh_rdalign (/*AUTOARG*/
    wire [3:0]      byte0_sel;
    wire [31:0]     data_mux;
    wire [31:0]     data_aligned;
-
+   wire 	   byte1_sel1;
+   wire 	   byte1_sel0;
+   wire 	   byte2_en;
+   wire 	   byte3_en;
+   
    //Shift down high word
    assign data_mux[31:0] = addr[2] ? data_in[63:32] : 
 			             data_in[31:0];
