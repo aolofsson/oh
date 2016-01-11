@@ -34,6 +34,7 @@ module oh_memory_sp(/*AUTOARG*/
      $display("Need to instantiate process specific macro here");
    
 `else
+   //Assume FPGA tool knows what it's doing (single clock...)
    reg [DW-1:0]        ram    [DEPTH-1:0];  
    reg [DW-1:0]        dout;
    integer 	       i;
@@ -47,8 +48,8 @@ module oh_memory_sp(/*AUTOARG*/
    always @ (posedge clk)
      for(i=0;i<DW;i=i+1)	   
        if(en & wem[i] & we)	       
- 	 ram[addr[AW-1:0]][i] <= din[i];
-     
+ 	 ram[addr[AW-1:0]][i] <= din[i]; 
+
 `endif
   
 endmodule // oh_memory_sp

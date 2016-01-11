@@ -8,50 +8,51 @@
 
 module oh_memory_dp(/*AUTOARG*/
    // Outputs
-   rd_data,
+   rd_dout,
    // Inputs
-   wr_clk, wr_en, wr_addr, wr_data, rd_clk, rd_en, rd_addr
+   wr_clk, wr_en, wr_wem, wr_addr, wr_din, rd_clk, rd_en, rd_addr
    );
 
-   parameter AW      = 14;   
-   parameter DW      = 32;
-   parameter MD      = 1<<AW;//memory depth
+   parameter  AW      = 14;   //address width
+   parameter  DW      = 32;   //memory width
+   localparam MD      = 1<<AW;//memory depth
 
    //write-port
    input               wr_clk; //write clock
-   input [DW/8-1:0]    wr_en;  //write enable vector
+   input               wr_en;  //write enable
+   input [DW-1:0]      wr_wem; //per bit write enable
    input [AW-1:0]      wr_addr;//write address
-   input [DW-1:0]      wr_data;//write data
+   input [DW-1:0]      wr_din; //write data
 
    //read-port   
    input 	       rd_clk; //read clock
    input 	       rd_en;  //read enable
    input [AW-1:0]      rd_addr;//read address
-   output[DW-1:0]      rd_data;//read output data
+   output[DW-1:0]      rd_dout;//read output data
    
-   //////////////////////
-   //SIMPLE MEMORY MODEL 
-   //////////////////////   
+`ifdef CFG_ASIC
 
+   initial  
+     $display("Need to instantiate process specific macro here");
+   
+`else
    reg [DW-1:0]        ram    [MD-1:0];  
-   reg [DW-1:0]        rd_data;
+   reg [DW-1:0]        rd_dout;
+   integer 	       i;
    
    //read port
    always @ (posedge rd_clk)
      if(rd_en)       
-       rd_data[DW-1:0] <= ram[rd_addr[AW-1:0]];
+       rd_dout[DW-1:0] <= ram[rd_addr[AW-1:0]];
    
    //write port
-   generate
-      genvar 	     i;
-      for (i = 0; i < DW/8; i = i+1) begin: gen_ram
-	 always @(posedge wr_clk)
-           begin  
-              if (wr_en[i]) 
-                ram[wr_addr[AW-1:0]][(i+1)*8-1:i*8] <= wr_data[(i+1)*8-1:i*8];
-           end
-      end
-   endgenerate
+   always @(posedge wr_clk)    
+     for (i=0;i<DW;i=i+1)
+       if (wr_en & wr_wem[i]) 
+         ram[wr_addr[AW-1:0][i]] <= wr_din[i];
+   
+`endif // !`ifdef CFG_ASIC
+   
    
 endmodule // memory_dp
 
