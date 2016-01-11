@@ -1,12 +1,12 @@
 
-| Name            | Done | Function                            |  
-|-----------------|------|-------------------------------------|  
-| oh_rsync        |  Y   | Reset synchronzation circuit        |  
-| oh_dsync        |  Y   | Data synchronizizer                 |  
-| oh_mux{N}       |  Y   | Various one-hot muxes               |  
-| oh_edgealign    |  Y   | Aligns slow pulse to fast clock     |  
-| oh_pulse2pulse  |  Y   | Converts fast pulse to slow pulse   |  
-| oh_stretcher    |  Y   | Stetches a pulse                    |  
+| Name            | Done | Function                            |
+|-----------------|------|-------------------------------------|
+| oh_rsync        |  Y   | Reset synchronzation circuit        |
+| oh_dsync        |  Y   | Data synchronizizer                 |
+| oh_mux{N}       |  Y   | Various one-hot muxes               |
+| oh_edgealign    |  Y   | Aligns slow pulse to fast clock     |
+| oh_pulse2pulse  |  Y   | Converts fast pulse to slow pulse   |
+| oh_stretcher    |  Y   | Stetches a pulse                    |
 | oh_clockdiv     |  N   | Clock divider                       |
 | oh_arbiter      |  N   | Configurable arbiter                |
 | oh_fifo_sync    |  Y   | FIFO with same rd/wr clocks         |

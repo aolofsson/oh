@@ -20,6 +20,8 @@ module oh_mux4(/*AUTOARG*/
    input 	   sel3;
 
    output [DW-1:0] out;
+
+   wire 	   error;
    
   
    assign out[DW-1:0] = ({(DW){sel0}} & in0[DW-1:0] |
@@ -27,6 +29,12 @@ module oh_mux4(/*AUTOARG*/
 			 {(DW){sel2}} & in2[DW-1:0] |
 			 {(DW){sel3}} & in3[DW-1:0]);
    
-			
+
+   assign error = (sel0 | sel1 | sel2 | sel3) &
+   		  ~(sel0 ^ sel1 ^ sel2 ^ sel3);
+
+   always @ (posedge error)
+     $display ("ERROR in oh_mux4 %m");
+   			
 endmodule // oh_mux4
 

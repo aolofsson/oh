@@ -137,7 +137,7 @@ module dv_driver (/*AUTOARG*/
 		 .coreid		(coreid[IDW-1:0]),
 		 .access_in		(dut_access[j]),
 		 .packet_in		(dut_packet[(j+1)*PW-1:j*PW]),
-		 .wait_in		(dut_wait[i])
+		 .wait_in		(dut_wait[j])
 		 );
       end	 
 	 
