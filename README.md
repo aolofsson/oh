@@ -23,3 +23,22 @@ The OH! repository source code is licensed under the MIT license unless otherwis
 ## CONTRIBUTING
 Instructions for contributing can be found [HERE](CONTRIBUTING.md).
 
+## RECOMMEND TOOLS
+
+* [Verilog-Perl](http://www.veripool.org/wiki/verilog-perl)
+* [Verilator Simulator](http://www.veripool.org/wiki/verilator)
+* [Emacs Verilog Mode](http://www.veripool.org/wiki/verilog-mode)
+* [Icarus Simulator](http://iverilog.icarus.com)
+* [GTKWave](http://gtkwave.sourceforge.net)
+
+## RECOMMENDED READING
+
+* [Sunburst Design Verilog Papers](http://www.sunburst-design.com/papers)
+* [Sutherland Verilog Papers](http://www.sutherland-hdl.com/papers.html)
+
+
+
+
+
+
+
