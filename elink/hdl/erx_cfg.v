@@ -1,9 +1,9 @@
 `include "elink_regmap.v"
 module erx_cfg (/*AUTOARG*/
    // Outputs
-   dma_access, mailbox_access, ecfg_access, ecfg_packet, mmu_enable,
-   remap_mode, remap_base, remap_pattern, remap_sel, idelay_value,
-   load_taps, test_mode, mailbox_irq_en,
+   mmu_access, dma_access, mailbox_access, ecfg_access, ecfg_packet,
+   mmu_enable, remap_mode, remap_base, remap_pattern, remap_sel,
+   idelay_value, load_taps, test_mode, mailbox_irq_en,
    // Inputs
    nreset, clk, erx_cfg_access, erx_cfg_packet, edma_rdata,
    mailbox_rdata, erx_access, erx_packet, gpio_datain, rx_status
@@ -26,6 +26,7 @@ module erx_cfg (/*AUTOARG*/
    input [PW-1:0]  erx_cfg_packet; // packet
 
    //readback/decode
+   output 	   mmu_access;     // mmu access
    output 	   dma_access;     // dma access
    output 	   mailbox_access; // mailbox access  
    input [31:0]    edma_rdata;     // dma readback data
@@ -120,6 +121,10 @@ module erx_cfg (/*AUTOARG*/
 			  (dstaddr_in[19:16] ==`EGROUP_MMR) &
 			  (dstaddr_in[10:8]  ==`EGROUP_DMA);
    
+   assign mmu_access    = erx_cfg_access & 
+			  (dstaddr_in[19:16] ==`EGROUP_MMU) &
+			  dstaddr_in[15];
+
    //Read operation (cfg or dma or mailbox)
    assign ecfg_read      = erx_cfg_access & ~write_in;
 

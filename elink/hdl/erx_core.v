@@ -67,6 +67,7 @@ module erx_core (/*AUTOARG*/
    wire			mailbox_access;		// From erx_cfg of erx_cfg.v
    wire			mailbox_irq_en;		// From erx_cfg of erx_cfg.v
    wire [31:0]		mailbox_rdata;		// From erx_mailbox of emailbox.v
+   wire			mmu_access;		// From erx_cfg of erx_cfg.v
    wire			mmu_enable;		// From erx_cfg of erx_cfg.v
    wire [31:0]		remap_base;		// From erx_cfg of erx_cfg.v
    wire [1:0]		remap_mode;		// From erx_cfg of erx_cfg.v
@@ -135,7 +136,7 @@ module erx_core (/*AUTOARG*/
    /************************************************************/
    /*ELINK MEMORY MANAGEMENT UNIT                              */
    /************************************************************/
-   /*emmu AUTO_TEMPLATE (.reg_access	       (erx_cfg_access),
+   /*emmu AUTO_TEMPLATE (.reg_access	       (mmu_access),
 		         .reg_packet	       (erx_packet[PW-1:0]), 
                          .emesh_\(.*\)_out     (emmu_\1[]),   
                          .emesh_\(.*\)_in      (emesh_remap_\1[]),   
@@ -155,7 +156,7 @@ module erx_core (/*AUTOARG*/
 		 .rd_clk		(clk),			 // Templated
 		 .nreset		(nreset),
 		 .mmu_en		(mmu_enable),		 // Templated
-		 .reg_access		(erx_cfg_access),	 // Templated
+		 .reg_access		(mmu_access),		 // Templated
 		 .reg_packet		(erx_packet[PW-1:0]),	 // Templated
 		 .emesh_access_in	(emesh_remap_access),	 // Templated
 		 .emesh_packet_in	(emesh_remap_packet[PW-1:0])); // Templated
@@ -212,7 +213,8 @@ module erx_core (/*AUTOARG*/
 			     };
    */
    
-   erx_cfg erx_cfg (.rx_status    	({11'b0,
+   erx_cfg erx_cfg (.gpio_datain	(9'b0),
+		    .rx_status    	({11'b0,
 					  rx_rd_wait,
 					  rx_wr_wait,
 					  rxrr_wait,
@@ -222,6 +224,7 @@ module erx_core (/*AUTOARG*/
 					),
 		     /*AUTOINST*/
 		    // Outputs
+		    .mmu_access		(mmu_access),
 		    .dma_access		(dma_access),
 		    .mailbox_access	(mailbox_access),
 		    .ecfg_access	(ecfg_access),
@@ -243,8 +246,7 @@ module erx_core (/*AUTOARG*/
 		    .edma_rdata		(edma_rdata[31:0]),
 		    .mailbox_rdata	(mailbox_rdata[31:0]),
 		    .erx_access		(erx_access),
-		    .erx_packet		(erx_packet[PW-1:0]),
-		    .gpio_datain	(gpio_datain[8:0]));
+		    .erx_packet		(erx_packet[PW-1:0]));
    
    /************************************************************/
    /*ELINK DMA                                                 */

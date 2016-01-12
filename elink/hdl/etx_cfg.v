@@ -6,18 +6,22 @@
 `include "elink_regmap.v"
 module etx_cfg (/*AUTOARG*/
    // Outputs
-   etx_cfg_access, etx_cfg_packet, tx_enable, mmu_enable, gpio_enable,
-   remap_enable, burst_enable, gpio_data, ctrlmode, ctrlmode_bypass,
+   cfg_mmu_access, etx_cfg_access, etx_cfg_packet, tx_enable,
+   mmu_enable, gpio_enable, remap_enable, burst_enable, gpio_data,
+   ctrlmode, ctrlmode_bypass,
    // Inputs
    nreset, clk, cfg_access, etx_access, etx_packet, etx_wait,
    tx_status
    );
-   
-   parameter AW               = 32;   
-   parameter PW               = 2*AW+40;   
-   parameter RFAW             = 6;
-   parameter DEFAULT_VERSION  = 16'h0000;
-   parameter ID               = 999;
+
+   //##################################################################
+   //# INTERFACE
+   //##################################################################
+   parameter AW       = 32;   
+   parameter PW       = 2*AW+40;   
+   parameter RFAW     = 6;
+   parameter VERSION  = 16'h0000;
+   parameter ID       = 999;
 
    //reset+clk
    input 	    nreset;         // sync reset      
@@ -28,10 +32,11 @@ module etx_cfg (/*AUTOARG*/
    input 	    etx_access;     // for transaction counter
    input [PW-1:0]   etx_packet;     // for transaction sampler
    input 	    etx_wait;       // wait signal   
+   output 	    cfg_mmu_access; // mmu access
 
-   //packet output (for RX
-   output 	    etx_cfg_access;
-   output [PW-1:0]  etx_cfg_packet;
+   //packet output (for RX)
+   output 	    etx_cfg_access; // access for rx (write or rdata forward)
+   output [PW-1:0]  etx_cfg_packet; // packet
 
    //tx (static configs)
    output 	   tx_enable;       // enable signal for TX  
@@ -42,9 +47,12 @@ module etx_cfg (/*AUTOARG*/
    output [8:0]    gpio_data;       // data for elink outputs (static)   
    output [3:0]    ctrlmode;        // value for emesh ctrlmode tag
    output          ctrlmode_bypass; // selects ctrlmode
-
    input [15:0]    tx_status;       // tx status signals 
-   
+
+   //##################################################################
+   //# BODY
+   //##################################################################
+
    //registers/wires
    reg [15:0] 	   tx_version_reg;
    reg [11:0] 	   tx_cfg_reg;
@@ -96,8 +104,15 @@ module etx_cfg (/*AUTOARG*/
 		         (dstaddr_in[19:16] ==`EGROUP_MMR) &
 		         (dstaddr_in[10:8]  ==`EGROUP_TX);
    			 			 
+   //MMU access
+   assign cfg_mmu_access = cfg_access & 
+			   (dstaddr_in[19:16] ==`EGROUP_MMU) &
+			   ~dstaddr_in[15];
+
    assign ecfg_read    = tx_match & ~write_in;
    assign ecfg_write   = tx_match & write_in;
+
+   
    
    //Config write enables 
    assign tx_version_write  = ecfg_write & (dstaddr_in[RFAW+1:2]==`E_VERSION);
@@ -156,7 +171,7 @@ module etx_cfg (/*AUTOARG*/
    //###########################
    always @ (posedge clk)
      if(!nreset)
-       tx_version_reg[15:0] <= DEFAULT_VERSION;
+       tx_version_reg[15:0] <= VERSION;
      else if (tx_version_write)
        tx_version_reg[15:0] <= data_in[15:0];       
 
