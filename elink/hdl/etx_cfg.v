@@ -75,10 +75,11 @@ module etx_cfg (/*AUTOARG*/
    wire [AW-1:0]	srcaddr_in;		// From p2e of packet2emesh.v
    wire			write_in;		// From p2e of packet2emesh.v
    // End of automatics
-   
-   /*****************************/
-   /*ADDRESS DECODE LOGIC       */
-   /*****************************/
+
+
+   //###########################
+   //# DECODE LOGIC
+   //###########################
    packet2emesh #(.AW(AW))
    p2e (.packet_in   (etx_packet[PW-1:0]),
 	/*AUTOINST*/
@@ -118,9 +119,9 @@ module etx_cfg (/*AUTOARG*/
    assign mmu_enable      = tx_cfg_reg[1];   
    assign remap_enable    = (tx_cfg_reg[3:2]==2'b01);
    assign ctrlmode[3:0]   = tx_cfg_reg[7:4];
-   assign ctrlmode_bypass = tx_cfg_reg[8];
-   assign gpio_enable     = (tx_cfg_reg[10:9]==2'b01);
-   assign burst_enable    = tx_cfg_reg[11];
+   assign ctrlmode_bypass = tx_cfg_reg[9];
+   assign burst_enable    = tx_cfg_reg[10];
+   assign gpio_enable     = (tx_cfg_reg[11:10]==2'b01);
    
    //###########################
    //# STATUS REGISTER

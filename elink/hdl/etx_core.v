@@ -198,12 +198,10 @@ module etx_core(/*AUTOARG*/
    //# TX CONFIGURATION
    //##################################################################  
  
-   etx_cfg etx_cfg (.tx_status	({5'b0,
+   etx_cfg etx_cfg (.tx_status	({7'b0,
 				  tx_burst,     
 				  tx_rd_wait,
 				  tx_wr_wait,
-				  etx_rd_wait,
-				  etx_wr_wait,
 				  txrr_wait,
 				  txrd_wait,
 				  txwr_wait,

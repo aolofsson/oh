@@ -175,7 +175,7 @@ elink
 
 ## Registers
  
-The full 32 bit physical address of an elink register is the address seen below added to the 12 bit elink ID that maps to address bits 31:20.  As an example, if the elink ID is 0x810, then writing to the E_RESET register would be done to address 0x810F0200. Readback is done through the txrd channel with the source address sub field set to 810Dxxxx;
+The full 32 bit physical address of an elink register is the address seen below added to the 12 bit elink ID that maps to address bits 31:20.  As an example, if the elink ID is 0x810, then writing to the ELINK_RESET register would be done to address 0x810F0200. Readback is done through the txrd channel with the source address sub field set to 810Dxxxx;
  
 REGISTER         | ACCESS | ADDRESS | DESCRIPTION 
 -----------------|--------|---------|------------------
@@ -208,8 +208,10 @@ Reset control register for the elink and Epiphany chip
 
 FIELD    | DESCRIPTION 
 -------- | --------------------------------------------------
- [0]     | 0: active
-         | 1: resets elink and Epiphany chip 
+ [0]     | 0: TX active
+         | 1: TX reset asserted
+ [1]     | 0: RX active
+         | 1: RX reset asserted
 
 -------------------------------
 
@@ -273,8 +275,7 @@ TX configuration settings
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
- [0]     | 0:  TX disabled (not implemented)  
-         | 1:  TX enabled
+ [0]     | Not implemented (reserved for TX enable)
  [1]     | 0:  MMU disabled
          | 1:  MMU enabled
  [3:2]   | 00: Address remapping disabled
@@ -287,33 +288,31 @@ FIELD    | DESCRIPTION
          | 1001: Force SOUTH routing on address match (instead of "into" core)
          | 1101: Force WEST routing on address match (instead of "into" core)
          | 0011: Multicast routing (LABS)
- [8]     | Control mode select for TXRD/TXWR channels
+ [8]     | Reservered for cltrmode[4] 
+ [9]     | Control mode select for TXRD/TXWR channels
          | 0: ctrlmode field taken from incoming transmit packet
          | 1: ctrlmode field taken E_TXCFG
- [10:9]  | 00: Normal transmit mode
-         | 01: GPIO direct drive mode
- [11]    | 0: Burst mode disabled
+ [10]    | 0: Burst mode disabled
          | 1: Burst mode enabled
+ [11:10] | 00: Normal transmit mode
+         | 01: GPIO direct drive mode
 	 
 -------------------------------
 
 ## ELINK_TXSTATUS (0xF0214)
-TX status register
+TX status register. Sticky means once a signal goes high, it stays high until register is over written.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
-[0]      | TXWR FIFO was full
-[1]      | TXRD FIFO was full
-[2]      | TXRR FIFO was full
-[3]      | TXWR stalled
-[4]      | TXRD stalled
-[5]      | TXRR stalled
-[6]      | WR_WAIT input pin was high
-[7]      | RD_WAIT input pin was high
-[8]      | Burst occured
-
-
-[15:0]  | TBD
+[0]      | Sticky TXWR FIFO full flag
+[1]      | Sticky TXRD FIFO full flag
+[2]      | Sticky TXRR FIFO full flag
+[3]      | Sticky TXWR wait flag
+[4]      | Sticky TXRD wait flag
+[5]      | Sticky TXRR wait flag
+[6]      | Sticky IO input WR_WAIT flag
+[7]      | Sticky IO input RD_WAIT flag
+[8]      | Sticky burst detection flag
 
 -------------------------------
 
