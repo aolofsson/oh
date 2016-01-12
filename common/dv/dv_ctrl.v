@@ -19,13 +19,15 @@ module dv_ctrl(/*AUTOARG*/
    input  test_done;  //test is done
    
    //signal declarations
-   reg 	  nreset = 1'b0;
-   reg 	  clk    = 1'b0;
+   reg 	  nreset;
    reg 	  start;
+   reg 	  clk=0;
    
    //RESET
    initial
      begin	
+	#(1)
+	nreset   = 'b0;	
 	#(CLK_PERIOD*20)   //hold reset for 20 cycles
 	nreset   = 'b1;
      end
@@ -52,7 +54,7 @@ module dv_ctrl(/*AUTOARG*/
    initial
      begin
 	$dumpfile("waveform.vcd");
-	//$dumpvars(0, dv_top);
+	$dumpvars(0, dv_top);
      end
 `endif
    
