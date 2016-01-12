@@ -56,9 +56,9 @@ module oh_fifo_cdc (/*AUTOARG*/
    //Holds access high until "acknowledge"
    always @ (posedge clk_out or negedge nreset)
      if(!nreset)
-       access_out <=1'b0;   
+       access_out <= 1'b0;   
      else if(~wait_in)
-       access_out <=rd_en;
+       access_out <= rd_en;
 
    //Read response fifo (from master)
    defparam fifo.DW    = DW;

@@ -106,7 +106,7 @@ module erx_cfg (/*AUTOARG*/
 	.data_in			(data_in[AW-1:0]));
    
    //read/write decode
-   assign cfg_access     = erx_cfg_access &
+   assign cfg_access   = erx_cfg_access &
 		         (dstaddr_in[19:16] ==`EGROUP_MMR) &
 		         (dstaddr_in[10:8]  ==`EGROUP_RX)  &
 			 ~dstaddr_in[5];  //reserveed for mailbox
@@ -116,14 +116,20 @@ module erx_cfg (/*AUTOARG*/
 		          (dstaddr_in[10:8]  ==`EGROUP_RX)  &
 			  dstaddr_in[5];
 			     
-   assign dma_access     =  erx_cfg_access & 
+   assign dma_access     = erx_cfg_access & 
 			  (dstaddr_in[19:16] ==`EGROUP_MMR) &
 			  (dstaddr_in[10:8]  ==`EGROUP_DMA);
    
-   
-   assign ecfg_read      = cfg_access & ~write_in;
+   //Read operation (cfg or dma or mailbox)
+   assign ecfg_read      = erx_cfg_access & ~write_in;
+
+   //Write to the register file
    assign ecfg_write     = cfg_access & write_in;
 
+   //Passing through readback data from TX
+   assign ecfg_tx_read   = erx_cfg_access &
+                           (dstaddr_in[19:16] ==`EGROUP_RR);
+   
    //Config write enables
    assign rx_cfg_write      = ecfg_write & (dstaddr_in[RFAW+1:2]==`ERX_CFG);
    assign rx_offset_write   = ecfg_write & (dstaddr_in[RFAW+1:2]==`ERX_OFFSET);
@@ -228,7 +234,7 @@ module erx_cfg (/*AUTOARG*/
    //pipeline
    always @ (posedge clk)
      begin
-	ecfg_access       <= erx_cfg_access & ~ecfg_write;//read or "tx readback"
+	ecfg_access       <= ecfg_read | ecfg_tx_read;
 	datamode_out[1:0] <= datamode_in[1:0];
 	ctrlmode_out[4:0] <= ctrlmode_in[3:0];
 	write_out         <= 1'b1;	
@@ -238,7 +244,7 @@ module erx_cfg (/*AUTOARG*/
 	rx_sel            <= ~ecfg_read;
 	dma_sel           <= dma_access;
 	mailbox_sel       <= mailbox_access;
-	tx_sel            <= erx_cfg_access & ecfg_write;
+	tx_sel            <= ecfg_tx_read;
      end
 
       

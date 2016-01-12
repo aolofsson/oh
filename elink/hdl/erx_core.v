@@ -153,6 +153,7 @@ module erx_core (/*AUTOARG*/
 		 // Inputs
 		 .wr_clk		(clk),			 // Templated
 		 .rd_clk		(clk),			 // Templated
+		 .nreset		(nreset),
 		 .mmu_en		(mmu_enable),		 // Templated
 		 .reg_access		(erx_cfg_access),	 // Templated
 		 .reg_packet		(erx_packet[PW-1:0]),	 // Templated
