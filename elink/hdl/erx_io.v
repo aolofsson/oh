@@ -143,12 +143,16 @@ module erx_io (/*AUTOARG*/
 
    //(..and shuffle data for 104 bit packet)
    //seems redundant??? for burst??
+   always @ (posedge rx_lclk or negedge erx_io_nreset)
+     if(~erx_io_nreset)
+       burst         <= 1'b0;   
+     else if (access)
+       burst       <= burst_detect;
+   
+
    always @ (posedge rx_lclk)
      if(access)   
        begin
-	  //pipelin burst (delay by one frame)
-	  burst                 <= burst_detect;	  
-
 	  //access
 	  rx_packet_lclk[0]     <= rx_sample[40];
 
@@ -199,8 +203,9 @@ module erx_io (/*AUTOARG*/
 
    //clock handoff
    always @ (posedge rx_lclk_div4)
-     rx_access <= access_wide;
-        
+     begin
+	rx_access <= access_wide;
+     end
    always @ (posedge rx_lclk_div4)
      if(access_wide)
        begin
