@@ -2,7 +2,7 @@ module dut(/*AUTOARG*/
    // Outputs
    dut_active, wait_out, access_out, packet_out,
    // Inputs
-   clk, nreset, vdd, vss, access_in, packet_in, wait_in
+   frame, data, clk, nreset, vdd, vss, access_in, packet_in, wait_in
    );
 
    parameter AW    = 32;
@@ -38,6 +38,10 @@ module dut(/*AUTOARG*/
    input [N-1:0]     wait_in;
 
    /*AUTOINPUT*/
+   // Beginning of automatic inputs (from unused autoinst inputs)
+   input [7:0]		data;			// To elink_monitor of elink_monitor.v
+   input		frame;			// To elink_monitor of elink_monitor.v
+   // End of automatics
  
    //floating wires
    wire 	     elink0_cclk_n;		// From elink0 of elink.v
@@ -232,6 +236,13 @@ module dut(/*AUTOARG*/
 		 .txrd_packet		(elink0_txrd_packet[PW-1:0])); // Templated
 
 
+   //elink checker
+   elink_monitor elink_monitor (.frame		(elink0_txo_frame_p),
+				.clk		(elink0_txo_lclk_p),
+				.din		(elink0_txo_data_p[7:0])
+				);
+   
+   
    //######################################################################
    //2ND ELINK (WITH EPIPHANY MEMORY)
    //######################################################################
@@ -340,6 +351,8 @@ module dut(/*AUTOARG*/
 		 .packet_in		(emem_packet[PW-1:0]));	 // Templated
 
 
+  
+     
 endmodule // dv_elink
 // Local Variables:
 // verilog-library-directories:("." "../hdl" "../../emesh/dv" "../../emesh/hdl")
