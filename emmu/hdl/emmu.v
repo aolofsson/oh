@@ -18,8 +18,8 @@ module emmu (/*AUTOARG*/
    // Outputs
    reg_rdata, emesh_access_out, emesh_packet_out,
    // Inputs
-   wr_clk, rd_clk, mmu_en, reg_access, reg_packet, emesh_access_in,
-   emesh_packet_in, emesh_wait_in
+   wr_clk, rd_clk, nreset, mmu_en, reg_access, reg_packet,
+   emesh_access_in, emesh_packet_in, emesh_wait_in
    );
 
    //#####################################################################
@@ -36,7 +36,8 @@ module emmu (/*AUTOARG*/
    // clocks
    input 	     wr_clk;              // single clock
    input 	     rd_clk;              // single clock
-
+   input 	     nreset;              // async active low reset
+   
    // config
    input 	     mmu_en;              // enables mmu (by config register)
 
@@ -147,12 +148,16 @@ module emmu (/*AUTOARG*/
    //###########################         
 
    //pipeline (compensates for 1 cycle memory access)
+
+   always @ (posedge  rd_clk)
+     if (!nreset)
+       emesh_access_out         <=  1'b0;   
+     else if(~emesh_wait_in)
+       emesh_access_out         <=  emesh_access_in;
+
    always @ (posedge  rd_clk)
      if(~emesh_wait_in)
-       begin
-	  emesh_access_out         <=  emesh_access_in;
 	  emesh_packet_reg[PW-1:0] <=  emesh_packet_in[PW-1:0];	  
-       end
      	 
    //like base register for trampolining to 64 bit space
    assign emesh_dstaddr_out[63:0] = mmu_en ? {emmu_lookup_data[43:0], 
