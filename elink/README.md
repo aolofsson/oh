@@ -185,10 +185,10 @@ ELINK_CHIPID     | RW     | 0xF0208 | Chip ID for Epiphany pins
 ELINK_VERSION    | RW     | 0xF020C | Version number (static)  
 *****************|********|*********|**************************
 ELINK_TXCFG      | RW     | 0xF0210 | TX configuration
-ELINK_TXSTATUS   | R-     | 0xF0214 | TX status
+ELINK_TXSTATUS   | RW     | 0xF0214 | TX status
 ELINK_TXGPIO     | RW     | 0xF0218 | TX data in GPIO mode
 ELINK_TXMONITOR  | RW     | 0xF021C | TX transaction monitor
-ELINK_TXPACKET   | RW     | 0xF0220 | TX packet sampler
+ELINK_TXPACKET   | R-     | 0xF0220 | TX packet sampler
 ELINK_TXMMU      | -W     | 0xE0000 | TX MMU table 
 *****************|******* |*********|********************
 ELINK_RXCFG      | RW     | 0xF0300 | RX configuration
