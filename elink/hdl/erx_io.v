@@ -76,6 +76,15 @@ module erx_io (/*AUTOARG*/
    wire [8:0] 	 rxi_delay_out;
    reg 		 burst_detect;   
    reg [3:0] 	 valid;
+
+   //#########################################
+   //# Pins inverted for 64-core board
+   //#########################################        
+`ifdef TARGET_E64
+   assign invert_pins=1'b1;
+`else
+   assign invert_pins=1'b0;
+`endif
    
    //#######################################
    //#Register DDR inputs for better timing
@@ -229,12 +238,21 @@ module erx_io (/*AUTOARG*/
       .IB    (rxi_frame_n),
       .O     (rxi_frame));
 
-
+//TODO: Will this work?
+`ifdef TARGET_E64
+   IBUFDS #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTD_ELINK))
+   ibuf_lclk (.I     (rxi_lclk_n),
+	      .IB    (rxi_lclk_p),
+	      .O     (rx_clkin)
+	      );
+`else
    IBUFDS #(.DIFF_TERM  ("TRUE"),.IOSTANDARD (IOSTD_ELINK))
    ibuf_lclk (.I     (rxi_lclk_p),
 	      .IB    (rxi_lclk_n),
 	      .O     (rx_clkin)
 	      );
+`endif
+   
  
    generate
       if(ETYPE==1)
@@ -262,13 +280,13 @@ module erx_io (/*AUTOARG*/
 	   obufds_wrwait (
 			  .O(rxo_wr_wait_p),
 			  .OB(rxo_wr_wait_n),
-			  .I(rx_wr_wait)
+			  .I(rx_wr_wait ^ invert_pins)
 			  );
 	   
 	   OBUFDS  #(.IOSTANDARD(IOSTD_ELINK),.SLEW("SLOW")) 
 	   obufds_rdwait  (.O(rxo_rd_wait_p),
 			   .OB(rxo_rd_wait_n),
-			   .I(rx_rd_wait)
+			   .I(rx_rd_wait ^ invert_pins)
 			   );
 	end
    endgenerate
@@ -329,7 +347,7 @@ module erx_io (/*AUTOARG*/
 		   .Q2 (rx_word_iddr[i+8]),
 		   .C  (rx_lclk_iddr),//rx_lclk_iddr
 		   .CE (1'b1),
-		   .D  (rxi_delay_out[i]),
+		   .D  (rxi_delay_out[i] ^ invert_pins),
 		   .R  (1'b0),
 		   .S  (1'b0)
 		   );
@@ -341,9 +359,9 @@ module erx_io (/*AUTOARG*/
 	iddr_frame (
 		   .Q1 (rx_frame_iddr),
 		   .Q2 (),    
-		   .C  (rx_lclk_iddr),//rx_lclk_iddr
+		   .C  (rx_lclk_iddr),//TODO: will this work?
 		   .CE (1'b1),
-		   .D  (rxi_delay_out[8]),
+		   .D  (rxi_delay_out[8] ^ invert_pins),
 		   .R  (1'b0),
 		   .S  (1'b0)
 		   );

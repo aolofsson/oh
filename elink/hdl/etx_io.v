@@ -57,7 +57,16 @@ module etx_io (/*AUTOARG*/
    wire 	  tx_wr_wait_async;
    wire 	  tx_rd_wait_async;
    wire [7:0] 	  txo_data_ddr;
+   wire 	  invert_pins;
    
+   //#########################################
+   //# Pins inverted for 64-core board
+   //#########################################        
+`ifdef TARGET_E64
+   assign invert_pins=1'b1;
+`else
+   assign invert_pins=1'b0;
+`endif
    //#########################################
    //# Synchronizatsion to fast domain
    //#########################################        
@@ -89,8 +98,8 @@ module etx_io (/*AUTOARG*/
    //############################################## 
    always @ (negedge tx_lclk_io)
      begin
-	tx_wr_wait_sync <= tx_wr_wait_async;
-	tx_rd_wait_sync <= tx_rd_wait_async;
+	tx_wr_wait_sync <= tx_wr_wait_async ^ invert_pins;
+	tx_rd_wait_sync <= tx_rd_wait_async ^ invert_pins;
      end
 
    //Looks like legacy elink puts out short wait pulses.
@@ -119,8 +128,8 @@ module etx_io (/*AUTOARG*/
 		   .Q  (txo_data_ddr[i]),
 		   .C  (tx_lclk_io),
 		   .CE (1'b1),
-		   .D1 (tx_data16[i+8]),
-		   .D2 (tx_data16[i]),
+		   .D1 (tx_data16[i+8] ^ invert_pins),
+		   .D2 (tx_data16[i] ^ invert_pins),
 		   .R  (1'b0),
 		   .S  (1'b0)
 		   );
@@ -133,8 +142,8 @@ module etx_io (/*AUTOARG*/
 	      .Q  (txo_frame_ddr),
 	      .C  (tx_lclk_io),
 	      .CE (1'b1),
-	      .D1 (tx_frame16),
-	      .D2 (tx_frame16),
+	      .D1 (tx_frame16 ^ invert_pins),
+	      .D2 (tx_frame16 ^ invert_pins),
 	      .R  (1'b0), //reset
 	      .S  (1'b0)
 	      );
@@ -145,8 +154,8 @@ module etx_io (/*AUTOARG*/
 	      .Q  (txo_lclk90),
 	      .C  (tx_lclk90),
 	      .CE (1'b1),
-	      .D1 (1'b1),
-	      .D2 (1'b0),
+	      .D1 (1'b1 ^ invert_pins),
+	      .D2 (1'b0 ^ invert_pins),
 	      .R  (1'b0),//should be no reason to reset clock, static input
 	      .S  (1'b0)
 	      );
