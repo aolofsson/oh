@@ -42,7 +42,7 @@ module dv_top();
    // -dumps stimulus
    //############################################################
 
-   dv_ctrl dv_ctrl (.test_done		(1'b1),     //optimize later
+   dv_ctrl dv_ctrl (.test_done		(1'b1),   //optimize later
 		    /*AUTOINST*/
 		    // Outputs
 		    .nreset		(nreset),
@@ -56,7 +56,6 @@ module dv_top();
    // DEVICE UNDER TEST
    // -create your own module named dut to include at compile time 
    //#############################################################   
-
 
    /*dut AUTO_TEMPLATE(
                         .\(.*\)_out (dut_\1[]),

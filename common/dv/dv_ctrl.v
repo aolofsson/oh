@@ -8,7 +8,7 @@ module dv_ctrl(/*AUTOARG*/
 
    parameter CLK_PERIOD = 10;
    parameter CLK_PHASE  = CLK_PERIOD/2;
-   parameter TIMEOUT    = 1000;
+   parameter TIMEOUT    = 5000;
 
    output nreset;     // async active low reset
    output clk;        // main clock
