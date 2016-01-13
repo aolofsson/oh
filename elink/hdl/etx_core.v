@@ -141,22 +141,21 @@ module etx_core(/*AUTOARG*/
                          );
    */
 
-   emmu #(.BID(0))
-   etx_mmu (.reg_rdata		(), // not used (no readback from MMU)
+   emmu etx_mmu (.reg_rdata		(), // not used (no readback from MMU)
 	    /*AUTOINST*/
-	    // Outputs
-	    .emesh_access_out		(emmu_access),		 // Templated
-	    .emesh_packet_out		(emmu_packet[PW-1:0]),	 // Templated
-	    // Inputs
-	    .wr_clk			(clk),			 // Templated
-	    .rd_clk			(clk),			 // Templated
-	    .nreset			(nreset),
-	    .mmu_en			(mmu_enable),		 // Templated
-	    .reg_access			(cfg_mmu_access),	 // Templated
-	    .reg_packet			(etx_packet[PW-1:0]),	 // Templated
-	    .emesh_access_in		(etx_remap_access),	 // Templated
-	    .emesh_packet_in		(etx_remap_packet[PW-1:0]), // Templated
-	    .emesh_wait_in		(etx_wait));		 // Templated
+		 // Outputs
+		 .emesh_access_out	(emmu_access),		 // Templated
+		 .emesh_packet_out	(emmu_packet[PW-1:0]),	 // Templated
+		 // Inputs
+		 .wr_clk		(clk),			 // Templated
+		 .rd_clk		(clk),			 // Templated
+		 .nreset		(nreset),
+		 .mmu_en		(mmu_enable),		 // Templated
+		 .reg_access		(cfg_mmu_access),	 // Templated
+		 .reg_packet		(etx_packet[PW-1:0]),	 // Templated
+		 .emesh_access_in	(etx_remap_access),	 // Templated
+		 .emesh_packet_in	(etx_remap_packet[PW-1:0]), // Templated
+		 .emesh_wait_in		(etx_wait));		 // Templated
    
    //##################################################################
    //# ELINK PROTOCOL CONVERTER (104 bit-->64 bits)

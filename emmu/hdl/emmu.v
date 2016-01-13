@@ -27,11 +27,10 @@ module emmu (/*AUTOARG*/
    //#####################################################################
 
    // parameters
-   parameter AW     = 32;                 // address width 
-   parameter PW     = 2*AW+40;            // packet width
-   parameter MW     = 48;                 // width of table
-   parameter MAW    = 12;                 // memory addres width (entries = 1<<MAW)   
-   parameter BID    = 0;                  // block ID
+   parameter  AW     = 32;                 // address width 
+   parameter  MW     = 48;                 // width of table
+   parameter  MAW    = 12;                 // memory addres width (entries = 1<<MAW)
+   localparam PW     = 2*AW+40;            // packet width
    
    // clocks
    input 	     wr_clk;              // single clock
@@ -98,13 +97,11 @@ module emmu (/*AUTOARG*/
    
    //write controls
    assign mem_wem[MW-1:0] = ~reg_dstaddr[2] ? {{(MW-32){1'b0}},32'hFFFFFFFF} :
-                                              {{(MW-32){1'b0}},32'h00000000};
+                                              {{(MW-32){1'b1}},32'h00000000};
       
    assign mem_write       = reg_access & 
-			    reg_write  &
-			    (reg_dstaddr[15]==BID);//RX=1,TX=0
-
-   
+			    reg_write;
+      
    assign mem_data[MW-1:0] = {reg_data[31:0], reg_data[31:0]};
 
    //###########################
