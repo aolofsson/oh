@@ -199,12 +199,12 @@ module emaxi(/*autoarg*/
    //RXWR
    packet2emesh p2e_rxwr (
 			  // Outputs
-			  .write_out		(),
-			  .datamode_out		(rxwr_datamode[1:0]),
-			  .ctrlmode_out		(),
-			  .dstaddr_out		(rxwr_dstaddr[AW-1:0]),
-			  .data_out		(rxwr_data[DW-1:0]),
-			  .srcaddr_out		(rxwr_srcaddr[AW-1:0]),
+			  .write_in		(),
+			  .datamode_in		(rxwr_datamode[1:0]),
+			  .ctrlmode_in		(),
+			  .dstaddr_in		(rxwr_dstaddr[AW-1:0]),
+			  .data_in		(rxwr_data[DW-1:0]),
+			  .srcaddr_in		(rxwr_srcaddr[AW-1:0]),
 			  // Inputs
 			  .packet_in		(rxwr_packet[PW-1:0])
 			  );
@@ -212,12 +212,12 @@ module emaxi(/*autoarg*/
    //RXRD
    packet2emesh p2e_rxrd (
 			  // Outputs
-			  .write_out		(),
-			  .datamode_out		(rxrd_datamode[1:0]),
-			  .ctrlmode_out		(rxrd_ctrlmode[3:0]),
-			  .dstaddr_out		(rxrd_dstaddr[AW-1:0]),
-			  .data_out		(),
-			  .srcaddr_out		(rxrd_srcaddr[AW-1:0]),
+			  .write_in		(),
+			  .datamode_in		(rxrd_datamode[1:0]),
+			  .ctrlmode_in		(rxrd_ctrlmode[3:0]),
+			  .dstaddr_in		(rxrd_dstaddr[AW-1:0]),
+			  .data_in		(),
+			  .srcaddr_in		(rxrd_srcaddr[AW-1:0]),
 			  // Inputs
 			  .packet_in		(rxrd_packet[PW-1:0])
 			  );
@@ -227,12 +227,12 @@ module emaxi(/*autoarg*/
 		     // Outputs
 		     .packet_out	(txrr_packet[PW-1:0]),
 		     // Inputs
-		     .write_in		(1'b1),
-		     .datamode_in	(txrr_datamode[1:0]),
-		     .ctrlmode_in	(txrr_ctrlmode[3:0]),
-		     .dstaddr_in	(txrr_dstaddr[AW-1:0]),
-		     .data_in		(txrr_data[DW-1:0]),
-		     .srcaddr_in	(txrr_srcaddr[AW-1:0])
+		     .write_out		(1'b1),
+		     .datamode_out	(txrr_datamode[1:0]),
+		     .ctrlmode_out	(txrr_ctrlmode[3:0]),
+		     .dstaddr_out	(txrr_dstaddr[AW-1:0]),
+		     .data_out		(txrr_data[DW-1:0]),
+		     .srcaddr_out	(txrr_srcaddr[AW-1:0])
 		     );
    			    
    //#########################################################################
