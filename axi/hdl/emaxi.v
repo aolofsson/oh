@@ -154,7 +154,7 @@ module emaxi(/*autoarg*/
    reg 		       txrr_access;
    reg [31:0] 	       txrr_data;
    reg [31:0] 	       txrr_srcaddr;
-   reg [1:0] 	       txrr_datamode;
+   reg [3:0] 	       txrr_datamode;
    reg [3:0] 	       txrr_ctrlmode;
    reg [31:0] 	       txrr_dstaddr;
    reg [63:0] 	       m_axi_rdata_fifo;
@@ -178,7 +178,7 @@ module emaxi(/*autoarg*/
    wire [AW-1:0]       rxwr_srcaddr;
 
    wire [1:0] 	       rxrd_datamode;
-   wire [3:0] 	       rxrd_ctrlmode;
+   wire [4:0] 	       rxrd_ctrlmode;
    wire [AW-1:0]       rxrd_dstaddr;
    wire [AW-1:0]       rxrd_srcaddr;
 
@@ -214,7 +214,7 @@ module emaxi(/*autoarg*/
 			  // Outputs
 			  .write_in		(),
 			  .datamode_in		(rxrd_datamode[1:0]),
-			  .ctrlmode_in		(rxrd_ctrlmode[3:0]),
+			  .ctrlmode_in		(rxrd_ctrlmode[4:0]),
 			  .dstaddr_in		(rxrd_dstaddr[AW-1:0]),
 			  .data_in		(),
 			  .srcaddr_in		(rxrd_srcaddr[AW-1:0]),
@@ -229,7 +229,7 @@ module emaxi(/*autoarg*/
 		     // Inputs
 		     .write_out		(1'b1),
 		     .datamode_out	(txrr_datamode[1:0]),
-		     .ctrlmode_out	(txrr_ctrlmode[3:0]),
+		     .ctrlmode_out	({1'b0,txrr_ctrlmode[3:0]}),
 		     .dstaddr_out	(txrr_dstaddr[AW-1:0]),
 		     .data_out		(txrr_data[DW-1:0]),
 		     .srcaddr_out	(txrr_srcaddr[AW-1:0])
