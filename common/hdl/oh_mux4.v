@@ -34,7 +34,7 @@ module oh_mux4(/*AUTOARG*/
    		  ~(sel0 ^ sel1 ^ sel2 ^ sel3);
 
    always @ (posedge error)
-     $display ("ERROR in oh_mux4 %m");
+     $display ("ERROR at in oh_mux4 %m at ",$time);
    			
 endmodule // oh_mux4
 
