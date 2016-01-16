@@ -90,7 +90,8 @@ module emailbox (/*AUTOARG*/
    assign mailbox_write = emesh_access &
 	                  emesh_write  &
 	                  (emesh_addr[31:20]==ID) & 
-			  (emesh_addr[19:16]==`EGROUP_MMR) & 
+			  (emesh_addr[19:16]==`EGROUP_MMR) &
+			  (emesh_addr[10:8] ==`EGROUP_MESH) & 
                           (emesh_addr[RFAW+1:2]==`E_MAILBOXLO); 
    
    //###########################################

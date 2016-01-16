@@ -109,13 +109,11 @@ module erx_cfg (/*AUTOARG*/
    //read/write decode
    assign cfg_access   = erx_cfg_access &
 		         (dstaddr_in[19:16] ==`EGROUP_MMR) &
-		         (dstaddr_in[10:8]  ==`EGROUP_RX)  &
-			 ~dstaddr_in[5];  //reserveed for mailbox
+		         (dstaddr_in[10:8]  ==`EGROUP_RX);
    
    assign mailbox_access = erx_cfg_access &
 		          (dstaddr_in[19:16] ==`EGROUP_MMR) &
-		          (dstaddr_in[10:8]  ==`EGROUP_RX)  &
-			  dstaddr_in[5];
+		          (dstaddr_in[10:8]  ==`EGROUP_MESH);
 			     
    assign dma_access     = erx_cfg_access & 
 			  (dstaddr_in[19:16] ==`EGROUP_MMR) &
@@ -246,7 +244,7 @@ module erx_cfg (/*AUTOARG*/
 	dstaddr_out[31:0] <= ecfg_read ? srcaddr_in[31:0] : dstaddr_in[31:0];
 	data_out[31:0]    <= data_in[31:0];
 	srcaddr_out[31:0] <= srcaddr_in[31:0];
-	rx_sel            <= ~ecfg_read;
+	rx_sel            <= cfg_access;
 	dma_sel           <= dma_access;
 	mailbox_sel       <= mailbox_access;
 	tx_sel            <= ecfg_tx_read;

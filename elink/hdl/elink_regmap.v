@@ -17,9 +17,13 @@
 `define EGROUP_RR      4'hD // read response block
 
 //Register blocks[10:8]
-`define EGROUP_TX      3'd2 //0200
-`define EGROUP_RX      3'd3 //0300
-`define EGROUP_DMA     3'd5 //0500
+`define EGROUP_RF       3'd0 //0x000
+`define EGROUP_TX       3'd2 //0x200
+`define EGROUP_RX       3'd3 //0x300
+`define EGROUP_CORE     3'd4 //0x400
+`define EGROUP_DMA      3'd5 //0x500
+`define EGROUP_MEM      3'd6 //0x600
+`define EGROUP_MESH     3'd7 //0x700
 
 //ETX-REGS
 `define E_RESET        6'd0 //F0200-reset
@@ -43,9 +47,9 @@
 
 //MAILBOX  REGS
 `ifndef  E_MAILBOXLO	
- `define E_MAILBOXLO    6'd8  //F0320-reserved
- `define E_MAILBOXHI    6'd9  //F0324-reserved
- `define E_MAILBOXSTAT  6'd10 //F0328-reserved
+ `define E_MAILBOXLO   6'hC //F0730-lower 32 bits of mailbox
+ `define E_MAILBOXHI   6'hD //F0734-upper 32 bits of mailbox
+ `define E_MAILBOXSTAT 6'hE //F0738-mailbox status
 `endif
 
 //DMA (same numbering as in Epiphany, limit to 4 channels)

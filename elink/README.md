@@ -181,26 +181,28 @@ REGISTER         | ACCESS | ADDRESS | DESCRIPTION
 -----------------|--------|---------|------------------
 ELINK_RESET      | -W     | 0xF0200 | Soft reset
 ELINK_CLK        | -W     | 0xF0204 | Clock configuration
-ELINK_CHIPID     | RW     | 0xF0208 | Chip ID for Epiphany pins  
-ELINK_VERSION    | RW     | 0xF020C | Version number (static)  
+ELINK_CHIPID     | RW     | 0xF0208 | Chip ID for Epiphany pins
+ELINK_VERSION    | RW     | 0xF020C | Version number (static)
 *****************|********|*********|**************************
 ELINK_TXCFG      | RW     | 0xF0210 | TX configuration
 ELINK_TXSTATUS   | RW     | 0xF0214 | TX status
 ELINK_TXGPIO     | RW     | 0xF0218 | TX data in GPIO mode
 ELINK_TXMONITOR  | RW     | 0xF021C | TX transaction monitor
 ELINK_TXPACKET   | R-     | 0xF0220 | TX packet sampler
-ELINK_TXMMU      | -W     | 0xE0000 | TX MMU table 
 *****************|******* |*********|********************
 ELINK_RXCFG      | RW     | 0xF0300 | RX configuration
 ELINK_RXSTATUS   | R-     | 0xF0304 | RX status register
 ELINK_RXGPIO     | R-     | 0xF0308 | RX data in GPIO mode
 ELINK_RXOFFSET   | RW     | 0xF030C | RX mem offset in remap mode
-ELINK_RXDELAY0   | RW     | 0xF0310 | RX idelays 4 bit values d[7:0]
-ELINK_RXDELAY1   | RW     | 0xF0314 | RX idelay msbs and frametap lsbs
+ELINK_RXDELAY0   | RW     | 0xF0310 | RX idelays 4 bit lsb values d[7:0]
+ELINK_RXDELAY1   | RW     | 0xF0314 | RX idelay taps {all msbs,frame lsbs}
 ELINK_RXTESTDATA | RW     | 0xF0318 | RX sampled data
-ELINK_MAILBOXLO  | RW     | 0xF0320 | RX mailbox (lower 32 bit)
-ELINK_MAILBOXHI  | RW     | 0xF0324 | RX mailbox (upper 32 bits)
-ELINK_MAILBOXSTAT| RW     | 0xF0328 | RX mailbox status 
+*****************|******* |*********|********************
+ELINK_MAILBOXLO  | RW     | 0xF0730 | Mailbox (lower 32 bit)
+ELINK_MAILBOXHI  | RW     | 0xF0734 | Mailbox (upper 32 bits)
+ELINK_MAILBOXSTAT| RW     | 0xF0738 | Mailbox status 
+*****************|******* |*********|********************
+ELINK_TXMMU      | -W     | 0xE0000 | TX MMU table 
 ELINK_RXMMU      | -W     | 0xE8000 | RX MMU table 
 
 ## ELINK_RESET (0xF0200)
@@ -448,7 +450,7 @@ FIELD   | DESCRIPTION
 
 -------------------------------
 
-## ELINK_MAILBOXLO (0xF0320)
+## ELINK_MAILBOXLO (0xF0730)
 Lower 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Must be read before ELINK_MAILBOXHI is read
 
 FIELD    | DESCRIPTION 
@@ -457,14 +459,14 @@ FIELD    | DESCRIPTION
 
 -------------------------------
 
-## ELINK_MAILBOXHI (0xF0324)
+## ELINK_MAILBOXHI (0xF0734)
 Upper 32 bit word of current entry of RX 64-bit wide mailbox FIFO. Reading this register causes the RX FIFO read pointer to increment by one.
 
 FIELD    | DESCRIPTION 
 -------- |---------------------------------------------------
  [31:0]  | Upper data of RX FIFO
 
-## ELINK_MAILBOXSTAT (0xF0328)
+## ELINK_MAILBOXSTAT (0xF0738)
 Status of mailbox
 
 FIELD    | DESCRIPTION 
