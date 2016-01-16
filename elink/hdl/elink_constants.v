@@ -1,11 +1,9 @@
 `ifndef ELINK_CONSTANTS_V_
  `define ELINK_CONSTANTS_V_
 
-//These constants are mutually exclusive
- `define TARGET_XILINX        //uncomment for non-xilinx platforms
- `define CFG_AW 32
- `define CFG_DW 32
- `define CFG_LW 8
- `define CFG_NW        13     /*Number of bytes in the transmission*/
+ //target platform (mutually exclusive)
+ `define TARGET_XILINX        //xilinx specific blocks
+ //`define TARGET_ALTERA      //altera specifics
+ //`define TARGET_ASIC        //asic specific blocks
 
 `endif
