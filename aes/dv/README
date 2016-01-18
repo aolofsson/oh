@@ -1,0 +1,6 @@
+This is a C-program which generates many expected test vectors. ~ ~
+
+How to build:
+    gcc gen_test_case.c aes.c
+
+Enjoy ~ ~

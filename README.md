@@ -18,7 +18,7 @@ An Open Hardware Library for Chip and FPGA designers written in Verilog
 | [xilibs](xilibs)    | Simulation modules for Xilinx primitives    |
 
 ## LICENSE
-The OH! repository source code is licensed under the MIT license unless otherwise specified. See [LICENSE](LICENSE) for full copyright terms.
+The OH! repository source code is licensed under the MIT license unless otherwise specified. See [LICENSE](LICENSE) for MIT copyright terms. Design specific licenses can be found in the folder root (eg: aes/LICENSE) 
 
 ## CONTRIBUTING
 Instructions for contributing can be found [HERE](CONTRIBUTING.md).
