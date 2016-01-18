@@ -1,25 +1,26 @@
-module oh_8b10b_enc (/*AUTOARG*/
+module oh_8b10b_encoder (/*AUTOARG*/
    // Outputs
    data_out,
    // Inputs
-   clk, nreset, data_in
+   clk, nreset, ksel, data_in
    );
          
    //#####################################################################
    //# INTERFACE
+   //#####################################################################  
+
+   input 	   clk;      //main clock
+   input 	   nreset;   //async active low reset  
+   input 	   ksel;     //select one of 12 K characters  
+   input [7:0] 	   data_in;  //unencoded data input
+   output [9:0]    data_out; //encoded data output
+
    //#####################################################################
-   
-   //clk/reset
-   input 	   clk;   
-   input 	   nreset;
+   //# BODY
+   //#####################################################################  
 
-   //Data
-   input 	   data_in[7:0];
-   output 	   data_out[9:0];
-
-   
-
-   
   
-endmodule // oh_8b10b_enc
+endmodule // oh_8b10b_encoder
+
+
 

@@ -16,7 +16,11 @@ module oh_crc (/*AUTOARG*/
    input           nreset;   
    input 	   en;   
    input [DW-1:0]  in;
-   output [DW-1:0] out,
+   output [DW-1:0] out;
+   
 		 		    
 endmodule // oh_crc
+
+
+
  

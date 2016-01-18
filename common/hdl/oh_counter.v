@@ -2,7 +2,7 @@ module oh_counter (/*AUTOARG*/
    // Outputs
    count, zero,
    // Inputs
-   clk, nreset, en, load, wdata
+   clk, nreset, in, en, load, wdata
    );
  
    //###############################################################
@@ -17,6 +17,7 @@ module oh_counter (/*AUTOARG*/
    input 	   nreset;
    
    //counter control
+   input 	   in;     //input to count
    input 	   en;     //counter enabled
    input 	   load;   //loads new start value
    input [DW-1:0]  wdata;  //write data
@@ -30,10 +31,8 @@ module oh_counter (/*AUTOARG*/
    //###############################################################
    reg [DW-1:0]    count;
    
-   always @(posedge clk or negedge)
-     if(nreset)
-       count[DW-1:0] = 'b0;
-     else if(load)
+   always @(posedge clk)
+     if(load)
        count[DW-1:0] = wdata[DW-1:0];
      else if (en)
        count[DW-1:0] = count_in[DW-1:0];
@@ -41,7 +40,7 @@ module oh_counter (/*AUTOARG*/
    generate
       if(TYPE=="BINARY")
 	begin
-	   assign count_in[DW-1:0] = count[DW-1:0] + 1'b1;
+	   assign count_in[DW-1:0] = count[DW-1:0] + in;
 	end
       else if (TYPE=="GRAY")
 	begin

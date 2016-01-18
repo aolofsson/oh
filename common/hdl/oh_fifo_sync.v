@@ -82,13 +82,13 @@ module oh_fifo_sync (/*AUTOARG*/
 	.rd_dout	(dout[DW-1:0]),
 	.rd_clk		(clk),
 	.rd_en		(rd_en),
-	.rd_addr	(rd_addr[AW-1:0])
+	.rd_addr	(rd_addr[AW-1:0]),
 	// write port
 	.wr_clk		(clk),
 	.wr_en		(wr_en),
   	.wr_wem		({(DW){1'b1}}),
 	.wr_addr	(wr_addr[AW-1:0]),
-	.wr_din	        (din[DW-1:0]),
+	.wr_din	        (din[DW-1:0])
 	);
 
 endmodule // fifo_sync
