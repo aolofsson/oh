@@ -35,18 +35,18 @@
 
 module emaxi(/*autoarg*/
    // Outputs
-   rxwr_wait, rxrd_wait, txrr_access, txrr_packet, m_axi_awid,
-   m_axi_awaddr, m_axi_awlen, m_axi_awsize, m_axi_awburst,
-   m_axi_awlock, m_axi_awcache, m_axi_awprot, m_axi_awqos,
-   m_axi_awvalid, m_axi_wid, m_axi_wdata, m_axi_wstrb, m_axi_wlast,
-   m_axi_wvalid, m_axi_bready, m_axi_arid, m_axi_araddr, m_axi_arlen,
-   m_axi_arsize, m_axi_arburst, m_axi_arlock, m_axi_arcache,
-   m_axi_arprot, m_axi_arqos, m_axi_arvalid, m_axi_rready,
+   wr_wait, rd_wait, rr_access, rr_packet, m_axi_awid, m_axi_awaddr,
+   m_axi_awlen, m_axi_awsize, m_axi_awburst, m_axi_awlock,
+   m_axi_awcache, m_axi_awprot, m_axi_awqos, m_axi_awvalid, m_axi_wid,
+   m_axi_wdata, m_axi_wstrb, m_axi_wlast, m_axi_wvalid, m_axi_bready,
+   m_axi_arid, m_axi_araddr, m_axi_arlen, m_axi_arsize, m_axi_arburst,
+   m_axi_arlock, m_axi_arcache, m_axi_arprot, m_axi_arqos,
+   m_axi_arvalid, m_axi_rready,
    // Inputs
-   rxwr_access, rxwr_packet, rxrd_access, rxrd_packet, txrr_wait,
-   m_axi_aclk, m_axi_aresetn, m_axi_awready, m_axi_wready, m_axi_bid,
-   m_axi_bresp, m_axi_bvalid, m_axi_arready, m_axi_rid, m_axi_rdata,
-   m_axi_rresp, m_axi_rlast, m_axi_rvalid
+   wr_access, wr_packet, rd_access, rd_packet, rr_wait, m_axi_aclk,
+   m_axi_aresetn, m_axi_awready, m_axi_wready, m_axi_bid, m_axi_bresp,
+   m_axi_bvalid, m_axi_arready, m_axi_rid, m_axi_rdata, m_axi_rresp,
+   m_axi_rlast, m_axi_rvalid
    );
 
    parameter M_IDW  = 12;
@@ -59,19 +59,19 @@ module emaxi(/*autoarg*/
    //########################
 
    //Write request
-   input 	       rxwr_access;
-   input [PW-1:0]      rxwr_packet;   
-   output 	       rxwr_wait;
+   input 	       wr_access;
+   input [PW-1:0]      wr_packet;   
+   output 	       wr_wait;
    
    //Read request
-   input 	       rxrd_access;
-   input [PW-1:0]      rxrd_packet;
-   output 	       rxrd_wait;
+   input 	       rd_access;
+   input [PW-1:0]      rd_packet;
+   output 	       rd_wait;
    
    //Read response
-   output 	       txrr_access;
-   output [PW-1:0]     txrr_packet;
-   input 	       txrr_wait;
+   output 	       rr_access;
+   output [PW-1:0]     rr_packet;
+   input 	       rr_wait;
 
    //########################
    //AXI MASTER INTERFACE
@@ -151,16 +151,14 @@ module emaxi(/*autoarg*/
    reg [63 : 0]        wdata_aligned;
    reg [7 : 0] 	       wstrb_aligned;
    
-   reg 		       txrr_access;
-   reg [31:0] 	       txrr_data;
-   reg [31:0] 	       txrr_srcaddr;
-   reg [3:0] 	       txrr_datamode;
-   reg [3:0] 	       txrr_ctrlmode;
-   reg [31:0] 	       txrr_dstaddr;
+   reg 		       rr_access;
+   reg [31:0] 	       rr_data;
+   reg [31:0] 	       rr_srcaddr;
+   reg [3:0] 	       rr_datamode;
+   reg [3:0] 	       rr_ctrlmode;
+   reg [31:0] 	       rr_dstaddr;
    reg [63:0] 	       m_axi_rdata_fifo;
-   reg 		       txrr_access_fifo;
-   
- 
+   reg 		       rr_access_fifo;
   
    
    //wires
@@ -172,20 +170,20 @@ module emaxi(/*autoarg*/
    wire [40:0] 	       readinfo_in;
    wire 	       awvalid_in;
    
-   wire [1:0] 	       rxwr_datamode;
-   wire [AW-1:0]       rxwr_dstaddr;
-   wire [DW-1:0]       rxwr_data;
-   wire [AW-1:0]       rxwr_srcaddr;
+   wire [1:0] 	       wr_datamode;
+   wire [AW-1:0]       wr_dstaddr;
+   wire [DW-1:0]       wr_data;
+   wire [AW-1:0]       wr_srcaddr;
 
-   wire [1:0] 	       rxrd_datamode;
-   wire [4:0] 	       rxrd_ctrlmode;
-   wire [AW-1:0]       rxrd_dstaddr;
-   wire [AW-1:0]       rxrd_srcaddr;
+   wire [1:0] 	       rd_datamode;
+   wire [4:0] 	       rd_ctrlmode;
+   wire [AW-1:0]       rd_dstaddr;
+   wire [AW-1:0]       rd_srcaddr;
 
-   wire [1:0] 	       txrr_datamode_fifo;
-   wire [3:0] 	       txrr_ctrlmode_fifo;
-   wire [31:0] 	       txrr_dstaddr_fifo;
-   wire [2:0] 	       txrr_alignaddr_fifo;
+   wire [1:0] 	       rr_datamode_fifo;
+   wire [3:0] 	       rr_ctrlmode_fifo;
+   wire [31:0] 	       rr_dstaddr_fifo;
+   wire [2:0] 	       rr_alignaddr_fifo;
    wire [103:0]        packet_out;   
    wire 	       fifo_prog_full;
    wire 	       fifo_full;   	
@@ -200,39 +198,39 @@ module emaxi(/*autoarg*/
    packet2emesh p2e_rxwr (
 			  // Outputs
 			  .write_in		(),
-			  .datamode_in		(rxwr_datamode[1:0]),
+			  .datamode_in		(wr_datamode[1:0]),
 			  .ctrlmode_in		(),
-			  .dstaddr_in		(rxwr_dstaddr[AW-1:0]),
-			  .data_in		(rxwr_data[DW-1:0]),
-			  .srcaddr_in		(rxwr_srcaddr[AW-1:0]),
+			  .dstaddr_in		(wr_dstaddr[AW-1:0]),
+			  .data_in		(wr_data[DW-1:0]),
+			  .srcaddr_in		(wr_srcaddr[AW-1:0]),
 			  // Inputs
-			  .packet_in		(rxwr_packet[PW-1:0])
+			  .packet_in		(wr_packet[PW-1:0])
 			  );
    
    //RXRD
    packet2emesh p2e_rxrd (
 			  // Outputs
 			  .write_in		(),
-			  .datamode_in		(rxrd_datamode[1:0]),
-			  .ctrlmode_in		(rxrd_ctrlmode[4:0]),
-			  .dstaddr_in		(rxrd_dstaddr[AW-1:0]),
+			  .datamode_in		(rd_datamode[1:0]),
+			  .ctrlmode_in		(rd_ctrlmode[4:0]),
+			  .dstaddr_in		(rd_dstaddr[AW-1:0]),
 			  .data_in		(),
-			  .srcaddr_in		(rxrd_srcaddr[AW-1:0]),
+			  .srcaddr_in		(rd_srcaddr[AW-1:0]),
 			  // Inputs
-			  .packet_in		(rxrd_packet[PW-1:0])
+			  .packet_in		(rd_packet[PW-1:0])
 			  );
 
-   //TXRR
+   //RR
    emesh2packet e2p (
 		     // Outputs
-		     .packet_out	(txrr_packet[PW-1:0]),
+		     .packet_out	(rr_packet[PW-1:0]),
 		     // Inputs
 		     .write_out		(1'b1),
-		     .datamode_out	(txrr_datamode[1:0]),
-		     .ctrlmode_out	({1'b0,txrr_ctrlmode[3:0]}),
-		     .dstaddr_out	(txrr_dstaddr[AW-1:0]),
-		     .data_out		(txrr_data[DW-1:0]),
-		     .srcaddr_out	(txrr_srcaddr[AW-1:0])
+		     .datamode_out	(rr_datamode[1:0]),
+		     .ctrlmode_out	({1'b0,rr_ctrlmode[3:0]}),
+		     .dstaddr_out	(rr_dstaddr[AW-1:0]),
+		     .data_out		(rr_data[DW-1:0]),
+		     .srcaddr_out	(rr_srcaddr[AW-1:0])
 		     );
    			    
    //#########################################################################
@@ -267,8 +265,8 @@ module emaxi(/*autoarg*/
 
    assign aw_go       = m_axi_awvalid & m_axi_awready;
    assign w_go        = m_axi_wvalid  & m_axi_wready;
-   assign rxwr_wait   = awvalid_b   | wvalid_b;
-   assign awvalid_in  = rxwr_access & ~awvalid_b & ~wvalid_b;
+   assign wr_wait     = awvalid_b | wvalid_b;
+   assign awvalid_in  = wr_access & ~awvalid_b & ~wvalid_b;
    
    // generate write-address signals
    always @( posedge m_axi_aclk )     
@@ -297,9 +295,9 @@ module emaxi(/*autoarg*/
 	      else 
 		begin
 		   m_axi_awvalid       <= awvalid_in;
-		   m_axi_awaddr[31:0]  <= rxwr_dstaddr[31:0];
+		   m_axi_awaddr[31:0]  <= wr_dstaddr[31:0];
 		   m_axi_awlen[7:0]    <= 8'b0;
-		   m_axi_awsize[2:0]   <= { 1'b0, rxwr_datamode[1:0]};
+		   m_axi_awsize[2:0]   <= { 1'b0, wr_datamode[1:0]};
 		end
 	    end
           if( awvalid_in & m_axi_awvalid & ~aw_go )
@@ -310,9 +308,9 @@ module emaxi(/*autoarg*/
 	 //Pipeline stage
          if( awvalid_in )
 	   begin
-              awaddr_b[31:0]  <= rxwr_dstaddr[31:0];
+              awaddr_b[31:0]  <= wr_dstaddr[31:0];
               awlen_b[7:0]    <= 8'b0;
-              awsize_b[2:0]   <= { 1'b0, rxwr_datamode[1:0] };
+              awsize_b[2:0]   <= { 1'b0, wr_datamode[1:0] };
          end        
        end // else: !if(~m_axi_aresetn)
    
@@ -321,18 +319,18 @@ module emaxi(/*autoarg*/
    //#########################################################################
 
    always @*
-     case( rxwr_datamode[1:0] )        
-       2'b00:    wdata_aligned[63:0] = { 8{rxwr_data[7:0]}};
-       2'b01:    wdata_aligned[63:0] = { 4{rxwr_data[15:0]}};
-       2'b10:    wdata_aligned[63:0] = { 2{rxwr_data[31:0]}};
-       default: wdata_aligned[63:0]  = { rxwr_srcaddr[31:0], rxwr_data[31:0]};
+     case( wr_datamode[1:0] )        
+       2'b00:    wdata_aligned[63:0] = { 8{wr_data[7:0]}};
+       2'b01:    wdata_aligned[63:0] = { 4{wr_data[15:0]}};
+       2'b10:    wdata_aligned[63:0] = { 2{wr_data[31:0]}};
+       default: wdata_aligned[63:0]  = { wr_srcaddr[31:0], wr_data[31:0]};
      endcase
 
    always @*
      begin
-	case(rxwr_datamode[1:0])
+	case(wr_datamode[1:0])
           2'd0: // byte
-            case(rxwr_dstaddr[2:0])
+            case(wr_dstaddr[2:0])
               3'd0:    wstrb_aligned[7:0] = 8'h01;
               3'd1:    wstrb_aligned[7:0] = 8'h02;
               3'd2:    wstrb_aligned[7:0] = 8'h04;
@@ -343,14 +341,14 @@ module emaxi(/*autoarg*/
               default: wstrb_aligned[7:0] = 8'h80;
             endcase
           2'd1: // 16b hword
-            case(rxwr_dstaddr[2:1])
+            case(wr_dstaddr[2:1])
               2'd0:    wstrb_aligned[7:0] = 8'h03;
               2'd1:    wstrb_aligned[7:0] = 8'h0c;
               2'd2:    wstrb_aligned[7:0] = 8'h30;
               default: wstrb_aligned[7:0] = 8'hc0;
             endcase
           2'd2: // 32b word
-            if(rxwr_dstaddr[2])
+            if(wr_dstaddr[2])
 	      wstrb_aligned[7:0] = 8'hf0;
             else
 	      wstrb_aligned[7:0] = 8'h0f;
@@ -392,7 +390,7 @@ module emaxi(/*autoarg*/
               end
             end // if ( ~axi_wvalid | w_go )
 
-         if( rxwr_access & m_axi_wvalid & ~w_go )
+         if( wr_access & m_axi_wvalid & ~w_go )
            wvalid_b <= 1'b1;
          else if( w_go )
            wvalid_b <= 1'b0;
@@ -412,10 +410,10 @@ module emaxi(/*autoarg*/
    //2. use src address to match with writes coming back
    //3. Assumes in order returns
    
-   assign  readinfo_in[40:0] = {rxrd_srcaddr[31:0],//40:9
-				rxrd_dstaddr[2:0], //8:6
-				rxrd_ctrlmode[3:0],//5:2
-				rxrd_datamode[1:0] //1:0
+   assign  readinfo_in[40:0] = {rd_srcaddr[31:0],//40:9
+				rd_dstaddr[2:0], //8:6
+				rd_ctrlmode[3:0],//5:2
+				rd_datamode[1:0] //1:0
 				};
    
 
@@ -428,98 +426,97 @@ module emaxi(/*autoarg*/
    
    //Synchronous FIFO for read transactions  	 
 
-   oh_fifo_async #(.DW(104), .DEPTH(32)) 
+   oh_fifo_sync #(.DW(104), 
+		   .DEPTH(32)) 
    fifo_async (.full		(fifo_full),
 	       .prog_full	(fifo_prog_full),
 	       .dout		(packet_out[103:0]),
 	       .empty		(),
-	       .valid		(),
 	       // Inputs
-	       .rst		(~sync_nreset),
-	       .wr_clk	(m_axi_aclk),
-	       .rd_clk	(m_axi_aclk),
+	       .nreset		(sync_nreset),
+	       .clk	        (m_axi_aclk),
 	       .wr_en		(fifo_wr_en),
 	       .din		({63'b0,readinfo_in[40:0]}),
 	       .rd_en		(fifo_rd_en)
 	       ); 
 
-   assign  txrr_datamode_fifo[1:0]  = packet_out[1:0];
-   assign  txrr_ctrlmode_fifo[3:0]  = packet_out[5:2];
-   assign  txrr_alignaddr_fifo[2:0] = packet_out[8:6];
-   assign  txrr_dstaddr_fifo[31:0]  = packet_out[40:9];
+   assign  rr_datamode_fifo[1:0]  = packet_out[1:0];
+   assign  rr_ctrlmode_fifo[3:0]  = packet_out[5:2];
+   assign  rr_alignaddr_fifo[2:0] = packet_out[8:6];
+   assign  rr_dstaddr_fifo[31:0]  = packet_out[40:9];
    
    //###################################################################
    //Read address channel
    //###################################################################
    
-   assign    m_axi_araddr[31:0]   = rxrd_dstaddr[31:0];
-   assign    m_axi_arsize[2:0]    = {1'b0, rxrd_datamode[1:0]};
+   assign    m_axi_araddr[31:0]   = rd_dstaddr[31:0];
+   assign    m_axi_arsize[2:0]    = {1'b0, rd_datamode[1:0]};
    assign    m_axi_arlen[7:0]     = 8'd0;  
-   assign    m_axi_arvalid        = rxrd_access & ~fifo_prog_full; //BUG& ~txrr_wait & ~fifo_prog_full; //remove 
+   assign    m_axi_arvalid        = rd_access & ~fifo_prog_full; //BUG& ~rr_wait & ~fifo_prog_full; //remove 
    assign    fifo_wr_en           = m_axi_arvalid & m_axi_arready ;
-   assign    rxrd_wait            = ~m_axi_arready | fifo_prog_full;//BUG| txrr_wait
-   assign    fifo_rd_en           =  m_axi_rvalid & m_axi_rready;//BUG & ~txrr_wait
+   assign    rd_wait              = ~m_axi_arready | fifo_prog_full;//BUG| rr_wait
+   assign    fifo_rd_en           =  m_axi_rvalid & m_axi_rready;//BUG & ~rr_wait
 				      
    //#################################################################
    //Read response channel
    //#################################################################
-   assign    m_axi_rready         = ~txrr_wait; //BUG!: 1'b1
+   assign    m_axi_rready         = ~rr_wait; //BUG!: 1'b1
 
    //Pipeline axi transaction to account for FIFO read latency   
    always @ (posedge m_axi_aclk)
      if(!m_axi_aresetn) 
        begin
-	  txrr_access_fifo  <= 1'b0;	  
-	  txrr_access       <= 1'b0;	  
+	  rr_access_fifo  <= 1'b0;	  
+	  rr_access       <= 1'b0;	  
        end
      else	 
        begin
-	  txrr_access_fifo   <= fifo_rd_en;
-	  txrr_access        <= txrr_access_fifo;	  
+	  rr_access_fifo   <= fifo_rd_en;
+	  rr_access        <= rr_access_fifo;	  
        end
 
    //Alignment Mux (one cycle)
    always @ (posedge m_axi_aclk)    
      begin	  
 	m_axi_rdata_fifo[63:0] <= m_axi_rdata[63:0];      	  
-	txrr_datamode[1:0] <= txrr_datamode_fifo[1:0];
-	txrr_ctrlmode[3:0] <= txrr_ctrlmode_fifo[3:0];
-	txrr_dstaddr[31:0] <= txrr_dstaddr_fifo[31:0];	  
+	rr_datamode[1:0] <= rr_datamode_fifo[1:0];
+	rr_ctrlmode[3:0] <= rr_ctrlmode_fifo[3:0];
+	rr_dstaddr[31:0] <= rr_dstaddr_fifo[31:0];	  
 	//all data needs to be right aligned
 	//(this is due to the Epiphany right aligning all words)
-	case(txrr_datamode_fifo[1:0])//datamode
+	case(rr_datamode_fifo[1:0])//datamode
           2'd0:  // byte read
-            case(txrr_alignaddr_fifo[2:0])
-	      3'd0:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[7:0]};
-	      3'd1:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[15:8]};
-	      3'd2:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[23:16]};
-	      3'd3:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[31:24]};
-	      3'd4:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[39:32]};
-	      3'd5:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[47:40]};
-	      3'd6:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[55:48]};
-	      3'd7:     txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[63:56]};
-	      default:  txrr_data[31:0] <= {24'b0,m_axi_rdata_fifo[7:0]};
+            case(rr_alignaddr_fifo[2:0])
+	      3'd0:     rr_data[31:0] <= {24'b0,m_axi_rdata_fifo[7:0]};
+	      3'd1:     rr_data[31:0] <= {24'b0,m_axi_rdata_fifo[15:8]};
+	      3'd2:     rr_data[31:0] <= {24'b0,m_axi_rdata_fifo[23:16]};
+	      3'd3:     rr_data[31:0] <= {24'b0,m_axi_rdata_fifo[31:24]};
+	      3'd4:     rr_data[31:0] <= {24'b0,m_axi_rdata_fifo[39:32]};
+	      3'd5:     rr_data[31:0] <= {24'b0,m_axi_rdata_fifo[47:40]};
+	      3'd6:     rr_data[31:0] <= {24'b0,m_axi_rdata_fifo[55:48]};
+	      3'd7:     rr_data[31:0] <= {24'b0,m_axi_rdata_fifo[63:56]};
+	      default:  rr_data[31:0] <= {24'b0,m_axi_rdata_fifo[7:0]};
             endcase	    
           2'd1:  // 16b hword
-            case(txrr_alignaddr_fifo[2:1])
-	      2'd0:    txrr_data[31:0] <= {16'b0,m_axi_rdata_fifo[15:0]};
-	      2'd1:    txrr_data[31:0] <= {16'b0,m_axi_rdata_fifo[31:16]};
-	      2'd2:    txrr_data[31:0] <= {16'b0,m_axi_rdata_fifo[47:32]};
-	      2'd3:    txrr_data[31:0] <= {16'b0,m_axi_rdata_fifo[63:48]};
-	      default: txrr_data[31:0] <= {16'b0,m_axi_rdata_fifo[15:0]};
+            case(rr_alignaddr_fifo[2:1])
+	      2'd0:    rr_data[31:0] <= {16'b0,m_axi_rdata_fifo[15:0]};
+	      2'd1:    rr_data[31:0] <= {16'b0,m_axi_rdata_fifo[31:16]};
+	      2'd2:    rr_data[31:0] <= {16'b0,m_axi_rdata_fifo[47:32]};
+	      2'd3:    rr_data[31:0] <= {16'b0,m_axi_rdata_fifo[63:48]};
+	      default: rr_data[31:0] <= {16'b0,m_axi_rdata_fifo[15:0]};
             endcase
           2'd2:  // 32b word
 	    begin
-               if(txrr_alignaddr_fifo[2])
-		 txrr_data[31:0] <= m_axi_rdata_fifo[63:32];
+               if(rr_alignaddr_fifo[2])
+		 rr_data[31:0] <= m_axi_rdata_fifo[63:32];
                else
-		 txrr_data[31:0] <= m_axi_rdata_fifo[31:0];
+		 rr_data[31:0] <= m_axi_rdata_fifo[31:0];
 	    end
           // 64b word already defined by defaults above
           2'd3: 
 	    begin // 64b dword
-	       txrr_data[31:0]     <= m_axi_rdata_fifo[31:0];
-	       txrr_srcaddr[31:0]  <= m_axi_rdata_fifo[63:32];
+	       rr_data[31:0]     <= m_axi_rdata_fifo[31:0];
+	       rr_srcaddr[31:0]  <= m_axi_rdata_fifo[63:32];
             end
         endcase         
      end // always @ (posedge m_axi_aclk1 )
