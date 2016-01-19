@@ -161,7 +161,6 @@ module erx_core (/*AUTOARG*/
 		 .emesh_access_in	(emesh_remap_access),	 // Templated
 		 .emesh_packet_in	(emesh_remap_packet[PW-1:0])); // Templated
    
-
    /************************************************************/
    /*EMAILBOX                                                  */
    /************************************************************/
@@ -195,24 +194,7 @@ module erx_core (/*AUTOARG*/
    /************************************************************/
    /* ERX CONFIGURATION                                        */
    /************************************************************/
-   /*erx_cfg AUTO_TEMPLATE (.mi_dout       (mi_cfg_dout[DW-1:0]),
-                            .mi_en	   (mi_cfg_en),
-    );
-        */   
-   
-   /*
-   assign gpio_datain[8:0]= {rx_frame_par[0],
-			     rx_data_par[7],
-			     rx_data_par[6],
-			     rx_data_par[5],
-			     rx_data_par[4],
-			     rx_data_par[3],
-			     rx_data_par[2],
-			     rx_data_par[1],
-			     rx_data_par[0]
-			     };
-   */
-   
+      
    erx_cfg erx_cfg (.gpio_datain	(9'b0),
 		    .rx_status    	({11'b0,
 					  rx_rd_wait,

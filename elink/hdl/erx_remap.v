@@ -31,8 +31,6 @@ module erx_remap (/*AUTOARG*/
    wire [31:0] 	   static_remap;
    wire [31:0] 	   dynamic_remap;
    wire [31:0] 	   remap_mux;
-   wire 	   write_in;
-   wire 	   read_in;
    wire [31:0] 	   addr_in;
    wire [31:0] 	   addr_out;
    wire 	   remap_en;
@@ -45,8 +43,7 @@ module erx_remap (/*AUTOARG*/
    
    //parsing packet
    assign addr_in[31:0]  =  emesh_packet_in[39:8];
-   assign write_in       =  emesh_packet_in[1];
-   assign read_in        =  ~emesh_packet_in[1];
+ 
    
    //simple static remap
    assign static_remap[31:20] = (remap_sel[11:0] & remap_pattern[11:0]) |
