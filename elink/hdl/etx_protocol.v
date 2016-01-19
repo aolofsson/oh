@@ -139,10 +139,9 @@ module etx_protocol (/*AUTOARG*/
    //############################################################
    //# TRANSMIT STATE MACHINE
    //#############################################################
-   assign etx_valid = tx_enable & 
-		      etx_access &
-		      ~(etx_dstaddr[31:20]==ID) & 
-		       ~tx_wait;
+   assign etx_valid = tx_enable  & 
+		      etx_access & 
+		      ~tx_wait;
    
 `define TX_IDLE  3'b000
 `define TX_START 3'b001
