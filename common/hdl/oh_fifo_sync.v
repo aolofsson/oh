@@ -1,40 +1,35 @@
 module oh_fifo_sync (/*AUTOARG*/
    // Outputs
-   dout, empty, full, almost_full, count,
+   dout, full, prog_full, empty, count,
    // Inputs
    clk, nreset, din, wr_en, rd_en
    );
       
    //#####################################################################
-   //# PARAMETERS
-   //#####################################################################
-   parameter DEPTH       = 4;
-   parameter DW          = 104;
-   parameter ALMOST_FULL = DEPTH-1;
-
-   localparam AW         = $clog2(DEPTH);
-      
-   //#####################################################################
    //# INTERFACE
    //#####################################################################
+   parameter  DEPTH       = 4;
+   parameter  DW          = 104;
+   parameter  PROG_FULL   = DEPTH/2;
+   localparam AW          = $clog2(DEPTH);
 
    //clk/reset
-   input 	   clk;   
-   input 	   nreset;   
+   input 	   clk;          // clock
+   input 	   nreset;       // active high async reset 
 
    //write port
-   input [DW-1:0]  din;   
-   input 	   wr_en;   
+   input [DW-1:0]  din;          // data to write
+   input 	   wr_en;        // write fifo
 
-   //Read port
-   input 	   rd_en;   
-   output [DW-1:0] dout;
+   //read port
+   input 	   rd_en;        // read fifo
+   output [DW-1:0] dout;         // output data (next cycle)
 
-   //Status   
-   output 	   empty;   
-   output 	   full;
-   output 	   almost_full;
-   output [AW:0]   count;
+   //Status    
+   output 	   full;         // fifo full
+   output 	   prog_full;    // fifo is almost full
+   output 	   empty;        // fifo is empty  
+   output [AW:0]   count;        // valid entries in fifo
   
    //#####################################################################
    //# BODY
@@ -45,7 +40,7 @@ module oh_fifo_sync (/*AUTOARG*/
    reg [AW:0]    count;
    
    assign empty       = (count[AW:0]==0);   
-   assign almost_full = (count[AW:0] >=ALMOST_FULL);   
+   assign prog_full   = (count[AW:0] >=PROG_FULL);   
    assign full        = (count==DEPTH);
    
    always @ ( posedge clk or negedge nreset) 
@@ -63,17 +58,15 @@ module oh_fifo_sync (/*AUTOARG*/
      else if(wr_en) 
        begin
 	  wr_addr[AW-1:0] <= wr_addr[AW-1:0] + 'd1;
-	  count[AW:0]     <= count[AW:0]     + 'd1;	
+	  count[AW:0]     <= count[AW:0]  + 'd1;	
        end 
      else if(rd_en) 
        begin	      
           rd_addr[AW-1:0] <= rd_addr[AW-1:0] + 'd1;
-          count[AW:0]     <= count[AW:0]     - 'd1;
+          count[AW:0]     <= count[AW:0]  - 'd1;
        end
    
    // GENERIC DUAL PORTED MEMORY
-   defparam mem.DW=DW;
-   defparam mem.AW=AW;   
    oh_memory_dp 
      #(.DW(DW),
        .AW(AW))

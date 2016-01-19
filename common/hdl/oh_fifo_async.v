@@ -1,42 +1,41 @@
 module oh_fifo_async (/*AUTOARG*/
    // Outputs
-   dout, full, prog_full, empty, valid,
+   dout, full, prog_full, empty, valid, ccount,
    // Inputs
-   rst, wr_clk, wr_en, din, rd_clk, rd_en
+   nreset, wr_clk, wr_en, din, rd_clk, rd_en
    );
+
+   //#####################################################################
+   //# INTERFACE
+   //#####################################################################
+   parameter DW    = 104;          // FIFO width
+   parameter DEPTH = 32;           // FIFO depth
+   parameter TYPE  = "XILINX";     // "XILINX" or "ALTERA"
+   parameter WAIT  = 0;            // assert random prog_full wait
    
-   parameter DW    = 104;     //FIFO width
-   parameter DEPTH = 32;      //FIFO depth
-   parameter TYPE  = "XILINX";//"BASIC" or "XILINX" or "ALTERA"
-   parameter WAIT  = 0;       //assert random prog_full wait
+   //clk/reset
+   input 	   nreset;    // async reset
 
-   //##########
-   //# RESET/CLOCK
-   //##########
-   input 	   rst;       //async reset
+   //write port
+   input           wr_clk;    // write clock   
+   input 	   wr_en;     // write fifo
+   input [DW-1:0]  din;       // data to write
 
-   //##########
-   //# FIFO WRITE
-   //##########
-   input           wr_clk;    //write clock   
-   input 	   wr_en;   
-   input [DW-1:0]  din;
-  
-   //###########
-   //# FIFO READ
-   //###########
-   input           rd_clk;    //read clock   
-   input 	   rd_en;
-   output [DW-1:0] dout;
+   //read port
+   input           rd_clk;    // read clock   
+   input 	   rd_en;     // read fifo
+   output [DW-1:0] dout;      // output data (next cycle)
 
-   //###########
-   //# STATUS
-   //###########
-   output 	   full;      //fifo is full
-   output 	   prog_full; //fifo reaches full threshold
-   output 	   empty;     //fifo is empty
-   output 	   valid;     //data is valid at output
-
+   //status
+   output 	   full;      // fifo is full
+   output 	   prog_full; // fifo reaches full threshold
+   output 	   empty;     // fifo is empty
+   output 	   valid;     // data is valid at output
+   output [15:0]   ccount;     // valid entries in fifo
+   
+   //#####################################################################
+   //# BODY
+   //#####################################################################
    //local wires
    wire 	   fifo_prog_full;
    wire 	   wait_random;
@@ -44,7 +43,7 @@ module oh_fifo_async (/*AUTOARG*/
    assign prog_full = fifo_prog_full | wait_random;
    
 generate
-if(TYPE=="BASIC") begin : basic   
+if(TYPE=="GENERIC") begin : basic   
    oh_fifo_async_model 
      #(.DEPTH(DEPTH),
        .DW(DW))
@@ -56,7 +55,7 @@ if(TYPE=="BASIC") begin : basic
 	       .empty			(empty),
 	       .valid			(valid),
 	       // Inputs
-	       .rst			(rst),
+	       .rst			(~nreset),
 	       .wr_clk			(wr_clk),
 	       .rd_clk			(rd_clk),
 	       .wr_en			(wr_en),
@@ -74,7 +73,7 @@ else if (TYPE=="XILINX") begin : xilinx
 	       .empty			(empty),
 	       .valid			(valid),
 	       // Inputs
-	       .rst			(rst),
+	       .rst			(~nreset),
 	       .wr_clk			(wr_clk),
 	       .rd_clk			(rd_clk),
 	       .wr_en			(wr_en),
@@ -89,8 +88,8 @@ endgenerate
       if(WAIT>0)
 	begin	   
 	   reg [7:0] wait_counter;  
-	   always @ (posedge wr_clk or posedge rst)
-	     if(rst)
+	   always @ (posedge wr_clk or negedge nreset)
+	     if(~nreset)
 	       wait_counter[7:0] <= 'b0;   
 	     else
 	       wait_counter[7:0] <= wait_counter+1'b1;         
@@ -114,9 +113,9 @@ endmodule // oh_fifo_async
 module oh_fifo_async_model
    (/*AUTOARG*/
    // Outputs
-   full, prog_full, dout, empty, valid,
+   full, prog_full, dout, empty, valid, count,
    // Inputs
-   rst, wr_clk, rd_clk, wr_en, din, rd_en
+   nreset, wr_clk, rd_clk, wr_en, din, rd_en
    );
    
    parameter DW    = 104;            //Fifo width 
@@ -126,7 +125,7 @@ module oh_fifo_async_model
    //##########
    //# RESET/CLOCK
    //##########
-   input           rst;       //asynchronous reset
+   input           nreset;    //asynchronous active low reset
    input           wr_clk;    //write clock   
    input           rd_clk;    //read clock   
 
@@ -145,5 +144,6 @@ module oh_fifo_async_model
    output [DW-1:0] dout;
    output          empty;
    output          valid;
+   output [AW-1:0] count;
 
 endmodule // oh_fifo_async_model
