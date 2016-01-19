@@ -12,7 +12,9 @@ module IDDR (/*AUTOARG*/
     parameter [0:0] IS_C_INVERTED = 1'b0;
     parameter [0:0] IS_D_INVERTED = 1'b0;
     parameter SRTYPE              = "SYNC";
-   
+
+   localparam HOLDHACK            = 0.1;
+      
    output   Q1;   // IDDR registered output (first) 
    output   Q2;   // IDDR registered output (second)    
    input    C;    // clock
@@ -32,19 +34,19 @@ module IDDR (/*AUTOARG*/
    
    always @ (posedge C)
      if(CE)
-       Q1_pos <= D;
+       Q1_pos <= #(HOLDHACK) D;
 
    always @ (posedge C)
      if(CE)
-       Q1_reg <= Q1_pos;
+       Q1_reg <= #(HOLDHACK) Q1_pos;
          
    always @ (negedge C)
      if(CE)
-       Q2_neg <= D;
+       Q2_neg <= #(HOLDHACK) D;
    
    always @ (posedge C)
      if(CE)
-      Q2_pos <= Q2_neg;
+      Q2_pos <= #(HOLDHACK) Q2_neg;
 
    //Select behavior based on parameters
    assign Q1 = (DDR_CLK_EDGE_REG == "SAME_EDGE_PIPELINED") ? Q1_reg :

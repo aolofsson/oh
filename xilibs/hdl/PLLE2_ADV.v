@@ -152,7 +152,7 @@ module PLLE2_ADV #(
 `else   
    always @ (posedge (CLKIN1 & vco_clk) or negedge (CLKIN1&~vco_clk))
      begin
-	CLKOUT_DIV_LOCK[5:0] <= CLKOUT_DIV[5:0];	
+	CLKOUT_DIV_LOCK[5:0] = CLKOUT_DIV[5:0];	
      end
 `endif
    
@@ -168,12 +168,12 @@ module PLLE2_ADV #(
    
    always @ (CLKOUT_DIV_LOCK)
      begin	
-	CLKOUT0 <= #(CLK0_DELAY) ~reset & CLKOUT_DIV_LOCK[0];
-	CLKOUT1 <= #(CLK1_DELAY) ~reset & CLKOUT_DIV_LOCK[1];
-	CLKOUT2 <= #(CLK2_DELAY) ~reset & CLKOUT_DIV_LOCK[2];
-	CLKOUT3 <= #(CLK3_DELAY) ~reset & CLKOUT_DIV_LOCK[3];
-	CLKOUT4 <= #(CLK4_DELAY) ~reset & CLKOUT_DIV_LOCK[4];
-	CLKOUT5 <= #(CLK5_DELAY) ~reset & CLKOUT_DIV_LOCK[5];
+	CLKOUT0 = #(CLK0_DELAY) ~reset & CLKOUT_DIV_LOCK[0];
+	CLKOUT1 = #(CLK1_DELAY) ~reset & CLKOUT_DIV_LOCK[1];
+	CLKOUT2 = #(CLK2_DELAY) ~reset & CLKOUT_DIV_LOCK[2];
+	CLKOUT3 = #(CLK3_DELAY) ~reset & CLKOUT_DIV_LOCK[3];
+	CLKOUT4 = #(CLK4_DELAY) ~reset & CLKOUT_DIV_LOCK[4];
+	CLKOUT5 = #(CLK5_DELAY) ~reset & CLKOUT_DIV_LOCK[5];
      end
 
    //##############
