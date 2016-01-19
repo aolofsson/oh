@@ -106,9 +106,9 @@ module erx_io (/*AUTOARG*/
    always @ (posedge rx_lclk or negedge erx_io_nreset)
      if(!erx_io_nreset)
        rx_pointer[6:0] <= 7'b0;   
-     else if (~rx_frame)
-       rx_pointer[6:0] <= 7'b0000001; //new frame
-     else if (rx_pointer[6])
+     else if (~rx_frame | (rx_pointer[6] & ~rx_frame_iddr))
+       rx_pointer[6:0] <= 7'b0000001; //prepare for new frame
+     else if (rx_pointer[6] & rx_frame_iddr)
        rx_pointer[6:0] <= 7'b0001000; //anticipate burst
      else if(rx_frame)
        rx_pointer[6:0] <= {rx_pointer[5:0],1'b0};//middle of frame
