@@ -11,7 +11,7 @@ module oh_fifo_sync (/*AUTOARG*/
    parameter  DEPTH       = 4;
    parameter  DW          = 104;
    parameter  PROG_FULL   = DEPTH/2;
-   localparam AW          = $clog2(DEPTH);
+   parameter  AW          = $clog2(DEPTH);
 
    //clk/reset
    input 	   clk;          // clock
