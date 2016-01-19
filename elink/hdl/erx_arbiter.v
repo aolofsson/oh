@@ -67,8 +67,12 @@ module erx_arbiter (/*AUTOARG*/
    //Read response path (from IO or elink register readback)
    //#######################################################
      
-   assign rxrr_access         = (erx_access & (erx_dstaddr[31:20]==ID))  |
-				 ecfg_access;
+   assign rxrr_access   =  ecfg_access |
+			   (erx_access & 
+			    (erx_dstaddr[31:20]==ID) &
+			    (erx_dstaddr[19:16]==`EGROUP_RR));
+   
+
    
    assign rxrr_packet[PW-1:0] = ecfg_access ? ecfg_packet[PW-1:0] :	    
                                               erx_packet[PW-1:0];
