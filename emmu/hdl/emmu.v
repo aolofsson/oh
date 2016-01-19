@@ -1,19 +1,17 @@
-/*
- ###########################################################################
- # **EMMU**
- # 
- # This block uses the upper 12 bits [31:20] of a memory address as an index
- # to read an entry from a table.
- #
- # The table is written from the mi_* configuration interface.
- #
- # The table can be configured as 12 bits wide or 44 bits wide.
- #
- # 32bit address output = {table_data[11:0],dstaddr[19:0]}
- # 64bit address output = {table_data[43:0],dstaddr[19:0]}
- #
- ############################################################################
- */
+// ###########################################################################
+// # MEMORY TRANSACTION TRANSLATOR
+// # 
+// # This block uses the upper 12 bits [31:20] of a memory address as an index
+// # to read an entry from a table.
+// #
+// # Writes are done from the register config interface
+// #
+// # The table can be configured as 12 bits wide or 44 bits wide.
+// #
+// # 32bit address output = {table_data[11:0],dstaddr[19:0]}
+// # 64bit address output = {table_data[43:0],dstaddr[19:0]}
+// #
+// ############################################################################
 module emmu (/*AUTOARG*/
    // Outputs
    reg_rdata, emesh_access_out, emesh_packet_out,
@@ -27,32 +25,32 @@ module emmu (/*AUTOARG*/
    //#####################################################################
 
    // parameters
-   parameter  AW     = 32;                 // address width 
-   parameter  MW     = 48;                 // width of table
-   parameter  MAW    = 12;                 // memory addres width (entries = 1<<MAW)
-   localparam PW     = 2*AW+40;            // packet width
+   parameter  AW     = 32;            // address width 
+   parameter  MW     = 48;            // width of table
+   parameter  MAW    = 12;            // memory addres width (entries = 1<<MAW)
+   localparam PW     = 2*AW+40;       // packet width
    
-   // clocks
-   input 	     wr_clk;              // single clock
-   input 	     rd_clk;              // single clock
-   input 	     nreset;              // async active low reset
+   //reset    
+   input 	     nreset;          // async active low reset
    
-   // config
-   input 	     mmu_en;              // enables mmu (by config register)
+   //config
+   input 	     mmu_en;          // enables mmu (by config register)
 
-   // register access
-   input 	     reg_access;          // valid packet
-   input [PW-1:0]    reg_packet;          // packet
-   output [31:0]     reg_rdata;           // readback data
+   //write port
+   input 	     wr_clk;          // single clock
+   input 	     reg_access;      // valid packet
+   input [PW-1:0]    reg_packet;      // packet
+   output [31:0]     reg_rdata;       // readback data
    
-   // input packet
-   input 	     emesh_access_in;     // valid packet
-   input [PW-1:0]    emesh_packet_in;     // input packet
-   input 	     emesh_wait_in;       // pushback
+   //read port
+   input 	     rd_clk;          // single clock
+   input 	     emesh_access_in; // valid packet
+   input [PW-1:0]    emesh_packet_in; // input packet
+   input 	     emesh_wait_in;   // pushback
 
-   // translated packet
-   output 	     emesh_access_out;    // valid packet 
-   output [PW-1:0]   emesh_packet_out;    // output packet
+   //translated packet
+   output 	     emesh_access_out;// valid packet 
+   output [PW-1:0]   emesh_packet_out;// output packet
    
    //#####################################################################
    //# BODY

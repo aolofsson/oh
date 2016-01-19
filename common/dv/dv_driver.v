@@ -89,7 +89,6 @@ module dv_driver (/*AUTOARG*/
    //TODO: parametrize 
    initial     
      begin
-	#1
 	  if(NAME=="north" | NAME=="south" )
 	    offset=12'h001;   
 	  else

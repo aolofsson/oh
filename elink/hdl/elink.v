@@ -16,7 +16,6 @@ module elink (/*AUTOARG*/
    parameter DW          = 32;       //native data width
    parameter PW          = 104;      //packet width   
    parameter ID          = 12'h810;  //epiphany ID for elink (ie addr[31:20])
-   parameter IOSTD_ELINK = "LVDS_25";
    parameter ETYPE       = 1;
    
    /****************************/

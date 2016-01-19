@@ -29,7 +29,7 @@ module etx_arbiter (/*AUTOARG*/
    //tx clock and reset
    input          clk;
    input          nreset;
-
+   
    //Write Request (from slave)
    input 	   txwr_access;
    input [PW-1:0]  txwr_packet;
@@ -135,6 +135,7 @@ module etx_arbiter (/*AUTOARG*/
 	end
       else if (~etx_all_wait)
 	begin
+	   //for loopback, send cfg to RX (mostly for mailbox)
 	   etx_access   <= access_in & ~cfg_match;
 	   cfg_access   <= access_in & cfg_match;
 	end	   

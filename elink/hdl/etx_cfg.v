@@ -55,7 +55,7 @@ module etx_cfg (/*AUTOARG*/
 
    //registers/wires
    reg [15:0] 	   tx_version_reg;
-   reg [11:0] 	   tx_cfg_reg;
+   reg [15:0] 	   tx_cfg_reg;
    reg [8:0] 	   tx_gpio_reg;
    reg [15:0] 	   tx_status_reg;
    reg [31:0] 	   tx_monitor_reg;
@@ -126,9 +126,9 @@ module etx_cfg (/*AUTOARG*/
    //###########################
    always @ (posedge clk)
      if(!nreset)
-       tx_cfg_reg[11:0] <= 'b0;
+       tx_cfg_reg[15:0] <= 'b0;
      else if (tx_cfg_write)
-       tx_cfg_reg[11:0] <= data_in[11:0];
+       tx_cfg_reg[15:0] <= data_in[15:0];
 
    assign tx_enable       = 1'b1;//TODO: fix! ecfg_tx_config_reg[0];
    assign mmu_enable      = tx_cfg_reg[1];   
@@ -199,7 +199,7 @@ module etx_cfg (/*AUTOARG*/
      if(ecfg_read)
        case(dstaddr_in[RFAW+1:2])
          `E_VERSION:   cfg_dout[31:0] <= {16'b0, tx_version_reg[15:0]};
-         `ETX_CFG:     cfg_dout[31:0] <= {21'b0, tx_cfg_reg[10:0]};
+         `ETX_CFG:     cfg_dout[31:0] <= {16'b0, tx_cfg_reg[15:0]};
          `ETX_GPIO:    cfg_dout[31:0] <= {23'b0, tx_gpio_reg[8:0]};
 	 `ETX_STATUS:  cfg_dout[31:0] <= {16'b0, tx_status_reg[15:0]};
 	 `ETX_MONITOR: cfg_dout[31:0] <= {tx_monitor_reg[31:0]};

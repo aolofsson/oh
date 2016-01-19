@@ -137,7 +137,7 @@ module erx_core (/*AUTOARG*/
    /*ELINK MEMORY MANAGEMENT UNIT                              */
    /************************************************************/
    /*emmu AUTO_TEMPLATE (.reg_access	       (mmu_access),
-		         .reg_packet	       (erx_packet[PW-1:0]), 
+		         .reg_packet	       (erx_cfg_packet[PW-1:0]), 
                          .emesh_\(.*\)_out     (emmu_\1[]),   
                          .emesh_\(.*\)_in      (emesh_remap_\1[]),   
                          .mmu_en	       (mmu_enable),
@@ -152,12 +152,12 @@ module erx_core (/*AUTOARG*/
 		 .emesh_access_out	(emmu_access),		 // Templated
 		 .emesh_packet_out	(emmu_packet[PW-1:0]),	 // Templated
 		 // Inputs
-		 .wr_clk		(clk),			 // Templated
-		 .rd_clk		(clk),			 // Templated
 		 .nreset		(nreset),
 		 .mmu_en		(mmu_enable),		 // Templated
+		 .wr_clk		(clk),			 // Templated
 		 .reg_access		(mmu_access),		 // Templated
-		 .reg_packet		(erx_packet[PW-1:0]),	 // Templated
+		 .reg_packet		(erx_cfg_packet[PW-1:0]), // Templated
+		 .rd_clk		(clk),			 // Templated
 		 .emesh_access_in	(emesh_remap_access),	 // Templated
 		 .emesh_packet_in	(emesh_remap_packet[PW-1:0])); // Templated
    

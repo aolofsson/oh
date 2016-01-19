@@ -122,7 +122,6 @@ module emailbox (/*AUTOARG*/
 	read_status  <= reg_read & (reg_dstaddr[RFAW+1:2]==`E_MAILBOXSTAT);
      end
 
-   //TODO: check that high bits stay high
    oh_mux3 #(.DW(32))
    oh_mux3 (// Outputs
 	     .out (reg_rdata[31:0]),
@@ -143,9 +142,8 @@ module emailbox (/*AUTOARG*/
 	.empty     (mailbox_empty),
 	.full      (mailbox_full),
      	.prog_full (),
-	.valid     (dout_valid),
 	//Common async reset
-	.rst       (~nreset),  
+	.nreset    (nreset),  
 	//Read Port
 	.rd_en     (mailbox_read), 
 	.rd_clk    (rd_clk),  
