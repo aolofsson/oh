@@ -12,7 +12,7 @@ module parallella_base(/*AUTOARG*/
    elink_active, mailbox_irq, i2c_scl_i, i2c_sda_i, ps_gpio_i,
    txo_data_n, txo_data_p, txo_frame_n, txo_frame_p, txo_lclk_n,
    txo_lclk_p, rxo_rd_wait_n, rxo_rd_wait_p, rxo_wr_wait_n,
-   rxo_wr_wait_p,
+   rxo_wr_wait_p, constant_zero, constant_one,
    // Inouts
    i2c_scl, i2c_sda, gpio_n, gpio_p,
    // Inputs
@@ -93,7 +93,9 @@ module parallella_base(/*AUTOARG*/
    output		rxo_rd_wait_p;
    output		rxo_wr_wait_n;
    output		rxo_wr_wait_p;
-   
+   output		constant_zero;
+   output		constant_one;
+
    /*AUTOINOUT*/
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
@@ -181,6 +183,9 @@ module parallella_base(/*AUTOARG*/
    // End of automatics
    /*AUTOWIRE*/
    
+   assign constant_zero = 1'b0;
+   assign constant_one = 1'b1;
+
 
    /*axi_elink AUTO_TEMPLATE ( 
 	                .m_axi_\(.*\) (m_axi_\1[]),
