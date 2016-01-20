@@ -4,6 +4,7 @@
 -y ../../memory/dv
 -y ../../axi/dv
 -y ../../common/hdl
+-y ../../accelerator/hdl
 -y ../../elink/hdl
 -y ../../edma/hdl
 -y ../../emesh/hdl
@@ -20,4 +21,5 @@
 +incdir+../../edma/hdl
 +incdir+../../emmu/hdl
 +incdir+../../emailbox/hdl
++incdir+../../accelerator/hdl
 +incdir+../../etrace/hdl

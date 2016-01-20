@@ -479,9 +479,9 @@ module emaxi(/*autoarg*/
    always @ (posedge m_axi_aclk)    
      begin	  
 	m_axi_rdata_fifo[63:0] <= m_axi_rdata[63:0];      	  
-	rr_datamode[1:0] <= rr_datamode_fifo[1:0];
-	rr_ctrlmode[3:0] <= rr_ctrlmode_fifo[3:0];
-	rr_dstaddr[31:0] <= rr_dstaddr_fifo[31:0];	  
+	rr_datamode[1:0]       <= rr_datamode_fifo[1:0];
+	rr_ctrlmode[3:0]       <= rr_ctrlmode_fifo[3:0];
+	rr_dstaddr[31:0]       <= rr_dstaddr_fifo[31:0];	  
 	//all data needs to be right aligned
 	//(this is due to the Epiphany right aligning all words)
 	case(rr_datamode_fifo[1:0])//datamode

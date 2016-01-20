@@ -113,16 +113,15 @@ module accelerator (/*AUTOARG*/
    //registers
    assign acc_match   = access_in                &
 			(dstaddr_in[31:20]==ID)  &
-		        (dstaddr_in[19:7]==13'b0);
+		        (dstaddr_in[19:16]==`EGROUP_MMR);
    
    assign input0_match  = acc_match & (dstaddr_in[RFAW+1:2]==`REG_INPUT0);
    assign input1_match  = acc_match & (dstaddr_in[RFAW+1:2]==`REG_INPUT1);
-   assign output0_match = acc_match & (dstaddr_in[RFAW+1:2]==`REG_OUTPUT);
+   assign output_match  = acc_match & (dstaddr_in[RFAW+1:2]==`REG_OUTPUT);
    
-   assign input0_write  = input0_match  & write_in;
-   assign input1_write  = input1_match  & write_in;
-   assign output0_read  = output0_match & ~write_in;
-
+   assign input0_write  = input0_match  &  write_in;
+   assign input1_write  = input1_match  &  write_in;
+   assign output_read   = output_match  & ~write_in;
 
    //input0
    always @ (posedge clk)
@@ -131,11 +130,11 @@ module accelerator (/*AUTOARG*/
 
    //input1
    always @ (posedge clk)
-     if(input0_write)
-       reg_input0[31:0] <= data_in[31:0];
+     if(input1_write)
+       reg_input1[31:0] <= data_in[31:0];
 
    //arithmetic
-   assign result[31:0] = reg_input0[31:0] + 
+   assign result[31:0] = reg_input0[31:0] +
 			 reg_input1[31:0];
    
    //#########################
@@ -146,7 +145,7 @@ module accelerator (/*AUTOARG*/
      if(~nreset)
        s_rr_access    <= 'b0;   
      else
-       s_rr_access  <= output0_read;
+       s_rr_access  <= output_read;
    
    always @ (posedge clk)
      data_out[31:0] <= result[31:0];	
