@@ -67,6 +67,7 @@ module erx_core (/*AUTOARG*/
    wire			mailbox_access;		// From erx_cfg of erx_cfg.v
    wire			mailbox_irq_en;		// From erx_cfg of erx_cfg.v
    wire [31:0]		mailbox_rdata;		// From erx_mailbox of emailbox.v
+   wire			mailbox_wait;		// From erx_mailbox of emailbox.v
    wire			mmu_access;		// From erx_cfg of erx_cfg.v
    wire			mmu_enable;		// From erx_cfg of erx_cfg.v
    wire [31:0]		remap_base;		// From erx_cfg of erx_cfg.v
@@ -181,6 +182,7 @@ module erx_core (/*AUTOARG*/
 	       // Outputs
 	       .reg_rdata		(mailbox_rdata[31:0]),	 // Templated
 	       .mailbox_irq		(mailbox_irq),
+	       .mailbox_wait		(mailbox_wait),
 	       // Inputs
 	       .nreset			(nreset),
 	       .wr_clk			(clk),			 // Templated
@@ -283,6 +285,7 @@ module erx_core (/*AUTOARG*/
 		// Inputs
 		.erx_access		(emmu_access),		 // Templated
 		.erx_packet		(emmu_packet[PW-1:0]),	 // Templated
+		.mailbox_wait		(mailbox_wait),
 		.edma_access		(edma_access),
 		.edma_packet		(edma_packet[PW-1:0]),
 		.ecfg_access		(ecfg_access),

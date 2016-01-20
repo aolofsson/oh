@@ -40,7 +40,6 @@ module oh_fifo_cdc (/*AUTOARG*/
    wire 	      empty;
    wire 	      full;
    wire 	      prog_full;   
-   wire 	      valid;   
    reg 		      access_out;
       
    //We use the prog_full clean out any buffers in pipe
@@ -62,10 +61,10 @@ module oh_fifo_cdc (/*AUTOARG*/
 		    .WAIT(WAIT))
    fifo (.prog_full (prog_full),
 	 .full	    (full),
+	 .rd_count  (),
 	 .nreset    (nreset),
 	 .dout	    (packet_out[DW-1:0]),
 	 .empty	    (empty),
-	 .valid	    (valid), 
 	 .wr_clk    (clk_in),
 	 .rd_clk    (clk_out),
 	 .wr_en	    (wr_en),

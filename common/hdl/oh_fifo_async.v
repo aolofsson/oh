@@ -1,6 +1,6 @@
 module oh_fifo_async (/*AUTOARG*/
    // Outputs
-   dout, full, prog_full, empty, valid, ccount,
+   dout, full, prog_full, empty, rd_count,
    // Inputs
    nreset, wr_clk, wr_en, din, rd_clk, rd_en
    );
@@ -9,9 +9,10 @@ module oh_fifo_async (/*AUTOARG*/
    //# INTERFACE
    //#####################################################################
    parameter DW    = 104;          // FIFO width
-   parameter DEPTH = 32;           // FIFO depth
+   parameter DEPTH = 32;           // FIFO depth (entries)
    parameter TYPE  = "XILINX";     // "XILINX" or "ALTERA"
    parameter WAIT  = 0;            // assert random prog_full wait
+   parameter CW    = $clog2(DEPTH);// binary read count width
    
    //clk/reset
    input 	   nreset;    // async reset
@@ -30,8 +31,7 @@ module oh_fifo_async (/*AUTOARG*/
    output 	   full;      // fifo is full
    output 	   prog_full; // fifo reaches full threshold
    output 	   empty;     // fifo is empty
-   output 	   valid;     // data is valid at output
-   output [15:0]   ccount;     // valid entries in fifo
+   output [CW-1:0] rd_count;  // valid entries in fifo
    
    //#####################################################################
    //# BODY
@@ -53,7 +53,7 @@ if(TYPE=="GENERIC") begin : basic
 	       .prog_full		(fifo_prog_full),
 	       .dout			(dout[DW-1:0]),
 	       .empty			(empty),
-	       .valid			(valid),
+	       .rd_data_count		(rd_count[CW-1:0]),
 	       // Inputs
 	       .rst			(~nreset),
 	       .wr_clk			(wr_clk),
@@ -71,7 +71,7 @@ else if (TYPE=="XILINX") begin : xilinx
 	       .prog_full		(fifo_prog_full),
 	       .dout			(dout[DW-1:0]),
 	       .empty			(empty),
-	       .valid			(valid),
+	       .rd_data_count		(rd_count[CW-1:0]),
 	       // Inputs
 	       .rst			(~nreset),
 	       .wr_clk			(wr_clk),
@@ -103,9 +103,6 @@ endgenerate
    
    
 endmodule // oh_fifo_async
-
-
-
 // Local Variables:
 // verilog-library-directories:("." "../fpga/" "../dv")
 // End:
@@ -113,37 +110,32 @@ endmodule // oh_fifo_async
 module oh_fifo_async_model
    (/*AUTOARG*/
    // Outputs
-   full, prog_full, dout, empty, valid, count,
+   dout, empty, rd_count, full, prog_full,
    // Inputs
-   nreset, wr_clk, rd_clk, wr_en, din, rd_en
+   nreset, wr_clk, wr_en, din, rd_clk, rd_en
    );
    
    parameter DW    = 104;            //Fifo width 
    parameter DEPTH = 1;              //Fifo depth (entries)         
-   parameter AW    = $clog2(DEPTH);  //FIFO address width (for model)
+   parameter CW    = $clog2(DEPTH);  //FIFO address width (for model)
 
-   //##########
-   //# RESET/CLOCK
-   //##########
+   //common reset
    input           nreset;    //asynchronous active low reset
-   input           wr_clk;    //write clock   
-   input           rd_clk;    //read clock   
 
-   //##########
-   //# FIFO WRITE
-   //##########
+   //fifo write
+   input           wr_clk;    //write clock   
    input           wr_en;   
    input  [DW-1:0] din;
+   
+   //fifo read
+   input           rd_clk;    //read clock   
+   input 	   rd_en;
+   output [DW-1:0] dout;
+
+   //status
+   output          empty;
+   output [CW-1:0] rd_count;
    output          full;
    output 	   prog_full;
    
-   //###########
-   //# FIFO READ
-   //###########
-   input 	   rd_en;
-   output [DW-1:0] dout;
-   output          empty;
-   output          valid;
-   output [AW-1:0] count;
-
 endmodule // oh_fifo_async_model
