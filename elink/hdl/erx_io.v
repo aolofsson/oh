@@ -105,11 +105,11 @@ module erx_io (/*AUTOARG*/
    //write Pointer   
    always @ (posedge rx_lclk or negedge erx_io_nreset)
      if(!erx_io_nreset)
-       rx_pointer[6:0] <= 7'b0;   
-     else if (~rx_frame | (rx_pointer[6] & ~rx_frame_iddr))
-       rx_pointer[6:0] <= 7'b0000001; //prepare for new frame
+       rx_pointer[6:0] <= 7'b0000001;   
      else if (rx_pointer[6] & rx_frame_iddr)
        rx_pointer[6:0] <= 7'b0001000; //anticipate burst
+     else if (rx_pointer[6])
+       rx_pointer[6:0] <= 7'b0000001; //prepare for new frame    
      else if(rx_frame)
        rx_pointer[6:0] <= {rx_pointer[5:0],1'b0};//middle of frame
       
@@ -199,6 +199,7 @@ module erx_io (/*AUTOARG*/
 
    //stretch access pulse to 4 cycles
    //use shift register for speed
+   //TODO: simplify
    
    always @ (posedge rx_lclk)
      if(!erx_io_nreset)
@@ -210,18 +211,24 @@ module erx_io (/*AUTOARG*/
 
    assign access_wide = valid[3];
 
-   //clock handoff
+   //access
    always @ (posedge rx_lclk_div4)
      begin
 	rx_access <= access_wide;
      end
+
+   //packet
    always @ (posedge rx_lclk_div4)
      if(access_wide)
-       begin
-	  rx_packet[PW-1:0] <= rx_packet_lclk[PW-1:0];
-	  rx_burst          <= burst;	  
-       end
+       rx_packet[PW-1:0] <= rx_packet_lclk[PW-1:0];
 
+   //burst
+   always @ (posedge rx_lclk_div4)
+     if(!erx_io_nreset)
+       rx_burst          <= 1'b0;
+     else if(access_wide)
+       rx_burst          <= burst;
+   
    //################################
    //# I/O Buffers Instantiation
    //################################

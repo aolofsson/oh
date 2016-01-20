@@ -51,7 +51,7 @@ module erx_protocol (/*AUTOARG*/
    assign dstaddr_next[31:0] = dstaddr_reg[31:0] + 4'b1000;
    
    assign dstaddr_mux[31:0]  =  rx_burst ? dstaddr_next[31:0] :
-			                  rx_addr[31:0];
+			                   rx_addr[31:0];
                   
    //Pipeline stage and decode  
    

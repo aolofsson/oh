@@ -152,7 +152,7 @@ module emmu (/*AUTOARG*/
 
    always @ (posedge  rd_clk)
      if(~emesh_wait_in)
-	  emesh_packet_reg[PW-1:0] <=  emesh_packet_in[PW-1:0];	  
+       emesh_packet_reg[PW-1:0] <=  emesh_packet_in[PW-1:0];	  
      	 
    //like base register for trampolining to 64 bit space
    assign emesh_dstaddr_out[63:0] = mmu_en ? {emmu_lookup_data[43:0], 

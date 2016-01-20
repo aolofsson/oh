@@ -69,10 +69,8 @@ module erx_arbiter (/*AUTOARG*/
      
    assign rxrr_access   =  ecfg_access |
 			   (erx_access & 
-			    (erx_dstaddr[31:20]==ID) &
-			    (erx_dstaddr[19:16]==`EGROUP_RR));
-   
-
+			   (erx_dstaddr[31:20]==ID) &
+			    erx_dstaddr[19:16]==`EGROUP_RR);
    
    assign rxrr_packet[PW-1:0] = ecfg_access ? ecfg_packet[PW-1:0] :	    
                                               erx_packet[PW-1:0];
@@ -91,7 +89,7 @@ module erx_arbiter (/*AUTOARG*/
    //Read Request Path (from IO through MMU) 
    //########################################
 
-   assign erx_read           = erx_access & ~erx_write;
+   assign erx_read            = erx_access & ~erx_write;
    
    assign rxrd_access         = erx_read | edma_access;
    

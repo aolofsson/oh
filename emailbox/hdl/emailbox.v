@@ -28,7 +28,9 @@ module emailbox (/*AUTOARG*/
    parameter DEPTH  = 32;          // fifo depth
    parameter PW     = 2*AW+40;     // packet size
    parameter MW     = PW;          // fifo memory width
-
+   parameter TYPE   = "SYNC";      // SYNC or ASYNC fifo
+   
+   
    //clk+reset
    input           nreset;         // asynchronous active low reset
    input 	   wr_clk;         // write clock
@@ -113,7 +115,9 @@ module emailbox (/*AUTOARG*/
 	 .packet_in			(reg_packet[PW-1:0]));	 // Templated
    
    assign reg_read      = reg_access & ~reg_write;
-   assign mailbox_read  = reg_read & (reg_dstaddr[RFAW+1:2]==`E_MAILBOXLO);
+   assign mailbox_read  = reg_read &
+			  ~mailbox_empty &
+			  (reg_dstaddr[RFAW+1:2]==`E_MAILBOXLO);
 
    always @ (posedge rd_clk)
      begin
@@ -134,25 +138,52 @@ module emailbox (/*AUTOARG*/
    //###########################################
    // FIFO
    //###########################################  
-   oh_fifo_async #(.DW(MW),
-		   .DEPTH(DEPTH)
-		   )
-   fifo(// Outputs
-	.dout      (mailbox_data[MW-1:0]),
-	.empty     (mailbox_empty),
-	.full      (mailbox_full),
-     	.prog_full (),
-	//Common async reset
-	.nreset    (nreset),  
-	//Read Port
-	.rd_en     (mailbox_read), 
-	.rd_clk    (rd_clk),  
-	//Write Port 
-	.din       ({40'b0,emesh_din[63:0]}),
-	.wr_en     (mailbox_write),
-	.wr_clk    (wr_clk)  			     
-	); 
+generate
+   if(TYPE=="ASYNC")
+     begin
+	oh_fifo_async #(.DW(MW),
+			.DEPTH(DEPTH)
+			)
+	fifo(// Outputs
+	     .dout      (mailbox_data[MW-1:0]),
+	     .empty     (mailbox_empty),
+	     .full      (mailbox_full),
+     	     .prog_full (),
+	     //Common async reset
+	     .nreset    (nreset),  
+	     //Read Port
+	     .rd_en     (mailbox_read), 
+	     .rd_clk    (rd_clk),  
+	     //Write Port 
+	     .din       ({40'b0,emesh_din[63:0]}),
+	     .wr_en     (mailbox_write),
+	     .wr_clk    (wr_clk)  			     
+	     ); 
+     end // if (TYPE=="ASYNC")
+   else
+     begin
+	oh_fifo_sync #(.DW(MW),
+			.DEPTH(DEPTH)
+			)
+	fifo(// Outputs
+	     .dout      (mailbox_data[MW-1:0]),
+	     .empty     (mailbox_empty),
+	     .full      (mailbox_full),
+     	     .prog_full (),
+	     //Common async reset,clk
+	     .nreset    (nreset),  
+	     .clk       (wr_clk),  
+	     //Read Port
+	     .rd_en     (mailbox_read), 
+	     //Write Port 
+	     .din       ({40'b0,emesh_din[63:0]}),
+	     .wr_en     (mailbox_write)
+	     ); 	
+     end
 
+endgenerate
+   
+   
    //###########################################
    // INTERRUPT OUTPUTS
    //###########################################  
