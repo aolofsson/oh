@@ -57,7 +57,8 @@ module etx_arbiter (/*AUTOARG*/
    //regs
    reg 		   etx_access;
    reg [PW-1:0]    etx_packet;
-   reg 		   cfg_access;  //bypass translation on read response
+   reg 		   cfg_access;  //config access
+   reg [PW-1:0]    cfg_packet;  //config packet
    
    //wires  
    wire [3:0] 	   txrd_ctrlmode;
@@ -94,8 +95,9 @@ module etx_arbiter (/*AUTOARG*/
    //######################################################################
    //Pushback (stall) Signals
    //######################################################################
-   assign etx_all_wait = etx_wait  | etx_cfg_wait;
-   
+   assign etx_all_wait = (etx_wait     & ~cfg_match) |
+			 (etx_cfg_wait &  cfg_match);
+      
    //Read response
    assign txrr_wait = etx_all_wait;
 
@@ -111,10 +113,16 @@ module etx_arbiter (/*AUTOARG*/
    //#####################################################################
    //# Pipeline stage (arbiter+mux takes time..)
    //#####################################################################
-   assign access_in = (txwr_grant & ~txwr_wait) |
+   assign access_in = txwr_grant |
+		      txrd_grant |
+		      txrr_grant;
+
+/*   assign access_in = (txwr_grant & ~txwr_wait) |
 		      (txrd_grant & ~txrd_wait) |
 		      (txrr_grant & ~txrr_wait);
 
+  */ 
+   
    packet2emesh #(.AW(AW))
    p2e (.write_in	(),
 	.datamode_in	(),
@@ -129,17 +137,18 @@ module etx_arbiter (/*AUTOARG*/
    //access decode
     always @ (posedge clk)
       if (!nreset)
-	begin
-	   etx_access    <= 1'b0;   
-	   cfg_access    <= 1'b0;	   
-	end
-      else if (~etx_all_wait)
-	begin
-	   //for loopback, send cfg to RX (mostly for mailbox)
-	   etx_access   <= access_in & ~cfg_match;
-	   cfg_access   <= access_in & cfg_match;
-	end	   
-   
+	etx_access    <= 1'b0;   
+      else if (~etx_wait)
+	//for loopback, send cfg to RX (mostly for mailbox)
+	etx_access   <= access_in & ~cfg_match;
+
+   //config access
+   always @ (posedge clk)
+     if (!nreset)
+       cfg_access  <= 1'b0;	   
+     else if (~etx_cfg_wait)
+       cfg_access  <= (txwr_grant | txrd_grant) & cfg_match;
+
    //packet
    always @ (posedge clk)
      if (access_in & ~etx_all_wait)
