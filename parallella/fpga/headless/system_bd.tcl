@@ -192,14 +192,15 @@ proc create_root_design { parentCell } {
 
   # Create instance: processing_system7_0, and set properties
   set processing_system7_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0 ]
-  set_property -dict [ list CONFIG.PCW_CORE0_FIQ_INTR {1} \
+  set_property -dict [ list CONFIG.PCW_CORE0_FIQ_INTR {0} \
 CONFIG.PCW_ENET0_ENET0_IO {MIO 16 .. 27} CONFIG.PCW_ENET0_GRP_MDIO_ENABLE {1} \
 CONFIG.PCW_ENET0_PERIPHERAL_ENABLE {1} CONFIG.PCW_ENET1_PERIPHERAL_ENABLE {0} \
 CONFIG.PCW_EN_CLK3_PORT {1} CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {100} \
 CONFIG.PCW_FPGA3_PERIPHERAL_FREQMHZ {100} CONFIG.PCW_GPIO_EMIO_GPIO_ENABLE {1} \
 CONFIG.PCW_GPIO_MIO_GPIO_ENABLE {1} CONFIG.PCW_GPIO_MIO_GPIO_IO {MIO} \
 CONFIG.PCW_I2C0_I2C0_IO {EMIO} CONFIG.PCW_I2C0_PERIPHERAL_ENABLE {1} \
-CONFIG.PCW_I2C0_RESET_ENABLE {0} CONFIG.PCW_PRESET_BANK1_VOLTAGE {LVCMOS 1.8V} \
+CONFIG.PCW_I2C0_RESET_ENABLE {0} CONFIG.PCW_IRQ_F2P_INTR {1} \
+CONFIG.PCW_IRQ_F2P_MODE {DIRECT} CONFIG.PCW_PRESET_BANK1_VOLTAGE {LVCMOS 1.8V} \
 CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE {1} CONFIG.PCW_QSPI_PERIPHERAL_ENABLE {1} \
 CONFIG.PCW_SD1_PERIPHERAL_ENABLE {1} CONFIG.PCW_SD1_SD1_IO {MIO 10 .. 15} \
 CONFIG.PCW_SDIO_PERIPHERAL_FREQMHZ {50} CONFIG.PCW_UART1_PERIPHERAL_ENABLE {1} \
@@ -222,6 +223,10 @@ CONFIG.PCW_USE_S_AXI_HP1 {1}  ] $processing_system7_0
   set processing_system7_0_axi_periph [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 processing_system7_0_axi_periph ]
   set_property -dict [ list CONFIG.NUM_MI {1}  ] $processing_system7_0_axi_periph
 
+  # Create instance: sys_concat_intc, and set properties
+  set sys_concat_intc [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 sys_concat_intc ]
+  set_property -dict [ list CONFIG.NUM_PORTS {16}  ] $sys_concat_intc
+
   # Create interface connections
   connect_bd_intf_net -intf_net axi_mem_intercon_M00_AXI [get_bd_intf_pins axi_mem_intercon/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP1]
   connect_bd_intf_net -intf_net parallella_base_0_m_axi [get_bd_intf_pins axi_mem_intercon/S00_AXI] [get_bd_intf_pins parallella_base_0/m_axi]
@@ -236,9 +241,10 @@ CONFIG.PCW_USE_S_AXI_HP1 {1}  ] $processing_system7_0
   connect_bd_net -net parallella_base_0_cclk_n [get_bd_ports cclk_n] [get_bd_pins parallella_base_0/cclk_n]
   connect_bd_net -net parallella_base_0_cclk_p [get_bd_ports cclk_p] [get_bd_pins parallella_base_0/cclk_p]
   connect_bd_net -net parallella_base_0_chip_resetb [get_bd_ports chip_nreset] [get_bd_pins parallella_base_0/chip_nreset]
+  connect_bd_net -net parallella_base_0_constant_zero [get_bd_pins parallella_base_0/constant_zero] [get_bd_pins sys_concat_intc/In0] [get_bd_pins sys_concat_intc/In1] [get_bd_pins sys_concat_intc/In2] [get_bd_pins sys_concat_intc/In3] [get_bd_pins sys_concat_intc/In4] [get_bd_pins sys_concat_intc/In5] [get_bd_pins sys_concat_intc/In6] [get_bd_pins sys_concat_intc/In7] [get_bd_pins sys_concat_intc/In8] [get_bd_pins sys_concat_intc/In9] [get_bd_pins sys_concat_intc/In10] [get_bd_pins sys_concat_intc/In12] [get_bd_pins sys_concat_intc/In13] [get_bd_pins sys_concat_intc/In14] [get_bd_pins sys_concat_intc/In15]
   connect_bd_net -net parallella_base_0_i2c_scl_i [get_bd_pins parallella_base_0/i2c_scl_i] [get_bd_pins processing_system7_0/I2C0_SCL_I]
   connect_bd_net -net parallella_base_0_i2c_sda_i [get_bd_pins parallella_base_0/i2c_sda_i] [get_bd_pins processing_system7_0/I2C0_SDA_I]
-  connect_bd_net -net parallella_base_0_mailbox_irq [get_bd_pins parallella_base_0/mailbox_irq] [get_bd_pins processing_system7_0/Core0_nFIQ]
+  connect_bd_net -net parallella_base_0_mailbox_irq [get_bd_pins parallella_base_0/mailbox_irq] [get_bd_pins sys_concat_intc/In11]
   connect_bd_net -net parallella_base_0_ps_gpio_i [get_bd_pins parallella_base_0/ps_gpio_i] [get_bd_pins processing_system7_0/GPIO_I]
   connect_bd_net -net parallella_base_0_rxo_rd_wait_n [get_bd_ports rxo_rd_wait_n] [get_bd_pins parallella_base_0/rxo_rd_wait_n]
   connect_bd_net -net parallella_base_0_rxo_rd_wait_p [get_bd_ports rxo_rd_wait_p] [get_bd_pins parallella_base_0/rxo_rd_wait_p]
@@ -266,6 +272,7 @@ CONFIG.PCW_USE_S_AXI_HP1 {1}  ] $processing_system7_0
   connect_bd_net -net rxi_frame_p_1 [get_bd_ports rxi_frame_p] [get_bd_pins parallella_base_0/rxi_frame_p]
   connect_bd_net -net rxi_lclk_n_1 [get_bd_ports rxi_lclk_n] [get_bd_pins parallella_base_0/rxi_lclk_n]
   connect_bd_net -net rxi_lclk_p_1 [get_bd_ports rxi_lclk_p] [get_bd_pins parallella_base_0/rxi_lclk_p]
+  connect_bd_net -net sys_concat_intc_dout [get_bd_pins processing_system7_0/IRQ_F2P] [get_bd_pins sys_concat_intc/dout]
   connect_bd_net -net txi_rd_wait_n_1 [get_bd_ports txi_rd_wait_n] [get_bd_pins parallella_base_0/txi_rd_wait_n]
   connect_bd_net -net txi_rd_wait_p_1 [get_bd_ports txi_rd_wait_p] [get_bd_pins parallella_base_0/txi_rd_wait_p]
   connect_bd_net -net txi_wr_wait_n_1 [get_bd_ports txi_wr_wait_n] [get_bd_pins parallella_base_0/txi_wr_wait_n]
