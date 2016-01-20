@@ -473,6 +473,8 @@ FIELD    | DESCRIPTION
 -------- |---------------------------------------------------
  [0]     | Mailbox is NOT empty
  [1]     | Mailbox is full
+ [2]     | Mailbox is half full
+ [31:16] | Number of messsages in mailbox
 
 ## ELINK_RXMMU (0xE8000)
 A table of N entries for translating incoming 12 bit address to a new value. Entries are aligned on 8 byte boundaries.
