@@ -13,7 +13,7 @@
 `include "emailbox_regmap.v" // is there a better way?
 module emailbox (/*AUTOARG*/
    // Outputs
-   reg_rdata, mailbox_irq,
+   reg_rdata, mailbox_irq, mailbox_wait,
    // Inputs
    nreset, wr_clk, rd_clk, emesh_access, emesh_packet, reg_access,
    reg_packet, mailbox_irq_en
@@ -22,14 +22,15 @@ module emailbox (/*AUTOARG*/
    //##################################################################
    //# INTERFACE
    //##################################################################
-   parameter AW     = 32;          // data width of fifo
-   parameter ID     = 12'h000;     // link id
-   parameter RFAW   = 6;           // address bus width
-   parameter DEPTH  = 32;          // fifo depth
-   parameter PW     = 2*AW+40;     // packet size
-   parameter MW     = PW;          // fifo memory width
-   parameter TYPE   = "SYNC";      // SYNC or ASYNC fifo
-   
+   parameter AW     = 32;           // data width of fifo
+   parameter ID     = 12'h000;      // link id
+   parameter RFAW   = 6;            // address bus width
+   parameter DEPTH  = 32;           // fifo depth
+   parameter CW     = $clog2(DEPTH);// fifo count width
+   parameter PW     = 2*AW+40;      // packet size
+   parameter MW     = PW;           // fifo memory width
+   parameter TYPE   = "SYNC";       // SYNC or ASYNC fifo
+
    
    //clk+reset
    input           nreset;         // asynchronous active low reset
@@ -48,6 +49,7 @@ module emailbox (/*AUTOARG*/
    //mailbox flags
    input 	   mailbox_irq_en; // interupt enable 	    
    output 	   mailbox_irq;    // interrupt
+   output 	   mailbox_wait;   // mailbox is at prog_full, pushback
    
    //##################################################################
    //# BODY
@@ -55,15 +57,18 @@ module emailbox (/*AUTOARG*/
    reg 		   read_hi;
    reg 		   read_lo;
    reg 		   read_status;     
-   wire 	   mi_rd;  
    wire [31:0] 	   emesh_addr;
    wire [63:0] 	   emesh_din;
    wire 	   emesh_write;
    wire 	   mailbox_read;
    wire 	   mailbox_write;
    wire [MW-1:0]   mailbox_data;
-   wire 	   mailbox_empty; 
-
+   wire 	   mailbox_empty;
+   wire 	   mailbox_full;	   
+   wire 	   mailbox_prog_full;
+   wire [CW-1:0]   message_count;
+   wire [31:0] 	   mailbox_status;
+   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [4:0]		reg_ctrlmode;		// From p2e1 of packet2emesh.v
@@ -89,12 +94,13 @@ module emailbox (/*AUTOARG*/
 	// Inputs
 	.packet_in	(emesh_packet[PW-1:0]));
    
-   assign mailbox_write = emesh_access &
-	                  emesh_write  &
-	                  (emesh_addr[31:20]==ID) & 
-			  (emesh_addr[19:16]==`EGROUP_MMR) &
-			  (emesh_addr[10:8] ==`EGROUP_MESH) & 
-                          (emesh_addr[RFAW+1:2]==`E_MAILBOXLO); 
+   assign mailbox_write = ~mailbox_full & 
+			   emesh_access &
+	                   emesh_write  &
+	                   (emesh_addr[31:20]==ID) & 
+			   (emesh_addr[19:16]==`EGROUP_MMR) &
+			   (emesh_addr[10:8] ==`EGROUP_MESH) & 
+                           (emesh_addr[RFAW+1:2]==`E_MAILBOXLO); 
    
    //###########################################
    // READ PORT
@@ -130,9 +136,9 @@ module emailbox (/*AUTOARG*/
    oh_mux3 (// Outputs
 	     .out (reg_rdata[31:0]),
 	     // Inputs
-	     .in0 ({30'h0,mailbox_full, mailbox_not_empty}), .sel0 (read_status),
-	     .in1 (mailbox_data[63:32]),                     .sel1 (read_hi),
-     	     .in2 (mailbox_data[31:0]),                      .sel2 (read_lo)
+	     .in0 (mailbox_status[31:0]), .sel0 (read_status),
+	     .in1 (mailbox_data[63:32]),  .sel1 (read_hi),
+     	     .in2 (mailbox_data[31:0]),   .sel2 (read_lo)
 	     );
 
    //###########################################
@@ -148,7 +154,8 @@ generate
 	     .dout      (mailbox_data[MW-1:0]),
 	     .empty     (mailbox_empty),
 	     .full      (mailbox_full),
-     	     .prog_full (),
+     	     .prog_full (mailbox_prog_full),
+	     .rd_count  (message_count[CW-1:0]),
 	     //Common async reset
 	     .nreset    (nreset),  
 	     //Read Port
@@ -169,7 +176,8 @@ generate
 	     .dout      (mailbox_data[MW-1:0]),
 	     .empty     (mailbox_empty),
 	     .full      (mailbox_full),
-     	     .prog_full (),
+     	     .prog_full (mailbox_prog_full),
+	     .rd_count  (message_count[CW-1:0]),
 	     //Common async reset,clk
 	     .nreset    (nreset),  
 	     .clk       (wr_clk),  
@@ -182,16 +190,25 @@ generate
      end
 
 endgenerate
-   
-   
+      
    //###########################################
-   // INTERRUPT OUTPUTS
+   // MAILBOX STATUS
    //###########################################  
 
-   assign mailbox_not_empty  = ~mailbox_empty;
+   assign mailbox_not_empty    = ~mailbox_empty;
 
-   assign mailbox_irq        = mailbox_irq_en & 
-			       (mailbox_not_empty | mailbox_full);
+   assign mailbox_irq          = mailbox_irq_en & 
+				 (mailbox_not_empty | 
+				  mailbox_prog_full |
+				  mailbox_full);
+   
+   assign mailbox_wait         = mailbox_prog_full;
+   
+   assign mailbox_status[31:0] = {message_count[CW-1:0],
+				  13'b0,
+				  mailbox_prog_full,
+				  mailbox_full, 
+				  mailbox_not_empty};
       
 endmodule // emailbox
 // Local Variables:
