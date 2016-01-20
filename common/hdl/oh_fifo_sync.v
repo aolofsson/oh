@@ -1,6 +1,6 @@
 module oh_fifo_sync (/*AUTOARG*/
    // Outputs
-   dout, full, prog_full, empty, count,
+   dout, full, prog_full, empty, rd_count,
    // Inputs
    clk, nreset, din, wr_en, rd_en
    );
@@ -29,7 +29,7 @@ module oh_fifo_sync (/*AUTOARG*/
    output 	   full;         // fifo full
    output 	   prog_full;    // fifo is almost full
    output 	   empty;        // fifo is empty  
-   output [AW:0]   count;        // valid entries in fifo
+   output [AW-1:0] rd_count;     // valid entries in fifo
   
    //#####################################################################
    //# BODY
@@ -37,18 +37,18 @@ module oh_fifo_sync (/*AUTOARG*/
       
    reg [AW-1:0]  wr_addr;
    reg [AW-1:0]  rd_addr;
-   reg [AW:0]    count;
+   reg [AW-1:0]  rd_count;
    
-   assign empty       = (count[AW:0]==0);   
-   assign prog_full   = (count[AW:0] >=PROG_FULL);   
-   assign full        = (count==DEPTH);
+   assign empty       = (rd_count[AW-1:0] == 0);   
+   assign prog_full   = (rd_count[AW-1:0] >= PROG_FULL);   
+   assign full        = (rd_count[AW-1:0] == DEPTH);
    
    always @ ( posedge clk or negedge nreset) 
      if(!nreset) 
        begin	   
-          wr_addr[AW-1:0] <= 'd0;
-          rd_addr[AW-1:0] <= 'b0;
-          count[AW:0]     <= 'b0;
+          wr_addr[AW-1:0]   <= 'd0;
+          rd_addr[AW-1:0]   <= 'b0;
+          rd_count[AW-1:0]  <= 'b0;
        end 
      else if(wr_en & rd_en) 
        begin
@@ -57,13 +57,13 @@ module oh_fifo_sync (/*AUTOARG*/
        end 
      else if(wr_en) 
        begin
-	  wr_addr[AW-1:0] <= wr_addr[AW-1:0] + 'd1;
-	  count[AW:0]     <= count[AW:0]  + 'd1;	
+	  wr_addr[AW-1:0] <= wr_addr[AW-1:0]  + 'd1;
+	  rd_count[AW-1:0]<= rd_count[AW-1:0] + 'd1;	
        end 
      else if(rd_en) 
        begin	      
-          rd_addr[AW-1:0] <= rd_addr[AW-1:0] + 'd1;
-          count[AW:0]     <= count[AW:0]  - 'd1;
+          rd_addr[AW-1:0] <= rd_addr[AW-1:0]  + 'd1;
+          rd_count[AW-1:0]<= rd_count[AW-1:0] - 'd1;
        end
    
    // GENERIC DUAL PORTED MEMORY
