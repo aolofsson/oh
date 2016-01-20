@@ -1,4 +1,4 @@
-// (c) Copyright 1995-2015 Xilinx, Inc. All rights reserved.
+// (c) Copyright 1995-2016 Xilinx, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of Xilinx, Inc. and is protected under U.S. and
@@ -63,7 +63,7 @@ module fifo_async_104x32 (
   dout,
   full,
   empty,
-  valid,
+  rd_data_count,
   prog_full
 );
 
@@ -84,12 +84,10 @@ output wire [103 : 0] dout;
 output wire full;
 (* X_INTERFACE_INFO = "xilinx.com:interface:fifo_read:1.0 FIFO_READ EMPTY" *)
 output wire empty;
-output wire valid;
+output wire [4 : 0] rd_data_count;
 output wire prog_full;
 
-  //fifo_generator_v12_0
-
-fifo_generator_vlog_beh #(
+  fifo_generator_vlog_beh #(
     .C_COMMON_CLOCK(0),
     .C_COUNT_TYPE(0),
     .C_DATA_COUNT_WIDTH(5),
@@ -107,12 +105,12 @@ fifo_generator_vlog_beh #(
     .C_HAS_INT_CLK(0),
     .C_HAS_MEMINIT_FILE(0),
     .C_HAS_OVERFLOW(0),
-    .C_HAS_RD_DATA_COUNT(0),
+    .C_HAS_RD_DATA_COUNT(1),
     .C_HAS_RD_RST(0),
     .C_HAS_RST(1),
     .C_HAS_SRST(0),
     .C_HAS_UNDERFLOW(0),
-    .C_HAS_VALID(1),
+    .C_HAS_VALID(0),
     .C_HAS_WR_ACK(0),
     .C_HAS_WR_DATA_COUNT(0),
     .C_HAS_WR_RST(0),
@@ -320,10 +318,10 @@ fifo_generator_vlog_beh #(
     .overflow(),
     .empty(empty),
     .almost_empty(),
-    .valid(valid),
+    .valid(),
     .underflow(),
     .data_count(),
-    .rd_data_count(),
+    .rd_data_count(rd_data_count),
     .wr_data_count(),
     .prog_full(prog_full),
     .prog_empty(),
