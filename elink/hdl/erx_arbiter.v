@@ -4,8 +4,8 @@ module erx_arbiter (/*AUTOARG*/
    rx_rd_wait, rx_wr_wait, edma_wait, ecfg_wait, rxwr_access,
    rxwr_packet, rxrd_access, rxrd_packet, rxrr_access, rxrr_packet,
    // Inputs
-   erx_access, erx_packet, edma_access, edma_packet, ecfg_access,
-   ecfg_packet, rxwr_wait, rxrd_wait, rxrr_wait
+   erx_access, erx_packet, mailbox_wait, edma_access, edma_packet,
+   ecfg_access, ecfg_packet, rxwr_wait, rxrd_wait, rxrr_wait
    );
 
    parameter AW   = 32;
@@ -19,6 +19,9 @@ module erx_arbiter (/*AUTOARG*/
    input [PW-1:0]  erx_packet;
    output          rx_rd_wait; //for IO
    output          rx_wr_wait; //for IO
+
+   //Pushback from mailbox
+   input 	   mailbox_wait;
    
    //From DMA
    input           edma_access;
@@ -105,8 +108,9 @@ module erx_arbiter (/*AUTOARG*/
    
    assign rx_rd_wait    = rxrd_wait;
 
-   assign rx_wr_wait    = ecfg_access |
-			  rxwr_wait | 
+   assign rx_wr_wait    = ecfg_access  |
+			  mailbox_wait |
+			  rxwr_wait    | 
 			  rxrr_wait;
    
 endmodule // erx_arbiter
