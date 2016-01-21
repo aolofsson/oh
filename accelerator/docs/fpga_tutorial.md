@@ -6,8 +6,8 @@ background-image:  /images/parallella_front_slant.png
 ----
 
 ## Creating an FPGA accelerator in 15 min!
-Andreas Olofsson, 1/21/2016  
-(Presented at ANL FPGA Workshop) 
+Andreas Olofsson, Adapteva & Parallella Founder  
+(Presented at ANL FPGA Workshop)   
 
 ---- #parallella-introduction ----
 background-image:  /images/parallella_front_slant.png
@@ -19,7 +19,7 @@ background-image:  /images/parallella_front_slant.png
 * $898K raised on Kickstarter in Oct 2012
 * Open source and open access
 * Starting at $99
-* Now generally available at Amazon & Digi-Key
+* Available at Amazon & Digi-Key
 
 ---- #parallella-specs ----
 
@@ -41,8 +41,8 @@ background-image:  /images/parallella_front_slant.png
 
 1. **CODE:** main() { printf("Hello World\n");}
 2. **COMPILE:** gcc hello.c
-3. **TEST** ./a.out
-3. **DEBUG** printf, gdb
+3. **TEST:** ./a.out
+3. **DEBUG:** printf, gdb
 
 ---- #Hardware ----
 
@@ -66,18 +66,6 @@ background-image:  /images/parallella_front_slant.png
 | Debugging       | "easy"     | an art          |
 | Cost of mistake | low        | VERY HIGH!!!!   |
 
----- #Resources ----
-
-## Resources
-
-* Tutorial: http://github.com/parallella/oh/accelerator
-
-
-* OH! Library: http://github.com/parallella/oh  
-
-
-* Forum: http://forums.parallella.org
-
 ---- #start ----
 
 ## Let's start..."hello world"
@@ -86,38 +74,92 @@ background-image:  /images/parallella_front_slant.png
 assign result[31:0]=input0[31:0]*input1[31:0];
 ```
 
-----
-
-## Now what????
+> Now what??
 
 ---- #Steps ----
 
 ## What's missing
 1. Control code
-2. Interfaces
+2. Host/Accelerator Hardware interfaces
 3. Test environment
 4. Synthesis scripts (non trivial)
 5. Drivers (software)
 
+> How many man-years is that?
+
+---- #OH ----
+
+## OH! (Open Hardware Library)
+
+* Verilog
+* MIT license
+* ~15K lines of code so far
+* Best practices based on 20 years of chip design
+* Silicon proven building blocks
+* **Small:** FIFOs, synchronizers, muxes, arbiters, etc
+* **Big:** chip to chip link, mailboxes, memory translators
+* http://github.com/parallela/oh
+* Yes, we do accept pull requests!
+
+
+
+---- #DEMO ----
+background-image:  /images/parallella_front_slant.png
+
+## DEMO
+
+---- #Summary ----
+
+## Accelerator Case Study
+
+1. **Coding:**         2hrs
+2. **Simulate/Debug:** 2hrs
+3. **Synthesize:**     2hrs
+4. **Debug 1st "Bus Error":** 1hr
+5. **Debug 2nd "Bus Error":** 2hrs
+
+> 9hrs to put together something that takes 30 seconds in C!
+
 ---- #Files ----
 
 ## Files Used
+
+REPO: github.com/parallella/oh/accelerator
 
 1. **Code:** hdl/{accelerator.v,axi_accelerator.v}
 2. **Testbench:** dv/{dut_axi_accelerator.v,build.sh,run.sh}
 3. **Synthesis:** fpga/{package.tcl, run.tcl}
 4. **Drivers:** sw/{driver.c,test.c}
 
+---- #How-To ----
+
+## How to Run
+
+**VERIFY:**
+```sh
+$ cd accelerator/dv
+$ ./build.sh                 # build 
+$ ./run.sh tests/hello.emf   # load data
+$ gtkwave waveform.vcd       # view waveform
+$ cd ../fpga
+$ ./build.sh                 # build bitstream
+```
+
 ---- #Conclusions ----
 
 ## Conclusions
 
-1. Yes, you can build an FPGA accelerator in 15 minutes
-2. HW is still 100x more exepnsive to develop than SW
-3. This tutorial was prepared in less than 24hrs thanks to leverage
-4. Much more investment needed in open sorce HW.
+1. Yes, today you CAN build an FPGA accelerator in 15 min
+2. Anything new is still 100x more expensive to develop than SW
+3. Develop for FPGAs, but keep ASIC option open
 
-http://github.com/parallella/oh
+> ...to make FPGA universally viable we need to catch up with >>$trillion investment in software infrastructure
+
+**Email:** andreas@adapteva.com  
+**Twitter:** @adapteva
+
+
+
 
 
 
