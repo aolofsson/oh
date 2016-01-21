@@ -67,7 +67,7 @@ module emesh_mux (/*AUTOARG*/
      begin
 	packet_out[PW-1:0] = 'b0;
 	for(i=0;i<N;i=i+1)
-	  packet_out[PW-1:0] |= {(PW){grants[i]}} & packet_in[((i+1)*PW-1)-:PW];
+	  packet_out[PW-1:0] = packet_out[PW-1:0] | {(PW){grants[i]}} & packet_in[((i+1)*PW-1)-:PW];
      end
 
 endmodule // mesh_mux
