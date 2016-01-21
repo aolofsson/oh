@@ -1,0 +1,133 @@
+----  ----
+name: Creating an FPGA accelerator in 15 min
+
+---- #Title ----
+background-image:  /images/parallella_front_slant.png
+----
+
+## Creating an FPGA accelerator in 15 min!
+Andreas Olofsson, 1/21/2016  
+(Presented at ANL FPGA Workshop) 
+
+---- #parallella-introduction ----
+background-image:  /images/parallella_front_slant.png
+
+## Kickstarting Parallel Computing
+* Parallella: "Supercomputing for everyone"
+* 18 CPU cores on a credit card and @ 5W 
+* Democratizes access to parallel computing
+* $898K raised on Kickstarter in Oct 2012
+* Open source and open access
+* Starting at $99
+* Now generally available at Amazon & Digi-Key
+
+---- #parallella-specs ----
+
+## Parallella Specs (http://parallella.org)
+
+|                        |                        |
+|----------------------  |:----------------------:|
+| Performance            | ~30 GFLOPS             |
+| Architecture           | ARM + FPGA + MANYCORE  |
+| Memory                 |  1GB DDR3              |
+| IO                     | ~25 Gb/s (48 GPIO)     |
+| Size                   | credit-card            |
+| Power                  | <5W                    |
+| Cost                   | $99 -> $249            |
+
+---- #Software ----
+
+## "Hello World" in Software
+
+1. **CODE:** main() { printf("Hello World\n");}
+2. **COMPILE:** gcc hello.c
+3. **TEST** ./a.out
+3. **DEBUG** printf, gdb
+
+---- #Hardware ----
+
+## "Hello World" in Hardware
+
+1. **CODE:** Verilog/VHDL source
+2. **CODE MORE:** Verilog/SystemC testbench
+3. **TEST:** VCS/NC/Icarus/Verilator
+4. **DEBUG:** Waveform debugging
+5. **SYNTHESIZE:** HDL-->NETLIST-->POLYGONS
+6. **BURN:** FPGA/ASIC
+7. **TEST MORE:** Pray that it works...
+
+---- #Comparison ----
+
+## Hardwave vs Software
+|                 | SW         |   HW            |
+|---------------- |:----------:|:---------------:|
+| Compile Time    | seconds    | minutes/months  |
+| Libraries       | lots       | little          |
+| Debugging       | "easy"     | an art          |
+| Cost of mistake | low        | VERY HIGH!!!!   |
+
+---- #Resources ----
+
+## Resources
+
+* Tutorial: http://github.com/parallella/oh/accelerator
+
+
+* OH! Library: http://github.com/parallella/oh  
+
+
+* Forum: http://forums.parallella.org
+
+---- #start ----
+
+## Let's start..."hello world"
+
+```verilog
+assign result[31:0]=input0[31:0]*input1[31:0];
+```
+
+----
+
+## Now what????
+
+---- #Steps ----
+
+## What's missing
+1. Control code
+2. Interfaces
+3. Test environment
+4. Synthesis scripts (non trivial)
+5. Drivers (software)
+
+---- #Files ----
+
+## Files Used
+
+1. **Code:** hdl/{accelerator.v,axi_accelerator.v}
+2. **Testbench:** dv/{dut_axi_accelerator.v,build.sh,run.sh}
+3. **Synthesis:** fpga/{package.tcl, run.tcl}
+4. **Drivers:** sw/{driver.c,test.c}
+
+---- #Conclusions ----
+
+## Conclusions
+
+1. Yes, you can build an FPGA accelerator in 15 minutes
+2. HW is still 100x more exepnsive to develop than SW
+3. This tutorial was prepared in less than 24hrs thanks to leverage
+4. Much more investment needed in open sorce HW.
+
+http://github.com/parallella/oh
+
+
+
+
+
+
+
+
+
+
+
+
+
