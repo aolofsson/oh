@@ -124,7 +124,7 @@ background-image:  /images/parallella_front_slant.png
 
 ## Files Used
 
-REPO: github.com/parallella/oh/accelerator
+SOURCES: http://github.com/parallella/oh/accelerator
 
 1. **Code:** hdl/{accelerator.v,axi_accelerator.v}
 2. **Testbench:** dv/{dut_axi_accelerator.v,build.sh,run.sh}
@@ -133,16 +133,18 @@ REPO: github.com/parallella/oh/accelerator
 
 ---- #How-To ----
 
-## How to Run
+## How to Verify, Modfy, and Burn
 
-**VERIFY:**
 ```sh
 $ cd accelerator/dv
 $ ./build.sh                 # build 
 $ ./run.sh tests/hello.emf   # load data
 $ gtkwave waveform.vcd       # view waveform
+$ emacs ../hdl/accelerator.v # "put code here"
 $ cd ../fpga
 $ ./build.sh                 # build bitstream
+$ sudo cp parallella.bit.bin /media/$user/boot
+$ sync  #Insert SD card in parallella
 ```
 
 ---- #Conclusions ----
