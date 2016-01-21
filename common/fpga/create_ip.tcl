@@ -28,15 +28,21 @@ if {[llength $constraints_files] != 0} {
 
 #ADDING IP
 if {[llength $ip_files] != 0} {
+    
+    #Add to fileset
     add_files -norecurse -fileset [get_filesets sources_1] $ip_files
+
+    #Set mode for IP
+    foreach file $ip_files {
+	#TODO: is this needed?
+	set file_obj [get_files -of_objects [get_filesets sources_1] $file]
+	set_property "synth_checkpoint_mode" "Singular" $file_obj
+    }    
+    #RERUN/UPGRADE IP
+    upgrade_ip [get_ips]
 }
-foreach file $ip_files {
-    #TODO: is this needed?
-    set file_obj [get_files -of_objects [get_filesets sources_1] $file]
-    set_property "synth_checkpoint_mode" "Singular" $file_obj
-}
-#RERUN/UPGRADE IP
-upgrade_ip [get_ips]
+
+
 
 #TODO: How to check for this status of previous command?
 #foreach file $ip_files {
