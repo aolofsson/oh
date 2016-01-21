@@ -6,7 +6,7 @@ background-image:  /images/parallella_front_slant.png
 ----
 
 ## Creating an FPGA accelerator in 15 min!
-Andreas Olofsson, Adapteva & Parallella Founder  
+Andreas Olofsson,  Adapteva & Parallella Founder  
 (Presented at ANL FPGA Workshop)   
 
 ---- #parallella-introduction ----
@@ -14,7 +14,7 @@ background-image:  /images/parallella_front_slant.png
 
 ## Kickstarting Parallel Computing
 * Parallella: "Supercomputing for everyone"
-* 18 CPU cores on a credit card and @ 5W 
+* 18 CPU cores + FPGA on a credit card (5W) 
 * Democratizes access to parallel computing
 * $898K raised on Kickstarter in Oct 2012
 * Open source and open access
@@ -71,7 +71,7 @@ background-image:  /images/parallella_front_slant.png
 ## Let's start..."hello world"
 
 ```verilog
-assign result[31:0]=input0[31:0]*input1[31:0];
+assign result[31:0]=input0[31:0]+input1[31:0];
 ```
 
 > Now what??
