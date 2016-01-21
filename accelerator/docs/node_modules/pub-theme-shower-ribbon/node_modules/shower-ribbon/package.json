@@ -1,0 +1,61 @@
+{
+  "name": "shower-ribbon",
+  "description": "Ribbon theme for Shower HTML presentation engine",
+  "version": "1.0.11",
+  "author": {
+    "name": "Vadim Makeev",
+    "url": "http://pepelsbey.com/"
+  },
+  "homepage": "https://github.com/shower/ribbon",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/shower/ribbon.git"
+  },
+  "bugs": {
+    "url": "http://github.com/shower/shower/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/shower/shower/wiki/MIT-License"
+    }
+  ],
+  "keywords": [
+    "shower",
+    "presentation",
+    "ribbon",
+    "theme"
+  ],
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-autoprefixer": "^0.7.5",
+    "grunt-bump": "0.0.14",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-csso": "^0.6.2",
+    "grunt-sass": "^0.13.1",
+    "load-grunt-tasks": "^0.4.0"
+  },
+  "gitHead": "d59af0239f0f61990f36f37f321407dde2b2a3a8",
+  "_id": "shower-ribbon@1.0.11",
+  "scripts": {},
+  "_shasum": "401d8da86c351c8c3a643c16d9cce3716127635e",
+  "_from": "shower-ribbon@>=1.0.11 <2.0.0",
+  "_npmVersion": "1.4.27",
+  "_npmUser": {
+    "name": "pepelsbey",
+    "email": "pepelsbey@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "pepelsbey",
+      "email": "pepelsbey@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "401d8da86c351c8c3a643c16d9cce3716127635e",
+    "tarball": "http://registry.npmjs.org/shower-ribbon/-/shower-ribbon-1.0.11.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/shower-ribbon/-/shower-ribbon-1.0.11.tgz",
+  "readme": "ERROR: No README data found!"
+}
