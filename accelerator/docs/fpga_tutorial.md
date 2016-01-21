@@ -58,7 +58,7 @@ background-image:  /images/parallella_front_slant.png
 
 ---- #Comparison ----
 
-## Hardwave vs Software
+## Hardware vs Software
 |                 | SW         |   HW            |
 |---------------- |:----------:|:---------------:|
 | Compile Time    | seconds    | minutes/months  |
@@ -98,7 +98,7 @@ assign result[31:0]=input0[31:0]+input1[31:0];
 * Silicon proven building blocks
 * **Small:** FIFOs, synchronizers, muxes, arbiters, etc
 * **Big:** chip to chip link, mailboxes, memory translators
-* http://github.com/parallela/oh
+* http://github.com/parallella/oh
 * Yes, we do accept pull requests!
 
 
@@ -124,7 +124,7 @@ background-image:  /images/parallella_front_slant.png
 
 ## Files Used
 
-SOURCES: http://github.com/parallella/oh/accelerator
+SOURCES: http://github.com/parallella/oh
 
 1. **Code:** hdl/{accelerator.v,axi_accelerator.v}
 2. **Testbench:** dv/{dut_axi_accelerator.v,build.sh,run.sh}
@@ -133,7 +133,7 @@ SOURCES: http://github.com/parallella/oh/accelerator
 
 ---- #How-To ----
 
-## How to Verify, Modfy, and Burn
+## How to Verify, Modify, and Burn
 
 ```sh
 $ cd accelerator/dv
