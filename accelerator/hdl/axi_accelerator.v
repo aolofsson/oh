@@ -38,11 +38,7 @@ module axi_accelerator(/*AUTOARG*/
    //clk, reset
    input        sys_nreset;                  // active low async reset
    input 	sys_clk;                     // system clock for AXI
-   
-   //gpio
-   output [15:0]      gpio_out;
-   
-
+    
    //Interrupt
    output 	irq;                         // accelerator interrupt
 
