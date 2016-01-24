@@ -143,6 +143,9 @@ proc create_root_design { parentCell } {
 
 
   # Create interface ports
+  # Create instance: axi_mem_intercon, and set properties
+  set axi_mem_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_mem_intercon ]
+  set_property -dict [ list CONFIG.NUM_MI {1}  ] $axi_mem_intercon
 
   # Create ports
 
@@ -154,7 +157,7 @@ proc create_root_design { parentCell } {
 
   # Create instance: processing_system7_0, and set properties
   set processing_system7_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0 ]
-  set_property -dict [ list CONFIG.PCW_CORE0_FIQ_INTR {1} \
+  set_property -dict [ list CONFIG.PCW_CORE0_FIQ_INTR {0} \
 CONFIG.PCW_ENET0_ENET0_IO {MIO 16 .. 27} CONFIG.PCW_ENET0_GRP_MDIO_ENABLE {1} \
 CONFIG.PCW_ENET0_PERIPHERAL_ENABLE {1} CONFIG.PCW_ENET1_PERIPHERAL_ENABLE {0} \
 CONFIG.PCW_EN_CLK3_PORT {1} CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {100} \
@@ -195,7 +198,7 @@ CONFIG.PCW_USE_S_AXI_HP1 {1}  ] $processing_system7_0
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins proc_sys_reset_0/ext_reset_in] [get_bd_pins processing_system7_0/FCLK_RESET0_N]
 
   # Create address segments
-  create_bd_addr_seg -range 0x10000 -offset 0x83C00000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_accelerator_0/s_axi/axi_lite] SEG_axi_accelerator_0_axi_lite
+  create_bd_addr_seg -range 0x40000000 -offset 0x80000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_accelerator_0/s_axi/axi_lite] SEG_axi_accelerator_0_axi_lite
   
 
   # Restore current instance

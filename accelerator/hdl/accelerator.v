@@ -107,7 +107,7 @@ module accelerator (/*AUTOARG*/
    
    
    //#####################
-   //#ACCELERATOR
+   //#CONTROL LOGIC
    //#####################
 
    //registers
@@ -133,9 +133,13 @@ module accelerator (/*AUTOARG*/
      if(input1_write)
        reg_input1[31:0] <= data_in[31:0];
 
-   //arithmetic
-   assign result[31:0] = reg_input0[31:0] +
-			 reg_input1[31:0];
+  
+   //#############################
+   //#ACCELERATOR 
+   //#############################
+
+   //(PUT CODE HERE!)
+   assign result[31:0] = reg_input0[31:0] + reg_input1[31:0];
    
    //#########################
    //#READBACK WITH PIPELINE
