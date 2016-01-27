@@ -136,7 +136,7 @@ module etx_cfg (/*AUTOARG*/
    assign ctrlmode[3:0]   = tx_cfg_reg[7:4];
    assign ctrlmode_bypass = tx_cfg_reg[9];
    assign burst_enable    = tx_cfg_reg[10];
-   assign gpio_enable     = (tx_cfg_reg[11:10]==2'b01);
+   assign gpio_enable     = (tx_cfg_reg[12:11]==2'b01);
    
    //###########################
    //# STATUS REGISTER
