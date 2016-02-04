@@ -24,6 +24,7 @@ CODING METHODOLOGY
 * Keep parameter names short
 * Use common names: nreset, clk, din, dout, en, rd, wr, addr, etc
 * Make names as short as possible, but not shorter
+* Use _ in constants over 4 bits (eg: 8'h1100_1100)
 
 ## METHODLOGY
 * Use `include files for constants
@@ -48,8 +49,7 @@ CODING METHODOLOGY
 * Use default statements in all case statements
 * Don't use proprietary EDA tool pragmas (use parameters)
 * Only use synthesizable constructs
+* Use $signed() for arithmetic operations on signed types
 * Allowed keywords: assign, always, input, output, wire, reg, module, endmodule, if/else, case, casez, ~,|,&,^,==, >>, <<, >, <,?,posedge, negedge, generate, for(...), begin, end, $signed,
-
-
 
 
