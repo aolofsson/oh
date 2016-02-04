@@ -296,7 +296,7 @@ FIELD    | DESCRIPTION
          | 1: ctrlmode field taken E_TXCFG
  [10]    | 0: Burst mode disabled
          | 1: Burst mode enabled
- [11:10] | 00: Normal transmit mode
+ [12:11] | 00: Normal transmit mode
          | 01: GPIO direct drive mode
 	 
 -------------------------------
