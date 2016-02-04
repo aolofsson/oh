@@ -1,7 +1,5 @@
 =======
-# OH!
-
-An Open Hardware library for Chip and FPGA designers written in Verilog.
+# OH! : Open Hardware for FPGA and ASIC designers
 
 ![alt tag](common/docs/lego.jpg)
 
@@ -41,5 +39,6 @@ Instructions for contributing can be found [HERE](CONTRIBUTING.md).
 
 
 
-
+----
+[picture-license](https://commons.wikimedia.org/wiki/File:Lego_Color_Bricks.jpg)
 
