@@ -3,6 +3,8 @@
 
 An Open Hardware library for Chip and FPGA designers written in Verilog.
 
+![alt tag](common/docs/lego.jpg)
+
 ## CONTENT
 
 | Module                     | Description                                 |
