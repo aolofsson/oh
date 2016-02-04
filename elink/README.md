@@ -45,7 +45,7 @@ The default elink communication protocol uses source synchronous clocks, a packe
            
 BYTE     | DESCRIPTION 
 ---------|--------------
-B00      | R00000B0 (R set to 1 for reads, B set to 1 for bursts)
+B00      | R0000A00 (R=1 for reads, A=1 burst with autoincrement)
 B01      | {ctrlmode[3:0],dstaddr[31:28]}
 B02      | dstaddr[27:20]
 B03      | dstaddr[19:12]
