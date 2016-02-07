@@ -28,7 +28,7 @@ A list of some basic equations and constants I have found useful in my life as a
 
 | Rule                                | Value                                 |
 |-------------------------------------|---------------------------------------|
-| De Morgan's Law                     | ~(A&B)=~A|~B, ~(A|B)=~A&~B            |
+| De Morgan's Law                     | ~(A & B) =~A or ~B, ~(A or B) =~A &~B |
 | RC delay                            | (0.35) * res/um * cap/um * L(um)^2    |
 | Relative permitivity (SiO2)         | 3.9                                   |
 | Relative permitivity (Si)           | 11.68                                 |
