@@ -13,6 +13,7 @@
 | [elink](elink)             | Point to point LVDS link                    |
 | [emailbox](emailbox)       | Simple mailbox with interrupt output        |
 | [emmu](emmu)               | Simple memory transaction translation unit  |
+| [irqc](irqc)               | Epiphany nested interrupt controller        |
 | [xilibs](xilibs)           | Simulation modules for Xilinx primitives    |
 
 ## LICENSE
