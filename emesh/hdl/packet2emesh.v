@@ -62,8 +62,10 @@ module packet2emesh(/*AUTOARG*/
 	end
       else
 	begin : unknown
+`ifdef TARGET_SIM
 	   initial
 	     $display ("packet width=%ds not supported",  PW);
+`endif
 	end
    endgenerate
    
