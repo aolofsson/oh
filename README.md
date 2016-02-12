@@ -5,16 +5,22 @@
 
 ## CONTENT
 
-| Module                     | Description                                 |
-|----------------------------|---------------------------------------------|
-| [accelerator](accelerator) | A simple accelerator tutorial               |
-| [common](common)           | Library of generally useful components      |
-| [emesh](emesh)             | Emesh interface utility circuits            |
-| [elink](elink)             | Point to point LVDS link                    |
-| [emailbox](emailbox)       | Simple mailbox with interrupt output        |
-| [emmu](emmu)               | Simple memory transaction translation unit  |
-| [irqc](irqc)               | Epiphany nested interrupt controller        |
-| [xilibs](xilibs)           | Simulation modules for Xilinx primitives    |
+| Module                     | Status  | Description                              |
+|----------------------------|---------|------------------------------------------|
+| [accelerator](accelerator) | FPGA    | Accelerator tutorial                     |
+| [common](common)           | SILICON*| Library of generally useful components   |
+| [emesh](emesh)             | SILICON | Emesh interface utility circuits         |
+| [elink](elink)             | SILICON | Point to point LVDS link                 |
+| [emailbox](emailbox)       | FPGA    | Mailbox with interrupt output            |
+| [emmu](emmu)               | FPGA    | Memory transaction translation unit      |
+| [irqc](irqc)               | SILICON | Epiphany nested interrupt controller     |
+| [xilibs](xilibs)           | FPGA    | Simulation modules for Xilinx primitives |
+
+**NOTES:**
+* "SILICON": Silicon validated
+* "FPGA":    FPGA validated
+* "SIM":     Simulation only 
+* Common folder includes modules with mixed status. Some are silicon validated, others have only been simulated.
 
 ## LICENSE
 The OH! repository source code is licensed under the MIT license unless otherwise specified. See [LICENSE](LICENSE) for MIT copyright terms. Design specific licenses can be found in the folder root (eg: aes/LICENSE) 
