@@ -26,7 +26,7 @@ module oh_rsync (/*AUTOARG*/
    generate          
       for(i=0;i<PS;i=i+1)
 	if(i==0)
-	  begin
+	  begin : first_stage
 	     for(j=0;j<DW;j=j+1)		 
 	       begin
 		  always @ (posedge clk or negedge nrst_in[j])		 
@@ -37,7 +37,7 @@ module oh_rsync (/*AUTOARG*/
 	       end
 	  end
 	else
-	  begin
+	  begin : second_stage
 	     for(j=0;j<DW;j=j+1)		 
 	       begin
 		  always @ (posedge clk or negedge nrst_in[j])		 

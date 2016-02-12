@@ -43,16 +43,16 @@ module packet2emesh(/*AUTOARG*/
       
    generate
       if(AW==32)
-	begin
+	begin : packet32
 	   assign write_in           = packet_in[0];   
 	   assign datamode_in[1:0]   = packet_in[2:1];   
 	   assign ctrlmode_in[4:0]   = {1'b0,packet_in[6:3]};   
 	   assign dstaddr_in[31:0]   = packet_in[39:8]; 	 
 	   assign srcaddr_in[31:0]   = packet_in[103:72];  
-	   assign data_in[31:0]      = packet_in[71:40];  
+	   assign data_in[31:0]      = packet_in[71:40]; 
 	end
       else if(AW==64)
-	begin
+	begin : packet64
 	   assign write_in           = packet_in[0];
 	   assign datamode_in[1:0]   = packet_in[2:1];  
 	   assign ctrlmode_in[4:0]   = packet_in[7:3];
@@ -61,9 +61,9 @@ module packet2emesh(/*AUTOARG*/
 	   assign data_in[63:0]      = packet_in[103:40];
 	end
       else
-	begin
+	begin : unknown
 	   initial
-	     $display ("packet width=%0s not supported",  PW);
+	     $display ("packet width=%ds not supported",  PW);
 	end
    endgenerate
    
