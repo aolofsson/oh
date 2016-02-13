@@ -8,6 +8,7 @@
 | Module                     | Status  | Description                              |
 |----------------------------|---------|------------------------------------------|
 | [accelerator](accelerator) | FPGA    | Accelerator tutorial                     |
+| [chip](chip)               | SILICON | Chip design reference flow               |
 | [common](common)           | SILICON*| Library of generally useful components   |
 | [emesh](emesh)             | SILICON | Emesh interface utility circuits         |
 | [elink](elink)             | SILICON | Point to point LVDS link                 |
@@ -38,13 +39,9 @@ Instructions for contributing can be found [HERE](CONTRIBUTING.md).
 
 ## RECOMMENDED READING
 
-* [Verilog Quick Reference](verilog/verilog_reference.md)
-* [Sunburst Design Verilog Papers](http://www.sunburst-design.com/papers)
-* [Sutherland Verilog Papers](http://www.sutherland-hdl.com/papers.html)
-
-
-
-
+* [Glossary](chip/docs/glossary.md)
+* [Chip constants](chip/docs/constants.md)
+* [Verilog Reference](verilog/verilog_reference.md)
 
 ----
 [picture-license](https://commons.wikimedia.org/wiki/File:Lego_Color_Bricks.jpg)
