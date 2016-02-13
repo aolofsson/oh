@@ -44,3 +44,8 @@ xgui/
 *.dcp
 *.veo
 *_ooc.*
+
+#######################
+#ASIC proprietary files
+proprietary/
+
