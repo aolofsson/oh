@@ -1,10 +1,14 @@
+Chip Design Glossary
+===============================
+
+All entries backed up by neutral Wiki entries.
 
 ## DESIGN
 * [ASIC](https://en.wikipedia.org/wiki/Application-specific_integrated_circuit): Application specific integrated circuit.
 * [Moore's Law](https://en.wikipedia.org/wiki/Moore%27s_law): Observation by Gordon Moore that the number of transistors in an IC doubles approximately every two years.
 * [Mask Work](https://en.wikipedia.org/wiki/Integrated_circuit_layout_design_protection): A special field of US intellectual proprely law dedicated to 2D and 3D integrated circuit topogrophis "layouts".
 * [Chip](https://en.wikipedia.org/wiki/Integrated_circuit): A set of electronic circuits on one small plate ("chip") of semiconductor material, normally silicon.
-* [Die](https://en.wikipedia.org/wiki/Die_(integrated_circuit): Small block of semioncuctor material that can be cut ("diced") from a silicon wafer
+* [Die](https://en.wikipedia.org/wiki/Die_%28integrated_circuit%29): Small block of semioncuctor material that can be cut ("diced") from a silicon wafer
 * [IP](https://en.wikipedia.org/wiki/Semiconductor_intellectual_property_core): Semiconductor reusable design blocks containing author's Intellectual Property. Can be licensed under open source or commercial terms.
 * [EDA](https://en.wikipedia.org/wiki/Electronic_design_automation): Electronic Design Automation tools used to enhance chip design productivity.
 * [GDSII](https://en.wikipedia.org/wiki/GDSII): Binary format of design database sent to foundry
@@ -42,13 +46,12 @@
 * [Clock gating](https://en.wikipedia.org/wiki/Clock_gating): Technique to save power in synchronous logic design. Dynamically shuts off unused portions of the clock tree.
 * [Multi-threshold CMOS](https://en.wikipedia.org/wiki/Multi-threshold_CMOS): Variation of CMOS technology with multiple threshold voltages to offer designer more options for meeting power and performance targets.
 * [Cross talk](https://en.wikipedia.org/wiki/Crosstalk): The coupling of nearby signals on a chip, usually through capacitive coupling.
-* [Signoff](https://en.wikipedia.org/wiki/Signoff_(electronic_design_automation): The final stamp of approval that the design is ready to be sent to foundry for manufacturing.
+* [Signoff](https://en.wikipedia.org/wiki/Signoff_%28electronic_design_automation%29): The final stamp of approval that the design is ready to be sent to foundry for manufacturing.
 * [STA](https://en.wikipedia.org/wiki/Static_timing_analysis): Method of computing the expected timing of a digital circuit without requiring a simulation of the full circuit.
 * [SEU](https://en.wikipedia.org/wiki/Single_event_upset): Change of state caused by one single ionizing particle (ions, electrons, photons...) striking a sensitive node in a micro-electronic device
 * [Electromigration](https://en.wikipedia.org/wiki/Electromigration): Transport of material caused by the gradual movement of the ions in a conductor due to the momentum transfer between conducting electrons and diffusing metal atoms.
 * [PVT Corners](https://en.wikipedia.org/wiki/Process_corners): Represenets the extremes of the process, voltage, and temperature that could likely occur in a given semiconductor process. Can include combinations of FEOL (NMOS/PMOS) and BEOL, temperature (eg -40-->125 deg), and voltage (eg nominal +/- 10%).
 * [EMI](https://en.wikipedia.org/wiki/Electromagnetic_interference): Electromagneic interference
-* Constraints: Design constraints provided to EDA tools together with design. Together they form the basis for timing, power, and signal integrity signoff.
 
 ## MANUFACTURING
 * [FinFet](https://en.wikipedia.org/wiki/Multigate_device): Nonplanar, double-gate transistor.
