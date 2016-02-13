@@ -17,14 +17,16 @@ The structure is designed to simplify implementation scripts and maximize portab
 
 ![alt tag](docs/directory_structure.png)
 
-* **docs**: Contains common documents and design guidelines
-* **foundry name(foundry1)**: tsmc, gf, tower, smic, umc, etc
-* **process name(process1)**: 28slp, 65g, etc
-* **hard ip name**: stdlib, io, sram, serdes, etc
-* **IP company name(ipco1)**: arm, synopsys, cadence, tsmc, etc
-* **eda name(eda1)**: synopsys, cadence, mentor, etc
+* **docs**: Common documents and design guidelines
+* **foundry name ("foundry1")**: tsmc, gf, tower, smic, umc, etc
+* **process name ("process1")**: 28slp, 65g, etc
+* **hard ip name**: pdk, stdlib, io, sram, serdes, etc
+* **IP company name ("ipco1")**: arm, synopsys, cadence, tsmc, etc
+* **eda name ("eda1")**: synopsys, cadence, mentor, etc
 
-To visualize the directory structure, Linux 'tree'. 
+Description of contents inside each folder can be found in the local README.md file.
+
+To visualize the directory structure, use the 'tree' utility. 
 
 ## CONTRIBUTION NEEDED
 Non-disclosure agreements prevent populating the directory with exact script and process details. If you have access to an open process, then please do subnmit a PR with a populated technology tree
