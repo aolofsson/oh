@@ -10,6 +10,7 @@ All entries backed up by neutral Wiki entries.
 * [Chip](https://en.wikipedia.org/wiki/Integrated_circuit): A set of electronic circuits on one small plate ("chip") of semiconductor material, normally silicon.
 * [Die](https://en.wikipedia.org/wiki/Die_%28integrated_circuit%29): Small block of semioncuctor material that can be cut ("diced") from a silicon wafer
 * [IP](https://en.wikipedia.org/wiki/Semiconductor_intellectual_property_core): Semiconductor reusable design blocks containing author's Intellectual Property. Can be licensed under open source or commercial terms.
+* [IP Vendors](https://en.wikipedia.org/wiki/List_of_semiconductor_IP_core_vendors): List of commercial semiconductor IP vendors
 * [EDA](https://en.wikipedia.org/wiki/Electronic_design_automation): Electronic Design Automation tools used to enhance chip design productivity.
 * [GDSII](https://en.wikipedia.org/wiki/GDSII): Binary format of design database sent to foundry
 * [DRC](https://en.wikipedia.org/wiki/Design_rule_checking): Design Rule Constraints specifying manufacturing constraints 
