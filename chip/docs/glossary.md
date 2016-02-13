@@ -77,10 +77,8 @@ All entries backed up by neutral Wiki entries.
 * [Interposer](https://en.wikipedia.org/wiki/Interposer): Electrical interface used to spread a connection to a wider pitch. Can be based on silicon, ceramic, or organic material.
 * [Wirebond](https://en.wikipedia.org/wiki/Wire_bonding): Method of bonding a silicon die to a package using wires
 * [Flip-chip](https://en.wikipedia.org/wiki/Flip_chip): Method of bonding a silicon die to package using solder bumps
-
 * [BGA](https://en.wikipedia.org/wiki/Ball_grid_array): Ball grid array (BGA) is a type of surface-mount packaging (a chip carrier) used for integrated circuits.
 * [BGA substrate](https://en.wikipedia.org/wiki/Ball_grid_array): A miniaturized PCB that mates the silicon die to BGA pins. 
-
 * [Leadframe](https://en.wikipedia.org/wiki/Lead_frame): Metal structure inside a chip package that carry signals from the die to the outside. The die is glued to the leadframe and bond wires attach to the die pads.
 
 ## TEST
