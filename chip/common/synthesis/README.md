@@ -1,12 +1,16 @@
-Vendor agnostic synthesis wrappers
+Vanilla chip synthesis flow
 =====================================
 
 The following TCL mush be defined before running the flow. Also, clearly the vendor specific files must be in place.
+
+## REQUIRED SHELL VARIABLES
 
 | SHELL VARIABLE   | DESCRIPTION                         |
 |------------------|-------------------------------------|
 | $PROCESS_HOME    | Path to foundry process             |
 | $OH_HOME         | Path to OH repo home                |
+
+## REQUIRED TCL VARIABLES
 
 | TCL VARIABLE     | DESCRIPTION                         |
 |------------------|-------------------------------------|
@@ -17,10 +21,11 @@ The following TCL mush be defined before running the flow. Also, clearly the ven
 | $OH_FLOORPLAN    | Floorplanning file (tcl)            |
 | $OH_CONSTRAINTS  | Timing constraints file             |
                 
-## Example
+**Example: (my_vars.tcl)**
 
 ```tcl
 set OH_DESIGN            "ecore"                      ; # top level module
+
 set OH_FILES      "../../../hdl/$OH_DESIGN.v             \
                    -y $env(OH_HOME)/emesh/hdl            \
                    -y $env(OH_HOME)/common/hdl           \
@@ -36,7 +41,16 @@ set OH_FILES      "../../../hdl/$OH_DESIGN.v             \
                    +incdir+$env(EPIPHANY_HOME)/edma/hdl"; # verilog libraries
 
 set OH_CONSTRAINTS       ${OH_DESIGN}.sdc           ; # constraints 
+
 set OH_FLOORPLAN         ${OH_DESIGN}_floorplan.tcl ; # floorplan script
 
 ```
 
+## Usage
+
+```
+>> cd 
+>> dc_shell -topographical_mode
+dc_shell> source $EPIPHANY_HOME/ecore/chip/synthesis/my_vars.tcl
+dc_shell> source $OH_HOME/chip/common/synthesis/run.tcl
+```
