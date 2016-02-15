@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#define NMESSAGES 1000000
+
 #define STEP_ADDR 0x6000
 #define STOP_ADDR 0x6004
 

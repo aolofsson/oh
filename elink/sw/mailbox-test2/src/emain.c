@@ -3,6 +3,7 @@
 
 #include "common.h"
 
+#define FOO_ADDR 0x8e000000
 #define MAILBOX_ADDR 0x810F0730
 /* TODO: Move to e-lib */
 void e_send_message(uint32_t data)
@@ -28,6 +29,10 @@ int main()
 {
 	volatile uint32_t *step = (uint32_t *) STEP_ADDR;
 	volatile uint32_t *stop = (uint32_t *) STOP_ADDR;
+	volatile uint32_t *foop = (uint32_t *) FOO_ADDR;
+
+	//uint32_t foo = *foop;
+	uint32_t foo = 0;
 	uint32_t prev_step = 0;
 
 	int i;
@@ -43,11 +48,11 @@ int main()
 		for (i = 0; i < 100000000; i++)
 			__asm__ __volatile__ ("nop" ::: "memory");
 
-		e_send_message(prev_step);
+		e_send_message(prev_step + foo + 1);
 
 		prev_step++;
 	}
 
-	for (i = 0; i < 1000000; i++)
-		e_send_message(prev_step++);
+	for (i = 0; i < NMESSAGES; i++)
+		e_send_message(i);
 }
