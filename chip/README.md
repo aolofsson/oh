@@ -17,7 +17,8 @@ The structure is designed to simplify implementation scripts and maximize portab
 
 ![alt tag](docs/directory_structure.png)
 
-* **docs**: Common documents and design guidelines
+* **docs**: Open source documents and design guidelines
+* **common**: Open source tcl script and software
 * **foundry name ("foundry1")**: tsmc, gf, tower, smic, umc, etc
 * **process name ("process1")**: 28slp, 65g, etc
 * **hard ip name**: pdk, stdlib, io, sram, serdes, etc

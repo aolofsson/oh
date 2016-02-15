@@ -3,8 +3,12 @@ Vendor agnostic synthesis wrappers
 
 The following TCL mush be defined before running the flow. Also, clearly the vendor specific files must be in place.
 
+| SHELL VARIABLE   | DESCRIPTION                         |
+|------------------|-------------------------------------|
+| $PROCESS_HOME    | Path to foundry process             |
+| $OH_HOME         | Path to OH repo home                |
 
-| VARIABLE         | DESCRIPTION                         |
+| TCL VARIABLE     | DESCRIPTION                         |
 |------------------|-------------------------------------|
 | $OH_VENDOR       | synopsys, cadence, etc              |
 | $OH_TOOL         | dc, rc, etc                         |
@@ -14,6 +18,7 @@ The following TCL mush be defined before running the flow. Also, clearly the ven
 | $OH_CONSTRAINTS  | Timing constraints file             |
                 
 ## Example
+
 ```tcl
 set OH_DESIGN            "ecore"                      ; # top level module
 set OH_FILES      "../../../hdl/$OH_DESIGN.v             \
