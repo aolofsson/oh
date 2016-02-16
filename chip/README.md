@@ -15,16 +15,18 @@ The structure is designed to simplify implementation scripts and maximize portab
 
 ## DIRECTORY STRUCTURE & NAMING METHODOLOGY
 
-| DIRECTORY NAME           | DESCRIPTION                                      |
-|--------------------------|--------------------------------------------------|
-| docs                     | Open source documents and design guidelines      |
-| common                   | Open source tcl script and software              |
-| foundry ("foundry1")     | tsmc, gf, tower, smic, umc, etc                  |
-| process ("process1")     | 28slp, 65g, etc                                  |
-| IP types("ip1")          | pdk, stdlib, io, sram, serdes, etc               |
-| IP company name ("ipco1")| arm, synopsys, cadence, tsmc, etc                |
-| eda company name ("eda1")| synopsys, cadence, mentor, etc                   |
-| proprietary              | content under NDA not for distribution           |
+| DIRECTORY NAME             | DESCRIPTION                                   |
+|----------------------------|-----------------------------------------------|
+| docs                       | open source documents and design guidelines   |
+| synthesis                  | open source synthesis scripts                 |
+| pnr                        | open source place&route scripts               |
+| signoff                    | open source signoff scripts                   |
+| foundry ("foundry1")       | tsmc, gf, tower, smic, umc, etc               |
+|   process ("process1")     | 28slp, 65g, etc                               |
+|   IP types("ip1")          | pdk, stdlib, io, sram, serdes, etc            |
+|   IP company name ("ipco1")| arm, synopsys, cadence, tsmc, etc             |
+|   eda company name ("eda1")| synopsys, cadence, mentor, etc                |
+|   proprietary              | content under NDA not for distribution        |
  
 ![alt tag](docs/directory_structure.png)
 
