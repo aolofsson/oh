@@ -3,6 +3,7 @@ set LOCALPATH [file dirname [ info script ]]
 
 set OH_VENDOR synopsys
 set OH_TOOL   dc
+set OH_
 
 ################################
 # STEP1: SETUP PROCESS
@@ -12,7 +13,7 @@ source $LOCALPATH/01_setup_process.tcl
 
 ################################
 # STEP2: SETUP LIBRARIES
-################################
+################################SW
 
 source $LOCALPATH/02_setup_libs.tcl
 

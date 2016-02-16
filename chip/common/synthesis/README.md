@@ -3,14 +3,14 @@ Vanilla chip synthesis flow
 
 The following TCL mush be defined before running the flow. Also, clearly the vendor specific files must be in place.
 
-## REQUIRED SHELL VARIABLES
+## Required Shell Variables
 
 | SHELL VARIABLE   | DESCRIPTION                         |
 |------------------|-------------------------------------|
 | $PROCESS_HOME    | Path to foundry process             |
 | $OH_HOME         | Path to OH repo home                |
 
-## REQUIRED TCL VARIABLES
+## Required TCL Variables
 
 | TCL VARIABLE     | DESCRIPTION                         |
 |------------------|-------------------------------------|
@@ -21,10 +21,14 @@ The following TCL mush be defined before running the flow. Also, clearly the ven
 | $OH_FLOORPLAN    | Floorplanning file (tcl)            |
 | $OH_CONSTRAINTS  | Timing constraints file             |
                 
-**Example: (my_vars.tcl)**
+## Example: (my_vars.tcl)**
 
 ```tcl
-set OH_DESIGN            "ecore"                      ; # top level module
+set OH_VENDOR     "synopsys"
+
+set OH_TOOl       "dc"
+
+set OH_DESIGN     "ecore"  
 
 set OH_FILES      "../../../hdl/$OH_DESIGN.v             \
                    -y $env(OH_HOME)/emesh/hdl            \
@@ -38,11 +42,11 @@ set OH_FILES      "../../../hdl/$OH_DESIGN.v             \
                    -y $env(EPIPHANY_HOME)/fpumm/hdl      \
                    +incdir+$env(EPIPHANY_HOME)/emesh/hdl \
                    +incdir+$env(EPIPHANY_HOME)/ecore/hdl \
-                   +incdir+$env(EPIPHANY_HOME)/edma/hdl"; # verilog libraries
+                   +incdir+$env(EPIPHANY_HOME)/edma/hdl"
 
-set OH_CONSTRAINTS       ${OH_DESIGN}.sdc           ; # constraints 
+set OH_CONSTRAINTS       ${OH_DESIGN}.sdc
 
-set OH_FLOORPLAN         ${OH_DESIGN}_floorplan.tcl ; # floorplan script
+set OH_FLOORPLAN         ${OH_DESIGN}_floorplan.tcl
 
 ```
 
