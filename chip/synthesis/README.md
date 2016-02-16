@@ -3,27 +3,23 @@ Vanilla chip synthesis flow
 
 The following TCL mush be defined before running the flow. Also, clearly the vendor specific files must be in place.
 
-## Required Shell Variables
+# SYNTHESIS FLOW
 
-| SHELL VARIABLE   | DESCRIPTION                         |
-|------------------|-------------------------------------|
-| $PROCESS_HOME    | Path to foundry process             |
-| $OH_HOME         | Path to OH repo home                |
-
-## Required TCL Variables
-
-| TCL VARIABLE     | DESCRIPTION                         |
-|------------------|-------------------------------------|
-| $OH_VENDOR       | synopsys, cadence, etc              |
-| $OH_TOOL         | dc, rc, etc                         |
-| $OH_DESIGN       | Name of top level module            |
-| $OH_FILES        | Design files                        |
-| $OH_LIBS         | Synthesis libraries (ex: my_svtlib) |
-| $OH_MACROS       | Hard macros in design (ex: my_sram) |
-| $OH_FLOORPLAN    | Floorplanning file (tcl)            |
-| $OH_CONSTRAINTS  | Timing constraints file             |
+| STEP   | FUNCTION        | NOTES                                       |
+|--------|-----------------|---------------------------------------------| 
+| 00     | setup_process   | Setup tech files + libraries                |
+| 01     | setup_tool      | Setup synthesis tool                        | 
+| 02     | read_design     | Read in design files                        | 
+| 03     | read_constraints| Read in design constaints                   | 
+| 04     | setup_corners   | Setup up operating conditions               | 
+| 05     | floorplan       | Read floorplan information                  | 
+| 06     | check_design    | Check design integrity                      | 
+| 07     | compile         | Comile HDL to gates                         | 
+| 08     | dft             | Insert test features (scan)                 | 
+| 09     | optimize        | Seconday optimization step                  | 
+| 10     | write_netlist   | Write out netlists and reports              | 
                 
-## Example: (my_vars.tcl)**
+## Example Setup File ("example.tcl")
 
 ```tcl
 set OH_VENDOR     "synopsys"
@@ -32,9 +28,9 @@ set OH_TOOl       "dc"
 
 set OH_DESIGN     "ecore"
 
-set OH_LIBS       ""
+set OH_LIBS       "svtlib"
 
-set OH_MACROS     ""
+set OH_MACROS     "sram64x1024"
 
 set OH_FILES      "../../../hdl/$OH_DESIGN.v             \
                    -y $env(OH_HOME)/emesh/hdl            \
@@ -50,9 +46,9 @@ set OH_FILES      "../../../hdl/$OH_DESIGN.v             \
                    +incdir+$env(EPIPHANY_HOME)/ecore/hdl \
                    +incdir+$env(EPIPHANY_HOME)/edma/hdl"
 
-set OH_CONSTRAINTS       ${OH_DESIGN}.sdc
+set OH_CONSTRAINTS  "${OH_DESIGN}.sdc"
 
-set OH_FLOORPLAN         ${OH_DESIGN}_floorplan.tcl
+set OH_FLOORPLAN    "${OH_DESIGN}_floorplan.tcl"
 
 ```
 
@@ -61,6 +57,5 @@ set OH_FLOORPLAN         ${OH_DESIGN}_floorplan.tcl
 ```
 >> cd 
 >> dc_shell -topographical_mode
-dc_shell> source $EPIPHANY_HOME/ecore/chip/synthesis/my_vars.tcl
-dc_shell> source $OH_HOME/chip/common/synthesis/run.tcl
+dc_shell> source $env(OH_HOME)/chip/synthesis/example.tcl
 ```

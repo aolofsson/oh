@@ -5,7 +5,7 @@ set LOCALPATH "."
 # SETUP PROCESS
 ################################
 
-source $LOCALPATH/setup_process.tcl
+source $env(PROCESS_HOME)/eda/$OH_VENDOR/setup_process.tcl
 
 ################################
 # STEP1: SETUP TOOL
