@@ -35,7 +35,7 @@ Instructions for contributing can be found [HERE](CONTRIBUTING.md).
 * [Emacs Verilog Mode](http://www.veripool.org/wiki/verilog-mode)
 * [Icarus Simulator](http://iverilog.icarus.com)
 * [GTKWave](http://gtkwave.sourceforge.net)
-* [Verilog-Perl](http://www.veripool.org/wiki/verilog-perl)
+* [Wavedrom](http://wavedrom.com/editor.html)
 
 ## RECOMMENDED READING
 
