@@ -2,70 +2,70 @@
 #set LOCALPATH [file dirname [ info script ]]
 set LOCALPATH "."
 ################################
-# STEP1: SETUP PROCESS
+# SETUP PROCESS
 ################################
 
-source $LOCALPATH/01_setup_process.tcl
+source $LOCALPATH/setup_process.tcl
 
 ################################
-# STEP2: SETUP TOOL
+# STEP1: SETUP TOOL
 ################################
 
-source $LOCALPATH/02_setup_tool.tcl
+source $LOCALPATH/01_setup_tool.tcl
 
 ################################
-# STEP3: READ DESIGN FILES
+# STEP2: READ DESIGN FILES
 ################################
 
-source $LOCALPATH/03_read_design.tcl
+source $LOCALPATH/02_read_design.tcl
 
 ################################
-# STEP4: READ CONSTRAINTS 
+# STEP3: READ CONSTRAINTS 
 ################################
 
-source $LOCALPATH/04_read_constraints.tcl
+source $LOCALPATH/03_read_constraints.tcl
 
 ################################
-# STEP5: SETUP CORNERS
+# STEP4: SETUP CORNERS
 ################################
 
-source $LOCALPATH/05_setup_corners.tcl
+source $LOCALPATH/04_setup_corners.tcl
 
 ################################
-# STEP6: READ FLROOPLAN
+# STEP5: READ FLROOPLAN
 ################################
 
-source $LOCALPATH/06_floorplan.tcl
+source $LOCALPATH/05_floorplan.tcl
 
 ################################
-# STEP7: CHECK DESIGN
+# STEP6: CHECK DESIGN
 ################################
 
-source $LOCALPATH/07_check_design.tcl
+source $LOCALPATH/06_check_design.tcl
 
 ################################
-# STEP8: COMPILE
+# STEP7: COMPILE
 ################################
 
-source $LOCALPATH/08_compile.tcl
+source $LOCALPATH/07_compile.tcl
 
 ################################
-# STEP9: DFT
+# STEP8: DFT
 ################################
 
-source $LOCALPATH/09_dft.tcl
+source $LOCALPATH/08_dft.tcl
 
 ################################
-# STEP10: OPTIMIZE 
+# STEP9: OPTIMIZE 
 ################################
 
-source $LOCALPATH/10_optimize.tcl
+source $LOCALPATH/09_optimize.tcl
 
 ################################
-# STEP11: WRITE NETLIST (AND OTHER FILES)
+# STEP10: WRITE NETLIST (AND OTHER FILES)
 ################################
 
-source $LOCALPATH/11_write_netlist.tcl
+source $LOCALPATH/10_write_netlist.tcl
 
 #exit
 
