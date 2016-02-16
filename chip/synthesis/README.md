@@ -18,6 +18,8 @@ The following TCL mush be defined before running the flow. Also, clearly the ven
 | $OH_TOOL         | dc, rc, etc                         |
 | $OH_DESIGN       | Name of top level module            |
 | $OH_FILES        | Design files                        |
+| $OH_LIBS         | Synthesis libraries (ex: my_svtlib) |
+| $OH_MACROS       | Hard macros in design (ex: my_sram) |
 | $OH_FLOORPLAN    | Floorplanning file (tcl)            |
 | $OH_CONSTRAINTS  | Timing constraints file             |
                 
@@ -28,7 +30,11 @@ set OH_VENDOR     "synopsys"
 
 set OH_TOOl       "dc"
 
-set OH_DESIGN     "ecore"  
+set OH_DESIGN     "ecore"
+
+set OH_LIBS       ""
+
+set OH_MACROS     ""
 
 set OH_FILES      "../../../hdl/$OH_DESIGN.v             \
                    -y $env(OH_HOME)/emesh/hdl            \

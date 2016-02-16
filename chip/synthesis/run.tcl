@@ -1,10 +1,6 @@
 #SET PATH
-set LOCALPATH [file dirname [ info script ]]
-
-set OH_VENDOR synopsys
-set OH_TOOL   dc
-set OH_
-
+#set LOCALPATH [file dirname [ info script ]]
+set LOCALPATH "."
 ################################
 # STEP1: SETUP PROCESS
 ################################
@@ -12,70 +8,64 @@ set OH_
 source $LOCALPATH/01_setup_process.tcl
 
 ################################
-# STEP2: SETUP LIBRARIES
-################################SW
-
-source $LOCALPATH/02_setup_libs.tcl
-
-################################
-# STEP3: CONFIGURE TOOL
+# STEP2: SETUP TOOL
 ################################
 
-source $LOCALPATH/03_configure_tool.tcl
+source $LOCALPATH/02_setup_tool.tcl
 
 ################################
-# STEP4: READ DESIGN FILES
+# STEP3: READ DESIGN FILES
 ################################
 
-source $LOCALPATH/04_read_design.tcl
+source $LOCALPATH/03_read_design.tcl
 
 ################################
-# STEP5: READ CONSTRAINTS 
+# STEP4: READ CONSTRAINTS 
 ################################
 
-source $LOCALPATH/05_read_constraints.tcl
+source $LOCALPATH/04_read_constraints.tcl
 
 ################################
-# STEP6: SETUP CORNERS
+# STEP5: SETUP CORNERS
 ################################
 
-source $LOCALPATH/06_setup_corners.tcl
+source $LOCALPATH/05_setup_corners.tcl
 
 ################################
-# STEP7: READ FLROOPLAN
+# STEP6: READ FLROOPLAN
 ################################
 
-source $LOCALPATH/07_floorplan.tcl
+source $LOCALPATH/06_floorplan.tcl
 
 ################################
-# STEP8: CHECK DESIGN
+# STEP7: CHECK DESIGN
 ################################
 
-source $LOCALPATH/08_check_design.tcl
+source $LOCALPATH/07_check_design.tcl
 
 ################################
-# STEP9: COMPILE
+# STEP8: COMPILE
 ################################
 
-source $LOCALPATH/09_compile.tcl
+source $LOCALPATH/08_compile.tcl
 
 ################################
-# STEP10: DFT
+# STEP9: DFT
 ################################
 
-source $LOCALPATH/10_dft.tcl
+source $LOCALPATH/09_dft.tcl
 
 ################################
-# STEP11: OPTIMIZE 
+# STEP10: OPTIMIZE 
 ################################
 
-source $LOCALPATH/11_optimize.tcl
+source $LOCALPATH/10_optimize.tcl
 
 ################################
-# STEP12: WRITE NETLIST (AND OTHER FILES)
+# STEP11: WRITE NETLIST (AND OTHER FILES)
 ################################
 
-source $LOCALPATH/12_write_netlist.tcl
+source $LOCALPATH/11_write_netlist.tcl
 
-exit
+#exit
 

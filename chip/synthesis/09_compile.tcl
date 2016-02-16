@@ -1,1 +1,2 @@
-source ../$VENDOR/$TOOL/06_compile.tcl
+source $env(EDA_HOME)/$OH_VENDOR/$OH_TOOL/10_dft.tcl
+
