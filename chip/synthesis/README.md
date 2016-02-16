@@ -1,23 +1,24 @@
-Vanilla chip synthesis flow
+OH!: Synthesis Flow
 =====================================
 
-The following TCL mush be defined before running the flow. Also, clearly the vendor specific files must be in place.
+This guide documents the OH! fron end synthesis flow that compiles Verilog HDL into a gate level netlist. The flow requires certain TCL and Shell variables to be setup, as defined [HERE](../README.md).
+
+The synthesis flow scripts call EDA specific scipts as needed. 
 
 # SYNTHESIS FLOW
 
-| STEP   | FUNCTION        | NOTES                                       |
-|--------|-----------------|---------------------------------------------| 
-| 00     | setup_process   | Setup tech files + libraries                |
-| 01     | setup_tool      | Setup synthesis tool                        | 
-| 02     | read_design     | Read in design files                        | 
-| 03     | read_constraints| Read in design constaints                   | 
-| 04     | setup_corners   | Setup up operating conditions               | 
-| 05     | floorplan       | Read floorplan information                  | 
-| 06     | check_design    | Check design integrity                      | 
-| 07     | compile         | Comile HDL to gates                         | 
-| 08     | dft             | Insert test features (scan)                 | 
-| 09     | optimize        | Seconday optimization step                  | 
-| 10     | write_netlist   | Write out netlists and reports              | 
+| FILE                   | NOTES                                       |
+|------------------------|---------------------------------------------| 
+| 01_setup_tool.tcl      | Setup synthesis tool                        | 
+| 02_read_design.tcl     | Read in design files                        | 
+| 03_read_constraints.tcl| Read in design constaints                   | 
+| 04_setup_corners.tcl   | Setup up operating conditions               | 
+| 05_floorplan.tcl       | Read floorplan information                  | 
+| 06_check_design.tcl    | Check design integrity                      | 
+| 07_compile.tcl         | Comile HDL to gates                         | 
+| 08_dft.tcl             | Insert test features (scan)                 | 
+| 09_optimize.tcl        | Seconday optimization step                  | 
+| 10_write_netlist.tcl   | Write out netlists and reports              | 
                 
 ## Example Setup File ("example.tcl")
 
