@@ -89,11 +89,10 @@ set OH_FLOORPLAN         ${OH_DESIGN}_floorplan.tcl
 
 ```
 
-## Usage Example ("synthesis step")
+## Flow Reference Guides
 
-```
->> cd 
->> dc_shell -topographical_mode
-dc_shell> source $OH_HOME/synthesis/example.tcl
-```
+* [Synthesis](synthesis/README.md)
+* [Place & Route](pnr/README.md)
+* [Signoff](signoff/README.md)
+
 
