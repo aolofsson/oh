@@ -1,5 +1,6 @@
 # mailbox tests
 
-Kernel code here, will be included in official 'parallella-linux'
-when API:s have stabilized...
-https://github.com/olajep/parallella-linux/tree/wip-mailbox
+Requires the devel version of the redesigned epiphany driver, which can be
+found on this branch:
+
+https://github.com/parallella/parallella-linux/tree/ola-devel
