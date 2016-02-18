@@ -1,27 +1,33 @@
 =======
-# OH! : Open Hardware for FPGA and ASIC designers
+# OH!: Open hardware for Chips and FPGAs
 
 ![alt tag](common/docs/lego.jpg)
 
 ## CONTENT
 
-| Module                     | Status  | Description                              |
-|----------------------------|---------|------------------------------------------|
-| [accelerator](accelerator) | FPGA    | Accelerator tutorial                     |
-| [chip](chip)               | SILICON | Chip design reference flow               |
-| [common](common)           | SILICON*| Library of generally useful components   |
-| [emesh](emesh)             | SILICON | Emesh interface utility circuits         |
-| [elink](elink)             | SILICON | Point to point LVDS link                 |
-| [emailbox](emailbox)       | FPGA    | Mailbox with interrupt output            |
-| [emmu](emmu)               | FPGA    | Memory transaction translation unit      |
-| [irqc](irqc)               | SILICON | Epiphany nested interrupt controller     |
-| [xilibs](xilibs)           | FPGA    | Simulation modules for Xilinx primitives |
+| FOLDER                   | STATUS| DESCRIPTION                          |
+|--------------------------|-------|--------------------------------------|
+|[accelerator](accelerator)| FPGA  | Accelerator tutorial                 |
+|[axi](axi)                | FPGA  | AXI master and slave interfaces      |
+|[chip](chip)              | SI    | Chip design reference flow           |
+|[common](common)          | SI    | Library of basic components          |
+|[elink](elink)            | SI    | Point to point LVDS link             |
+|[emailbox](emailbox)      | FPGA  | Mailbox with interrupt output        |
+|[emesh](emesh)            | SI    | Emesh interface utility circuits     |
+|[emmu](emmu)              | FPGA  | Memory transaction translation unit  |
+|[etrace](etrace)          | HH    | Logic Analyzer                       |
+|[gpio](gpio)              | HH    | General Purpose IO                   |
+|[irqc](irqc)              | SI    | Epiphany nested interrupt controller |
+|[parallella](parallella)  | FPGA  | Parallella FPGA logic                |
+|[risc-v](risc-v)          | HH    | RISC-V implementation                |
+|[spi](spi)                | HH    | SPI master/slave                     |
+|[verilog](verilog)        | HH    | Verilog referenca material           |
+|[xilibs](xilibs)          | FPGA  | Xilinx simulation models             |
 
 **NOTES:**
-* "SILICON": Silicon validated
-* "FPGA":    FPGA validated
-* "SIM":     Simulation only 
-* Common folder includes modules with mixed status. Some are silicon validated, others have only been simulated.
+* "SI"= Silicon validated
+* "FPGA" =  FPGA validated
+* "HH" =  Hard hat area (work in progress)
 
 ## LICENSE
 The OH! repository source code is licensed under the MIT license unless otherwise specified. See [LICENSE](LICENSE) for MIT copyright terms. Design specific licenses can be found in the folder root (eg: aes/LICENSE) 
@@ -29,16 +35,16 @@ The OH! repository source code is licensed under the MIT license unless otherwis
 ## CONTRIBUTING
 Instructions for contributing can be found [HERE](CONTRIBUTING.md).
 
-## RECOMMEND TOOLS
+## RECOMMENDED TOOLS
 
 * [Verilator Simulator](http://www.veripool.org/wiki/verilator)
 * [Emacs Verilog Mode](http://www.veripool.org/wiki/verilog-mode)
 * [Icarus Simulator](http://iverilog.icarus.com)
 * [GTKWave](http://gtkwave.sourceforge.net)
 * [Wavedrom](http://wavedrom.com/editor.html)
+* [FuseSoC](https://github.com/olofk/fusesoc)
 
-## RECOMMENDED READING
-
+## REFERENCES MANUALS
 * [Glossary](chip/docs/glossary.md)
 * [Chip constants](chip/docs/constants.md)
 * [Verilog Reference](verilog/verilog_reference.md)
