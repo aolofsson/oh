@@ -1,10 +1,47 @@
 Chip Design Glossary
 ===============================
 
-## Design
+## Chip Architecture
+
+* [ADC](https://en.wikipedia.org/wiki/Analog-to-digital_converter): Analog to Digital Converter
+* [Adder](https://en.wikipedia.org/wiki/Adder_%28electronics%29): Circuit to add two numbers
+* [Arbiter](https://en.wikipedia.org/wiki/Arbiter_%28electronics%29): Arbitrates between competing requesters
+* [ASIC](https://en.wikipedia.org/wiki/Application-specific_integrated_circuit): Application specific integrated circuit.
+* [CPU](https://en.wikipedia.org/wiki/Central_processing_unit): Central processing unit
+* [CSA](https://en.wikipedia.org/wiki/Carry-save_adder): Carry save adder 
+* [DAC](https://en.wikipedia.org/wiki/Digital-to-analog_converter): Digital to Analog Converter
+* [DDS](https://en.wikipedia.org/wiki/Direct_digital_synthesizer): Direct digital synthesis
+* [DSP](https://en.wikipedia.org/wiki/Digital_signal_processor): Digital signal processor
+* [Ethernet](https://en.wikipedia.org/wiki/Ethernet): Family of standard network technologies
+* [FPGA](https://en.wikipedia.org/wiki/Field-programmable_gate_array): Field-programmable gate array (FPGA) is an integrated circuit designed to be configured by a customer or a designer after manufacturing.
+* [FIFO](https://en.wikipedia.org/wiki/FIFO_%28computing_and_electronics%29): First in first out buffer
+* [DRAM](https://en.wikipedia.org/wiki/Dynamic_random-access_memory): Dynamic random-access semiconductor memory
+* [Flash](https://en.wikipedia.org/wiki/Flash_memory): Non-volatile semiconductor memory
+* [FPU](https://en.wikipedia.org/wiki/Floating_point): Floating point unit
+* [GPIO](https://en.wikipedia.org/wiki/General-purpose_input/output): IO controllale at run time
+* [Gray code](https://en.wikipedia.org/wiki/Gray_code): Binary system where successive values differ by one bit
+* [I2C](https://en.wikipedia.org/wiki/I%C2%B2C): Multi-master 2 wire bus
+* [LVDS}(https://en.wikipedia.org/wiki/Low-voltage_differential_signaling): Low-voltage differential signaling (also TIA/EIA-644)
+* [MUX](https://en.wikipedia.org/wiki/Multiplexer): Multiplexer
+* [Multiplier](https://en.wikipedia.org/wiki/Binary_multiplier): Binary multiplier
+* [NCO](https://en.wikipedia.org/wiki/Numerically_controlled_oscillator): Numerically controlled oscillator
+* [NOC](https://en.wikipedia.org/wiki/Network_on_a_chip): Network on a chip
+* [PCIe](https://en.wikipedia.org/wiki/PCI_Express): High Speed serial computer expansion bus
+* [PIC](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller): Programmable interrupt controller
+* [PLL](https://en.wikipedia.org/wiki/Phase-locked_loop): Phase locked loop
+* [PWM](https://en.wikipedia.org/wiki/Pulse-width_modulation): Pulse width modulation
+* [Q](https://en.wikipedia.org/wiki/Q_%28number_format%29): Q fixed point number format
+* [ROM](https://en.wikipedia.org/wiki/Read-only_memory): Read only memory (denser than RAM)
+* [Schmitt Trigger](https://en.wikipedia.org/wiki/Schmitt_trigger): Comparitor circuit wityh 
+* [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus): Synchronous 4 wirem aster/slave interface
+* [SRAM](https://en.wikipedia.org/wiki/Static_random-access_memory): Static random access semiconductor memory
+* [UART](https://en.wikipedia.org/wiki/Universal_asynchronous_receiver/transmitter): Asynchronous 2 wire point to point interface
+* [USB](https://en.wikipedia.org/wiki/USB): 2 wire point to point 5 V interface
+* [8b10b](https://en.wikipedia.org/wiki/8b/10b_encoding): Code that maps 8-bits to 10bit DC balanced symbols
+
+## Chip Design
 
 * [Antenna effect](https://en.wikipedia.org/wiki/Antenna_effect): Plasma induced gate oxide damage that can occur during semiconductor processing.
-* [ASIC](https://en.wikipedia.org/wiki/Application-specific_integrated_circuit): Application specific integrated circuit.
 * [BIST](https://en.wikipedia.org/wiki/Built-in_self-test): Built in Self Test
 * [Chip](https://en.wikipedia.org/wiki/Integrated_circuit): A set of electronic circuits on one small plate ("chip") of semiconductor material, normally silicon.
 * [Clock gating](https://en.wikipedia.org/wiki/Clock_gating): Technique to save power in synchronous logic design. Dynamically shuts off unused portions of the clock tree.
@@ -15,6 +52,7 @@ Chip Design Glossary
 * [DFT](https://en.wikipedia.org/wiki/Design_for_testing): Design for Test
 * [Die](https://en.wikipedia.org/wiki/Die_%28integrated_circuit%29): Small block of semiconductor material that can be cut ("diced") from a silicon wafer
 * [DRC](https://en.wikipedia.org/wiki/Design_rule_checking): Design Rule Constraints specifying manufacturing constraints 
+
 * [DV](https://en.wikipedia.org/wiki/Functional_verification): Design Verification (DV) is the process of verifying that the logic design conforms to specification.
 * [EDA](https://en.wikipedia.org/wiki/Electronic_design_automation): Electronic Design Automation tools used to enhance chip design productivity.
 * [Electromigration](https://en.wikipedia.org/wiki/Electromigration): Transport of material caused by the gradual movement of the ions in a conductor due to the momentum transfer between conducting electrons and diffusing metal atoms.
@@ -24,17 +62,18 @@ Chip Design Glossary
 * [FEOL](https://en.wikipedia.org/wiki/Front_end_of_line): Front end of line processing. Includes all chop processing up to but not including metal interconnect layers.
 * [Flip-flop](https://en.wikipedia.org/wiki/Flip-flop_(electronics)): A clocked circuit that has two stable states and can be used to store state information. Usually understood to be clock edge sensitive.
 * [Foundry](https://en.wikipedia.org/wiki/Semiconductor_fabrication_plant): Semiconductor company offering manufacturing services
-* [FPGA](https://en.wikipedia.org/wiki/Field-programmable_gate_array): Field-programmable gate array (FPGA) is an integrated circuit designed to be configured by a customer or a designer after manufacturing.
+
 * [GDSII](https://en.wikipedia.org/wiki/GDSII): Binary format of design database sent to foundry
 * [HDL](https://en.wikipedia.org/wiki/Hardware_description_language): Specialized hardware description lanaguage for describing electronic circuits.
 * [IP](https://en.wikipedia.org/wiki/Semiconductor_intellectual_property_core): Semiconductor reusable design blocks containing author's Intellectual Property. Can be licensed under open source or commercial terms.
 * [IP Vendors](https://en.wikipedia.org/wiki/List_of_semiconductor_IP_core_vendors): List of commercial semiconductor IP vendors
+* [Jitter](https://en.wikipedia.org/wiki/Jitter): Deviation from perfect periodicity.
 * [Latchup](https://en.wikipedia.org/wiki/Latch-up):A type of short circuit that can occur in a chip due to inadvertent creation of a low-impedance path between the power supply rails of a MOSFET circuit, triggering a parasitic structure which disrupts proper functioning of the part.
 * [Layout](https://en.wikipedia.org/wiki/Integrated_circuit_layout): Representation of an integrated circuit in terms of planar geometric shapes which correspond to the patterns of metal, oxide, or semiconductor layers that make up the components of the integrated circuit.
 * [LEF](https://en.wikipedia.org/wiki/Library_Exchange_Format): Standard Cell Library Exchange Format layout
 * [Logical Effort](https://en.wikipedia.org/wiki/Logical_effort): Term coined by Ivan Sutherland and Bob Sproull as a straightforward technique used to normalize delays in a circuit.
 * [LVS](https://en.wikipedia.org/wiki/Layout_Versus_Schematic): Layout Versus Schematic software checks that the layout is identical to the netlist.
-* [Mask Work](https://en.wikipedia.org/wiki/Integrated_circuit_layout_design_protection): A special field of US intellectual properly law dedicated to 2D and 3D integrated circuit "layouts".
+* [Mask Works](https://en.wikipedia.org/wiki/Integrated_circuit_layout_design_protection): A special field of US intellectual properly law dedicated to 2D and 3D integrated circuit "layouts".
 * [MLS](https://en.wikipedia.org/wiki/Moisture_sensitivity_level): Packaging and handling precautions for some semiconductors. 
 * [Moore's Law](https://en.wikipedia.org/wiki/Moore%27s_law): Observation by Gordon Moore that the number of transistors in an IC doubles approximately every two years.
 * [MOSIS](https://en.wikipedia.org/wiki/MOSIS): Foundry service project offering MPW and low volume manufacturing. Jointly funded by DARPA and NSF in 1986 and still active today.
@@ -58,7 +97,6 @@ Chip Design Glossary
 * [TCL](https://en.wikipedia.org/wiki/Tcl): Scripting language used by most of the leading EDA chip design tools.
 * [Verilog](https://en.wikipedia.org/wiki/Verilog): Hardware description language (HDL)
 * [VLSI](https://en.wikipedia.org/wiki/Very-large-scale_integration): Very large Integrated Circuit (somewhat outdated term, everything is VLSI today)
-
 
 ## Manufacturing
 
