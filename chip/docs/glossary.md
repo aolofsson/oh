@@ -68,7 +68,7 @@ Chip Design Glossary
 * [Reconfigurable Computing](https://en.wikipedia.org/wiki/Reconfigurable_computing): Collection of customizable datapaths connected together by a fabric
 * [RISC](https://en.wikipedia.org/wiki/Reduced_instruction_set_computing): Reduced instruction set computing
 * [ROM](https://en.wikipedia.org/wiki/Read-only_memory): Read only memory (denser than RAM)
-* [SBC]](https://en.wikipedia.org/wiki/Single-board_computer): Single board computer
+* [SBC](https://en.wikipedia.org/wiki/Single-board_computer): Single board computers
 * [SDR](https://en.wikipedia.org/wiki/Software-defined_radio): Software defined radio
 * [SERDES](https://en.wikipedia.org/wiki/SerDes): Serializer/deserializer
 * [Shift Register](https://en.wikipedia.org/wiki/Shift_register): Set of registars that shifts bits one position at a time
@@ -114,7 +114,7 @@ Chip Design Glossary
 * [FEOL](https://en.wikipedia.org/wiki/Front_end_of_line): Front end of line processing. Includes all chop processing up to but not including metal interconnect layers.
 * [Flip-flop](https://en.wikipedia.org/wiki/Flip-flop_(electronics)): A clocked circuit that has two stable states and can be used to store state information.
 * [Foundry](https://en.wikipedia.org/wiki/Semiconductor_fabrication_plant): Semiconductor company offering manufacturing services.
-* [Full custom design](https://en.wikipedia.org/wiki/Full_custom): Design methodology involving layout of individual transistors (in contrast to standard cell methodology).
+* [Full custom design](https://en.wikipedia.org/wiki/Full_custom): Design methodology involving layout and interconnection of individual transistors
 * [GDSII](https://en.wikipedia.org/wiki/GDSII): Binary format of design database sent to foundry.
 * [HDL](https://en.wikipedia.org/wiki/Hardware_description_language): Specialized hardware description lanaguage for describing electronic circuits.
 * [Hold time](https://en.wikipedia.org/wiki/Flip-flop_%28electronics%29#Setup.2C_hold.2C_recovery.2C_removal_times): Minimum time synchronous input should hold steady after clock event.
@@ -122,7 +122,7 @@ Chip Design Glossary
 * [IP Vendors](https://en.wikipedia.org/wiki/List_of_semiconductor_IP_core_vendors): List of commercial semiconductor IP vendors.
 * [ISI](https://en.wikipedia.org/wiki/Intersymbol_interference): Intersymbol interference
 * [Jitter](https://en.wikipedia.org/wiki/Jitter): Deviation from perfect periodicity.
-* [Latchup](https://en.wikipedia.org/wiki/Latch-up): Short circuit due to inadvertent creation of a low-impedance path between the power supply rails of a MOSFET circuit.
+* [Latchup](https://en.wikipedia.org/wiki/Latch-up): Short circuit due to creation of a low-impedance path between the power supply rails of a circuit.
 * [Layout](https://en.wikipedia.org/wiki/Integrated_circuit_layout): Physical representation of an integrated circuit.
 * [LEF](https://en.wikipedia.org/wiki/Library_Exchange_Format): Standard Cell Library Exchange Format layout.
 * [Logical Effort](https://en.wikipedia.org/wiki/Logical_effort): Technique used to normalize (and optimize) digital circuits speed paths.
@@ -131,7 +131,7 @@ Chip Design Glossary
 * [Mealy machine](https://en.wikipedia.org/wiki/Mealy_machine): A finite state machine whose outputs depend on current state and the current inputs
 * [MLS](https://en.wikipedia.org/wiki/Moisture_sensitivity_level): Packaging and handling precautions for some semiconductors. 
 * [Moore Machine](https://en.wikipedia.org/wiki/Moore_machine): Finite state machine whose outputs depend only on its current state.
-* [Moore's Law](https://en.wikipedia.org/wiki/Moore%27s_law): Observation by Gordon Moore that the number of transistors in an IC doubles approximately every two years.
+* [Moore's Law](https://en.wikipedia.org/wiki/Moore%27s_law): Observation by Moore that the number of transistors in an IC doubles approximately every two years.
 * [MOSFET](https://en.wikipedia.org/wiki/MOSFET): Metal oxide field effect transistor. 
 * [MOSIS](https://en.wikipedia.org/wiki/MOSIS): Foundry service project offering MPWs and low volume manufacturing.
 * [MPW](https://en.wikipedia.org/wiki/Multi-project_wafer_service): Multi-project wafer service that integrates multiple designs on one reticle (aka "shuttle").
@@ -175,12 +175,11 @@ Chip Design Glossary
 * [Reticle](https://en.wikipedia.org/wiki/Photomask): A set of photomasks used by a stepper to step and print patterns onto a silicon wafer.
 * [Semiconductor Fabrication](https://en.wikipedia.org/wiki/Semiconductor_device_fabrication): Process used to create the integrated circuits
 * [Silicon](https://en.wikipedia.org/wiki/Silicon): Element (Si) forms the basis of the electronic revolution.
-* [Silicon on insulator](https://en.wikipedia.org/wiki/Silicon_on_insulator): Layered silicon–insulator–silicon substrate in place to reduce parasitic device capacitance.
+* [Silicon on insulator](https://en.wikipedia.org/wiki/Silicon_on_insulator): Layered silicon–insulator–silicon with reduced parasitic capacitance.
 * [Stepper](https://en.wikipedia.org/wiki/Stepper): Machine that passes light through reticle onto the silicon wafer being processed.
-
 * [TSV](https://en.wikipedia.org/wiki/Through-silicon_via): Vertical electrical connection (via) passing completely through a silicon wafer or die.
 * [Wafer](https://en.wikipedia.org/wiki/Wafer_(electronics)): Thin slice of semiconductor material used in electronics for the fabrication of integrated circuits.
-* [Wafer thinning](https://en.wikipedia.org/wiki/Wafer_backgrinding): Wafer thickness is reduced to allow for stacking and high density packaging.
+* [Wafer thinning](https://en.wikipedia.org/wiki/Wafer_backgrinding): Wafer thickness reduction to allow for stacking and high density packaging.
 
 ## Packaging
 
