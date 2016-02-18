@@ -1,5 +1,5 @@
 =======
-# OH!: Open hardware for Chips and FPGAs
+# OH! Open hardware for Chips and FPGAs
 
 ![alt tag](common/docs/lego.jpg)
 
@@ -35,6 +35,12 @@ The OH! repository source code is licensed under the MIT license unless otherwis
 ## CONTRIBUTING
 Instructions for contributing can be found [HERE](CONTRIBUTING.md).
 
+## REFERENCES MANUALS
+* [Verilog Reference](verilog/verilog_reference.md)
+* [Verilog Coding Methodology](https://github.com/parallella/oh/blob/master/CODING-METHODOLOGY.md)
+* [Glossary](chip/docs/glossary.md)
+* [Chip constants](chip/docs/constants.md)
+
 ## RECOMMENDED TOOLS
 
 * [Verilator Simulator](http://www.veripool.org/wiki/verilator)
@@ -44,10 +50,6 @@ Instructions for contributing can be found [HERE](CONTRIBUTING.md).
 * [Wavedrom](http://wavedrom.com/editor.html)
 * [FuseSoC](https://github.com/olofk/fusesoc)
 
-## REFERENCES MANUALS
-* [Glossary](chip/docs/glossary.md)
-* [Chip constants](chip/docs/constants.md)
-* [Verilog Reference](verilog/verilog_reference.md)
 
 ----
 [picture-license](https://commons.wikimedia.org/wiki/File:Lego_Color_Bricks.jpg)
