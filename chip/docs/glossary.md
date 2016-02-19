@@ -61,6 +61,7 @@ Chip Design Glossary
 * [PCM](https://en.wikipedia.org/wiki/Phase-change_memory): Phase change memory
 * [PCIe](https://en.wikipedia.org/wiki/PCI_Express): High Speed serial computer expansion bus
 * [PIC](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller): Programmable interrupt controller
+* [Priority Encoder](https://en.wikipedia.org/wiki/Priority_encoder): A circuit or algorithm that compresses multiple binary inputs into a smaller number of outputs
 * [PLL](https://en.wikipedia.org/wiki/Phase-locked_loop): Phase locked loop
 * [PWM](https://en.wikipedia.org/wiki/Pulse-width_modulation): Pulse width modulation
 * [Q](https://en.wikipedia.org/wiki/Q_%28number_format%29): Q fixed point number format
