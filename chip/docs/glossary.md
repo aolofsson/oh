@@ -13,7 +13,7 @@ Chip Design Glossary
 * [Audio codec](https://en.wikipedia.org/wiki/Audio_codec): Device/program that compresses/decompresses digital audio
 * [Boolean algebra](https://en.wikipedia.org/wiki/Boolean_algebra): Algebra in which variables are either true or false
 * [BTB](https://en.wikipedia.org/wiki/Branch_target_predictor): Branch target buffer
-* [Cache](https://en.wikipedia.org/wiki/Cache_%28computing%29): Locally storage of program and/or data for future use.
+* [Cache](https://en.wikipedia.org/wiki/Cache_%28computing%29): Local storage of program and/or data for future use.
 * [Cache coherence](https://en.wikipedia.org/wiki/Cache_coherence): Consistency of shared data that is stored in multiple local caches. 
 * [CAM](https://en.wikipedia.org/wiki/Content-addressable_memory): Content addressable memory
 * [CISC](https://en.wikipedia.org/wiki/Complex_instruction_set_computing): Complex instruction set computing
@@ -39,9 +39,9 @@ Chip Design Glossary
 * [GPU](https://en.wikipedia.org/wiki/Graphics_processing_unit): Integrated circuit for accelerating the creation of graphics on a display.
 * [DRAM](https://en.wikipedia.org/wiki/Dynamic_random-access_memory): Dynamic random-access semiconductor memory
 * [Flash](https://en.wikipedia.org/wiki/Flash_memory): Non-volatile semiconductor memory
-* [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform): Fast fourier transform
+* [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform): Fast Fourier transform
 * [FPU](https://en.wikipedia.org/wiki/Floating_point): Floating point unit
-* [GPIO](https://en.wikipedia.org/wiki/General-purpose_input/output): IO controllale at run time
+* [GPIO](https://en.wikipedia.org/wiki/General-purpose_input/output): IO controllable at run time
 * [Gray code](https://en.wikipedia.org/wiki/Gray_code): Binary system where successive values differ by one bit
 * [HBM](https://en.wikipedia.org/wiki/High_Bandwidth_Memory): High bandwidth memory
 * [I2C](https://en.wikipedia.org/wiki/I%C2%B2C): Multi-master 2 wire bus
@@ -50,7 +50,7 @@ Chip Design Glossary
 * [LSB](https://en.wikipedia.org/wiki/Least_significant_bit): Least significant bit
 * [LVDS](https://en.wikipedia.org/wiki/Low-voltage_differential_signaling): Low-voltage differential signaling (also TIA/EIA-644)
 * [MII](https://en.wikipedia.org/wiki/Media-independent_interface): Media independent interface for PHY chips
-* [MIMD](https://en.wikipedia.org/wiki/MIMD): Multiple instructionbs multiple data architecture
+* [MIMD](https://en.wikipedia.org/wiki/MIMD): Multiple instructions multiple data architecture
 * [MMU](https://en.wikipedia.org/wiki/Memory_management_unit): Memory management unit
 * [MSB](https://en.wikipedia.org/wiki/Most_significant_bit): Most significant bit
 * [MUX](https://en.wikipedia.org/wiki/Multiplexer): Multiplexer
@@ -71,10 +71,10 @@ Chip Design Glossary
 * [SBC](https://en.wikipedia.org/wiki/Single-board_computer): Single board computers
 * [SDR](https://en.wikipedia.org/wiki/Software-defined_radio): Software defined radio
 * [SERDES](https://en.wikipedia.org/wiki/SerDes): Serializer/deserializer
-* [Shift Register](https://en.wikipedia.org/wiki/Shift_register): Set of registars that shifts bits one position at a time
-* [SIMD](https://en.wikipedia.org/wiki/SIMD): Single instrution multiple data
-* [Schmitt Trigger](https://en.wikipedia.org/wiki/Schmitt_trigger): Comparitor circuit wityh 
-* [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus): Synchronous 4 wirem aster/slave interface
+* [Shift Register](https://en.wikipedia.org/wiki/Shift_register): Set of registers that shifts bits one position at a time
+* [SIMD](https://en.wikipedia.org/wiki/SIMD): Single instruction multiple data
+* [Schmitt Trigger](https://en.wikipedia.org/wiki/Schmitt_trigger): Comparator circuit with hysteresis
+* [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus): Synchronous 4 wire master/slave interface
 * [SRAM](https://en.wikipedia.org/wiki/Static_random-access_memory): Static random access semiconductor memory
 * [TLB](https://en.wikipedia.org/wiki/Translation_lookaside_buffer): Translation lookaside buffer
 * [UART](https://en.wikipedia.org/wiki/Universal_asynchronous_receiver/transmitter): Asynchronous 2 wire point to point interface
@@ -111,10 +111,10 @@ Chip Design Glossary
 * [EMI](https://en.wikipedia.org/wiki/Electromagnetic_interference): Electromagnetic interference.
 * [ESD](https://en.wikipedia.org/wiki/Electrostatic_discharge): Electrostatic discharge is the sudden flow of electricity between two electrically charged objects.
 * [Fabless](https://en.wikipedia.org/wiki/Fabless_manufacturing): The design and sale of semiconductor devices while outsourcing the manufacturing to 3rd party.
-* [FEOL](https://en.wikipedia.org/wiki/Front_end_of_line): Front end of line processing. Includes all chop processing up to but not including metal interconnect layers.
+* [FEOL](https://en.wikipedia.org/wiki/Front_end_of_line): Front end of line processing. Includes all chip processing up to but not including metal interconnect layers.
 * [Flip-flop](https://en.wikipedia.org/wiki/Flip-flop_(electronics)): A clocked circuit that has two stable states and can be used to store state information.
 * [Foundry](https://en.wikipedia.org/wiki/Semiconductor_fabrication_plant): Semiconductor company offering manufacturing services.
-* [Full custom design](https://en.wikipedia.org/wiki/Full_custom): Design methodology involving layout and interconnection of individual transistors
+* [Full custom design](https://en.wikipedia.org/wiki/Full_custom): Design methodology involving layout and interconnection of individual transistors.
 * [GDSII](https://en.wikipedia.org/wiki/GDSII): Binary format of design database sent to foundry.
 * [HDL](https://en.wikipedia.org/wiki/Hardware_description_language): Specialized hardware description lanaguage for describing electronic circuits.
 * [Hold time](https://en.wikipedia.org/wiki/Flip-flop_%28electronics%29#Setup.2C_hold.2C_recovery.2C_removal_times): Minimum time synchronous input should hold steady after clock event.
@@ -128,53 +128,53 @@ Chip Design Glossary
 * [Logical Effort](https://en.wikipedia.org/wiki/Logical_effort): Technique used to normalize (and optimize) digital circuits speed paths.
 * [LVS](https://en.wikipedia.org/wiki/Layout_Versus_Schematic): Layout Versus Schematic software checks that the layout is identical to the netlist.
 * [Mask Works](https://en.wikipedia.org/wiki/Integrated_circuit_layout_design_protection): Copyright law dedicated to 2D and 3D integrated circuit "layouts".
-* [Mealy machine](https://en.wikipedia.org/wiki/Mealy_machine): A finite state machine whose outputs depend on current state and the current inputs
+* [Mealy machine](https://en.wikipedia.org/wiki/Mealy_machine): A finite state machine whose outputs depend on current state and the current inputs.
 * [MLS](https://en.wikipedia.org/wiki/Moisture_sensitivity_level): Packaging and handling precautions for some semiconductors. 
 * [Moore Machine](https://en.wikipedia.org/wiki/Moore_machine): Finite state machine whose outputs depend only on its current state.
 * [Moore's Law](https://en.wikipedia.org/wiki/Moore%27s_law): Observation by Moore that the number of transistors in an IC doubles approximately every two years.
 * [MOSFET](https://en.wikipedia.org/wiki/MOSFET): Metal oxide field effect transistor. 
 * [MOSIS](https://en.wikipedia.org/wiki/MOSIS): Foundry service project offering MPWs and low volume manufacturing.
 * [MPW](https://en.wikipedia.org/wiki/Multi-project_wafer_service): Multi-project wafer service that integrates multiple designs on one reticle (aka "shuttle").
-* [MTBF](https://en.wikipedia.org/wiki/Mean_time_between_failures): Mean time between failures
+* [MTBF](https://en.wikipedia.org/wiki/Mean_time_between_failures): Mean time between failures.
 * [Multi-threshold CMOS](https://en.wikipedia.org/wiki/Multi-threshold_CMOS): CMOS technology with multiple transistor types with different threshold voltages.
 * [Optical proximity correction](https://en.wikipedia.org/wiki/Optical_proximity_correction): Technique used to compensate for semiconductor diffraction/process effects.
-* [Pass Transistor Logic](https://en.wikipedia.org/wiki/Pass_transistor_logic): Logic that connects input to non-gate terminal of mosfet transistor
-* [Physical design](https://en.wikipedia.org/wiki/Physical_design_%28electronics%29): Physical design flow ("layout")
-* [PDK](https://en.wikipedia.org/wiki/Process_design_kit):  Process design kits consist of a set of minimum set of files needed to design in a specific process.
+* [Pass Transistor Logic](https://en.wikipedia.org/wiki/Pass_transistor_logic): Logic that connects input to non-gate terminal of mosfet transistor.
+* [Physical design](https://en.wikipedia.org/wiki/Physical_design_%28electronics%29): Physical design flow ("layout").
+* [PDK](https://en.wikipedia.org/wiki/Process_design_kit):  Process design kits consisting of a minimum set of files needed to design in a specific process.
 * [Power gating](https://en.wikipedia.org/wiki/Power_gating): Technique used to reduce leakage/standby power by shutting of the supply to the circuit.
-* [P&R](https://en.wikipedia.org/wiki/Place_and_route): Automated Place and Route of a circuit using an EDA tool
+* [P&R](https://en.wikipedia.org/wiki/Place_and_route): Automated Place and Route of a circuit using an EDA tool.
 * [PVT Corners](https://en.wikipedia.org/wiki/Process_corners): Represents the extreme process, voltage, temperature that could occur in a given semiconductor process.
-* [Radiation Hardening](https://en.wikipedia.org/wiki/Radiation_hardening): Act of making devices resistant to damage caused by ionizing radiation
-* [RTL](https://en.wikipedia.org/wiki/Register-transfer_level): Design abstraction for digital circuit design
+* [Radiation Hardening](https://en.wikipedia.org/wiki/Radiation_hardening): Act of making devices resistant to damage caused by ionizing radiation.
+* [RTL](https://en.wikipedia.org/wiki/Register-transfer_level): Design abstraction for digital circuit design.
 * [Setup time](https://en.wikipedia.org/wiki/Flip-flop_%28electronics%29#Setup.2C_hold.2C_recovery.2C_removal_times): Minimum time synchronous input should be ready before clock event.
 * [SEU](https://en.wikipedia.org/wiki/Single_event_upset): Change of state caused by one single ionizing particle (ions, electrons, photons...).
 * [Signoff](https://en.wikipedia.org/wiki/Signoff_%28electronic_design_automation%29): The final approval that the design is ready to be sent to foundry for manufacturing.
 * [SOC](https://en.wikipedia.org/wiki/System_on_a_chip): System On Chip
-* [Spice](https://en.wikipedia.org/wiki/SPICE): Open source analog electronic circuit simulator
+* [Spice](https://en.wikipedia.org/wiki/SPICE): Open source analog electronic circuit simulator.
 * [STA](https://en.wikipedia.org/wiki/Static_timing_analysis): Method of computing the expected timing of a digital circuit without requiring full circuit simulation.
 * [Standard Cell Design](https://en.wikipedia.org/wiki/Standard_cell): Design process relying on a fixed set of standard cells.
-* [Subthreshold Leakage](https://en.wikipedia.org/wiki/Subthreshold_conduction): Current betwee source and drain in MOSFET when transistor is "off".
-* [Synchronous logic](https://en.wikipedia.org/wiki/Synchronous_circuit): Logic whose state is controlled by a synchronous clock
-* [Synthesis](https://en.wikipedia.org/wiki/Logic_synthesis): Translation of high level design description (eg Verilog) to a netlist format (eg standard cell gate level)
-* [SystemC](https://en.wikipedia.org/wiki/SystemC): Set of C+ class and macros for simulation. Commonly used for high level modeling and testing
+* [Subthreshold Leakage](https://en.wikipedia.org/wiki/Subthreshold_conduction): Current between source and drain in MOSFET when transistor is "off".
+* [Synchronous logic](https://en.wikipedia.org/wiki/Synchronous_circuit): Logic whose state is controlled by a synchronous clock.
+* [Synthesis](https://en.wikipedia.org/wiki/Logic_synthesis): Translation of high level design description (e.g. Verilog) to a netlist format (e.g. standard cell gate level).
+* [SystemC](https://en.wikipedia.org/wiki/SystemC): Set of C++ classes and macros for simulation. Commonly used for high level modeling and testing.
 * [Transistor](https://en.wikipedia.org/wiki/Transistor): A semiconductor device used to amplify/switch electronic signals.
 * [Tape-out](https://en.wikipedia.org/wiki/Tape-out): Act of sending photomask chip database ("layout") to the manufacturer.
 * [TCL](https://en.wikipedia.org/wiki/Tcl): Scripting language used by most of the leading EDA chip design tools.
-* [Verilog](https://en.wikipedia.org/wiki/Verilog): Hardware description language (HDL)
-* [VLSI](https://en.wikipedia.org/wiki/Very-large-scale_integration): Very large Integrated Circuit (somewhat outdated term, everything is VLSI today)
+* [Verilog](https://en.wikipedia.org/wiki/Verilog): Hardware description language (HDL).
+* [VLSI](https://en.wikipedia.org/wiki/Very-large-scale_integration): Very large Integrated Circuit (somewhat outdated term, everything is VLSI today).
 * [Von Neumann architecture](https://en.wikipedia.org/wiki/Von_Neumann_architecture): Computer architecture in which instructions and data are stored in the same memory.
 
 ## Manufacturing
 
 
 * [BEOL](https://en.wikipedia.org/wiki/Back_end_of_line): Back end of line processing for connecting together devices using metal interconnects.
-* [Dicing](https://en.wikipedia.org/wiki/CMOS): Act of cutting up wafer into individual dies
+* [Dicing](https://en.wikipedia.org/wiki/CMOS): Act of cutting up wafer into individual dies.
 * [FinFet](https://en.wikipedia.org/wiki/Multigate_device): Non planar, double-gate transistor.
 * [Photo-lithography](https://en.wikipedia.org/wiki/Photolithography): Process used in micro-fabrication to pattern parts of a thin film or the bulk of a substrate.
 * [Photomasks](https://en.wikipedia.org/wiki/Photomask): Opaque plates with holes or transparencies that allow light to shine through in a defined pattern.
 * [Reticle](https://en.wikipedia.org/wiki/Photomask): A set of photomasks used by a stepper to step and print patterns onto a silicon wafer.
-* [Semiconductor Fabrication](https://en.wikipedia.org/wiki/Semiconductor_device_fabrication): Process used to create the integrated circuits
-* [Silicon](https://en.wikipedia.org/wiki/Silicon): Element (Si) forms the basis of the electronic revolution.
+* [Semiconductor Fabrication](https://en.wikipedia.org/wiki/Semiconductor_device_fabrication): Process used to create the integrated circuits.
+* [Silicon](https://en.wikipedia.org/wiki/Silicon): Element (Si), forms the basis of the electronic revolution.
 * [Silicon on insulator](https://en.wikipedia.org/wiki/Silicon_on_insulator): Layered silicon–insulator–silicon with reduced parasitic capacitance.
 * [Stepper](https://en.wikipedia.org/wiki/Stepper): Machine that passes light through reticle onto the silicon wafer being processed.
 * [TSV](https://en.wikipedia.org/wiki/Through-silicon_via): Vertical electrical connection (via) passing completely through a silicon wafer or die.
@@ -186,27 +186,27 @@ Chip Design Glossary
 * [3D IC's](https://en.wikipedia.org/wiki/Three-dimensional_integrated_circuit): The process of stacking integrated circuits and connecting them through TSVs.
 * [BGA](https://en.wikipedia.org/wiki/Ball_grid_array): Ball grid array is a type of surface-mount packaging (a chip carrier) used for integrated circuits.
 * [BGA substrate](https://en.wikipedia.org/wiki/Ball_grid_array): A miniaturized PCB that mates the silicon die to BGA pins. 
-* [Bumping](https://en.wikipedia.org/wiki/Flip_chip): Placing of bumps on wafer/dies in preparation for package assembly
-* [DIMM](http://whatis.techtarget.com/definition/DIMM-dual-in-line-memory-module): Dual in lin memory module
-* [Flip-chip](https://en.wikipedia.org/wiki/Flip_chip): Method of bonding a silicon die to package using solder bumps
+* [Bumping](https://en.wikipedia.org/wiki/Flip_chip): Placing of bumps on wafer/dies in preparation for package assembly.
+* [DIMM](http://whatis.techtarget.com/definition/DIMM-dual-in-line-memory-module): Dual in line memory module.
+* [Flip-chip](https://en.wikipedia.org/wiki/Flip_chip): Method of bonding a silicon die to package using solder bumps.
 * [IC Assembly](https://en.wikipedia.org/wiki/Integrated_circuit_packaging): Semiconductor die is encased in a supporting case "package".
 * [Interposer](https://en.wikipedia.org/wiki/Interposer): Electrical interface used to spread a connection to a wider pitch.
 * [Heat sink](https://en.wikipedia.org/wiki/Heat_sink): A passive heat exchanger.
-* [Heat pipe](https://en.wikipedia.org/wiki/Heat_pipe): Device for efficiently transferring heat between two solid interfaces 
+* [Heat pipe](https://en.wikipedia.org/wiki/Heat_pipe): Device for efficiently transferring heat between two solid interfaces .
 * [KGD](https://en.wikipedia.org/wiki/Wafer_testing): Known Good Die. Dies that have been completely tested at wafer probe.
 * [Leadframe](https://en.wikipedia.org/wiki/Lead_frame): Metal structure inside a chip package that carry signals from the die to the outside.
 * [POP](https://en.wikipedia.org/wiki/Package_on_package): Package on Package
 * [SIP](https://en.wikipedia.org/wiki/System_in_package): System In Package
 * [SMT](https://en.wikipedia.org/wiki/Surface-mount_technology): Technique whereby packaged chips are mounted directly onto the PCB surface.
-* [Wirebond](https://en.wikipedia.org/wiki/Wire_bonding): Method of bonding a silicon die to a package using wires
+* [Wirebond](https://en.wikipedia.org/wiki/Wire_bonding): Method of bonding a silicon die to a package using wires.
 * [WSI](https://en.wikipedia.org/wiki/Wafer-scale_integration): Wafer scale integration
 
 ## Test
 
 * [Arbitrary Waveform Generator](https://en.wikipedia.org/wiki/Arbitrary_waveform_generator): Electronic instrument used to generate arbitrary signal waveforms.
-* [ATE](https://en.wikipedia.org/wiki/Automatic_test_equipment): Automatic Test Equipment for testing integrated circuits
+* [ATE](https://en.wikipedia.org/wiki/Automatic_test_equipment): Automatic Test Equipment for testing integrated circuits.
 * [Burn-in](https://en.wikipedia.org/wiki/Burn-in): Process of screening parts for potential premature life time failures.
-* [DIB](https://en.wikipedia.org/wiki/DUT_board): Device Interface Board for interfacng DUT to ATE. Also called DUT board, probe card, load board, PIB. 
+* [DIB](https://en.wikipedia.org/wiki/DUT_board): Device Interface Board for interfacing DUT to ATE. Also called DUT board, probe card, load board, PIB. 
 * [DMM](https://en.wikipedia.org/wiki/Multimeter): Electronic instrument for measuring voltage, current, and resistance.
 * [DUT](https://en.wikipedia.org/wiki/Device_under_test): Device under test
 * [FIB](https://en.wikipedia.org/wiki/Focused_ion_beam): Focused ion beam
@@ -214,7 +214,7 @@ Chip Design Glossary
 * [Logic Analyzer](https://en.wikipedia.org/wiki/Logic_analyzer): Electronic instrument for capturing multiple digital signal from a system.
 * [MCM](https://en.wikipedia.org/wiki/Multi-chip_module): Multi-chip Module
 * [Oscilloscope](https://en.wikipedia.org/wiki/Oscilloscope): Electronic instrument for tracking the change of an electrical signal over time.
-* [Probe Card](https://en.wikipedia.org/wiki/Probe_card): A direct interface between electronic test systems and a semiconductor wafer
+* [Probe Card](https://en.wikipedia.org/wiki/Probe_card): A direct interface between electronic test systems and a semiconductor wafer.
 * [SEM](https://en.wikipedia.org/wiki/Scanning_electron_microscope): Scanning electron microscope
 * [Spectrum Analyzer](https://en.wikipedia.org/wiki/Spectrum_analyzer): Electronic instrument for measuring the power of the spectrum of an unknown signal.
 
