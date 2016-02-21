@@ -17,7 +17,7 @@
 |[emmu](emmu)              | FPGA  | Memory transaction translation unit  |
 |[etrace](etrace)          | HH    | Logic Analyzer                       |
 |[gpio](gpio)              | HH    | General Purpose IO                   |
-|[irqc](irqc)              | SI    | Epiphany nested interrupt controller |
+|[pic](pic)                | SI    | Programmable interrupt controller    |
 |[parallella](parallella)  | FPGA  | Parallella FPGA logic                |
 |[risc-v](risc-v)          | HH    | RISC-V implementation                |
 |[spi](spi)                | HH    | SPI master/slave                     |

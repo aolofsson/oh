@@ -1,9 +1,9 @@
-`include "irqc_regmap.v"
+`include "pic_regmap.v"
 //###########################################################################
 //# IRQC: Simple nessted interrupt controller
 //# 
 //############################################################################
-module irqc(/*AUTOARG*/
+module pic(/*AUTOARG*/
    // Outputs
    ic_flush, ic_iret_reg, ic_imask_reg, ic_ilat_reg, ic_ipend_reg,
    ic_irq, ic_irq_addr,
