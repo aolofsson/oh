@@ -48,6 +48,7 @@ Chip Design Glossary
 * [LAN](https://en.wikipedia.org/wiki/Local_area_network): Local area network
 * [LFSR](https://en.wikipedia.org/wiki/Linear_feedback_shift_register): Linear feedback shift register
 * [LSB](https://en.wikipedia.org/wiki/Least_significant_bit): Least significant bit
+* [LUT] (https://en.wikipedia.org/wiki/Lookup_table): An array that replaces runtime computation with a simpler array indexing operation 
 * [LVDS](https://en.wikipedia.org/wiki/Low-voltage_differential_signaling): Low-voltage differential signaling (also TIA/EIA-644)
 * [MII](https://en.wikipedia.org/wiki/Media-independent_interface): Media independent interface for PHY chips
 * [MIMD](https://en.wikipedia.org/wiki/MIMD): Multiple instructions multiple data architecture
@@ -61,6 +62,7 @@ Chip Design Glossary
 * [PCM](https://en.wikipedia.org/wiki/Phase-change_memory): Phase change memory
 * [PCIe](https://en.wikipedia.org/wiki/PCI_Express): High Speed serial computer expansion bus
 * [PIC](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller): Programmable interrupt controller
+* [Priority Encoder](https://en.wikipedia.org/wiki/Priority_encoder): A circuit or algorithm that compresses multiple binary inputs into a smaller number of outputs
 * [PLL](https://en.wikipedia.org/wiki/Phase-locked_loop): Phase locked loop
 * [PWM](https://en.wikipedia.org/wiki/Pulse-width_modulation): Pulse width modulation
 * [Q](https://en.wikipedia.org/wiki/Q_%28number_format%29): Q fixed point number format
