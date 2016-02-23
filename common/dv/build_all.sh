@@ -3,7 +3,7 @@
 DV=../../common/dv/dv_top.v
 LIBS=$OH_HOME/common/dv/libs.cmd
 
-declare -a core_arr=("dut_oh_debouncer")
+declare -a core_arr=("dut_oh_debouncer" "dut_oh_clockdiv" "dut_oh_gray")
 declare -a cfg_arr=("")
 
 for core in "${core_arr[@]}"

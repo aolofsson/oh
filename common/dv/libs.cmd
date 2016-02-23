@@ -12,6 +12,7 @@
 -y ../../emmu/hdl
 -y ../../emailbox/hdl
 -y ../../etrace/hdl
+-y ../../c2c/hdl
 -y ../../gpio/hdl
 -y ../../memory/hdl
 -y ../../parallella/hdl
@@ -27,3 +28,4 @@
 +incdir+../../etrace/hdl
 +incdir+../../gpio/hdl
 +incdir+../../spi/hdl
++incdir+../../c2c/hdl
