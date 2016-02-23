@@ -19,7 +19,7 @@ bin/
 *.vcd
 *.out
 *.trace
-
+*.bin
 #######################
 # XILINX crap
 *.xpr
