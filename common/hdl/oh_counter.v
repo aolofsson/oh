@@ -1,8 +1,8 @@
 module oh_counter (/*AUTOARG*/
    // Outputs
-   count, zero,
+   count, carry, zero,
    // Inputs
-   clk, nreset, in, en, load, wdata
+   clk, in, en, load, load_data
    );
  
    //###############################################################
@@ -10,35 +10,51 @@ module oh_counter (/*AUTOARG*/
    //###############################################################
 
    parameter DW   = 64;
-   parameter TYPE = "BINARY"; //BINARY, GRAY, LFSR
+   parameter TYPE = "INCREMENT"; //INCREMENT, DECREMENT, GRAY, LFSR
    
    //clock interface
-   input           clk;
-   input 	   nreset;
-   
+   input           clk;      // clk input
+
    //counter control
-   input 	   in;     //input to count
-   input 	   en;     //counter enabled
-   input 	   load;   //loads new start value
-   input [DW-1:0]  wdata;  //write data
+   input 	   in;       // input to count
+   input 	   en;       // enable counter
+   input 	   load;     // load counter
+   input [DW-1:0]  load_data;// load data
       
    //outputs
-   output [DW-1:0] count;    //current count value   
-   output 	   zero;     //counter is zero
+   output [DW-1:0] count;    // current count value   
+   output 	   carry;    // carry out from counter
+   output 	   zero;     // counter is zero
    
    //###############################################################
    //# Interface
    //###############################################################
    reg [DW-1:0]    count;
+   reg 		   carry;
+   wire [DW-1:0]   count_in;
+   wire 	   carry_in;
    
    always @(posedge clk)
      if(load)
-       count[DW-1:0] = wdata[DW-1:0];
+       begin
+	  carry         <= 1'b0;	  
+	  count[DW-1:0] <= load_data[DW-1:0];
+       end
      else if (en)
-       count[DW-1:0] = count_in[DW-1:0];
-             
+       begin
+	  carry         <= carry_in;
+	  count[DW-1:0] <= count_in[DW-1:0];
+       end
+
+   assign zero = ~(count[DW-1:0]);
+   
+   // configure counter based on type
    generate
-      if(TYPE=="BINARY")
+      if(TYPE=="INCREMENT")
+	begin
+	   assign {carry_in,count_in[DW-1:0]} = count[DW-1:0] + in;
+	end
+      else if(TYPE=="DECREMENT")
 	begin
 	   assign count_in[DW-1:0] = count[DW-1:0] + in;
 	end
