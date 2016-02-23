@@ -8,11 +8,12 @@ module oh_fifo_async (/*AUTOARG*/
    //#####################################################################
    //# INTERFACE
    //#####################################################################
-   parameter DW    = 104;          // FIFO width
-   parameter DEPTH = 32;           // FIFO depth (entries)
-   parameter TYPE  = "XILINX";     // "XILINX" or "ALTERA"
-   parameter WAIT  = 0;            // assert random prog_full wait
-   parameter CW    = $clog2(DEPTH);// binary read count width
+   parameter DW         = 104;          // FIFO width
+   parameter DEPTH      = 32;           // FIFO depth (entries)
+   parameter TARGET     = `CFG_TARGET;  // "XILINX", "ALTERA", "GENERIC"
+   parameter WAIT       = 0;            // assert random prog_full wait
+   parameter PROG_FULL  = DEPTH/2;      // program full threshold
+   parameter AW         = $clog2(DEPTH);// binary read count width
    
    //clk/reset
    input 	   nreset;    // async reset
@@ -31,7 +32,7 @@ module oh_fifo_async (/*AUTOARG*/
    output 	   full;      // fifo is full
    output 	   prog_full; // fifo reaches full threshold
    output 	   empty;     // fifo is empty
-   output [CW-1:0] rd_count;  // valid entries in fifo
+   output [AW-1:0] rd_count;  // valid entries in fifo
    
    //#####################################################################
    //# BODY
@@ -39,30 +40,32 @@ module oh_fifo_async (/*AUTOARG*/
    //local wires
    wire 	   fifo_prog_full;
    wire 	   wait_random;
+   wire [AW-1:0]   wr_count;  // valid entries in fifo
    
    assign prog_full = fifo_prog_full | wait_random;
    
 generate
-if(TYPE=="GENERIC") begin : basic   
-   oh_fifo_async_model 
+if(TARGET=="GENERIC") begin : basic   
+   oh_fifo_generic 
      #(.DEPTH(DEPTH),
        .DW(DW))
-   fifo_model (
+   fifo_generic (
 	       // Outputs
 	       .full			(full),
 	       .prog_full		(fifo_prog_full),
 	       .dout			(dout[DW-1:0]),
 	       .empty			(empty),
-	       .rd_data_count		(rd_count[CW-1:0]),
+	       .rd_count		(rd_count[AW-1:0]),
+	       .wr_count		(wr_count[AW-1:0]),
 	       // Inputs
-	       .rst			(~nreset),
+	       .nreset   		(nreset),
 	       .wr_clk			(wr_clk),
 	       .rd_clk			(rd_clk),
 	       .wr_en			(wr_en),
 	       .din			(din[DW-1:0]),
 	       .rd_en			(rd_en));
 end
-else if (TYPE=="XILINX") begin : xilinx
+else if (TARGET=="XILINX") begin : xilinx
    if((DW==104) & (DEPTH==32))
      begin	
 	fifo_async_104x32 fifo (
@@ -71,7 +74,7 @@ else if (TYPE=="XILINX") begin : xilinx
 	       .prog_full		(fifo_prog_full),
 	       .dout			(dout[DW-1:0]),
 	       .empty			(empty),
-	       .rd_data_count		(rd_count[CW-1:0]),
+	       .rd_data_count		(rd_count[AW-1:0]),
 	       // Inputs
 	       .rst			(~nreset),
 	       .wr_clk			(wr_clk),
@@ -83,7 +86,7 @@ else if (TYPE=="XILINX") begin : xilinx
 end // block: xilinx   
 endgenerate
 
- //Random wait generator
+ //Random wait generator (for testing)
    generate
       if(WAIT>0)
 	begin	   
@@ -100,42 +103,8 @@ endgenerate
 	   assign wait_random = 1'b0;
 	end // else: !if(WAIT)
    endgenerate
-   
-   
+      
 endmodule // oh_fifo_async
 // Local Variables:
 // verilog-library-directories:("." "../fpga/" "../dv")
 // End:
-
-module oh_fifo_async_model
-   (/*AUTOARG*/
-   // Outputs
-   dout, empty, rd_count, full, prog_full,
-   // Inputs
-   nreset, wr_clk, wr_en, din, rd_clk, rd_en
-   );
-   
-   parameter DW    = 104;            //Fifo width 
-   parameter DEPTH = 1;              //Fifo depth (entries)         
-   parameter CW    = $clog2(DEPTH);  //FIFO address width (for model)
-
-   //common reset
-   input           nreset;    //asynchronous active low reset
-
-   //fifo write
-   input           wr_clk;    //write clock   
-   input           wr_en;   
-   input  [DW-1:0] din;
-   
-   //fifo read
-   input           rd_clk;    //read clock   
-   input 	   rd_en;
-   output [DW-1:0] dout;
-
-   //status
-   output          empty;
-   output [CW-1:0] rd_count;
-   output          full;
-   output 	   prog_full;
-   
-endmodule // oh_fifo_async_model
