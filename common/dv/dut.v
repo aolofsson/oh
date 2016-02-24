@@ -1,9 +1,9 @@
 // Standardized "DUT"
 module dut (/*AUTOARG*/
    // Outputs
-   dut_active, access_out, packet_out, wait_out,
+   dut_active, clkout, access_out, packet_out, wait_out,
    // Inputs
-   clk, nreset, vdd, vss, access_in, packet_in, wait_in
+   clk1, clk2, nreset, vdd, vss, access_in, packet_in, wait_in
    );
  
    parameter PW = 99;
@@ -12,12 +12,14 @@ module dut (/*AUTOARG*/
    //#######################################
    //# CLOCK AND RESET
    //#######################################
-   input            clk;
+   input            clk1;
+   input            clk2;   
    input            nreset;
    input [N*N-1:0]  vdd;
    input 	    vss;
-   output 	    dut_active; //dut ready to go after reset
-      
+   output 	    dut_active; // dut ready to go after reset
+   output 	    clkout;     // needed for monitor "source synchronous"
+
    //#######################################
    //#EMESH INTERFACE 
    //#######################################

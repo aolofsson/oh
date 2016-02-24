@@ -3,20 +3,22 @@ module dv_driver (/*AUTOARG*/
    // Outputs
    stim_access, stim_packet, stim_wait, stim_done,
    // Inputs
-   clk, nreset, start, coreid, dut_access, dut_packet, dut_wait
+   clkin, clkout, nreset, start, coreid, dut_access, dut_packet,
+   dut_wait
    );
 
    //Parameters
-   parameter  N        = 1;      // "N" packets wide
-   parameter  AW       = 32;     // address width
-   parameter  IDW      = 12;     // id width
-   parameter  NAME     = "none"; // north, south etc
-   parameter  STIMS    = 1;      // number of stimulus
-   parameter  MAW      = 16;     // 64KB memory address width
-   localparam PW       =2*AW+40; // packet width (derived)
+   parameter  N     = 1;       // "N" packets wide
+   parameter  AW    = 32;      // address width
+   parameter  IDW   = 12;      // id width
+   parameter  NAME  = "none";  // north, south etc
+   parameter  STIMS = 1;       // number of stimulus
+   parameter  MAW   = 16;      // 64KB memory address width
+   localparam PW    = 2*AW+40; // packet width (derived)
 
    //Control signals
-   input		clk;
+   input		clkin;
+   input		clkout;
    input		nreset;
    input		start;       //starts test
    input [IDW-1:0] 	coreid;      //everything has a coreid! 
@@ -63,7 +65,7 @@ module dv_driver (/*AUTOARG*/
 				.stim_done     (stim_vec_done[i]),
 				.stim_wait     (stim_wait[i]),
 				// Inputs
-				.clk	       (clk),
+				.clk	       (clkin),
 				.nreset	       (nreset),
 				.start	       (start),
 				.dut_wait      (dut_wait[i])
@@ -82,7 +84,7 @@ module dv_driver (/*AUTOARG*/
    endgenerate
   
    //###########################################
-   //MONITORS
+   //MONITORS (USE CLK2)
    //###########################################
    
    //Increment coreID depending on counter and orientation of side block
@@ -105,7 +107,7 @@ module dv_driver (/*AUTOARG*/
 			 .IDW(IDW)
 			 )	   	   
 	 monitor (//inputs
-				.clk		(clk),
+				.clk		(clkout),
 				.nreset		(nreset),
 				.dut_access	(dut_access[j]),
 				.dut_packet	(dut_packet[(j+1)*PW-1:j*PW]),
@@ -131,7 +133,7 @@ module dv_driver (/*AUTOARG*/
 		 .access_out		(mem_access_out[j]),
 		 .packet_out		(mem_packet_out[(j+1)*PW-1:j*PW]),
 		 // Inputs
-		 .clk			(clk),
+		 .clk			(clkout),
 		 .nreset		(nreset),
 		 .coreid		(coreid[IDW-1:0]),
 		 .access_in		(dut_access[j]),

@@ -15,7 +15,9 @@ module dv_top();
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			clk;			// From dv_ctrl of dv_ctrl.v
+   wire			clk1;			// From dv_ctrl of dv_ctrl.v
+   wire			clk2;			// From dv_ctrl of dv_ctrl.v
+   wire			clkout;			// From dut of dut.v
    wire [N-1:0]		dut_access;		// From dut of dut.v
    wire			dut_active;		// From dut of dut.v
    wire [N*PW-1:0]	dut_packet;		// From dut of dut.v
@@ -46,7 +48,8 @@ module dv_top();
 		    /*AUTOINST*/
 		    // Outputs
 		    .nreset		(nreset),
-		    .clk		(clk),
+		    .clk1		(clk1),
+		    .clk2		(clk2),
 		    .start		(start),
 		    // Inputs
 		    .dut_active		(dut_active),
@@ -60,7 +63,6 @@ module dv_top();
    /*dut AUTO_TEMPLATE(
                         .\(.*\)_out (dut_\1[]),
                         .\(.*\)_in  (stim_\1[]),
-                        .clk        (clk),
             );
     */
    
@@ -70,11 +72,13 @@ module dv_top();
    dut (/*AUTOINST*/
 	// Outputs
 	.dut_active			(dut_active),
+	.clkout				(clkout),
 	.access_out			(dut_access[N-1:0]),	 // Templated
 	.packet_out			(dut_packet[N*PW-1:0]),	 // Templated
 	.wait_out			(dut_wait[N-1:0]),	 // Templated
 	// Inputs
-	.clk				(clk),			 // Templated
+	.clk1				(clk1),
+	.clk2				(clk2),
 	.nreset				(nreset),
 	.vdd				(vdd[N*N-1:0]),
 	.vss				(vss),
@@ -89,8 +93,6 @@ module dv_top();
    /*dv_driver AUTO_TEMPLATE(
     .name         (@"(substring vl-cell-name  0 2)"_name[]),
     .coreid	  (@"(substring vl-cell-name  0 2)"_coreid[IDW-1:0]),
-    .clk          (clk),
-    .reset        (reset),
             );
     */
    
@@ -100,6 +102,7 @@ module dv_top();
 	       .IDW(IDW)
 	     ) 
    dv_driver (.coreid			(dv_coreid[IDW-1:0]),
+	      .clkin			(clk1),
 	      /*AUTOINST*/
 	      // Outputs
 	      .stim_access		(stim_access[N-1:0]),
@@ -107,7 +110,7 @@ module dv_top();
 	      .stim_wait		(stim_wait[N-1:0]),
 	      .stim_done		(stim_done),
 	      // Inputs
-	      .clk			(clk),			 // Templated
+	      .clkout			(clkout),
 	      .nreset			(nreset),
 	      .start			(start),
 	      .dut_access		(dut_access[N-1:0]),
