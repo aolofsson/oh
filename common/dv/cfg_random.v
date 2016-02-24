@@ -1,0 +1,2 @@
+`define CFG_RANDOM 1
+`define CFG_TARGET "GENERIC"
