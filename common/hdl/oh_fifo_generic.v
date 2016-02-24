@@ -1,3 +1,9 @@
+ //#####################################################################
+//# Asynchronous FIFO based on article by Clifford Cummings, "Simulation and Synthesis Techniques for Asynchronous FIFO Design", SNUG 2002
+//#
+//# Modifications: Using binary comparisons for simplicity. This may cost
+//# a few more gates, but the the clarity is worth it. 
+//#####################################################################
 module oh_fifo_generic
    (/*AUTOARG*/
    // Outputs
@@ -12,7 +18,7 @@ module oh_fifo_generic
    
    // parameters
    parameter DW        = 104;            // FIFO width 
-   parameter DEPTH     = 1;              // FIFO depth (entries)         
+   parameter DEPTH     = 16;             // FIFO depth (entries)         
    parameter PROG_FULL = DEPTH/2;        // FIFO full threshold 
    parameter AW        = $clog2(DEPTH);  // FIFO address width (for model)
 
@@ -33,67 +39,97 @@ module oh_fifo_generic
    output          empty;        // fifo is empty
    output          full;         // fifo is full
    output 	   prog_full;    // fifo is "half empty"
-   output [AW-1:0] rd_count;// fifo count on rd side
-   output [AW-1:0] wr_count;// fifo count on wr side
+   output [AW-1:0] rd_count;     // NOT IMPLEMENTED 
+   output [AW-1:0] wr_count;     // NOT IMPLEMENTED
 
    //#####################################################################
    //# BODY
    //#####################################################################
    
-   reg [AW-1:0]    wr_addr;
-   reg [AW-1:0]    rd_addr;
-   reg [AW-1:0]    rd_count;
-   reg [AW-1:0]    wr_count;
+   //regs 
+   reg [AW:0]    wr_addr;       // extra bit for wraparound comparison
+   reg [AW:0] 	 wr_addr_ahead; // extra bit for wraparound comparison   
+   reg [AW:0] 	 rd_addr;  
+   wire [AW:0] 	 rd_addr_gray;
+   wire [AW:0] 	 wr_addr_gray;
+   wire [AW:0] 	 rd_addr_gray_sync;
+   wire [AW:0] 	 wr_addr_gray_sync;
+   wire [AW:0] 	 rd_addr_sync;
+   wire [AW:0] 	 wr_addr_sync;
 
+   //###########################
+   //# Full/empty indicators
+   //###########################
+
+   // uses on extra bit for compare to track wraparound pointers 
+   // careful clock synchronization done using gray codes
+   // could get rid of gray2bin for rd_addr_sync... 
+   
    // fifo indicators
-   assign empty     = (rd_count[AW-1:0] == 'b0);
-   assign full      = (wr_count[AW-1:0] == DEPTH);
-   assign prog_full = (wr_count[AW-1:0] >= PROG_FULL);   
+   assign empty    =  (rd_addr_gray[AW:0] == wr_addr_gray_sync[AW:0]);
 
-   // write side state machine
+   // fifo full
+   assign full     =  (wr_addr[AW-1:0] == rd_addr_sync[AW-1:0]) &
+		      (wr_addr[AW]     != rd_addr_sync[AW]);
+
+
+   // programmable full
+   assign prog_full = (wr_addr_ahead[AW-1:0] == rd_addr_sync[AW-1:0]) &
+		      (wr_addr_ahead[AW]     != rd_addr_sync[AW]);
+
+   //###########################
+   //#write side state machine
+   //###########################
+
    always @ ( posedge wr_clk or negedge nreset) 
      if(!nreset) 
-       begin	   
-          wr_addr[AW-1:0]   <= 'd0;
-	  wr_count[AW-1:0]  <= 'd0;
-       end 
-     else if(wr_en & rd_en_sync) 
-	  wr_addr[AW-1:0] <= wr_addr[AW-1:0] + 'd1;
+       wr_addr[AW:0]  <= 'b0;
      else if(wr_en) 
-       begin
-	  wr_addr[AW-1:0] <= wr_addr[AW-1:0]  + 'd1;
-	  wr_count[AW-1:0]<= wr_count[AW-1:0] + 'd1;	
-       end
-     else if(rd_en_sync) 
-       wr_count[AW-1:0]<= wr_count[AW-1:0] - 'd1;	
+       wr_addr[AW:0]  <= wr_addr[AW:0]  + 'd1;
 
-   // read side state machine
+   //address for prog_full indicator
+   always @ (posedge wr_clk)
+     if(~nreset)
+       wr_addr_ahead[AW:0] <= 'b0;   
+     else if(~prog_full)
+       wr_addr_ahead[AW:0] <= wr_addr[AW:0]  + PROG_FULL;
+   
+   oh_bin2gray #(.DW(AW+1))
+   wr_b2g (.gray   (wr_addr_gray[AW:0]),
+	   .bin	   (wr_addr[AW:0]));
+   
+   oh_dsync  #(.DW(AW+1))
+   wr_sync(.dout (wr_addr_gray_sync[AW:0]),
+	   .clk  (rd_clk),
+	   .din  (wr_addr_gray[AW:0]));
+   
+   //###########################
+   //#read side state machine
+   //###########################
+
    always @ ( posedge rd_clk or negedge nreset) 
      if(!nreset) 
-       begin	   
-          rd_addr[AW-1:0]   <= 'd0;
-	  rd_count[AW-1:0]  <= 'd0;
-       end 
-     else if(rd_en & wr_en_sync) 
-       rd_addr[AW-1:0] <= rd_addr[AW-1:0] + 'd1;
+       rd_addr[AW:0] <= 'd0;   
      else if(rd_en) 
-       begin
-	  rd_addr[AW-1:0] <= rd_addr[AW-1:0]  + 'd1;
-	  rd_count[AW-1:0] <= rd_count[AW-1:0] - 'd1;	
-       end
-     else if(wr_en_sync) 
-       rd_count[AW-1:0] <= rd_count[AW-1:0] + 'd1;	
-         
-   // clock domain synchronizers
-   oh_dsync wr_sync(.dout (wr_en_sync),
-		    .clk  (rd_clk),
-		    .din  (wr_en));
+       rd_addr[AW:0] <= rd_addr[AW:0] + 'd1;
    
-   oh_dsync rd_sync(.dout (rd_en_sync),
-		    .clk  (wr_clk),
-		    .din  (rd_en));
+   oh_bin2gray #(.DW(AW+1))
+   rd_b2g (.gray  (rd_addr_gray[AW:0]),
+	   .bin	  (rd_addr[AW:0]));
    
-   // dual ported memory (1rd, 1 wr)
+   oh_dsync  #(.DW(AW+1))
+   rd_sync(.dout (rd_addr_gray_sync[AW:0]),
+	   .clk  (rd_clk),
+	   .din  (rd_addr_gray[AW:0]));
+
+   oh_gray2bin #(.DW(AW+1))
+   rd_g2b (.bin  (rd_addr_sync[AW:0]),
+	   .gray (rd_addr_gray_sync[AW:0]));
+   
+
+   //###########################
+   //#dual ported memory
+   //###########################
    oh_memory_dp  #(.DW(DW),
 		   .AW(AW))
    fifo_mem(// Outputs
