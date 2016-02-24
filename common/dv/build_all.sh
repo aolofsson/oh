@@ -1,16 +1,13 @@
 #!/bin/bash
 
+# Compiles all dut*.v files in this directory
+
 DV=../../common/dv/dv_top.v
 LIBS=$OH_HOME/common/dv/libs.cmd
+CFG="cfg_random.v"
 
-declare -a core_arr=("dut_oh_debouncer" "dut_oh_clockdiv" "dut_oh_gray")
-declare -a cfg_arr=("")
-
-for core in "${core_arr[@]}"
+for file in dut*.v
 do
-    for cfg in "${cfg_arr[@]}"
-    do
-	iverilog -g2005 -DTARGET_SIM=1 $cfg $core.v $DV -f $LIBS -o $core.bin
-    done
-
+    root=${file%%.*}
+    iverilog -g2005 -DTARGET_SIM=1 $CFG $file $DV -f $LIBS -o $root.bin   
 done
