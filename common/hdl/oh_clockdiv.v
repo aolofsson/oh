@@ -60,7 +60,7 @@ module oh_clockdiv(/*AUTOARG*/
        counter[7:0] <= 8'b00000001;
      else if(posedge_match | cfg_reset)
        counter[7:0] <= 8'b00000001;// Self resetting
-     else
+     else if (en)
        counter[7:0] <= (counter[7:0] + 8'b00000001);
    
    assign posedge_match    = (counter[7:0]==divcfg_dec[7:0]);
