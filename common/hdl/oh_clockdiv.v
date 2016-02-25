@@ -37,8 +37,8 @@ module oh_clockdiv(/*AUTOARG*/
    wire       negedge_match;  
     
    // divider setting
-   always @ (divcfg[3:0])
-     casez (divcfg[3:0])
+   always @ (divcfg_reg[3:0])
+     casez (divcfg_reg[3:0])
        4'b0001 : divcfg_dec[7:0] = 8'b00000010;  // Divide by 2
        4'b0010 : divcfg_dec[7:0] = 8'b00000100;  // Divide by 4
        4'b0011 : divcfg_dec[7:0] = 8'b00001000;  // Divide by 8
@@ -50,8 +50,12 @@ module oh_clockdiv(/*AUTOARG*/
      endcase
 
    // divcfg change detector
-   always @ (posedge clk)
-     divcfg_reg[3:0]<=divcfg[3:0];
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       divcfg_reg[3:0]<='b0;   //set to bypass when  in reset (fast clocks)
+     else
+       divcfg_reg[3:0]<=divcfg[3:0];
+
    assign cfg_reset = (|(divcfg_reg[3:0] ^ divcfg[3:0]));
    
    // synchronous edge counter
@@ -78,7 +82,7 @@ module oh_clockdiv(/*AUTOARG*/
        clkout_reg <= 1'b0;
  
    // divide by one special case
-   assign clkout  = (divcfg[3:0]==4'b0000) ? clk : clkout_reg;
+   assign clkout  = (divcfg_reg[3:0]==4'b0000) ? clk : clkout_reg;
 
    // clkout90
    always @ (posedge clk or negedge nreset)
@@ -94,9 +98,9 @@ module oh_clockdiv(/*AUTOARG*/
      clkout90_div2 <= clkout_reg;
    
    // divide by one and two special cases
-   assign clkout90  = (divcfg[3:0]==4'b0000) ? clk           : 
-		      (divcfg[3:0]==4'b0001) ? clkout90_div2 :
-                             		        clkout90_reg;
+   assign clkout90  = (divcfg_reg[3:0]==4'b0000) ? clk           : 
+		      (divcfg_reg[3:0]==4'b0001) ? clkout90_div2 :
+                             	    	           clkout90_reg;
       
 endmodule // oh_clockdiv
 
