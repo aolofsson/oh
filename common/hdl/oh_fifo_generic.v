@@ -1,5 +1,7 @@
  //#####################################################################
-//# Asynchronous FIFO based on article by Clifford Cummings, "Simulation and Synthesis Techniques for Asynchronous FIFO Design", SNUG 2002
+//# Asynchronous FIFO based on article by Clifford Cummings, 
+//# "Simulation and Synthesis Techniques for Asynchronous FIFO Design"
+//# (SNUG2002)
 //#
 //# Modifications: Using binary comparisons for simplicity. This may cost
 //# a few more gates, but the the clarity is worth it. 
@@ -88,8 +90,8 @@ module oh_fifo_generic
        wr_addr[AW:0]  <= wr_addr[AW:0]  + 'd1;
 
    //address for prog_full indicator
-   always @ (posedge wr_clk)
-     if(~nreset)
+   always @ (posedge wr_clk or negedge nreset)
+     if(!nreset)
        wr_addr_ahead[AW:0] <= 'b0;   
      else if(~prog_full)
        wr_addr_ahead[AW:0] <= wr_addr[AW:0]  + PROG_FULL;
