@@ -31,13 +31,14 @@ module oh_oddr (/*AUTOARG*/
       
    //Generate different logic based on parameters
    always @ (posedge clk)
-     begin
-	q1_sl[DW-1:0] <= #(0.1) din1[DW-1:0];
-	q2_sl[DW-1:0] <= #(0.1) din2[DW-1:0];
-     end
+     if (ce)
+       begin
+	  q1_sl[DW-1:0] <= din1[DW-1:0];
+	  q2_sl[DW-1:0] <= din2[DW-1:0];
+       end
    
    always @ (negedge clk)
-     q2_sh[DW-1:0] <= #(0.1) q2_sl[DW-1:0];
+     q2_sh[DW-1:0] <= q2_sl[DW-1:0];
        
    assign out[DW-1:0] = clk ? q1_sl[DW-1:0] : 
 	                      q2_sh[DW-1:0];

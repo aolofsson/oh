@@ -36,19 +36,17 @@ module oh_iddr (/*AUTOARG*/
    always @ (posedge clk)
      if(ce)
        q1_sl[DW-1:0] <= din[DW-1:0];
-
+   
    // falling edge sample
    always @ (negedge clk)
-     if(ce)
-       q2_sh[DW-1:0] <= din[DW-1:0];
+     q2_sh[DW-1:0] <= din[DW-1:0];
    
    // pipeline for alignment
    always @ (posedge clk)
-     if(ce)
-       begin
-	  q1[DW-1:0] <= q1_sl[DW-1:0];
-	  q2[DW-1:0] <= q2_sh[DW-1:0];
-       end
+     begin
+	q1[DW-1:0] <= q1_sl[DW-1:0];
+	q2[DW-1:0] <= q2_sh[DW-1:0];
+     end
             
 endmodule // oh_iddr
 
