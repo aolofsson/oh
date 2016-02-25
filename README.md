@@ -9,6 +9,7 @@
 |--------------------------|-------|--------------------------------------|
 |[accelerator](accelerator)| FPGA  | Accelerator tutorial                 |
 |[axi](axi)                | FPGA  | AXI master and slave interfaces      |
+|[c2c](c2c)                | HH    | Protocol agnostic chip to chip link  |
 |[chip](chip)              | SI    | Chip design reference flow           |
 |[common](common)          | SI    | Library of basic components          |
 |[elink](elink)            | SI    | Point to point LVDS link             |
