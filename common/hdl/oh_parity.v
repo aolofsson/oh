@@ -1,14 +1,14 @@
 module oh_parity (/*AUTOARG*/
    // Outputs
-   parity,
+   out,
    // Inputs
-   data
+   in
    );
 
-   parameter DW = 64;         // width of converter
+   parameter DW = 64;       // width of converter
 
-   input [DW-1:0]  data;      // data input
-   output 	   parity;    // parity bit
+   input [DW-1:0]  in;      // data input
+   output 	   out;     // calculated parity bit
 
    assign parity = ^data[DW-1:0];
       
