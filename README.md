@@ -1,12 +1,11 @@
 =======
 # OH! Open hardware for Chips and FPGAs
 
-![alt tag](common/docs/lego.jpg)
-
-# PHILOSOPHY
 1. Make it work
 2. Make it simpler
 3. Make it modular
+
+![alt tag](common/docs/lego.jpg)
 
 ## CONTENT
 
