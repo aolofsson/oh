@@ -10,7 +10,7 @@ module dv_ctrl(/*AUTOARG*/
    parameter CFG_CLK1_PHASE  = CFG_CLK1_PERIOD/2;
    parameter CFG_CLK2_PERIOD = 100;
    parameter CFG_CLK2_PHASE  = CFG_CLK2_PERIOD/2;
-   parameter CFG_TIMEOUT     = 5000;
+   parameter CFG_TIMEOUT     = 50000;
 
    output nreset;     // async active low reset
    output clk1;       // main clock
@@ -67,7 +67,7 @@ module dv_ctrl(/*AUTOARG*/
      begin	
 	#(1)
 	nreset   = 'b0;	
-	#(clk1_phase * 20)   //hold reset for 20 clk cycles
+	#(clk1_phase * 20 + 100)   //hold reset for 20 clk cycles
 	nreset   = 'b1;
      end
 

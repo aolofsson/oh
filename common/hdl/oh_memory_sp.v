@@ -1,9 +1,9 @@
 module oh_memory_sp(/*AUTOARG*/
    // Outputs
-   dout, bist_dout,
+   dout,
    // Inputs
-   clk, en, we, wem, addr, din, vdd, vddm, sleep, shutdown,
-   cfg_repair, bist_en, bist_we, bist_wem, bist_addr, bist_din
+   clk, en, we, wem, addr, din, vdd, vddm, sleep, shutdown, repair,
+   bist_en, bist_we, bist_wem, bist_addr, bist_din
    );
 
    // parameters
@@ -27,7 +27,7 @@ module oh_memory_sp(/*AUTOARG*/
    input 	       vddm;       // array power rail     
    input 	       sleep;      // sleep (content retained)
    input 	       shutdown;   // shutdown (no retention)
-   input [RW-1:0]      cfg_repair; // "wildcard" repair vector   
+   input [RW-1:0]      repair;     // "wildcard" repair vector   
 
    // BIST interface (ASICs only)
    input 	       bist_en;   // bist enable
@@ -35,19 +35,18 @@ module oh_memory_sp(/*AUTOARG*/
    input [DW-1:0]      bist_wem;  // write enable vector
    input [AW-1:0]      bist_addr; // address
    input [DW-1:0]      bist_din;  // data input
-   output [DW-1:0]     bist_dout; // data output
    
 `ifdef CFG_ASIC
 
    //Actual IP hidden behind wrapper to protect the innocent
+
    sram_sp #(.DW(DW).
 	     .DEPTH(DEPTH),
 	     .PROJ(PROJ),
 	     .RW(RW))	     
-   sram_sp (/*AUTOINST*/
-	    // Outputs
+
+   sram_sp (// Outputs
 	    .dout			(dout[DW-1:0]),
-	    .bist_dout			(bist_dout[DW-1:0]),
 	    // Inputs
 	    .clk			(clk),
 	    .en				(en),
