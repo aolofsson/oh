@@ -1,8 +1,8 @@
 module dut(/*AUTOARG*/
    // Outputs
-   dut_active, wait_out, access_out, packet_out,
+   clkout, dut_active, wait_out, access_out, packet_out,
    // Inputs
-   frame, data, clk, nreset, vdd, vss, access_in, packet_in, wait_in
+   clk1, clk2, nreset, vdd, vss, access_in, packet_in, wait_in
    );
 
    parameter AW    = 32;
@@ -17,7 +17,9 @@ module dut(/*AUTOARG*/
    //#######################################
    //# CLOCK AND RESET
    //#######################################
-   input            clk;
+   input            clk1;
+   input            clk2;
+   output 	    clkout; 	    
    input            nreset;
    input [N*N-1:0]  vdd;
    input 	    vss;
@@ -38,10 +40,6 @@ module dut(/*AUTOARG*/
    input [N-1:0]     wait_in;
 
    /*AUTOINPUT*/
-   // Beginning of automatic inputs (from unused autoinst inputs)
-   input [7:0]		data;			// To elink_monitor of elink_monitor.v
-   input		frame;			// To elink_monitor of elink_monitor.v
-   // End of automatics
  
    //floating wires
    wire 	     elink0_cclk_n;		// From elink0 of elink.v
@@ -116,8 +114,12 @@ module dut(/*AUTOARG*/
    wire			elink1_txo_lclk_n;	// From elink1 of elink.v
    wire			elink1_txo_lclk_p;	// From elink1 of elink.v
    // End of automatics
+
+   //###################
+   // GLUE
+   //###################
+   assign clkout = clk1;
    
-  
    //######################################################################
    //EMESH INTERFACE
    //######################################################################
@@ -175,7 +177,7 @@ module dut(/*AUTOARG*/
 
    /*elink AUTO_TEMPLATE (
                           // Outputs                        
-                          .sys_clk            (clk),
+                          .sys_clk            (clk1),
                           .sys_nreset         (nreset),
                           .rxi_\(.*\)         (elink1_txo_\1[]),
                           .txi_\(.*\)         (elink1_rxo_\1[]),
@@ -219,7 +221,7 @@ module dut(/*AUTOARG*/
 		 .txrd_wait		(elink0_txrd_wait),	 // Templated
 		 // Inputs
 		 .sys_nreset		(nreset),		 // Templated
-		 .sys_clk		(clk),			 // Templated
+		 .sys_clk		(clk1),			 // Templated
 		 .rxi_lclk_p		(elink1_txo_lclk_p),	 // Templated
 		 .rxi_lclk_n		(elink1_txo_lclk_n),	 // Templated
 		 .rxi_frame_p		(elink1_txo_frame_p),	 // Templated
@@ -248,7 +250,7 @@ module dut(/*AUTOARG*/
    //######################################################################
    /*elink AUTO_TEMPLATE (
                           // Outputs                        
-                          .sys_clk            (clk),
+                          .sys_clk            (clk1),
                           .sys_nreset         (nreset),
                           .rxi_\(.*\)         (elink0_txo_\1[]),
                           .txi_\(.*\)         (elink0_rxo_\1[]),
@@ -302,7 +304,7 @@ module dut(/*AUTOARG*/
 		 .txrr_wait		(elink1_txrr_wait),	 // Templated
 		 // Inputs
 		 .sys_nreset		(nreset),		 // Templated
-		 .sys_clk		(clk),			 // Templated
+		 .sys_clk		(clk1),			 // Templated
 		 .rxi_lclk_p		(elink0_txo_lclk_p),	 // Templated
 		 .rxi_lclk_n		(elink0_txo_lclk_n),	 // Templated
 		 .rxi_frame_p		(elink0_txo_frame_p),	 // Templated
@@ -338,7 +340,7 @@ module dut(/*AUTOARG*/
 
    defparam emem.WAIT=0;   
    ememory emem (.wait_in	        (elink1_txrr_wait),//pushback on reads
-		 .clk		        (clk),
+		 .clk		        (clk1),
 		 .wait_out		(emem_wait),
 		 .coreid		(12'h0),
 		 /*AUTOINST*/
