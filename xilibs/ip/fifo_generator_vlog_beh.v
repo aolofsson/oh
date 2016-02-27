@@ -92,9 +92,9 @@
  *******************************************************************************
  */
 
-`timescale 1ps/1ps
+//`timescale 1ps/1ps
 `ifndef TCQ
- `define TCQ 100
+ `define TCQ 0.1
 `endif
 
 
