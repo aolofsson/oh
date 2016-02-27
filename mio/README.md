@@ -1,9 +1,9 @@
-C2C: Generic chip to chip link 
-===============================
+Mini-IO: A lightweight parallel interface
+=============================================
 
 
 ## Introduction
-* The C2C is a generic protocol agnostic link for moving data between dies. The block does not include any platform specific optimization
+* Mini-IO (MIO) is a generic protocol agnostic link for moving data between chips (or silicon dies). 
 
 ## Key Features
 
@@ -26,7 +26,6 @@ C2C: Generic chip to chip link
 | access_out         | I  | Valid packet from RX
 | data_out           | I  | Data from RX
 | wait_in            | O  | Pushback for RX from core side
-| *******************|****|***********************************
 | tx_access          | O  | TX packet framing signal
 | tx_clk             | O  | TX clock aligned in the center of the data eye
 | tx_data            | I  | TX DDR data                                    
@@ -35,7 +34,6 @@ C2C: Generic chip to chip link
 | rx_clk             | I  | RX center aligned clock 
 | rx_data            | I  | RX DDR data
 | rx_wait            | O  | RX pushback for TX
-| *******************|****|***********************************
 | clk                | I  | Core side clock
 | nreset             | I  | Active low async reset
 | io_clk             | I  | Clock for transmit side
@@ -46,8 +44,8 @@ C2C: Generic chip to chip link
 * c2c.v
 
 ## Parameters
-* `C2C_PW  : System interface packet width
-* `C2C_IOW : IO data width (number of data pins)
+* `CFG_MIOPW : System interface packet width
+* `CFG_MIOW  : IO data width (number of data pins)
 
 ## Registers
 * None
@@ -55,10 +53,11 @@ C2C: Generic chip to chip link
 ## Simulation
 
 ```
-cd $OH_HOME/c2v/dv
+cd $OH_HOME/mio/dv
 ./build.sh
-./run.sh dut_c2c.bin tests/test_random.emf
+./run.sh dut_mio.bin tests/test_random.emf
 ```
+
 
 
 

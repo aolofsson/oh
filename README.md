@@ -11,25 +11,26 @@
 
 ## CONTENT
 
-| FOLDER                   | STATUS| DESCRIPTION                          |
-|--------------------------|-------|--------------------------------------|
-|[accelerator](accelerator)| FPGA  | Accelerator tutorial                 |
-|[axi](axi)                | FPGA  | AXI master and slave interfaces      |
-|[c2c](c2c)                | HH    | Protocol agnostic chip to chip link  |
-|[chip](chip)              | SI    | Chip design reference flow           |
-|[common](common)          | SI    | Library of basic components          |
-|[elink](elink)            | SI    | Point to point LVDS link             |
-|[emailbox](emailbox)      | FPGA  | Mailbox with interrupt output        |
-|[emesh](emesh)            | SI    | Emesh interface utility circuits     |
-|[emmu](emmu)              | FPGA  | Memory transaction translation unit  |
-|[etrace](etrace)          | HH    | Logic Analyzer                       |
-|[gpio](gpio)              | HH    | General Purpose IO                   |
-|[pic](pic)                | SI    | Programmable interrupt controller    |
-|[parallella](parallella)  | FPGA  | Parallella FPGA logic                |
-|[risc-v](risc-v)          | HH    | RISC-V implementation                |
-|[spi](spi)                | HH    | SPI master/slave                     |
-|[verilog](verilog)        | HH    | Verilog referenca material           |
-|[xilibs](xilibs)          | FPGA  | Xilinx simulation models             |
+| FOLDER                   | STATUS| DESCRIPTION                           |
+|--------------------------|-------|---------------------------------------|
+|[accelerator](accelerator)| FPGA  | Accelerator tutorial                  |
+|[axi](axi)                | FPGA  | AXI master and slave interfaces       |
+|[c2c](c2c)                | HH    | Protocol agnostic chip to chip link   |
+|[chip](chip)              | SI    | Chip design reference flow            |
+|[common](common)          | SI    | Library of basic components           |
+|[elink](elink)            | SI    | Point to point LVDS link              |
+|[emailbox](emailbox)      | FPGA  | Mailbox with interrupt output         |
+|[emesh](emesh)            | SI    | Emesh interface utility circuits      |
+|[emmu](emmu)              | FPGA  | Memory transaction translation unit   |
+|[etrace](etrace)          | HH    | Logic Analyzer                        |
+|[gpio](gpio)              | HH    | General Purpose IO                    |
+|[mio](mio)                | HH    | Mini-IO: lightweight parallel link    |
+|[pic](pic)                | SI    | Programmable interrupt controller     |
+|[parallella](parallella)  | FPGA  | Parallella FPGA logic                 |
+|[risc-v](risc-v)          | HH    | RISC-V implementation                 |
+|[spi](spi)                | HH    | SPI master/slave                      |
+|[verilog](verilog)        | HH    | Verilog referenca material            |
+|[xilibs](xilibs)          | FPGA  | Xilinx simulation models              |
 
 **NOTES:**
 * "SI"= Silicon validated
