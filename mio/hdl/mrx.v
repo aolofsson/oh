@@ -1,4 +1,4 @@
-module crx (/*AUTOARG*/
+module mrx (/*AUTOARG*/
    // Outputs
    rx_wait, access_out, packet_out,
    // Inputs
@@ -11,9 +11,9 @@ module crx (/*AUTOARG*/
 
    //parameters
    parameter PW         = 104;             // data width (core)
-   parameter IOW        = 8;               // IO data width
+   parameter MIOW        = 8;               // IO data width
    parameter FIFO_DEPTH = 32;              // fifo depth  
-   localparam CW        = $clog2(2*PW/IOW);// transfer count width
+   localparam CW        = $clog2(2*PW/MIOW);// transfer count width
    
    //reset, clk
    input              clk;         // main core clock   
@@ -26,7 +26,7 @@ module crx (/*AUTOARG*/
    //IO interface
    input 	      rx_clk;      // clock from IO
    input 	      rx_access;   // access signal for IO
-   input [IOW-1:0]    rx_packet;   // packet from IO
+   input [MIOW-1:0]    rx_packet;   // packet from IO
    output 	      rx_wait;     // pushback for IO
 
    // data 
@@ -41,10 +41,10 @@ module crx (/*AUTOARG*/
    /*AUTOINPUT*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			fifo_access;		// From crx_protocol of crx_protocol.v
-   wire [PW-1:0]	fifo_packet;		// From crx_protocol of crx_protocol.v
-   wire			io_access;		// From crx_io of crx_io.v
-   wire [2*IOW-1:0]	io_packet;		// From crx_io of crx_io.v
+   wire			fifo_access;		// From mrx_protocol of mrx_protocol.v
+   wire [PW-1:0]	fifo_packet;		// From mrx_protocol of mrx_protocol.v
+   wire			io_access;		// From mrx_io of mrx_io.v
+   wire [2*MIOW-1:0]	io_packet;		// From mrx_io of mrx_io.v
    // End of automatics
 
  
@@ -86,13 +86,13 @@ module crx (/*AUTOARG*/
    //########################################
    //# PROTOCOL
    //########################################
-   /*crx_protocol  AUTO_TEMPLATE (
+   /*mrx_protocol  AUTO_TEMPLATE (
     .clk	(rx_clk),
         );
    */
-   crx_protocol #(.PW(PW),
-		  .IOW(IOW))
-   crx_protocol (/*AUTOINST*/
+   mrx_protocol #(.PW(PW),
+		  .MIOW(MIOW))
+   mrx_protocol (/*AUTOINST*/
 		 // Outputs
 		 .fifo_access		(fifo_access),
 		 .fifo_packet		(fifo_packet[PW-1:0]),
@@ -101,25 +101,25 @@ module crx (/*AUTOARG*/
 		 .nreset		(nreset),
 		 .datasize		(datasize[CW-1:0]),
 		 .io_access		(io_access),
-		 .io_packet		(io_packet[2*IOW-1:0]));
+		 .io_packet		(io_packet[2*MIOW-1:0]));
    
    //########################################
    //# FAST IO (DDR)
    //########################################
-   /*crx_io  AUTO_TEMPLATE (
+   /*mrx_io  AUTO_TEMPLATE (
     .clk	(rx_clk),
         );
    */
-   crx_io #(.IOW(IOW))
-   crx_io (
+   mrx_io #(.MIOW(MIOW))
+   mrx_io (
 	   /*AUTOINST*/
 	   // Outputs
 	   .io_access			(io_access),
-	   .io_packet			(io_packet[2*IOW-1:0]),
+	   .io_packet			(io_packet[2*MIOW-1:0]),
 	   // Inputs
 	   .nreset			(nreset),
 	   .clk				(rx_clk),		 // Templated
-	   .rx_packet			(rx_packet[IOW-1:0]),
+	   .rx_packet			(rx_packet[MIOW-1:0]),
 	   .rx_access			(rx_access));
   
 endmodule // ctx
