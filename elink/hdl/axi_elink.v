@@ -1,7 +1,7 @@
 //########################################################
 // ELINK + AXI_SLAVE + AXI_MASTER
 //########################################################
-`include "elink_regmap.v"
+`include "elink_regmap.vh"
 module axi_elink(/*AUTOARG*/
    // Outputs
    elink_active, rxo_wr_wait_p, rxo_wr_wait_n, rxo_rd_wait_p,

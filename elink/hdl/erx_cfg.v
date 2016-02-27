@@ -1,4 +1,4 @@
-`include "elink_regmap.v"
+`include "elink_regmap.vh"
 module erx_cfg (/*AUTOARG*/
    // Outputs
    mmu_access, dma_access, mailbox_access, ecfg_access, ecfg_packet,

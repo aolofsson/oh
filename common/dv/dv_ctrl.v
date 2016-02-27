@@ -39,8 +39,8 @@ module dv_ctrl(/*AUTOARG*/
 	r=$value$plusargs("SEED=%s", seed);	
 	$display("SEED=%d", seed);	
 `ifdef CFG_RANDOM
-	clk1_phase = {$random(seed)}; //generate random values
-	clk2_phase = {$random(seed)}; //generate random values
+	clk1_phase = 1 + {$random(seed)}; //generate random values
+	clk2_phase = 1 + {$random(seed)}; //generate random values
 `else
 	clk1_phase = CFG_CLK1_PHASE;	
 	clk2_phase = CFG_CLK2_PHASE; 
@@ -52,13 +52,13 @@ module dv_ctrl(/*AUTOARG*/
    //CLK1 GENERATOR
    //#################################
    always
-     #(clk1_phase + 1) clk1 = ~clk1; //add one to avoid "DC" state
+     #(clk1_phase) clk1 = ~clk1; //add one to avoid "DC" state
 
    //#################################
    //CLK2 GENERATOR
    //#################################
    always
-     #(clk2_phase + 1) clk2 = ~clk2;
+     #(clk2_phase) clk2 = ~clk2;
 
    //#################################
    //RESET

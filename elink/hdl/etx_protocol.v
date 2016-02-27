@@ -1,14 +1,10 @@
-/*
- *
- * This module converts the packet interface to a 64bit wide format 
- * suitable for sending out to a parallel to serial shift register.
- * The frame signal is sent along together with the data making.
- * The goal is to minimize the amount of logic done on the high speed
- * domain.
- * 
- * 
- */ 
-`include "elink_regmap.v"
+//#####################################################################
+//# This module converts the packet interface to a 64bit wide format 
+//# suitable for sending out to a parallel to serial shift register.
+//# The frame signal is sent along together with the data making.
+//# The goal is to minimize the amount of logic done on the high speed
+//#  domain.
+//#####################################################################
 module etx_protocol (/*AUTOARG*/
    // Outputs
    etx_rd_wait, etx_wr_wait, etx_wait, tx_burst, tx_access,

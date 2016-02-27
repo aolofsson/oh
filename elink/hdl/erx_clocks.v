@@ -1,22 +1,24 @@
-`include "elink_constants.v"
+`include "elink_constants.vh"
 module erx_clocks (/*AUTOARG*/
    // Outputs
    rx_lclk, rx_lclk_div4, rx_active, erx_nreset, erx_io_nreset,
    // Inputs
    sys_nreset, soft_reset, tx_active, sys_clk, rx_clkin
    );
-
-`ifdef TARGET_SIM
-   parameter RCW                 = 4;          // reset counter width
-`else
-   parameter RCW                 = 8;          // reset counter width
-`endif
-
-   //Frequency Settings (Mhz)
+   
+   //Frequency Settings (Mhz)   
    parameter FREQ_RXCLK      = 300;   
    parameter FREQ_IDELAY     = 200;   
-   parameter RXCLK_PHASE     = 0;   //270;  //-90 deg rxclk phase shift      
-   parameter PLL_VCO_MULT    = 4;   //RX
+   parameter RXCLK_PHASE     = 0;           // 270;
+   parameter PLL_VCO_MULT    = 4;           // RX
+   parameter TARGET          = `CFG_TARGET; // "XILINX", "ALTERA" etc
+
+   //Override reset counter size for simulation
+`ifdef TARGET_SIM
+   parameter RCW                 = 4;       // reset counter width
+`else
+   parameter RCW                 = 8;       // reset counter width
+`endif
 
    //Don't touch these! (derived parameters)
    localparam real    RXCLK_PERIOD  = 1000.000000 / FREQ_RXCLK; //? Why is the period needed here?
@@ -131,90 +133,91 @@ module erx_clocks (/*AUTOARG*/
 			.clk		(rx_lclk_div4),
 			.nrst_in	(rx_nreset)
 			);
-      	   
-`ifdef TARGET_XILINX	
 
-   //###########################
-   // PLL RX
-   //###########################  
-   
-   PLLE2_ADV
-     #(
-       .BANDWIDTH("OPTIMIZED"),          
-       .CLKFBOUT_MULT(PLL_VCO_MULT),              
-       .CLKFBOUT_PHASE(0.0),
-       .CLKIN1_PERIOD(RXCLK_PERIOD),
-       .CLKOUT0_DIVIDE(128),
-       .CLKOUT1_DIVIDE(128),
-       .CLKOUT2_DIVIDE(128),
-       .CLKOUT3_DIVIDE(IREF_DIVIDE),    // idelay ref clk
-       .CLKOUT4_DIVIDE(RXCLK_DIVIDE),   // rx_lclk
-       .CLKOUT5_DIVIDE(RXCLK_DIVIDE*4), // rx_lclk_div4
-       .CLKOUT0_DUTY_CYCLE(0.5),         
-       .CLKOUT1_DUTY_CYCLE(0.5),
-       .CLKOUT2_DUTY_CYCLE(0.5),
-       .CLKOUT3_DUTY_CYCLE(0.5),
-       .CLKOUT4_DUTY_CYCLE(0.5),
-       .CLKOUT5_DUTY_CYCLE(0.5),
-       .CLKOUT0_PHASE(0.0),
-       .CLKOUT1_PHASE(0.0),
-       .CLKOUT2_PHASE(0.0),
-       .CLKOUT3_PHASE(0.0),
-       .CLKOUT4_PHASE(0.0),//RXCLK_PHASE
-       .CLKOUT5_PHASE(0.0),//RXCLK_PHASE/4
-       .DIVCLK_DIVIDE(1.0), 
-       .REF_JITTER1(0.01), 
-       .STARTUP_WAIT("FALSE") 
-       ) pll_rx
-       (
-        .CLKOUT0(),
-        .CLKOUT1(),
-        .CLKOUT2(),
-        .CLKOUT3(idelay_ref_clk_pll),
-        .CLKOUT4(rx_lclk_pll),
-        .CLKOUT5(rx_lclk_div4_pll),
-	.PWRDWN(1'b0),
-        .RST(pll_reset),
-        .CLKFBIN(rx_lclk_fb),    
-        .CLKFBOUT(rx_lclk_fb),       
-        .CLKIN1(rx_clkin),
-	.CLKIN2(1'b0),
-	.CLKINSEL(1'b1),      
-	.DADDR(7'b0),
-        .DCLK(1'b0),
-	.DEN(1'b0),
-	.DI(16'b0),
-	.DWE(1'b0),
-	.DRDY(),//??
-	.DO(), //??
-	.LOCKED(pll_locked)
-        );
-   
-   //Clock network
-   BUFG i_lclk_bufg      (.I(rx_lclk_pll),      .O(rx_lclk));       //300Mhz
-   BUFG i_lclk_div4_bufg (.I(rx_lclk_div4_pll), .O(rx_lclk_div4)); //(300Mhz/4)
-   
-   BUFG i_idelay_bufg  (.I(idelay_ref_clk_pll),.O(idelay_ref_clk));//idelay ctrl clock
-
-   //two clock synchronizer for lock signal
-   oh_dsync dsync (.dout (pll_locked_sync),
-		   .clk	 (sys_clk),
-		   .din	 (pll_locked)
-		   );
-      
-   //###########################
-   // Idelay controller
-   //###########################
-   
-   (* IODELAY_GROUP = "IDELAY_GROUP" *) // Group name for IDELAYCTRL
-   IDELAYCTRL idelayctrl_inst 
-     (
-      .RDY(idelay_ready), // check ready flag in reset sequence?
-      .REFCLK(idelay_ref_clk),//200MHz clk (78ps tap delay)
-      .RST(idelay_reset));
-   
-`endif //  `ifdef TARGET_XILINX
-
+   generate
+      if(TARGET=="XILINX")
+	begin
+	   //###########################
+	   // PLL RX
+	   //###########################  
+	   
+	   PLLE2_ADV
+	     #(
+	       .BANDWIDTH("OPTIMIZED"),          
+	       .CLKFBOUT_MULT(PLL_VCO_MULT),              
+	       .CLKFBOUT_PHASE(0.0),
+	       .CLKIN1_PERIOD(RXCLK_PERIOD),
+	       .CLKOUT0_DIVIDE(128),
+	       .CLKOUT1_DIVIDE(128),
+	       .CLKOUT2_DIVIDE(128),
+	       .CLKOUT3_DIVIDE(IREF_DIVIDE),    // idelay ref clk
+	       .CLKOUT4_DIVIDE(RXCLK_DIVIDE),   // rx_lclk
+	       .CLKOUT5_DIVIDE(RXCLK_DIVIDE*4), // rx_lclk_div4
+	       .CLKOUT0_DUTY_CYCLE(0.5),         
+	       .CLKOUT1_DUTY_CYCLE(0.5),
+	       .CLKOUT2_DUTY_CYCLE(0.5),
+	       .CLKOUT3_DUTY_CYCLE(0.5),
+	       .CLKOUT4_DUTY_CYCLE(0.5),
+	       .CLKOUT5_DUTY_CYCLE(0.5),
+	       .CLKOUT0_PHASE(0.0),
+	       .CLKOUT1_PHASE(0.0),
+	       .CLKOUT2_PHASE(0.0),
+	       .CLKOUT3_PHASE(0.0),
+	       .CLKOUT4_PHASE(0.0),//RXCLK_PHASE
+	       .CLKOUT5_PHASE(0.0),//RXCLK_PHASE/4
+	       .DIVCLK_DIVIDE(1.0), 
+	       .REF_JITTER1(0.01), 
+	       .STARTUP_WAIT("FALSE") 
+	       ) pll_rx
+	       (
+		.CLKOUT0(),
+		.CLKOUT1(),
+		.CLKOUT2(),
+		.CLKOUT3(idelay_ref_clk_pll),
+		.CLKOUT4(rx_lclk_pll),
+		.CLKOUT5(rx_lclk_div4_pll),
+		.PWRDWN(1'b0),
+		.RST(pll_reset),
+		.CLKFBIN(rx_lclk_fb),    
+		.CLKFBOUT(rx_lclk_fb),       
+		.CLKIN1(rx_clkin),
+		.CLKIN2(1'b0),
+		.CLKINSEL(1'b1),      
+		.DADDR(7'b0),
+		.DCLK(1'b0),
+		.DEN(1'b0),
+		.DI(16'b0),
+		.DWE(1'b0),
+		.DRDY(),//??
+		.DO(), //??
+		.LOCKED(pll_locked)
+		);
+	   
+	   //Clock network
+	   BUFG i_lclk_bufg      (.I(rx_lclk_pll),      .O(rx_lclk));       //300Mhz
+	   BUFG i_lclk_div4_bufg (.I(rx_lclk_div4_pll), .O(rx_lclk_div4)); //(300Mhz/4)
+	   
+	   BUFG i_idelay_bufg  (.I(idelay_ref_clk_pll),.O(idelay_ref_clk));//idelay ctrl clock
+	   
+	   //two clock synchronizer for lock signal
+	   oh_dsync dsync (.dout (pll_locked_sync),
+			   .clk	 (sys_clk),
+			   .din	 (pll_locked)
+			   );
+	   
+	   //###########################
+	   // Idelay controller
+	   //###########################
+	   
+	   (* IODELAY_GROUP = "IDELAY_GROUP" *) // Group name for IDELAYCTRL
+	   IDELAYCTRL idelayctrl_inst 
+	     (
+	      .RDY(idelay_ready), // check ready flag in reset sequence?
+	      .REFCLK(idelay_ref_clk),//200MHz clk (78ps tap delay)
+	      .RST(idelay_reset));
+	   
+	end // if (TARGET=="XILINX")
+   endgenerate
 
 endmodule // eclocks
 // Local Variables:

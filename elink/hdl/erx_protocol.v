@@ -1,9 +1,6 @@
-/*
- This block handles the autoincrement needed for bursting and detects 
- read responses
- */
-`include "elink_regmap.v"
-
+//############################################################
+//#This block handles the autoincrement needed for bursting
+//############################################################
 module erx_protocol (/*AUTOARG*/
    // Outputs
    erx_access, erx_packet,
