@@ -1,8 +1,10 @@
 =======
 # OH! Open hardware for Chips and FPGAs
 
+## PHILOSOPHY
+
 1. Make it work
-2. Make it simpler
+2. Make it simple
 3. Make it modular
 
 ![alt tag](common/docs/lego.jpg)
@@ -104,17 +106,18 @@ Instructions for contributing can be found [HERE](CONTRIBUTING.md).
 * Use $signed() for arithmetic operations on signed types
 * Allowed keywords: assign, always, input, output, wire, reg, module, endmodule, if/else, case, casez, ~,|,&,^,==, >>, <<, >, <,?,posedge, negedge, generate, for(...), begin, end, $signed,
 
-# DESIGN GUIDELINES
+## DESIGN GUIDELINES
 
+* Separate the configuration from the design
+* Separate the design from the testbench
+* Separate the test from the testbench
 * When possible/reasonable use 64b boundaries for scalable registers
 * When posible place multi bit fields on nibble boundaries
 * All registers should have "0" as default value on reset
 * Only include reset values if absolutely needed
-* Separate the design from the testbench
-* Separate the test from the testbench
 * More to come...
 
-# DOCUMENTATION GUIDELINES
+## DOCUMENTATION GUIDELINES
 
 * Write docs in markdown
 * Specify which registers are reset
@@ -136,7 +139,7 @@ Instructions for contributing can be found [HERE](CONTRIBUTING.md).
 * Show how to synthesize/build..
 * Show how to use..
 
-# MODULE SIGNOFF CHECKLIST
+## MODULE SIGNOFF CHECKLIST
 
 * Is the block datasheet complete and accurate?
 * Is there a user guide?
