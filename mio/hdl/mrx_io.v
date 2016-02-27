@@ -1,7 +1,7 @@
 //#######################################################
 //# Target specific IO logic (fast, timing sensitive)
 //#######################################################
-module crx_io (/*AUTOARG*/
+module mrx_io (/*AUTOARG*/
    // Outputs
    io_access, io_packet,
    // Inputs
@@ -13,21 +13,21 @@ module crx_io (/*AUTOARG*/
    //#####################################################################
 
    //parameters
-   parameter  IOW  = 16;  
+   parameter  MIOW  = 16;  
 
    //RESET
-   input              nreset;        // async active low reset
-   input 	      clk;           // clock for IO
+   input               nreset;        // async active low reset
+   input 	       clk;           // clock for IO
    //IO interface
-   input [IOW-1:0]    rx_packet;     // data for IO
-   input 	      rx_access;     // access signal for IO
+   input [MIOW-1:0]    rx_packet;     // data for IO
+   input 	       rx_access;     // access signal for IO
    
    //FIFO interface (core side)
-   output 	      io_access;     // fifo packet valid
-   output [2*IOW-1:0] io_packet;     // fifo packet
+   output 	       io_access;     // fifo packet valid
+   output [2*MIOW-1:0] io_packet;     // fifo packet
    
    //regs
-   reg 		      io_access;
+   reg 		       io_access;
    
    //########################################
    //# CLOCK, RESET
@@ -42,6 +42,7 @@ module crx_io (/*AUTOARG*/
    //########################################
    //# ACCESS (SDR)
    //########################################
+
    always @ (posedge clk or negedge io_nreset)
      if(!nreset)
        io_access   <= 1'b0;
@@ -51,17 +52,16 @@ module crx_io (/*AUTOARG*/
    //########################################
    //# DATA (DDR) 
    //########################################
-   // sample data to improve timing
    
-   oh_iddr #(.DW(IOW))
-   data_iddr(.q1			(io_packet[IOW-1:0]),
-	     .q2			(io_packet[2*IOW-1:IOW]),
+   oh_iddr #(.DW(MIOW))
+   data_iddr(.q1			(io_packet[MIOW-1:0]),
+	     .q2			(io_packet[2*MIOW-1:MIOW]),
 	     .clk			(clk),
 	     .ce			(rx_access),
-	     .din			(rx_packet[IOW-1:0])
+	     .din			(rx_packet[MIOW-1:0])
 	     );
    
-endmodule // crx_io
+endmodule // mrx_io
 
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")

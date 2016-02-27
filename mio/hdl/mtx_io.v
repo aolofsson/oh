@@ -1,7 +1,7 @@
 //#######################################################
 //# Target specific IO logic (fast, timing sensitive)
 //#######################################################
-module ctx_io (/*AUTOARG*/
+module mtx_io (/*AUTOARG*/
    // Outputs
    tx_packet, tx_access,
    // Inputs
@@ -13,7 +13,7 @@ module ctx_io (/*AUTOARG*/
    //#####################################################################
 
    //parameters
-   parameter  IOW  = 16;  
+   parameter MIOW  = 16;  
    
    //RESET
    input              nreset;          // async active low reset
@@ -21,16 +21,16 @@ module ctx_io (/*AUTOARG*/
    
    //Core side 
    input              io_access;       // valid packet
-   input [2*IOW-1:0]  io_packet;       // packet
+   input [2*MIOW-1:0] io_packet;       // packet
    
    //IO interface
-   output [IOW-1:0]   tx_packet;       // data for IO
+   output [MIOW-1:0]  tx_packet;       // data for IO
    output 	      tx_access;       // access signal for IO
    input 	      tx_wait;         // pushback from IO
    
    //regs
-   reg [2*IOW-1:0]    packet_reg;
-   reg [IOW-1:0]      packet_sh;
+   reg [2*MIOW-1:0]   packet_reg;
+   reg [MIOW-1:0]     packet_sh;
    reg 		      tx_access;
    
    //########################################
@@ -56,15 +56,15 @@ module ctx_io (/*AUTOARG*/
    //# DATA (DDR) 
    //########################################
 
-   oh_oddr#(.DW(IOW))
-   data_oddr (.out	(tx_packet[IOW-1:0]),
+   oh_oddr#(.DW(MIOW))
+   data_oddr (.out	(tx_packet[MIOW-1:0]),
               .clk	(clk),
 	      .ce	(io_access & ~tx_wait),
-	      .din1	(io_packet[IOW-1:0]),
-	      .din2	(io_packet[2*IOW-1:IOW])
+	      .din1	(io_packet[MIOW-1:0]),
+	      .din2	(io_packet[2*MIOW-1:MIOW])
 	      );
       
-endmodule // ctx_io
+endmodule // mtx_io
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")
 // End:

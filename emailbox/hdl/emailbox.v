@@ -7,10 +7,10 @@
 //#
 //# Notes:    1.) System should take care of not overflowing the FIFO
 //#           2.) Reading E_MAILBOXLO causes a fifo rd pointer update
-//#           3.) The "embox_not_empty" is a "level" interrupt signal
-//#
+//#           3.) The "embox_not_empty" is a level interrupt signal
+//#           
 //#####################################################################
-`include "emailbox_regmap.v" // is there a better way?
+`include "emailbox_regmap.vh"
 module emailbox (/*AUTOARG*/
    // Outputs
    reg_rdata, mailbox_irq, mailbox_wait,
@@ -22,14 +22,18 @@ module emailbox (/*AUTOARG*/
    //##################################################################
    //# INTERFACE
    //##################################################################
+
    parameter AW     = 32;           // data width of fifo
    parameter ID     = 12'h000;      // link id
    parameter RFAW   = 6;            // address bus width
    parameter DEPTH  = 32;           // fifo depth
+   parameter TYPE   = "SYNC";       // SYNC or ASYNC fifo
+
+   //derived parameters
    parameter CW     = $clog2(DEPTH);// fifo count width
    parameter PW     = 2*AW+40;      // packet size
    parameter MW     = PW;           // fifo memory width
-   parameter TYPE   = "SYNC";       // SYNC or ASYNC fifo
+
 
    
    //clk+reset

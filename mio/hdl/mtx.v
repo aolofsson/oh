@@ -1,9 +1,8 @@
-module ctx (/*AUTOARG*/
+module mtx (/*AUTOARG*/
    // Outputs
-   wait_out, tx_clk, tx_access, tx_packet,
+   wait_out, tx_access, tx_packet,
    // Inputs
-   clk, io_clk, nreset, divcfg, access_in, packet_in, datasize,
-   tx_wait
+   clk, io_clk, nreset, access_in, packet_in, datasize, tx_wait
    );
 
    //#####################################################################
@@ -11,27 +10,25 @@ module ctx (/*AUTOARG*/
    //#####################################################################
 
    //parameters
-   parameter PW         = 104;              // data width (core)
-   parameter IOW        = 16;               // IO data width
-   parameter FIFO_DEPTH = 32;               // fifo depth  
-   localparam CW        = $clog2(2*PW/IOW); // transfer count width
+   parameter PW         = 104;               // data width (core)
+   parameter MIOW       = 16;                // IO data width
+   parameter FIFO_DEPTH = 32;                // fifo depth  
+   localparam CW        = $clog2(2*PW/MIOW); // transfer count width
 
    //reset, clk
    input              clk;         // main core clock   
-   input              io_clk;      // clock for tx
+   input              io_clk;      // clock for tx logic
    input              nreset;      // async active low reset
-   input [3:0] 	      divcfg;      // tx_clk divider config
 	         
    // data to transmit
    input 	      access_in;   // fifo data valid
    input [PW-1:0]     packet_in;   // fifo packet
-   input [CW-1:0]     datasize;    // size of data transmitted
+   input [CW-1:0]     datasize;    // size of data transmitted/received
    output 	      wait_out;    // wait pushback for fifo
 
-   //IO interface
-   output 	      tx_clk;      // phase shifted clock for IO
+   //IO interface (90 deg clock supplied outside this block)
    output 	      tx_access;   // access signal for IO
-   output [IOW-1:0]   tx_packet;   // packet for IO
+   output [MIOW-1:0]  tx_packet;   // packet for IO
    input 	      tx_wait;     // pushback from IO
 
    //#####################################################################
@@ -43,10 +40,9 @@ module ctx (/*AUTOARG*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			fifo_access;		// From fifo of oh_fifo_cdc.v
    wire [PW-1:0]	fifo_packet;		// From fifo of oh_fifo_cdc.v
-   wire			fifo_wait;		// From ctx_protocol of ctx_protocol.v
-   wire			io_access;		// From ctx_protocol of ctx_protocol.v
-   wire [2*IOW-1:0]	io_packet;		// From ctx_protocol of ctx_protocol.v
-   wire			tx_io_clk;		// From oh_clkdiv of oh_clockdiv.v
+   wire			fifo_wait;		// From mtx_protocol of mtx_protocol.v
+   wire			io_access;		// From mtx_protocol of mtx_protocol.v
+   wire [2*MIOW-1:0]	io_packet;		// From mtx_protocol of mtx_protocol.v
    // End of automatics
 
 
@@ -63,7 +59,7 @@ module ctx (/*AUTOARG*/
    .clk_in	(clk),
    .access_in	(access_in),
    .packet_in	(packet_in[PW-1:0]),
-   .clk_out	(tx_io_clk),
+   .clk_out	(io_clk),
    .wait_in	(fifo_wait),
     );
    */
@@ -80,26 +76,26 @@ module ctx (/*AUTOARG*/
 	  .clk_in			(clk),			 // Templated
 	  .access_in			(access_in),		 // Templated
 	  .packet_in			(packet_in[PW-1:0]),	 // Templated
-	  .clk_out			(tx_io_clk),		 // Templated
+	  .clk_out			(io_clk),		 // Templated
 	  .wait_in			(fifo_wait));		 // Templated
    
    //########################################
    //# PROTOCOL
    //########################################
-   /*ctx_protocol  AUTO_TEMPLATE (
-    .clk	(tx_io_clk),
+   /*mtx_protocol  AUTO_TEMPLATE (
+    .clk	(io_clk),
     );
    */
-   ctx_protocol #(.IOW(IOW),
+   mtx_protocol #(.MIOW(MIOW),
 		  .PW(PW))
 
-   ctx_protocol (/*AUTOINST*/
+   mtx_protocol (/*AUTOINST*/
 		 // Outputs
 		 .fifo_wait		(fifo_wait),
 		 .io_access		(io_access),
-		 .io_packet		(io_packet[2*IOW-1:0]),
+		 .io_packet		(io_packet[2*MIOW-1:0]),
 		 // Inputs
-		 .clk			(tx_io_clk),		 // Templated
+		 .clk			(io_clk),		 // Templated
 		 .nreset		(nreset),
 		 .datasize		(datasize[CW-1:0]),
 		 .fifo_access		(fifo_access),
@@ -110,43 +106,21 @@ module ctx (/*AUTOARG*/
    //# FAST IO (DDR)
    //########################################
    /*ctx_io  AUTO_TEMPLATE (
-    .clk	(tx_io_clk),
+    .clk	(io_clk),
     );
    */
-   ctx_io #(.IOW(IOW))
-   ctx_io (/*AUTOINST*/
+   mtx_io #(.MIOW(MIOW))
+   mtx_io (/*AUTOINST*/
 	   // Outputs
-	   .tx_packet			(tx_packet[IOW-1:0]),
+	   .tx_packet			(tx_packet[MIOW-1:0]),
 	   .tx_access			(tx_access),
 	   // Inputs
 	   .nreset			(nreset),
-	   .clk				(tx_io_clk),		 // Templated
+	   .clk				(clk),
 	   .io_access			(io_access),
-	   .io_packet			(io_packet[2*IOW-1:0]),
+	   .io_packet			(io_packet[2*MIOW-1:0]),
 	   .tx_wait			(tx_wait));
 
-   //########################################
-   //# CLOCK DIVIDER
-   //########################################
-
-   /*oh_clockdiv  AUTO_TEMPLATE (
-    .en		(1'b1),
-    .clk	(io_clk),
-    .clkout	(tx_io_clk),
-    .clkout90	(tx_clk),
-        );
-   */
-
-   oh_clockdiv oh_clkdiv(
-			 /*AUTOINST*/
-			 // Outputs
-			 .clkout		(tx_io_clk),	 // Templated
-			 .clkout90		(tx_clk),	 // Templated
-			 // Inputs
-			 .clk			(io_clk),	 // Templated
-			 .en			(1'b1),		 // Templated
-			 .nreset		(nreset),
-			 .divcfg		(divcfg[3:0]));
    
 endmodule // ctx
 // Local Variables:

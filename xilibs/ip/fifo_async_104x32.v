@@ -50,8 +50,6 @@
 // IP VLNV: xilinx.com:ip:fifo_generator:12.0
 // IP Revision: 4
 
-`timescale 1ns/1ps
-
 (* DowngradeIPIdentifiedWarnings = "yes" *)
 module fifo_async_104x32 (
   rst,

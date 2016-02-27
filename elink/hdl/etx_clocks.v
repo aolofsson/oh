@@ -1,4 +1,4 @@
-`include "elink_constants.v"
+`include "elink_constants.vh"
 module etx_clocks (/*AUTOARG*/
    // Outputs
    tx_lclk_io, tx_lclk90, tx_lclk_div4, cclk_p, cclk_n, etx_nreset,
@@ -7,18 +7,23 @@ module etx_clocks (/*AUTOARG*/
    sys_nreset, soft_reset, sys_clk
    );
 
-`ifdef TARGET_SIM
-   parameter RCW                 = 4;          // reset counter width
-`else
-   parameter RCW                 = 8;          // reset counter width
-`endif
+
 
    //Frequency Settings (Mhz)
    parameter FREQ_SYSCLK     = 100; 
    parameter FREQ_TXCLK      = 300;  
    parameter FREQ_CCLK       = 600;  
    parameter TXCLK_PHASE     = 90;   //txclk phase shift
+   parameter TARGET          = `CFG_TARGET; // "XILINX", "ALTERA" etc
 
+   //Override reset counter size for simulation
+`ifdef TARGET_SIM
+   parameter RCW                 = 4;          // reset counter width
+`else
+   parameter RCW                 = 8;          // reset counter width
+`endif
+   
+   
    //Don't touch these! (derived parameters)
    parameter          MMCM_VCO_MULT = 12;  //TX + CCLK
    localparam real    SYSCLK_PERIOD = 1000.000000 / FREQ_SYSCLK;
@@ -163,9 +168,12 @@ module etx_clocks (/*AUTOARG*/
 		     // Inputs
 		     .clk		(tx_lclk_div4),
 		     .nrst_in		(tx_nreset));
-  			     
-`ifdef TARGET_XILINX	
+   
 
+  generate
+      if(TARGET=="XILINX")
+	begin
+   
    //###########################
    // MMCM FOR TXCLK + CCLK
    //###########################
@@ -266,14 +274,22 @@ module etx_clocks (/*AUTOARG*/
                       .OB  (cclk_n),
                       .I   (cclk_oddr)
                       );
-`else // !`ifdef TARGET_XILINX
-   assign cclk_p       = sys_clk;
-   assign cclk_n       = sys_clk;
-   assign tx_lclk_io   = sys_clk;
-   assign tx_lclk_div4 = sys_clk;
-   assign tx_lclk90    = sys_clk;
 
-`endif //  `ifdef TARGET_XILINX
+	end // if (TARGET=="XILINX")
+      else
+	begin
+	   assign cclk_p       = sys_clk;
+	   assign cclk_n       = sys_clk;
+	   assign tx_lclk_io   = sys_clk;
+	   assign tx_lclk_div4 = sys_clk;
+	   assign tx_lclk90    = sys_clk;
+	end
+  endgenerate
+   
+	   
+ 
+
+
 
 endmodule // eclocks
 // Local Variables:

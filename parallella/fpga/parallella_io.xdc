@@ -55,6 +55,7 @@ set_property PACKAGE_PIN H17 [get_ports cclk_n]
 # Epiphany TX
 #####################
 set_property IOSTANDARD LVDS_25 [get_ports {txo*}]
+set_property IOSTANDARD LVDS_25 [get_ports {txi*}]
 set_property PACKAGE_PIN F17 [get_ports txo_lclk_n]
 set_property PACKAGE_PIN A20 [get_ports {txo_data_n[0]}]
 set_property PACKAGE_PIN B20 [get_ports {txo_data_n[1]}]

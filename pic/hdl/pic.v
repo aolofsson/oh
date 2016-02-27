@@ -1,4 +1,4 @@
-`include "pic_regmap.v"
+`include "pic_regmap.vh"
 //###########################################################################
 //# IRQC: Simple nessted interrupt controller
 //# 

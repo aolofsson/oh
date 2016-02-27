@@ -1,4 +1,4 @@
-`include "etrace_regmap.v"
+`include "etrace_regmap.vh"
 module etrace (/*AUTOARG*/
    // Outputs
    data_access_out, data_packet_out, cfg_access_out, cfg_packet_out,

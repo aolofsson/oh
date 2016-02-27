@@ -1,16 +1,15 @@
 
 //#########################################################################
-//# GPIO (Supports up to 32 GPIO pins)
+//# GPIO
 //# -each pin can be an output or input
-//# -level and edge interrupts supported on every input pin
 //#########################################################################
 
 `include "gpio_regmap.v"
 module gpio(/*AUTOARG*/
    // Outputs
-   reg_rdata, gpio_out, gpio_en, gpio_irq, gpio_ilat,
+   reg_rdata, io_out, io_en, gpio_irq, gpio_data,
    // Inputs
-   nreset, clk, reg_access, reg_packet, gpio_in
+   nreset, clk, reg_access, reg_packet, io_in
    );
   
    //##################################################################
@@ -32,14 +31,13 @@ module gpio(/*AUTOARG*/
    output [31:0]   reg_rdata;   // readback data
 
    //IO signals
-   output [N-1:0]  gpio_out;    // data to drive to IO pins
-   output [N-1:0]  gpio_en;     // tristate enables for IO pins
-   input  [N-1:0]  gpio_in;     // data from IO pins
+   output [N-1:0]  io_out;      // data to drive to IO pins
+   output [N-1:0]  io_en;       // tristate enables for IO pins
+   input  [N-1:0]  io_in;       // data from IO pins
    
    //global interrupt   
-   output 	   gpio_irq;    // or of all interrupts
-   output [31:0]   gpio_ilat;   // individual interrupt outputs
-   
+   output 	   gpio_irq;    // change detected on an input
+   output [N-1:0]  gpio_data;   // individual interrupt outputs
    
    //##################################################################
    //# BODY
@@ -49,16 +47,9 @@ module gpio(/*AUTOARG*/
    reg [N-1:0] 	   odata_reg;
    reg [N-1:0] 	   oen_reg;
    reg [N-1:0] 	   idata_reg;
-   reg [N-1:0] 	   itype_reg;
-   reg [N-1:0] 	   ipol_reg;
-   reg [N-1:0] 	   imask_reg;   
-   reg [N-1:0] 	   ilat_reg;
-   reg [N-1:0] 	   gpio_reg;
    reg [AW-1:0]    reg_rdata;
  	   
    //nets
-   reg [N-1:0] 	   ilat_in;
-   reg [N-1:0] 	   ilat_event;   
    wire [N-1:0]    gpio_sync;
    wire [N-1:0]    event_posedge;
    wire [N-1:0]    event_negedge;
@@ -86,7 +77,7 @@ module gpio(/*AUTOARG*/
    //################################
    //# REGISTER ACCESS DECODE
    //################################  
-
+   
    packet2emesh p2e(.packet_in		(reg_packet[PW-1:0]),
 		    /*AUTOINST*/
 		    // Outputs
@@ -97,26 +88,15 @@ module gpio(/*AUTOARG*/
 		    .srcaddr_in		(srcaddr_in[AW-1:0]),
 		    .data_in		(data_in[AW-1:0]));
 
+   assign reg_write      = reg_access & write_in;
+   assign reg_read       = reg_access & ~write_in;
 
-   assign gpio_match  = reg_access             &
-		        (dstaddr_in[10:8]==ID);
-
-   assign gpio_write      = gpio_match & write_in;
-   assign gpio_read      = gpio_match  & ~write_in;
-
-   assign odata_write     = gpio_write & (dstaddr_in[7:2]==`GPIO_ODATA);
-   assign odataand_write  = gpio_write & (dstaddr_in[7:2]==`GPIO_ODATAAND);
-   assign odataorr_write  = gpio_write & (dstaddr_in[7:2]==`GPIO_ODATAORR);
-   assign odataxor_write  = gpio_write & (dstaddr_in[7:2]==`GPIO_ODATAXOR);
-   assign oen_write       = gpio_write & (dstaddr_in[7:2]==`GPIO_OEN);
-   assign idata_write     = gpio_write & (dstaddr_in[7:2]==`GPIO_IDATA);
-   assign itype_write     = gpio_write & (dstaddr_in[7:2]==`GPIO_ITYPE);
-   assign ipol_write      = gpio_write & (dstaddr_in[7:2]==`GPIO_IPOL);
-   assign imask_write     = gpio_write & (dstaddr_in[7:2]==`GPIO_IMASK);
-   assign imaskand_write  = gpio_write & (dstaddr_in[7:2]==`GPIO_IMASKAND);
-   assign imaskorr_write  = gpio_write & (dstaddr_in[7:2]==`GPIO_IMASKORR);
-   assign ilat_write      = gpio_write & (dstaddr_in[7:2]==`GPIO_ILAT);
-   assign ilatand_write   = gpio_write & (dstaddr_in[7:2]==`GPIO_ILATAND);
+   assign odata_write     = reg_write & (dstaddr_in[7:2]==`GPIO_ODATA);
+   assign odataand_write  = reg_write & (dstaddr_in[7:2]==`GPIO_ODATAAND);
+   assign odataorr_write  = reg_write & (dstaddr_in[7:2]==`GPIO_ODATAORR);
+   assign odataxor_write  = reg_write & (dstaddr_in[7:2]==`GPIO_ODATAXOR);
+   assign oen_write       = reg_write & (dstaddr_in[7:2]==`GPIO_OEN);
+   assign idata_write     = reg_write & (dstaddr_in[7:2]==`GPIO_IDATA);
 
    //################################
    //# OUTPUT CONTROL REGISTERS
@@ -148,79 +128,14 @@ module gpio(/*AUTOARG*/
    always @ (posedge clk)
      idata_reg[N-1:0] <= gpio_sync[N-1:0];
 
-   //ITYPE
-   //0=level
-   //1=edge
-   always @ (posedge clk)
-     if(itype_write)
-       itype_reg[N-1:0] <= data_in[N-1:0];
-
-   //IPOLARITY
-   //0=positive
-   //1=negative
-   always @ (posedge clk)
-     if(ipol_write)
-       ipol_reg[N-1:0] <= data_in[N-1:0];
-
-   //IMASK
-   always @ (posedge clk)
-     if(imask_write)
-       imask_reg[N-1:0] <= data_in[N-1:0];
-     else if(imaskand_write)
-       imask_reg[N-1:0] <= imask_reg[N-1:0] & data_in[N-1:0];
-     else if(imaskorr_write)
-       imask_reg[N-1:0] <= imask_reg[N-1:0] | data_in[N-1:0];
-   
-   //ILAT
-   always @ (posedge clk or negedge nreset)
-     if(~nreset)
-       ilat_reg[N-1:0] <= 'b0;
-     else       
-       ilat_reg[N-1:0] <= ilat_in[N-1:0];
-   
-   //################################
-   //# INTERRUPT CONTROL
-   //################################ 
-
-   //ILAT
-   always @*
-     for(i=0;i<N;i=i+1)     
-       ilat_in[i] =(ilat_write & data_in[i]) |                    // ilat set
-	           (ilat_reg[i] & ~(ilatand_write & ~data_in[i]))|// ilat clear
-	           (ilat_event[i]);                               // event
-   
-   //shadow
-   always @ (posedge clk)    
-     gpio_reg[N-1:0] <= gpio_sync[N-1:0];
-   
-   //events
-   assign event_posedge[N-1:0] = gpio_sync[N-1:0]  & ~gpio_reg[N-1:0];
-   assign event_negedge[N-1:0] = ~gpio_sync[N-1:0] & gpio_reg[N-1:0];
-   
-   always @*
-     for(j=0;j<N;j=j+1)     
-       ilat_event[j] = (~itype_reg[j] & ~ipol_reg[j] & gpio_sync[j])    |
-	               (~itype_reg[j] & ipol_reg[j]  & ~gpio_sync[j])   |
-                       (itype_reg[j]  & ~ipol_reg[j] & event_posedge[j]) |
-	               (itype_reg[j]  &  ipol_reg[j] & event_negedge[j]);
-   
-   
-   //global interrupt output
-   assign gpio_irq = |ilat_reg[N-1:0];
-
-
    //################################
    //# READBACK
    //################################ 
    always @ (posedge clk)
-     if(gpio_read)
+     if(reg_read)
        case(dstaddr_in[7:2])
 	 `GPIO_OEN    :  reg_rdata[31:0]   <= oen_reg[N-1:0];
 	 `GPIO_IDATA  :  reg_rdata[31:0]   <= idata_reg[N-1:0];
-	 `GPIO_ITYPE  :  reg_rdata[31:0]   <= itype_reg[N-1:0];
-	 `GPIO_IPOL   :  reg_rdata[31:0]   <= ipol_reg[N-1:0];
-	 `GPIO_IMASK  :  reg_rdata[31:0]   <= imask_reg[N-1:0];
-	 `GPIO_ILAT   :  reg_rdata[31:0]   <= ilat_reg[N-1:0];
 	 default      :  reg_rdata[AW-1:0] <='b0;
        endcase // case (dstaddr_in[7:2])
 	 

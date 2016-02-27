@@ -1,4 +1,4 @@
-`include "accelerator_regmap.v"
+`include "accelerator_regmap.vh"
 module accelerator (/*AUTOARG*/
    // Outputs
    m_wr_access, m_wr_packet, m_rd_access, m_rd_packet, m_rr_wait,
