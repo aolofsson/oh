@@ -58,7 +58,7 @@ Chip Design Glossary
 * [Multiplier](https://en.wikipedia.org/wiki/Binary_multiplier): Binary multiplier
 * [NCO](https://en.wikipedia.org/wiki/Numerically_controlled_oscillator): Numerically controlled oscillator
 * [NOC](https://en.wikipedia.org/wiki/Network_on_a_chip): Network on a chip
-* [Parallel Computing](https://en.wikipedia.org/wiki/Parallel_computing): A type of computation where many operations are carried out simultanesouly. 
+* [Parallel Computing](https://en.wikipedia.org/wiki/Parallel_computing): A type of computation where many operations are carried out simultaneously. 
 * [PCM](https://en.wikipedia.org/wiki/Phase-change_memory): Phase change memory
 * [PCIe](https://en.wikipedia.org/wiki/PCI_Express): High Speed serial computer expansion bus
 * [PIC](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller): Programmable interrupt controller
@@ -95,6 +95,7 @@ Chip Design Glossary
 * [ATPG](https://en.wikipedia.org/wiki/Automatic_test_pattern_generation): Automatic test pattern generation
 * [BIST](https://en.wikipedia.org/wiki/Built-in_self-test): Built in Self Test
 * [Chip](https://en.wikipedia.org/wiki/Integrated_circuit): A set of electronic circuits on one small plate ("chip") of semiconductor material, normally silicon.
+* [Clock domain crossing](https://en.wikipedia.org/wiki/Clock_domain_crossing): Traversal of signal in synchronous digital ssytem from one clock domain to another.
 * [Clock gating](https://en.wikipedia.org/wiki/Clock_gating): Technique whereby clock in synchronous logic is shut off when idle.
 * [CMOS](https://en.wikipedia.org/wiki/CMOS): Complimentary metal-oxide semiconductor
 * [Cross talk](https://en.wikipedia.org/wiki/Crosstalk): The coupling of nearby signals on a chip, usually through capacitive coupling.
@@ -131,6 +132,7 @@ Chip Design Glossary
 * [LVS](https://en.wikipedia.org/wiki/Layout_Versus_Schematic): Layout Versus Schematic software checks that the layout is identical to the netlist.
 * [Mask Works](https://en.wikipedia.org/wiki/Integrated_circuit_layout_design_protection): Copyright law dedicated to 2D and 3D integrated circuit "layouts".
 * [Mealy machine](https://en.wikipedia.org/wiki/Mealy_machine): A finite state machine whose outputs depend on current state and the current inputs.
+* [Metastability](https://en.wikipedia.org/wiki/Metastability_in_electronics): Ability of a digital electronic system to persist for an unbounded time in an unstable equilibrium.
 * [MLS](https://en.wikipedia.org/wiki/Moisture_sensitivity_level): Packaging and handling precautions for some semiconductors. 
 * [Moore Machine](https://en.wikipedia.org/wiki/Moore_machine): Finite state machine whose outputs depend only on its current state.
 * [Moore's Law](https://en.wikipedia.org/wiki/Moore%27s_law): Observation by Moore that the number of transistors in an IC doubles approximately every two years.
@@ -162,7 +164,7 @@ Chip Design Glossary
 * [Transistor](https://en.wikipedia.org/wiki/Transistor): A semiconductor device used to amplify/switch electronic signals.
 * [Tape-out](https://en.wikipedia.org/wiki/Tape-out): Act of sending photomask chip database ("layout") to the manufacturer.
 * [TCL](https://en.wikipedia.org/wiki/Tcl): Scripting language used by most of the leading EDA chip design tools.
-* [Verilog](https://en.wikipedia.org/wiki/Verilog): Hardware description language (HDL).
+* [Verilog](https://en.wikipedia.org/wiki/Verilog): The dominant hardware description language (HDL) for chip design.
 * [VLSI](https://en.wikipedia.org/wiki/Very-large-scale_integration): Very large Integrated Circuit (somewhat outdated term, everything is VLSI today).
 * [Von Neumann architecture](https://en.wikipedia.org/wiki/Von_Neumann_architecture): Computer architecture in which instructions and data are stored in the same memory.
 
@@ -200,6 +202,7 @@ Chip Design Glossary
 * [POP](https://en.wikipedia.org/wiki/Package_on_package): Package on Package
 * [SIP](https://en.wikipedia.org/wiki/System_in_package): System In Package
 * [SMT](https://en.wikipedia.org/wiki/Surface-mount_technology): Technique whereby packaged chips are mounted directly onto the PCB surface.
+* [Through-hole](https://en.wikipedia.org/wiki/Through-hole_technology): TPackage pins inserted in drilled holes and soldered on opposite side of the board.
 * [Wirebond](https://en.wikipedia.org/wiki/Wire_bonding): Method of bonding a silicon die to a package using wires.
 * [WSI](https://en.wikipedia.org/wiki/Wafer-scale_integration): Wafer scale integration
 
@@ -218,5 +221,6 @@ Chip Design Glossary
 * [Oscilloscope](https://en.wikipedia.org/wiki/Oscilloscope): Electronic instrument for tracking the change of an electrical signal over time.
 * [Probe Card](https://en.wikipedia.org/wiki/Probe_card): A direct interface between electronic test systems and a semiconductor wafer.
 * [SEM](https://en.wikipedia.org/wiki/Scanning_electron_microscope): Scanning electron microscope
+* [Shmoo Plot](https://en.wikipedia.org/wiki/Shmoo_plot): An ASCII plot of a component response over a range of conditions.
 * [Spectrum Analyzer](https://en.wikipedia.org/wiki/Spectrum_analyzer): Electronic instrument for measuring the power of the spectrum of an unknown signal.
 
