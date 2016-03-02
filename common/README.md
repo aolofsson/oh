@@ -23,7 +23,7 @@
 | oh_csa32        |  Y   | Full adder                          |
 | oh_csa42        |  Y   | CSA4:2 Compressor                   |
 | oh_abs          |  N   | Absolute value circuit              |
-| oh_shifter      |  N   | Bonary shifter                      |
+| oh_shifter      |  N   | Binary shifter                      |
 | oh_bin2gray     |  N   | Binary to gray converter            |
 | oh_gray2bin     |  N   | Gray to binary converter            |
 | oh_counter      |  N   | Multi-type counter                  |
