@@ -1,5 +1,5 @@
 GPIO: General Purpose Software Programmable IO
-=======
+==============================================
 
 ## Features
 * Input pins accessible through GPIO_IN register read
@@ -17,7 +17,7 @@ GPIO: General Purpose Software Programmable IO
 | GPIO_IEN      | RD/WR  | H       | Input pin enable            |
 | GPIO_IN       | RD     | n/a     | Input pin value             |
 | GPIO_OUTAND   | WR     | n/a     | OUT = OUT & VALUE           |
-| GPIO_OUTORR   | WR     | n/a     | OUT = OUT | VALUE           |
+| GPIO_OUTORR   | WR     | n/a     | OUT = OUT 'or' VALUE        |
 | GPIO_OUTXOR   | WR     | n/a     | OUT = OUT ^ VALUE           |
 | GPIO_IMASK    | RD/WR  | L       | Masks interupt on input pin |
 
@@ -29,8 +29,12 @@ GPIO: General Purpose Software Programmable IO
 * IO pin interface (in/out/tristate)
 
 ## Parameters
-* AW = address space width (32/64)
-* N  = number of IO (1-64)
+* AW : address space width (32/64)
+* N  : number of IO (1-64)
+
+## Code
+* [gpio.v](hdl/gpio.v)
+* [gpio_regmap.vh](hdl/gpio_regmap.vh)
 
 ## Building
 
