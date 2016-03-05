@@ -101,7 +101,7 @@ module pic(/*AUTOARG*/
    //# RISING EDGE DETECTOR
    //########################### 
    always @ (posedge clk)    
-     ic_irq_shadow[IRQW-1:0]= ext_irq[IRQW-1:0] ;
+     ic_irq_shadow[IRQW-1:0] <= ext_irq[IRQW-1:0] ;
 
    assign ic_event[IRQW-1:0]  = ext_irq[IRQW-1:0] & ~ic_irq_shadow[IRQW-1:0] ;
 
