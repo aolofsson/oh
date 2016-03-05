@@ -46,18 +46,19 @@ module gpio(/*AUTOARG*/
    
    //registers
    reg [63:0] 	   oen_reg;
-   reg [63:0] 	   odata_reg;
+   reg [63:0] 	   out_reg;
    reg [63:0] 	   ien_reg;
-   reg [63:0] 	   idata_reg;
-   reg [63:0] 	   irqmask_reg;
+   reg [63:0] 	   in_reg;
+   reg [63:0] 	   imask_reg;
    reg [31:0] 	   reg_rdata;
 
    //nets
 
    wire [N-1:0]    gpio_sync;
    wire [N-1:0]    gpio_edge;  
+   wire [N-1:0]    edge_data;   
    wire [63:0] 	   reg_wdata;
-   
+   wire [63:0] 	   out_dmux;   
    integer 	   i,j;
 
    /*AUTOWIRE*/
@@ -73,6 +74,7 @@ module gpio(/*AUTOARG*/
    //################################
    //# SYNCHRONIZE INPUT DATA
    //################################  
+
    oh_dsync #(.DW(N))
    dsync (.dout	(gpio_sync[N-1:0]),
           .clk	(clk),
@@ -97,15 +99,20 @@ module gpio(/*AUTOARG*/
    assign reg_double       = datamode_in[1:0]==2'b11;
    assign reg_wdata[63:0]  = {srcaddr_in[31:0],data_in[31:0]};
    
-   assign oen_write       = reg_write & (dstaddr_in[7:3]==`GPIO_OEN);
-   assign odata_write     = reg_write & (dstaddr_in[7:3]==`GPIO_OUT);
-   assign ien_write       = reg_write & (dstaddr_in[7:3]==`GPIO_IEN);
-   assign idata_write     = reg_write & (dstaddr_in[7:3]==`GPIO_IN);
-   assign odataand_write  = reg_write & (dstaddr_in[7:3]==`GPIO_OUTAND);
-   assign odataorr_write  = reg_write & (dstaddr_in[7:3]==`GPIO_OUTORR);
-   assign odataxor_write  = reg_write & (dstaddr_in[7:3]==`GPIO_OUTXOR);
-   assign irqmask_write   = reg_write & (dstaddr_in[7:3]==`GPIO_IRQMASK);
-   
+   assign oen_write     = reg_write & (dstaddr_in[7:3]==`GPIO_OEN);
+   assign out_write     = reg_write & (dstaddr_in[7:3]==`GPIO_OUT);
+   assign ien_write     = reg_write & (dstaddr_in[7:3]==`GPIO_IEN);
+   assign in_write      = reg_write & (dstaddr_in[7:3]==`GPIO_IN);
+   assign outand_write  = reg_write & (dstaddr_in[7:3]==`GPIO_OUTAND);
+   assign outorr_write  = reg_write & (dstaddr_in[7:3]==`GPIO_OUTORR);
+   assign outxor_write  = reg_write & (dstaddr_in[7:3]==`GPIO_OUTXOR);
+   assign imask_write   = reg_write & (dstaddr_in[7:3]==`GPIO_IMASK);
+
+   assign out_reg_write = out_write |
+	                  outand_write |
+			  outorr_write |
+			  outxor_write;
+      
    //################################
    //# OUTPUT
    //################################ 
@@ -122,13 +129,21 @@ module gpio(/*AUTOARG*/
    assign gpio_oen[N-1:0] = oen_reg[N-1:0];
    
    //odata
+   oh_mux4 #(.DW(64))
+   oh_mux4 (.out (out_dmux[63:0]),
+	    // Inputs
+	    .in0 (reg_wdata[63:0]                ),.sel0 (out_write),
+	    .in1 (out_reg[63:0] & reg_wdata[63:0]),.sel1 (outand_write),
+	    .in2 (out_reg[63:0] | reg_wdata[63:0]),.sel2 (outorr_write),
+	    .in3 (out_reg[63:0] ^ reg_wdata[63:0]),.sel3 (outxor_write));
+   
    always @ (posedge clk)
-     if(odata_write & reg_double)
-       odata_reg[63:0] <= reg_wdata[63:0];
-     else if(odata_write)
-       odata_reg[31:0] <= reg_wdata[31:0];
+     if(out_reg_write & reg_double)
+       out_reg[63:0] <= out_dmux[63:0];
+     else if(out_reg_write)
+       out_reg[31:0] <= out_dmux[31:0];
  
-   assign gpio_out[N-1:0] = odata_reg[N-1:0];
+   assign gpio_out[N-1:0] = out_reg[N-1:0];
 
    //################################
    //# INPUT
@@ -145,29 +160,31 @@ module gpio(/*AUTOARG*/
 
    //idata
    always @ (posedge clk)
-     idata_reg[63:0] <= idata_reg[63:0] |
-			(gpio_sync[N-1:0] & ien_reg[63:0]);
+     in_reg[63:0] <= gpio_sync[N-1:0] & ien_reg[63:0];
 
-   assign gpio_data[N-1:0] = idata_reg[63:0];
+   assign gpio_data[N-1:0] = in_reg[63:0];
 
    //################################
-   //# IRQS
+   //# EDGE DETECTOR
    //################################ 
 
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       irqmask_reg[63:0] <= 'b0;   
-     else if(irqmask_write & reg_double)
-       irqmask_reg[63:0] <= reg_wdata[63:0];
-     else if(irqmask_write)
-       irqmask_reg[31:0] <= reg_wdata[31:0];
+       imask_reg[63:0] <= 'b0;   
+     else if(imask_write & reg_double)
+       imask_reg[63:0] <= reg_wdata[63:0];
+     else if(imask_write)
+       imask_reg[31:0] <= reg_wdata[31:0];
+
+   assign edge_data[N-1:0] = ~imask_reg[N-1:0] & in_reg[N-1:0];
    
    //detect any edge on input data
    oh_edgedetect #(.DW(N))
    oh_edgedetect (.out	(gpio_edge[N-1:0]),
 		  .clk	(clk),
 		  .cfg	(2'b11), //toggle detect
-		  .in	(idata_reg[N-1:0]));
+		  .in	(edge_data[N-1:0])
+		  );
 
    assign gpio_irq = |gpio_edge[N-1:0];
 			    
@@ -181,10 +198,10 @@ module gpio(/*AUTOARG*/
      if(reg_read)
        case(dstaddr_in[7:3])		 
 	 `GPIO_OEN     :  reg_rdata[31:0] <= odd ? oen_reg[63:32]     : oen_reg[31:0];
-	 `GPIO_OUT   :  reg_rdata[31:0] <= odd ? odata_reg[63:32]   : odata_reg[31:0];
+	 `GPIO_OUT     :  reg_rdata[31:0] <= odd ? out_reg[63:32]     : out_reg[31:0];
 	 `GPIO_IEN     :  reg_rdata[31:0] <= odd ? ien_reg[63:32]     : ien_reg[31:0]; 
-	 `GPIO_IN   :  reg_rdata[31:0] <= odd ? idata_reg[63:32]   : idata_reg[31:0];	 
-	 `GPIO_IRQMASK :  reg_rdata[31:0] <= odd ? irqmask_reg[63:32] : irqmask_reg[31:0];	 
+	 `GPIO_IN      :  reg_rdata[31:0] <= odd ? in_reg[63:32]      : in_reg[31:0];	 
+	 `GPIO_IMASK   :  reg_rdata[31:0] <= odd ? imask_reg[63:32]   : imask_reg[31:0];	 
 	 default       :  reg_rdata[31:0] <='b0;
        endcase // case (dstaddr_in[7:3])
 
