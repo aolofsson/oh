@@ -2,7 +2,8 @@
 
 DV="../../common/dv/dv_top.v"
 DUT="dut_gpio.v"
-iverilog -g2005 -DTARGET_SIM=1 \
+ROOT="gpio"
+iverilog -o $ROOT.bin -g2005 -DTARGET_SIM=1 \
 $DV \
 $DUT \
 -y ../hdl \

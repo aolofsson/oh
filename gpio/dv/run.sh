@@ -4,4 +4,4 @@ then
     rm test_0.emf
 fi
 cp $1 test_0.emf
-./gpio.vvp
+./gpio.bin

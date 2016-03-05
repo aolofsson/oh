@@ -2,7 +2,7 @@ module dut(/*AUTOARG*/
    // Outputs
    dut_active, clkout, wait_out, access_out, packet_out,
    // Inputs
-   clk, clk1, clk2, nreset, vdd, vss, access_in, packet_in, wait_in
+   clk1, clk2, nreset, vdd, vss, access_in, packet_in, wait_in
    );
 
    parameter AW    = 32;
@@ -40,9 +40,6 @@ module dut(/*AUTOARG*/
    input [N-1:0]     wait_in;
 
    /*AUTOINPUT*/ 
-   // Beginning of automatic inputs (from unused autoinst inputs)
-   input		clk;			// To gpio of gpio.v
-   // End of automatics
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [AW-1:0]	gpio_data;		// From gpio of gpio.v
@@ -52,6 +49,7 @@ module dut(/*AUTOARG*/
    wire [31:0]		reg_rdata;		// From gpio of gpio.v
    // End of automatics
 
+   wire 		clk;
    wire [AW-1:0] 	gpio_in;		// To gpio of gpio.v
    reg [N-1:0] 		access_out;
 
@@ -59,7 +57,6 @@ module dut(/*AUTOARG*/
    //DUT
    //######################################################################
 
-   assign gpio_in[AW-1:0] = 32'h87654321;
    assign wait_out[N-1:0] = 'b0;
    assign dut_active      = 1'b1;
    assign clkout          = clk1;
@@ -79,24 +76,27 @@ module dut(/*AUTOARG*/
 		     .srcaddr_out	({(AW){1'b0}})
 		     );
 
-   /*gpio AUTO_TEMPLATE(.gpio_irq     (gpio_irq),
+   /*gpio AUTO_TEMPLATE( 
+                        .gpio_irq     (gpio_irq),
                         .gpio_\(.*\)  (gpio_\1[AW-1:0]),
+                        .reg_rdata    (reg_rdata[31:0]),
+                        .reg_\(.*\)   (\1_in[]),
     );
    */
    gpio #(.N(AW))
-   gpio (.reg_access			(access_in[0]),
-	 .reg_packet			(packet_in[PW-1:0]),
-	 .gpio_in			(gpio_in[AW-1:0]),
+   gpio (.gpio_in			(gpio_out[AW-1:0]),
 	 /*AUTOINST*/
 	 // Outputs
-	 .reg_rdata			(reg_rdata[31:0]),
+	 .reg_rdata			(reg_rdata[31:0]),	 // Templated
 	 .gpio_out			(gpio_out[AW-1:0]),	 // Templated
 	 .gpio_oen			(gpio_oen[AW-1:0]),	 // Templated
 	 .gpio_irq			(gpio_irq),		 // Templated
 	 .gpio_data			(gpio_data[AW-1:0]),	 // Templated
 	 // Inputs
 	 .nreset			(nreset),
-	 .clk				(clk));
+	 .clk				(clk),
+	 .reg_access			(access_in),		 // Templated
+	 .reg_packet			(packet_in[PW-1:0]));	 // Templated
         
 endmodule // dut
 
