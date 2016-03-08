@@ -5,6 +5,11 @@
 *.e
 *.d
 bin/
+
+#########################
+# Auto created links
+symlinks
+
 ######################
 # Emacs/vim/gedit backup files
 *~
