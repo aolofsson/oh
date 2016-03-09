@@ -1,15 +1,32 @@
 =======
 # OH! Open hardware for Chips and FPGAs
 
+![alt tag](common/docs/lego.jpg)
+
+## CONTENT
+
+1. [Philosophy](#philosophy)
+2. [Modules](#modules)
+3. [How to Simulate](#how-to-simulate)
+5. [How to Build](#how-to-build)
+4. [Design Guide](#design-guide)
+5. [Coding Guide](#coding-guide)
+6. [Documentation Guide](#documentation-guide)
+7. [Design Checklist](#design-checklist)
+7. [Recommended Reading](#recommended-reading)
+8. [License](#license)
+
+----
+
 ## PHILOSOPHY
 
 1. Make it work
 2. Make it simple
 3. Make it modular
 
-![alt tag](common/docs/lego.jpg)
+----
 
-## CONTENT
+## Modules
 
 | FOLDER                   | STATUS| DESCRIPTION                           |
 |--------------------------|-------|---------------------------------------|
@@ -37,6 +54,8 @@
 * "FPGA" =  FPGA validated
 * "HH" =  Hard hat area (work in progress)
 
+----
+
 ## HOW TO SIMULATE
 
 ```sh
@@ -60,27 +79,29 @@
 ./run.sh pic
 ```
 
+----
 
+## HOW TO BUILD
 
-## LICENSE
-The OH! repository source code is licensed under the MIT license unless otherwise specified. See [LICENSE](LICENSE) for MIT copyright terms. Design specific licenses can be found in the folder root (eg: aes/LICENSE) 
+TBD
 
-## REFERENCES MANUALS
-* [Verilog Reference](verilog/verilog_reference.md)
-* [Verilog Coding Methodology](https://github.com/parallella/oh/blob/master/CODING-METHODOLOGY.md)
-* [Glossary](chip/docs/glossary.md)
-* [Chip constants](chip/docs/constants.md)
+----
 
-## RECOMMENDED TOOLS
+## DESIGN GUIDE
 
-* [Verilator Simulator](http://www.veripool.org/wiki/verilator)
-* [Emacs Verilog Mode](http://www.veripool.org/wiki/verilog-mode)
-* [Icarus Simulator](http://iverilog.icarus.com)
-* [GTKWave](http://gtkwave.sourceforge.net)
-* [Wavedrom](http://wavedrom.com/editor.html)
-* [FuseSoC](https://github.com/olofk/fusesoc)
+* Separate control from the datapath
+* Separate configuration from design
+* Separate design from testbench
+* Separate testbench from test (data)
+* Use 64b boundaries for scalable registers (when reasonable)
+* Place multi bit fields on nibble boundaries (when reasonable)
+* Make reset values "0"
+* Only reset register if absolutely necessary
+* More to come...
 
-# VERILOG CODING METHODOLOGY
+----
+
+# CODING GUIDE
 
 * Max 80 chars per line
 * One input/output statement per line
@@ -100,6 +121,7 @@ The OH! repository source code is licensed under the MIT license unless otherwis
 * Do not hard code numerical values in body of code
 * Keep parameter names short
 * Use common names: nreset, clk, din, dout, en, rd, wr, addr, etc
+* Make names descriptive, avoid non-common abbreviations 
 * Make names as short as possible, but not shorter
 * Use _ in constants over 4 bits (eg: 8'h1100_1100)
 * One module per file
@@ -129,18 +151,11 @@ The OH! repository source code is licensed under the MIT license unless otherwis
 * Use $signed() for arithmetic operations on signed types
 * Allowed keywords: assign, always, input, output, wire, reg, module, endmodule, if/else, case, casez, ~,|,&,^,==, >>, <<, >, <,?,posedge, negedge, generate, for(...), begin, end, $signed,
 
-## DESIGN GUIDELINES
 
-* Separate the configuration from the design
-* Separate the design from the testbench
-* Separate the test from the testbench
-* When possible/reasonable use 64b boundaries for scalable registers
-* When posible place multi bit fields on nibble boundaries
-* All registers should have "0" as default value on reset
-* Only include reset values if absolutely needed
-* More to come...
 
-## DOCUMENTATION GUIDELINES
+----
+
+## DOCUMENTATION GUIDE
 
 * Write docs in markdown
 * Specify which registers are reset
@@ -162,7 +177,9 @@ The OH! repository source code is licensed under the MIT license unless otherwis
 * Show how to synthesize/build..
 * Show how to use..
 
-## MODULE SIGNOFF CHECKLIST
+----
+
+## DESIGN CHECKLIST
 
 * Is the block datasheet complete and accurate?
 * Is there a user guide?
@@ -174,5 +191,23 @@ The OH! repository source code is licensed under the MIT license unless otherwis
 * Is the the block Silicon and FPGA validated?
 
 ----
+
+## RECOMMENDED READING
+
+* [Verilog Reference](verilog/verilog_reference.md)
+* [Glossary](chip/docs/glossary.md)
+* [Chip constants](chip/docs/constants.md)
+* [Verilator Simulator](http://www.veripool.org/wiki/verilator)
+* [Emacs Verilog Mode](http://www.veripool.org/wiki/verilog-mode)
+* [Icarus Simulator](http://iverilog.icarus.com)
+* [GTKWave](http://gtkwave.sourceforge.net)
+* [Wavedrom](http://wavedrom.com/editor.html)
+* [FuseSoC](https://github.com/olofk/fusesoc)
+
+## LICENSE
+The OH! repository source code is licensed under the MIT license unless otherwise specified. See [LICENSE](LICENSE) for MIT copyright terms. Design specific licenses can be found in the folder root (eg: aes/LICENSE) 
+
+----
+
 [picture-license](https://commons.wikimedia.org/wiki/File:Lego_Color_Bricks.jpg)
 
