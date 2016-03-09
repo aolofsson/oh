@@ -41,9 +41,26 @@
 
 ```sh
 ./build.sh gpio/dv/dut_gpio.v         # compile gpio testbench (example)
-./sim.sh gpio/dv/tests/test_regs.emf  # run a simulation with "test_regs.emf"
+./sim.sh gpio/dv/tests/test_basic.emf # run a simulation with "test_regs.emf"
 ./view.sh                             # open the waveform with gtkwave
 ```
+
+**Short-cut:**
+
+* Builds $name/dv/dut_$name.v
+* Runs test $name/dv/tests/test_basic.emf
+
+```sh
+./run.sh accelerator
+./run.sh elink
+./run.sh emailbox
+./run.sh emmu
+./run.sh gpio
+./run.sh spi
+./run.sh pic
+```
+
+
 
 ## LICENSE
 The OH! repository source code is licensed under the MIT license unless otherwise specified. See [LICENSE](LICENSE) for MIT copyright terms. Design specific licenses can be found in the folder root (eg: aes/LICENSE) 

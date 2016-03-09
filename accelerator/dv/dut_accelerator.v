@@ -1,9 +1,9 @@
-`include "elink_regmap.v"
+//`include "elink_regmap.v"
 module dut(/*AUTOARG*/
    // Outputs
-   dut_active, wait_out, access_out, packet_out,
+   dut_active, clkout, wait_out, access_out, packet_out,
    // Inputs
-   clk, nreset, vdd, vss, access_in, packet_in, wait_in
+   clk1, clk2, nreset, vdd, vss, access_in, packet_in, wait_in
    );
 
    //##########################################################################
@@ -18,11 +18,13 @@ module dut(/*AUTOARG*/
    parameter N     = 1;
 
    //clock,reset
-   input            clk;
+   input            clk1;
+   input            clk2;
    input            nreset;
    input [N*N-1:0]  vdd;
    input 	    vss;
    output 	    dut_active;
+   output 	    clkout;
    
    //Stimulus Driven Transaction
    input [N-1:0]     access_in;
@@ -127,13 +129,16 @@ module dut(/*AUTOARG*/
    wire			s_axi_wvalid;		// From emaxi of emaxi.v
    // End of automatics
       
+   assign clkout     = clk1;   
+   assign dut_active = 1'b1;
+
    //######################################################################
    //ACCELERATOR
    //######################################################################
    
    axi_accelerator 
    axi_accelerator (.sys_nreset		(nreset),
-		    .sys_clk		(clk),
+		    .sys_clk		(clk1),
 		    .m_axi_aresetn	(nreset),
 		    .s_axi_aresetn	(nreset),
 		    .s_axi_wstrb	(s_axi_wstrb[7:4] | s_axi_wstrb[3:0]),
@@ -231,7 +236,7 @@ module dut(/*AUTOARG*/
      */
    
    emaxi #(.M_IDW(M_IDW))
-   emaxi (.m_axi_aclk		(clk),
+   emaxi (.m_axi_aclk		(clk1),
 	  .m_axi_aresetn	(nreset),
 	  .m_axi_rdata		({s_axi_rdata[31:0],s_axi_rdata[31:0]}),
 	  .rr_wait		(wait_in),	  
@@ -286,7 +291,7 @@ module dut(/*AUTOARG*/
    
   
 
-   assign dut_active = 1'b1;
+ 
    
 
    //Tie off master output for now
@@ -294,7 +299,7 @@ module dut(/*AUTOARG*/
         );
     */
 
-   axislave_stub m_stub (.s_axi_aclk		(clk),
+   axislave_stub m_stub (.s_axi_aclk		(clk1),
 			 .s_axi_aresetn		(nreset),
 			 /*AUTOINST*/
 			 // Outputs
