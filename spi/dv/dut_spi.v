@@ -2,7 +2,7 @@ module dut(/*AUTOARG*/
    // Outputs
    dut_active, clkout, wait_out, access_out, packet_out,
    // Inputs
-   clk, clk1, clk2, nreset, vdd, vss, access_in, packet_in, wait_in
+   clk1, clk2, nreset, vdd, vss, access_in, packet_in, wait_in
    );
 
    parameter SREGS = 40;   
@@ -40,17 +40,17 @@ module dut(/*AUTOARG*/
    output [N*PW-1:0] packet_out;
    input [N-1:0]     wait_in;
 
+
+   wire 	     clk;
+   
    /*AUTOINPUT*/ 
-   // Beginning of automatic inputs (from unused autoinst inputs)
-   input		clk;			// To spi_master of spi_master.v, ...
-   // End of automatics
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			miso;			// From spi_slave of spi_slave.v
-   wire			mosi;			// From spi_master of spi_master.v
-   wire			sclk;			// From spi_master of spi_master.v
-   wire [SREGS*8-1:0]	spi_regs;		// From spi_slave of spi_slave.v
-   wire			ss;			// From spi_master of spi_master.v
+   wire			m_mosi;			// From master of spi.v
+   wire			m_sclk;			// From master of spi.v
+   wire			m_ss;			// From master of spi.v
+   wire			s_miso;			// From slave of spi.v
+   wire			spi_irq;		// From master of spi.v, ...
    // End of automatics
 
    //###################
@@ -65,43 +65,57 @@ module dut(/*AUTOARG*/
    //# DUT
    //######################################################################
 
-   spi_master #(.AW(AW))
-   spi_master  (/*AUTOINST*/
-		// Outputs
-		.sclk			(sclk),
-		.mosi			(mosi),
-		.ss			(ss),
-		.wait_out		(wait_out),
-		.access_out		(access_out),
-		.packet_out		(packet_out[PW-1:0]),
-		// Inputs
-		.clk			(clk),
-		.nreset			(nreset),
-		.miso			(miso),
-		.access_in		(access_in),
-		.packet_in		(packet_in[PW-1:0]),
-		.wait_in		(wait_in));
-   
-   spi_slave #(.AW(AW),
-	       .SREGS(SREGS)
-	       )
-   spi_slave (/*AUTOINST*/
-	      // Outputs
-	      .spi_regs			(spi_regs[SREGS*8-1:0]),
-	      .miso			(miso),
-	      .access_out		(access_out),
-	      .packet_out		(packet_out[PW-1:0]),
-	      .wait_out			(wait_out),
-	      // Inputs
-	      .clk			(clk),
-	      .nreset			(nreset),
-	      .sclk			(sclk),
-	      .mosi			(mosi),
-	      .ss			(ss),
-	      .wait_in			(wait_in),
-	      .access_in		(access_in),
-	      .packet_in		(packet_in[PW-1:0]));
+   spi #(.AW(AW),
+	 .SREGS(SREGS)
+	 )
 
+   master  (.m_miso			(s_miso),
+	    .master_mode		(1'b1),
+	    .s_miso			(),	
+	    .s_sclk			(1'b0),
+	    .s_mosi			(1'b0),
+	    .s_ss			(1'b1),
+	    .wait_in			(1'b0),
+	    .access_out			(),
+	    .packet_out			(),
+	    /*AUTOINST*/
+	    // Outputs
+	    .spi_irq			(spi_irq),
+	    .wait_out			(wait_out),
+	    .m_sclk			(m_sclk),
+	    .m_mosi			(m_mosi),
+	    .m_ss			(m_ss),
+	    // Inputs
+	    .nreset			(nreset),
+	    .clk			(clk),
+	    .access_in			(access_in),
+	    .packet_in			(packet_in[PW-1:0]));
+   
+   spi #(.AW(AW),
+	 .SREGS(SREGS)
+	 )
+
+   slave ( .s_sclk			(m_sclk),
+	   .s_mosi			(m_mosi),
+	   .s_ss			(m_ss),
+	   .master_mode			(1'b0),
+	   .access_in			(1'b0),
+	   .packet_in			(),
+	   .m_miso			(),
+	   .m_sclk			(),
+	   .m_mosi			(),
+	   .m_ss			(),
+	  /*AUTOINST*/
+	  // Outputs
+	  .spi_irq			(spi_irq),
+	  .access_out			(access_out),
+	  .packet_out			(packet_out[PW-1:0]),
+	  .wait_out			(wait_out),
+	  .s_miso			(s_miso),
+	  // Inputs
+	  .nreset			(nreset),
+	  .clk				(clk),
+	  .wait_in			(wait_in));
    
 endmodule // dut
 

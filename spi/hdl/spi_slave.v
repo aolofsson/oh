@@ -7,7 +7,7 @@
 
 module spi_slave(/*AUTOARG*/
    // Outputs
-   spi_regs, miso, access_out, packet_out, wait_out,
+   spi_regs, spi_irq, miso, access_out, packet_out, wait_out,
    // Inputs
    clk, nreset, sclk, mosi, ss, wait_in, access_in, packet_in
    );
@@ -21,7 +21,8 @@ module spi_slave(/*AUTOARG*/
    input 		clk;             // core clock
    input 	        nreset;          // async active low reset
    output [SREGS*8-1:0] spi_regs;        // all registers for control
-
+   output 		spi_irq;         // interrupt
+   
    //IO interface
    input 		sclk;            // spi clock
    input 		mosi;            // slave input

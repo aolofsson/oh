@@ -20,7 +20,7 @@ module spi_master(/*AUTOARG*/
    //clk,reset, cfg
    input 		clk;             // core clock
    input 	        nreset;          // async active low reset
-
+   
    //IO interface
    output 		sclk;            // spi clock
    output 		mosi;            // slave input
