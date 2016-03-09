@@ -1,0 +1,43 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Tue Mar  8 20:45:19 2016
+[*]
+[dumpfile] "/home/aolofsson/Adapteva/e5/oh/waveform.vcd"
+[dumpfile_mtime] "Tue Mar  8 20:23:23 2016"
+[dumpfile_size] 11210
+[savefile] "/home/aolofsson/oh.gtkw"
+[timestart] 0
+[size] 1000 592
+[pos] 311 27
+*0.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] dv_top.
+[treeopen] dv_top.dut.
+[sst_width] 223
+[signals_width] 174
+[sst_expanded] 1
+[sst_vpaned_height] 149
+@28
+dv_top.clk1
+dv_top.clk2
+dv_top.clkout
+dv_top.dut_access
+dv_top.dut_active
+@22
+dv_top.dut_packet[103:0]
+@28
+dv_top.dut_wait
+@22
+dv_top.dv_coreid[11:0]
+@28
+dv_top.nreset
+dv_top.start
+dv_top.stim_access
+dv_top.stim_done
+@22
+dv_top.stim_packet[103:0]
+@28
+dv_top.stim_wait
+dv_top.vdd
+dv_top.vss
+[pattern_trace] 1
+[pattern_trace] 0

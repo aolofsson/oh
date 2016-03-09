@@ -1,10 +1,10 @@
-/*
- * GPIO MODULE:
- * -up to 64 GPIOs natively (in pairs)
- * -atomic and, or, xor on odata
- * -global edge detect on any signal
- * 
- */
+//#############################################################################
+//# Function: General Purpose Software Programmable IO                        #
+//# (See README.md for complete documentation)                                #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see below)                                                 # 
+//#############################################################################
 `include "gpio_regmap.vh"
 module gpio(/*AUTOARG*/
    // Outputs
@@ -13,9 +13,9 @@ module gpio(/*AUTOARG*/
    nreset, clk, reg_access, reg_packet, gpio_in
    );
   
-   //##################################################################
+   //##########################################
    //# INTERFACE
-   //##################################################################
+   //##########################################
 
    parameter  N      = 24;      // number of gpio pins
    parameter  AW     = 32;      // address width
@@ -53,7 +53,6 @@ module gpio(/*AUTOARG*/
    reg [31:0] 	   reg_rdata;
 
    //nets
-
    wire [N-1:0]    gpio_sync;
    wire [N-1:0]    gpio_edge;  
    wire [N-1:0]    edge_data;   
@@ -116,7 +115,6 @@ module gpio(/*AUTOARG*/
    //################################
    //# OUTPUT
    //################################ 
-
    //oen (active low, tristate by default)
    always @ (posedge clk or negedge nreset)
      if(!nreset)
@@ -197,11 +195,16 @@ module gpio(/*AUTOARG*/
    always @ (posedge clk)
      if(reg_read)
        case(dstaddr_in[7:3])		 
-	 `GPIO_OEN     :  reg_rdata[31:0] <= odd ? oen_reg[63:32]     : oen_reg[31:0];
-	 `GPIO_OUT     :  reg_rdata[31:0] <= odd ? out_reg[63:32]     : out_reg[31:0];
-	 `GPIO_IEN     :  reg_rdata[31:0] <= odd ? ien_reg[63:32]     : ien_reg[31:0]; 
-	 `GPIO_IN      :  reg_rdata[31:0] <= odd ? in_reg[63:32]      : in_reg[31:0];	 
-	 `GPIO_IMASK   :  reg_rdata[31:0] <= odd ? imask_reg[63:32]   : imask_reg[31:0];	 
+	 `GPIO_OEN     :  reg_rdata[31:0] <= odd ? oen_reg[63:32]     : 
+					           oen_reg[31:0];
+	 `GPIO_OUT     :  reg_rdata[31:0] <= odd ? out_reg[63:32]     : 
+					           out_reg[31:0];
+	 `GPIO_IEN     :  reg_rdata[31:0] <= odd ? ien_reg[63:32]     : 
+					           ien_reg[31:0]; 
+	 `GPIO_IN      :  reg_rdata[31:0] <= odd ? in_reg[63:32]      : 
+					           in_reg[31:0];	 
+	 `GPIO_IMASK   :  reg_rdata[31:0] <= odd ? imask_reg[63:32]   : 
+					           imask_reg[31:0];	 
 	 default       :  reg_rdata[31:0] <='b0;
        endcase // case (dstaddr_in[7:3])
 
@@ -210,4 +213,27 @@ endmodule // gpio
 // verilog-library-directories:("." "../../emesh/hdl" "../../common/hdl")
 // End:
 
-
+//////////////////////////////////////////////////////////////////////////////
+// The MIT License (MIT)                                                    //
+//                                                                          //
+// Copyright (c) 2015-2016, Adapteva, Inc.                                  //
+//                                                                          //
+// Permission is hereby granted, free of charge, to any person obtaining a  //
+// copy of this software and associated documentation files (the "Software")//
+// to deal in the Software without restriction, including without limitation// 
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, //
+// and/or sell copies of the Software, and to permit persons to whom the    //
+// Software is furnished to do so, subject to the following conditions:     //
+//                                                                          //
+// The above copyright notice and this permission notice shall be included  // 
+// in all copies or substantial portions of the Software.                   //
+//                                                                          //
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  //
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               //
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   //
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     //
+// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT//
+// OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR //
+// THE USE OR OTHER DEALINGS IN THE SOFTWARE.                               //
+//                                                                          //
+//////////////////////////////////////////////////////////////////////////////

@@ -37,11 +37,16 @@
 * "FPGA" =  FPGA validated
 * "HH" =  Hard hat area (work in progress)
 
+## HOW TO SIMULATE
+
+```sh
+./build.sh gpio/dv/dut_gpio.v         # compile gpio testbench (example)
+./sim.sh gpio/dv/tests/test_regs.emf  # run a simulation with "test_regs.emf"
+./view.sh                             # open the waveform with gtkwave
+```
+
 ## LICENSE
 The OH! repository source code is licensed under the MIT license unless otherwise specified. See [LICENSE](LICENSE) for MIT copyright terms. Design specific licenses can be found in the folder root (eg: aes/LICENSE) 
-
-## CONTRIBUTING
-Instructions for contributing can be found [HERE](CONTRIBUTING.md).
 
 ## REFERENCES MANUALS
 * [Verilog Reference](verilog/verilog_reference.md)

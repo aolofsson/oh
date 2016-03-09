@@ -2,7 +2,7 @@
 //#
 //# - DW is fixed per design
 //# - size of packet being fed should be programmable
-//# - data is transmitted LSB first!
+//# - data is transmitted MSB first!
 //# - how to set up rx/tx protocol (other system channel??)
 //#######################################################################
 module mtx_protocol (/*AUTOARG*/
