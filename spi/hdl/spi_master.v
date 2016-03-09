@@ -1,92 +1,110 @@
 //#############################################################################
-//# Purpose: SPI slave module                                                 #
+//# Purpose: SPI master (configurable)                                        #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see below)                                                 # 
 //#############################################################################
 
-module spi_slave(/*AUTOARG*/
+module spi_master(/*AUTOARG*/
    // Outputs
-   spi_regs, miso, core_spi_access, core_spi_packet, core_spi_wait,
+   sclk, mosi, ss, wait_out, access_out, packet_out,
    // Inputs
-   clk, nreset, sclk, mosi, ss, core_access, core_packet
+   clk, nreset, miso, access_in, packet_in, wait_in
    );
 
    //parameters
-   parameter  SREGS = 16;                // total spi slave regs   
+   parameter  REGS  = 16;                // total regs   
    parameter  AW    = 32;                // addresss width
    localparam PW    = (2*AW+40);         // packet width
  
    //clk,reset, cfg
    input 		clk;             // core clock
    input 	        nreset;          // async active low reset
-   output [SREGS*8-1:0] spi_regs;        // all registers for control
 
    //IO interface
-   input 		sclk;            // spi clock
-   input 		mosi;            // slave input
-   input 		ss;              // slave select
-   output 		miso;            // slave output
+   output 		sclk;            // spi clock
+   output 		mosi;            // slave input
+   output 		ss;              // slave select
+   input 		miso;            // slave output
    
-   //core interface (clk domain) 
-   output 		core_spi_access; // valid transaction
-   output [PW-1:0] 	core_spi_packet; // data to core
-   output 		core_spi_wait;   // pushback to core
-   input 		core_access;     // read response from core
-   input [PW-1:0] 	core_packet;     // read response packet from core
+   //packet to transmit
+   input 		access_in;       // access from core
+   input [PW-1:0] 	packet_in;       // data to core
+   output 		wait_out;        // pushback from spi master
 
+   //return packet
+   output 		access_out;      // writeback from spi 
+   output [PW-1:0] 	packet_out;      // writeback data from spi
+   input 		wait_in;         // pushback by core
+ 
    /*AUTOINPUT*/
    /*AUTOOUTPUT*/
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			core_spi_read;		// From spi_slave_io of spi_slave_io.v
-   wire [6:0]		spi_addr;		// From spi_slave_io of spi_slave_io.v
-   wire			spi_clk;		// From spi_slave_io of spi_slave_io.v
-   wire [7:0]		spi_data;		// From spi_slave_io of spi_slave_io.v
-   wire			spi_write;		// From spi_slave_io of spi_slave_io.v
+   wire [7:0]		clkdiv_reg;		// From spi_master_regs of spi_master_regs.v
+   wire [7:0]		cmd_reg;		// From spi_master_regs of spi_master_regs.v
+   wire			cpha;			// From spi_master_regs of spi_master_regs.v
+   wire			cpol;			// From spi_master_regs of spi_master_regs.v
+   wire [7:0]		psize_reg;		// From spi_master_regs of spi_master_regs.v
+   wire			rx_access;		// From spi_master_io of spi_master_io.v
+   wire [7:0]		rx_data;		// From spi_master_io of spi_master_io.v
+   wire			spi_en;			// From spi_master_regs of spi_master_regs.v
+   wire [2:0]		spi_state;		// From spi_master_io of spi_master_io.v
+   wire			tx_access;		// From spi_master_regs of spi_master_regs.v
+   wire [PW-1:0]	tx_data;		// From spi_master_regs of spi_master_regs.v
    // End of automatics
    
-   spi_slave_regs #(.AW(AW),
-		    .SREGS(SREGS)
-		    )
-   spi_slave_regs (/*AUTOINST*/
-		   // Outputs
-		   .spi_regs		(spi_regs[SREGS*8-1:0]),
-		   // Inputs
-		   .clk			(clk),
-		   .nreset		(nreset),
-		   .spi_clk		(spi_clk),
-		   .spi_data		(spi_data[7:0]),
-		   .spi_write		(spi_write),
-		   .spi_addr		(spi_addr[5:0]),
-		   .core_access		(core_access),
-		   .core_packet		(core_packet[PW-1:0]),
-		   .core_spi_read	(core_spi_read));
+   spi_master_regs #(.AW(AW))
+   spi_master_regs (/*AUTOINST*/
+		    // Outputs
+		    .tx_access		(tx_access),
+		    .cmd_reg		(cmd_reg[7:0]),
+		    .tx_data		(tx_data[PW-1:0]),
+		    .cpol		(cpol),
+		    .cpha		(cpha),
+		    .spi_en		(spi_en),
+		    .psize_reg		(psize_reg[7:0]),
+		    .clkdiv_reg		(clkdiv_reg[7:0]),
+		    .wait_out		(wait_out),
+		    .access_out		(access_out),
+		    .packet_out		(packet_out[PW-1:0]),
+		    // Inputs
+		    .clk		(clk),
+		    .nreset		(nreset),
+		    .rx_data		(rx_data[PW-1:0]),
+		    .rx_access		(rx_access),
+		    .spi_state		(spi_state[2:0]),
+		    .access_in		(access_in),
+		    .packet_in		(packet_in[PW-1:0]),
+		    .wait_in		(wait_in));
    
-
-   spi_slave_io #(.AW(AW),
-		  .SREGS(SREGS)
+   spi_master_io #(.AW(AW)
 		  )
-   spi_slave_io (/*AUTOINST*/
-		 // Outputs
-		 .miso			(miso),
-		 .spi_clk		(spi_clk),
-		 .spi_write		(spi_write),
-		 .spi_addr		(spi_addr[6:0]),
-		 .spi_data		(spi_data[7:0]),
-		 .core_spi_access	(core_spi_access),
-		 .core_spi_packet	(core_spi_packet[PW-1:0]),
-		 .core_spi_read		(core_spi_read),
-		 // Inputs
-		 .sclk			(sclk),
-		 .mosi			(mosi),
-		 .ss			(ss),
-		 .spi_regs		(spi_regs[SREGS*8-1:0]),
-		 .clk			(clk));
+   spi_master_io (/*AUTOINST*/
+		  // Outputs
+		  .spi_state		(spi_state[2:0]),
+		  .rx_data		(rx_data[7:0]),
+		  .rx_access		(rx_access),
+		  .sclk			(sclk),
+		  .mosi			(mosi),
+		  .ss			(ss),
+		  // Inputs
+		  .clk			(clk),
+		  .nreset		(nreset),
+		  .spi_en		(spi_en),
+		  .cpol			(cpol),
+		  .cpha			(cpha),
+		  .clkdiv_reg		(clkdiv_reg[7:0]),
+		  .psize_reg		(psize_reg[7:0]),
+		  .cmd_reg		(cmd_reg[7:0]),
+		  .tx_data		(tx_data[PW-1:0]),
+		  .tx_access		(tx_access),
+		  .miso			(miso));
    
    
 endmodule // spi_slave
+
 
 //////////////////////////////////////////////////////////////////////////////
 // The MIT License (MIT)                                                    //

@@ -7,59 +7,75 @@
 
 module spi (/*AUTOARG*/
    // Outputs
-   reg_rdata, spi_irq, m_sclk, m_mosi, m_ss, s_miso,
+   spi_irq, access_out, packet_out, wait_out, sclk_out, mosi_out,
+   ss_out, miso_out,
    // Inputs
-   nreset, clk, reg_access, reg_packet, m_miso, s_sclk, s_mosi, s_ss
+   ss_slave, ss_master, sclk, rxdata, reg_packet, reg_access, mosi,
+   miso, master_mode, access, nreset, clk, spi_clk, access_in,
+   packet_in, wait_in, miso_in, sclk_in, mosi_in, ss_in
    );
 
    //##################################################################
    //# INTERFACE
    //##################################################################
 
-   parameter AW     = 32;         // data width of fifo
-   parameter PW     = 2*AW+40;    // packet size
-   parameter DEPTH  = 32;         // fifo depth
+   parameter AW     = 32;      // data width of fifo
+   parameter PW     = 2*AW+40; // packet size
+   parameter DEPTH  = 32;      // fifo depth
 
-   //clk+reset
-   input          nreset;         // asynchronous active low reset
-   input 	  clk;            // write clock
+   //clk, reset, irq
+   input           nreset;     // asynch active low reset
+   input 	   clk;        // core clock
+   input 	   spi_clk;    // spi clock (for master mode)
+   output 	   spi_irq;    // interrupt output
    
-   //register access
-   input 	  reg_access;     // register access (read only)
-   input [PW-1:0] reg_packet;     // data/address
-   output [31:0]  reg_rdata;      // readback data
+   //packet from core
+   input 	   access_in;  // access from core
+   input [PW-1:0]  packet_in;  // packet from core
+   input 	   wait_in;    // pushback from io   
 
-   //interrupt
-   output 	  spi_irq;        // interrupt output
+   //packet to core
+   output 	   access_out; // access to core
+   output [PW-1:0] packet_out; // packet to core
+   output 	   wait_out;   // pushback from core
 
-   //master spi
-   output         m_sclk;         // master  clock
-   output         m_mosi;         // master output
-   output 	  m_ss;           // slave select
-   input 	  m_miso;         // master input
+   //master spi interface
+   output          sclk_out;   // master clock
+   output 	   mosi_out;   // master output
+   output 	   ss_out;     // slave select
+   input 	   miso_in;    // master input
    
-   //slave spi
-   input 	  s_sclk;         // slave clock
-   input 	  s_mosi;         // slave input
-   input 	  s_ss;           // slave select
-   output 	  s_miso;         // slave output
+   //slave spi interface
+   input 	   sclk_in;    // slave clock
+   input 	   mosi_in;    // slave input
+   input 	   ss_in;      // slave select
+   output 	   miso_out;   // slave output
    
    //##################################################################
    //# BODY
    //##################################################################
 
    /*AUTOINPUT*/
+   // Beginning of automatic inputs (from unused autoinst inputs)
+   input		access;			// To spi_tx of spi_tx.v
+   input		master_mode;		// To spi_rx of spi_rx.v
+   input		miso;			// To spi_rx of spi_rx.v
+   input		mosi;			// To spi_rx of spi_rx.v
+   input		reg_access;		// To spi_regs of spi_regs.v
+   input [PW-1:0]	reg_packet;		// To spi_regs of spi_regs.v
+   input [7:0]		rxdata;			// To spi_regs of spi_regs.v
+   input		sclk;			// To spi_rx of spi_rx.v
+   input		ss_master;		// To spi_rx of spi_rx.v
+   input		ss_slave;		// To spi_rx of spi_rx.v
+   // End of automatics
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			access;			// From spi_rx of spi_rx.v
    wire			cpha;			// From spi_regs of spi_regs.v
    wire			cpol;			// From spi_regs of spi_regs.v
-   wire			miso;			// From spi_tx of spi_tx.v
-   wire			mosi;			// From spi_tx of spi_tx.v
-   wire [7:0]		rxdata;			// From spi_rx of spi_rx.v
-   wire			sclk;			// From spi_tx of spi_tx.v
-   wire			ss;			// From spi_tx of spi_tx.v
+   wire			mo;			// From spi_tx of spi_tx.v
+   wire [31:0]		reg_rdata;		// From spi_regs of spi_regs.v
+   wire			so;			// From spi_tx of spi_tx.v
    wire [7:0]		txdata;			// From spi_regs of spi_regs.v
    // End of automatics
 
@@ -78,10 +94,8 @@ module spi (/*AUTOARG*/
       
    spi_tx spi_tx (/*AUTOINST*/
 		  // Outputs
-		  .sclk			(sclk),
-		  .mosi			(mosi),
-		  .miso			(miso),
-		  .ss			(ss),
+		  .mo			(mo),
+		  .so			(so),
 		  // Inputs
 		  .nreset		(nreset),
 		  .clk			(clk),
@@ -92,17 +106,16 @@ module spi (/*AUTOARG*/
 
    spi_rx spi_rx (/*AUTOINST*/
 		  // Outputs
-		  .access		(access),
-		  .rxdata		(rxdata[7:0]),
+		  .access_out		(access_out),
+		  .packet_out		(packet_out[7:0]),
 		  // Inputs
-		  .nreset		(nreset),
 		  .clk			(clk),
-		  .cpol			(cpol),
-		  .cpha			(cpha),
+		  .master_mode		(master_mode),
 		  .sclk			(sclk),
 		  .mosi			(mosi),
 		  .miso			(miso),
-		  .ss			(ss));
+		  .ss_master		(ss_master),
+		  .ss_slave		(ss_slave));
    
    
 endmodule // spi

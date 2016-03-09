@@ -68,8 +68,8 @@ module spi_regs (/*AUTOARG*/
 		    .data_in		(data_in[AW-1:0]));
 
    
-   assign reg_write      = reg_access & write_in;
-   assign reg_read       = reg_access & ~write_in;
+   assign reg_write     = reg_access & write_in;
+   assign reg_read      = reg_access & ~write_in;
    
    assign cfg_write     = reg_write & (dstaddr_in[7:2]==`SPI_CFG);
    assign status_write  = reg_write & (dstaddr_in[7:2]==`SPI_STATUS);

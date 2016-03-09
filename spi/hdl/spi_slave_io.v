@@ -10,7 +10,7 @@ module spi_slave_io(/*AUTOARG*/
    miso, spi_clk, spi_write, spi_addr, spi_data, core_spi_access,
    core_spi_packet, core_spi_read,
    // Inputs
-   sclk, mosi, ss, spi_regs, core_clk
+   sclk, mosi, ss, spi_regs, clk
    );
 
    //#################################
@@ -18,7 +18,7 @@ module spi_slave_io(/*AUTOARG*/
    //#################################
 
    //parameters
-   parameter  REGS  = 16;         // total regs  (16/32/64) 
+   parameter  SREGS  = 16;         // total regs  (16/32/64) 
    parameter  AW    = 32;         // address width
    localparam PW    = (2*AW+40);  // packet width
    
@@ -33,10 +33,10 @@ module spi_slave_io(/*AUTOARG*/
    output 	       spi_write;       // regfile write
    output [6:0]        spi_addr;        // regfile addre
    output [7:0]        spi_data;        // data for regfile
-   input [REGS*8-1:0]  spi_regs;        // all registers
+   input [SREGS*8-1:0] spi_regs;        // all registers
    
    //core interface (synced to core clk)
-   input 	       core_clk;        // core clock
+   input 	       clk;             // core clock
    output 	       core_spi_access; // read or write core command   
    output [PW-1:0]     core_spi_packet; // packet
    output 	       core_spi_read;   // read core command (for regfile)
@@ -53,7 +53,7 @@ module spi_slave_io(/*AUTOARG*/
    reg 		       packet_done_reg;
    reg 		       core_spi_read;
    reg [PW-1:0]        core_spi_packet;   
-   wire [7:0] 	       packetsize;
+   wire [7:0] 	       psize;
       
    //#################################
    //# RX SHIFT REGISTER
@@ -67,7 +67,7 @@ module spi_slave_io(/*AUTOARG*/
    //# STATE MACHINE
    //#################################
 
-   assign packetsize[7:0] = spi_regs[15:8];
+   assign psize[7:0] = spi_regs[15:8];
    
 `define SPI_IDLE   3'b000  // when ss is high
 `define SPI_CMD    3'b001  // 8 cycles for command/addr
@@ -117,7 +117,7 @@ module spi_slave_io(/*AUTOARG*/
       
    assign byte_done     = &bit_count[2:0];
 
-   assign packet_done   = (bit_count[7:0]==packetsize[7:0]);
+   assign packet_done   = (bit_count[7:0]==psize[7:0]);
 
    //#################################
    //# TX SHIFT REGISTER
@@ -150,12 +150,12 @@ module spi_slave_io(/*AUTOARG*/
    
    //synchronizer
    oh_dsync dsync (.dout (packet_done_sync),
-		   .clk  (core_clk),
+		   .clk  (clk),
 		   .din  (packet_done)
 		   );
 
    //posedge detect and pipeline to line up with data
-   always @ (posedge core_clk)
+   always @ (posedge clk)
      begin
 	packet_done_reg <= packet_done_sync;	
 	spi_access      <= spi_access_pulse;	
@@ -164,14 +164,14 @@ module spi_slave_io(/*AUTOARG*/
    assign spi_access_pulse = packet_done_sync & ~packet_done_reg;	
    
    //spi read
-   always @ (posedge core_clk)
+   always @ (posedge clk)
      if(spi_access_pulse)
        core_spi_read <= spi_read;
      else
        core_spi_read <= 1'b0;
          
    //sample rx data
-   always @ (posedge core_clk)
+   always @ (posedge clk)
      if(spi_access_pulse)
        core_spi_packet[PW-1:0] <= spi_rx[PW-1:0];
    

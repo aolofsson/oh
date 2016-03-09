@@ -10,40 +10,41 @@ module spi_slave_regs (/*AUTOARG*/
    // Outputs
    spi_regs,
    // Inputs
-   nreset, chipid, spi_clk, spi_data, spi_write, spi_addr, core_clk,
-   core_access, core_packet, core_spi_read
+   clk, nreset, spi_clk, spi_data, spi_write, spi_addr, core_access,
+   core_packet, core_spi_read
    );
 
    //parameters
-   parameter  REGS   = 16;           // number of total regs (>16)   
+   parameter  SREGS  = 40;           // number of total regs (>40)   
+   parameter  CHIPID = 0;            // reset chipid value   
    parameter  AW     = 32;           // address width
    localparam PW     = (2*AW+40);    // packet width
         
-   // power on defaults
-   input 	       nreset;       // asych active low 
-   input [7:0] 	       chipid;       // default chipid
+   // clk, rest, chipid
+   input 	        clk;          // core clock
+   input 	        nreset;       // asych active low 
 
    // sclk domain
-   input 	       spi_clk;      // slave clock
-   input [7:0] 	       spi_data;     // slave data in (for write)
-   input 	       spi_write;    // slave write
-   input [5:0] 	       spi_addr;     // slave write addr (64 regs)
-   output [REGS*8-1:0] spi_regs;     // all regs concatenated
+   input 	        spi_clk;      // slave clock
+   input [7:0] 	        spi_data;     // slave data in (for write)
+   input 	        spi_write;    // slave write
+   input [5:0] 	        spi_addr;     // slave write addr (64 regs)
+   output [SREGS*8-1:0] spi_regs;     // all regs concatenated
    
-   // extension for core clock domain
-   input 	       core_clk;
-   input 	       core_access; 
-   input [PW-1:0]      core_packet;  // writeback data
-   input 	       core_spi_read;// read
+   // split transaction for core clock domain   
+   input 		core_access; 
+   input [PW-1:0] 	core_packet;  // writeback data
+   input 		core_spi_read;// read
    
    //regs
    reg [7:0] 	    spi_config;
-   reg [7:0] 	    spi_packetsize;  
-   reg [7:0] 	    user_regs[47:0];
+   reg [7:0] 	    spi_status;
+   reg [7:0] 	    spi_cmd;
+   reg [7:0] 	    spi_psize;
+
    reg [63:0] 	    core_regs;
-   reg [7:0] 	    core_valid;   
-   reg [REGS*8-1:0] spi_regs;
-   wire [7:0] 	    spi_chipid;
+   reg [7:0] 	    user_regs[47:0];
+   reg [1023:0]     spi_vector;
    wire [4*8-1:0]   spi_reserved;
    wire [63:0] 	    core_data;   
    integer 	    i;
@@ -52,9 +53,9 @@ module spi_slave_regs (/*AUTOARG*/
    //# SPI DECODE
    //#####################################
    
-   assign spi_config_write     = spi_write & (spi_addr[5:0]==`SPI_CONFIG);
-   assign spi_packetsize_write = spi_write & (spi_addr[5:0]==`SPI_PACKETSIZE);
-   assign spi_user_write       = spi_write & (|spi_addr[5:4]);
+   assign spi_config_write  = spi_write & (spi_addr[5:0]==`SPI_CONFIG);
+   assign spi_psize_write   = spi_write & (spi_addr[5:0]==`SPI_PSIZE);
+   assign spi_user_write    = spi_write & (|spi_addr[5:4]);
 
    //#####################################
    //# CORE DECODE
@@ -82,48 +83,40 @@ module spi_slave_regs (/*AUTOARG*/
        spi_config[7:0] <= 'b0;
      else if(spi_config_write)
        spi_config[7:0] <= spi_data[7:0];
-
+   
    //#####################################
-   //# PACKET SIZE [1]
+   //# STATUS [1]
+   //#####################################
+
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       spi_status[7:0] <= 'b0;
+     else if (core_write & core_access)
+       spi_status[7:0] <= 8'b1;   
+     else if (core_spi_read)
+       spi_status[7:0] <= 'b0;
+   
+   //#####################################
+   //# CMD [2]
+   //#####################################
+
+   //TBD
+   
+   //#####################################
+   //# PACKET SIZE [3]
    //#####################################
 
    always @ (posedge spi_clk or negedge nreset)
      if(!nreset)
-       spi_packetsize[7:0] <= PW;
-     else if(spi_packetsize_write)
-       spi_packetsize[7:0] <= spi_data[7:0];
-   
-   //#####################################
-   //# CHIPID [2]
-   //#####################################
-
-   assign spi_chipid[7:0] = chipid[7:0];
-
-   //#####################################
-   //# RESERVED [6:3]
-   //#####################################
-
-   assign spi_reserved[4*8-1:0] = 'b0;
-
-   //#####################################
-   //# CORE STATUS [7]
-   //#####################################
-
-   //TODO: implement per byte valid   
-
-   always @ (posedge core_clk or negedge nreset)
-     if(!nreset)
-       core_valid[7:0] <= 'b0;
-     else if (core_write & core_access)
-       core_valid[7:0] <= 8'b1;   
-     else if (core_spi_read)
-       core_valid[7:0] <= 'b0;
+       spi_psize[7:0] <= PW;
+     else if(spi_psize_write)
+       spi_psize[7:0] <= spi_data[7:0];
    
    //#####################################
    //# CORE DATA [15:8]
    //#####################################
 
-   always @ (posedge core_clk)
+   always @ (posedge clk)
      if(core_write & core_access)
        core_regs[63:0] <= core_data[63:0];
   
@@ -144,21 +137,24 @@ module spi_slave_regs (/*AUTOARG*/
     
    always @*
      begin
-	//3 config regs
-	spi_regs[7:0]    = spi_config[7:0];
-	spi_regs[15:8]   = spi_packetsize[7:0];
-	spi_regs[23:16]  = spi_chipid[7:0];
-	//4 reserved regs
-	spi_regs[56:24]  = spi_reserved[4*8-1:0];
-	//1 core data valid reg
-	spi_regs[63:56]  = core_valid[7:0];
-	//8 core data regs	
-	spi_regs[127:64] = core_regs[63:0];
-	//48 user regs
-	for(i=0;i<REGS-16;i=i+1)
-	  spi_regs[128+i*8 +:8] = user_regs[i];
+	//8 standard regs
+	spi_vector[7:0]     = spi_config[7:0];    //0
+	spi_vector[15:8]    = spi_status[7:0];    //1
+	spi_vector[23:16]   = spi_cmd[7:0];       //2
+	spi_vector[31:24]   = spi_psize[7:0];     //3
+	spi_vector[63:32]   = 32'b0;              //7:4
+	spi_vector[127:64]  = 64'b0;              //15:8	
+	//16 core data tx vector
+	spi_vector[255:128] = core_regs[63:0];
+	//16 core data rx vector
+	spi_vector[511:256] = 'b0;	
+	//32 user vector
+	for(i=0;i<SREGS-40;i=i+1)
+	  spi_vector[512+i*8 +:8] = user_regs[i];
      end
-     
+   
+
+   
 endmodule // spi_slave_regs
 
 // Local Variables:

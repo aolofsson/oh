@@ -2,9 +2,11 @@ module dut(/*AUTOARG*/
    // Outputs
    dut_active, wait_out, access_out, packet_out,
    // Inputs
-   clk, nreset, vdd, vss, access_in, packet_in, wait_in
+   core_packet, core_access, clk, clk1, clk2, nreset, vdd, vss,
+   clkout, access_in, packet_in, wait_in
    );
 
+   parameter SREGS = 40;   
    parameter AW    = 32;
    parameter DW    = 32;
    parameter CW    = 2; 
@@ -17,11 +19,13 @@ module dut(/*AUTOARG*/
    //#######################################
    //# CLOCK AND RESET
    //#######################################
-   input            clk;
+   input            clk1;
+   input            clk2;  
    input            nreset;
    input [N*N-1:0]  vdd;
    input 	    vss;
    output 	    dut_active;
+   output 	    clkout;
    
    //#######################################
    //#EMESH INTERFACE 
@@ -32,68 +36,78 @@ module dut(/*AUTOARG*/
    input [N*PW-1:0]  packet_in;
    output [N-1:0]    wait_out;
 
-   //DUT driven transactoin
+   //DUT driven transaction
    output [N-1:0]    access_out;
    output [N*PW-1:0] packet_out;
    input [N-1:0]     wait_in;
 
    /*AUTOINPUT*/ 
+   // Beginning of automatic inputs (from unused autoinst inputs)
+   input		clk;			// To spi_master of spi_master.v, ...
+   input		core_access;		// To spi_slave of spi_slave.v
+   input [PW-1:0]	core_packet;		// To spi_slave of spi_slave.v
+   // End of automatics
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			m_miso;			// From spi of spi.v
-   wire			m_mosi;			// From spi of spi.v
-   wire			m_sclk;			// From spi of spi.v
-   wire			m_ss;			// From spi of spi.v
-   wire [31:0]		reg_rdata;		// From spi of spi.v
-   wire			spi_irq;		// From spi of spi.v
+   wire			core_spi_access;	// From spi_slave of spi_slave.v
+   wire [PW-1:0]	core_spi_packet;	// From spi_slave of spi_slave.v
+   wire			core_spi_wait;		// From spi_slave of spi_slave.v
+   wire			miso;			// From spi_slave of spi_slave.v
+   wire			mosi;			// From spi_master of spi_master.v
+   wire			sclk;			// From spi_master of spi_master.v
+   wire [SREGS*8-1:0]	spi_regs;		// From spi_slave of spi_slave.v
+   wire			ss;			// From spi_master of spi_master.v
    // End of automatics
 
-   wire [AW-1:0] 	gpio_in;		// To gpio of gpio.v
-   reg [N-1:0] 		access_out;
+   //###################
+   // GLUE
+   //###################
+   assign clkout     = clk1;
+   assign clk        = clk1;
+   assign wait_out   = 1'b0;
+   assign dut_active = 1'b1;
 
    //######################################################################
-   //DUT
+   //# DUT
    //######################################################################
 
-   assign gpio_in[AW-1:0] = 32'h87654321;
-   assign wait_out[N-1:0] = 'b0;
-   assign dut_active      = 1'b1;
+   spi_master #(.AW(AW))
+   spi_master  (/*AUTOINST*/
+		// Outputs
+		.sclk			(sclk),
+		.mosi			(mosi),
+		.ss			(ss),
+		.wait_out		(wait_out),
+		.access_out		(access_out),
+		.packet_out		(packet_out[PW-1:0]),
+		// Inputs
+		.clk			(clk),
+		.nreset			(nreset),
+		.miso			(miso),
+		.access_in		(access_in),
+		.packet_in		(packet_in[PW-1:0]),
+		.wait_in		(wait_in));
    
-   always @ (posedge clk)
-     access_out[0] <= access_in[0] & ~packet_in[0];
+   spi_slave #(.AW(AW),
+	       .SREGS(SREGS)
+	       )
+   spi_slave (/*AUTOINST*/
+	      // Outputs
+	      .spi_regs			(spi_regs[SREGS*8-1:0]),
+	      .miso			(miso),
+	      .core_spi_access		(core_spi_access),
+	      .core_spi_packet		(core_spi_packet[PW-1:0]),
+	      .core_spi_wait		(core_spi_wait),
+	      // Inputs
+	      .clk			(clk),
+	      .nreset			(nreset),
+	      .sclk			(sclk),
+	      .mosi			(mosi),
+	      .ss			(ss),
+	      .core_access		(core_access),
+	      .core_packet		(core_packet[PW-1:0]));
 
-   emesh2packet e2p (// Outputs
-		     .packet_out	(packet_out[PW-1:0]),
-		     // Inputs
-		     .write_out		(1'b0),
-		     .datamode_out	(2'b10),
-		     .ctrlmode_out	(5'b0),
-		     .dstaddr_out	({(AW){1'b0}}),
-		     .data_out		(reg_rdata[AW-1:0]),
-		     .srcaddr_out	({(AW){1'b0}})
-		     );
-
-   /*spi AUTO_TEMPLATE(.s_\(.*\) (m_\1),
-    );
-   */
-   spi spi (.reg_access			(access_in[0]),
-	    .reg_packet			(packet_in[PW-1:0]),
-            /*AUTOINST*/
-	    // Outputs
-	    .reg_rdata			(reg_rdata[31:0]),
-	    .spi_irq			(spi_irq),
-	    .m_sclk			(m_sclk),
-	    .m_mosi			(m_mosi),
-	    .m_ss			(m_ss),
-	    .s_miso			(m_miso),		 // Templated
-	    // Inputs
-	    .nreset			(nreset),
-	    .clk			(clk),
-	    .m_miso			(m_miso),
-	    .s_sclk			(m_sclk),		 // Templated
-	    .s_mosi			(m_mosi),		 // Templated
-	    .s_ss			(m_ss));			 // Templated
-        
+   
 endmodule // dut
 
 // Local Variables:

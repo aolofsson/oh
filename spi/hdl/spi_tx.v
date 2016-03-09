@@ -1,6 +1,6 @@
 module spi_tx(/*AUTOARG*/
    // Outputs
-   sclk, mosi, miso, ss,
+   mo, so,
    // Inputs
    nreset, clk, access, txdata, cpol, cpha
    );
@@ -22,10 +22,8 @@ module spi_tx(/*AUTOARG*/
    input 	      cpha;         // clock phase (0=sample on first edge)  
      
    //serial interface to and from IO
-   output 	      sclk;         // serial clock
-   output 	      mosi;         // master output
-   output 	      miso;         // slave output
-   output 	      ss;           // slave select
+   output 	      mo;           // master output
+   output 	      so;           // slave output
    
    //##############################################################
    //#BODY
