@@ -10,7 +10,7 @@ module oh_fifo_async (/*AUTOARG*/
    //#####################################################################
    parameter DW         = 104;          // FIFO width
    parameter DEPTH      = 32;           // FIFO depth (entries)
-   parameter TARGET     = `CFG_TARGET;  // "XILINX", "ALTERA", "GENERIC"
+   parameter TARGET     = "XILINX";     // "XILINX", "ALTERA", "GENERIC"
    parameter WAIT       = 0;            // assert random prog_full wait
    parameter PROG_FULL  = DEPTH/2;      // program full threshold
    parameter AW         = $clog2(DEPTH);// binary read count width
