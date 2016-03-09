@@ -16,7 +16,7 @@ module spi_master_regs (/*AUTOARG*/
 
    //parameters
    parameter  CLKDIV = 16;            // default clkdiv     
-   parameter  PSIZE  = 4;             // default 4 byte read  
+   parameter  PSIZE  = 32;            // default is 32 bits
    parameter  AW     = 32;            // addresss width
    localparam PW     = (2*AW+40);     // packet width
  
