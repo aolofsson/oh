@@ -1,9 +1,9 @@
-`include "elink_regmap.v"
+`include "elink_regmap.vh"
 module dut(/*AUTOARG*/
    // Outputs
-   dut_active, wait_out, access_out, packet_out,
+   dut_active, clkout, wait_out, access_out, packet_out,
    // Inputs
-   clk, nreset, vdd, vss, access_in, packet_in, wait_in
+   clk1, clk2, nreset, vdd, vss, access_in, packet_in, wait_in
    );
 
    //##########################################################################
@@ -21,11 +21,13 @@ module dut(/*AUTOARG*/
 			    16'b0};          // axi return addr   
 
    //clock,reset
-   input            clk;
+   input            clk1;
+   input            clk2;
    input            nreset;
    input [N*N-1:0]  vdd;
    input 	    vss;
    output 	    dut_active;
+   output 	    clkout;
    
    //Stimulus Driven Transaction
    input [N-1:0]     access_in;
@@ -152,6 +154,12 @@ module dut(/*AUTOARG*/
    // End of automatics
 
    //######################################################################
+   // GLUE
+   //######################################################################
+
+   assign clkout = clk1;
+
+   //######################################################################
    //AXI MASTER
    //######################################################################
 
@@ -159,9 +167,10 @@ module dut(/*AUTOARG*/
    assign wait_out = wr_wait | rd_wait;
    assign write_in = access_in & packet_in[0];
    assign read_in  = access_in & ~packet_in[0];
+ 
    
    emaxi #(.M_IDW(M_IDW))
-   emaxi (.m_axi_aclk		(clk),
+   emaxi (.m_axi_aclk		(clk1),
 	  .m_axi_aresetn	(nreset),
 	  .m_axi_rdata		({m_axi_rdata[31:0],m_axi_rdata[31:0]}),
 	  .rr_wait		(wait_in),	  
@@ -223,7 +232,7 @@ module dut(/*AUTOARG*/
                               .sys_nreset         (nreset),
                               .m_\(.*\)           (mem_m_\1[]),
                               .s_\(.*\)           (m_\1[]),
-                              .sys_clk            (clk),
+                              .sys_clk            (clk1),
                               .rxi_\(.*\)         (txo_\1[]),
                               .txi_\(.*\)         (rxo_\1[]),
                          );
@@ -291,7 +300,7 @@ module dut(/*AUTOARG*/
 	   .s_axi_wready		(m_axi_wready),		 // Templated
 	   // Inputs
 	   .sys_nreset			(nreset),		 // Templated
-	   .sys_clk			(clk),			 // Templated
+	   .sys_clk			(clk1),			 // Templated
 	   .rxi_lclk_p			(txo_lclk_p),		 // Templated
 	   .rxi_lclk_n			(txo_lclk_n),		 // Templated
 	   .rxi_frame_p			(txo_frame_p),		 // Templated
@@ -433,7 +442,7 @@ module dut(/*AUTOARG*/
    ememory #(.WAIT(0),
 	     .MON(1)) 
    ememory (.wait_in	        (mem_rr_wait),//pushback on reads
-	    .clk	        (clk),
+	    .clk	        (clk1),
 	    .wait_out		(emem_wait),
 	    .coreid		(12'h0),
 	    /*AUTOINST*/
