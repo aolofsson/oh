@@ -18,11 +18,11 @@ then
 fi
 mkdir -p $OH_HOME/symlinks/hdl
 mkdir -p $OH_HOME/symlinks/dv
-pushd $OH_HOME/symlinks/hdl
+pushd $OH_HOME/symlinks/hdl > /dev/null
 ln -s ../../*/hdl/*.{v,vh} .
 cd ../dv
 ln -s ../../*/dv/*.v .
-popd
+popd > /dev/null
 ##############################
 #Build
 ###############################
