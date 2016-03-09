@@ -30,12 +30,18 @@ module oh_mux4(/*AUTOARG*/
 			 {(DW){sel3}} & in3[DW-1:0]);
    
 
+ 
+
+`ifdef TARGET_SIM
    assign error = (sel0 | sel1 | sel2 | sel3) &
    		  ~(sel0 ^ sel1 ^ sel2 ^ sel3);
 
-`ifdef TARGET_SIM
    always @ (posedge error)
-     $display ("ERROR at in oh_mux4 %m at ",$time);
+     begin
+	#1
+	if(error)
+	  $display ("ERROR at in oh_mux4 %m at ",$time);
+     end
 `endif
    			
 endmodule // oh_mux4
