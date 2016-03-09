@@ -7,8 +7,8 @@
 
 module spi_slave_io(/*AUTOARG*/
    // Outputs
-   miso, spi_clk, spi_write, spi_addr, spi_data, core_spi_access,
-   core_spi_packet, core_spi_read,
+   miso, spi_clk, spi_write, spi_addr, spi_data, access_out,
+   packet_out, spi_request,
    // Inputs
    sclk, mosi, ss, spi_regs, clk
    );
@@ -37,9 +37,9 @@ module spi_slave_io(/*AUTOARG*/
    
    //core interface (synced to core clk)
    input 	       clk;             // core clock
-   output 	       core_spi_access; // read or write core command   
-   output [PW-1:0]     core_spi_packet; // packet
-   output 	       core_spi_read;   // read core command (for regfile)
+   output 	       access_out;      // read or write core command   
+   output [PW-1:0]     packet_out;      // packet
+   output 	       spi_request;     // read core command (for regfile)
    
    //#################################
    //# BODY
@@ -51,8 +51,8 @@ module spi_slave_io(/*AUTOARG*/
    reg [PW-1:0]        spi_tx;
    reg 		       spi_access;
    reg 		       packet_done_reg;
-   reg 		       core_spi_read;
-   reg [PW-1:0]        core_spi_packet;   
+   reg 		       spi_request;
+   reg [PW-1:0]        packet_out;   
    wire [7:0] 	       psize;
       
    //#################################
@@ -166,14 +166,14 @@ module spi_slave_io(/*AUTOARG*/
    //spi read
    always @ (posedge clk)
      if(spi_access_pulse)
-       core_spi_read <= spi_read;
+       spi_request <= spi_read;
      else
-       core_spi_read <= 1'b0;
+       spi_request <= 1'b0;
          
    //sample rx data
    always @ (posedge clk)
      if(spi_access_pulse)
-       core_spi_packet[PW-1:0] <= spi_rx[PW-1:0];
+       packet_out[PW-1:0] <= spi_rx[PW-1:0];
    
 endmodule // spi_slave_io
 // Local Variables:

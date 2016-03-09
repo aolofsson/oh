@@ -8,10 +8,10 @@
 `include "spi_regmap.vh"
 module spi_slave_regs (/*AUTOARG*/
    // Outputs
-   spi_regs,
+   spi_regs, wait_out,
    // Inputs
-   clk, nreset, spi_clk, spi_data, spi_write, spi_addr, core_access,
-   core_packet, core_spi_read
+   clk, nreset, spi_clk, spi_data, spi_write, spi_addr, access_in,
+   packet_in, spi_request
    );
 
    //parameters
@@ -32,9 +32,10 @@ module spi_slave_regs (/*AUTOARG*/
    output [SREGS*8-1:0] spi_regs;     // all regs concatenated
    
    // split transaction for core clock domain   
-   input 		core_access; 
-   input [PW-1:0] 	core_packet;  // writeback data
-   input 		core_spi_read;// read
+   input 		access_in; 
+   input [PW-1:0] 	packet_in;    // writeback data
+   output 		wait_out;     // 0   
+   input 		spi_request; // read
    
    //regs
    reg [7:0] 	    spi_config;
@@ -48,6 +49,12 @@ module spi_slave_regs (/*AUTOARG*/
    wire [4*8-1:0]   spi_reserved;
    wire [63:0] 	    core_data;   
    integer 	    i;
+
+   //#####################################
+   //# JUNK
+   //#####################################
+   assign wait_out = 1'b0;
+   
    
    //#####################################
    //# SPI DECODE
@@ -62,14 +69,14 @@ module spi_slave_regs (/*AUTOARG*/
    //#####################################
 
    packet2emesh #(.AW(AW))
-   pe2 (.write_in	(core_write),
+   pe2 (.write_in	(write_in),
 	.datamode_in	(),
 	.ctrlmode_in	(),
 	.dstaddr_in	(),
 	.srcaddr_in	(core_data[63:32]),
 	.data_in	(core_data[31:0]),
 	// Inputs
-	.packet_in	(core_packet[PW-1:0]));
+	.packet_in	(packet_in[PW-1:0]));
    
    //#####################################
    //# CONFIG [0]
@@ -91,9 +98,9 @@ module spi_slave_regs (/*AUTOARG*/
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        spi_status[7:0] <= 'b0;
-     else if (core_write & core_access)
+     else if (write_in & access_in)
        spi_status[7:0] <= 8'b1;   
-     else if (core_spi_read)
+     else if (spi_request)
        spi_status[7:0] <= 'b0;
    
    //#####################################
@@ -117,7 +124,7 @@ module spi_slave_regs (/*AUTOARG*/
    //#####################################
 
    always @ (posedge clk)
-     if(core_write & core_access)
+     if(write_in & access_in)
        core_regs[63:0] <= core_data[63:0];
   
    //#####################################

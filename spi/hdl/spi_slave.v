@@ -7,9 +7,9 @@
 
 module spi_slave(/*AUTOARG*/
    // Outputs
-   spi_regs, miso, core_spi_access, core_spi_packet, core_spi_wait,
+   spi_regs, miso, access_out, packet_out, wait_out,
    // Inputs
-   clk, nreset, sclk, mosi, ss, core_access, core_packet
+   clk, nreset, sclk, mosi, ss, wait_in, access_in, packet_in
    );
 
    //parameters
@@ -28,22 +28,26 @@ module spi_slave(/*AUTOARG*/
    input 		ss;              // slave select
    output 		miso;            // slave output
    
-   //core interface (clk domain) 
-   output 		core_spi_access; // valid transaction
-   output [PW-1:0] 	core_spi_packet; // data to core
-   output 		core_spi_wait;   // pushback to core
-   input 		core_access;     // read response from core
-   input [PW-1:0] 	core_packet;     // read response packet from core
+ 
+   // read request to core
+   output 		access_out;      // valid transaction
+   output [PW-1:0] 	packet_out;      // data to core
+   input 		wait_in;         // pushback from core
 
+   // return from core
+   input 		access_in;       // read response from core
+   input [PW-1:0] 	packet_in;       // read response packet from core
+   output 		wait_out;        // pushback (not used)
+      
    /*AUTOINPUT*/
    /*AUTOOUTPUT*/
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			core_spi_read;		// From spi_slave_io of spi_slave_io.v
    wire [6:0]		spi_addr;		// From spi_slave_io of spi_slave_io.v
    wire			spi_clk;		// From spi_slave_io of spi_slave_io.v
    wire [7:0]		spi_data;		// From spi_slave_io of spi_slave_io.v
+   wire			spi_request;		// From spi_slave_io of spi_slave_io.v
    wire			spi_write;		// From spi_slave_io of spi_slave_io.v
    // End of automatics
    
@@ -53,6 +57,7 @@ module spi_slave(/*AUTOARG*/
    spi_slave_regs (/*AUTOINST*/
 		   // Outputs
 		   .spi_regs		(spi_regs[SREGS*8-1:0]),
+		   .wait_out		(wait_out),
 		   // Inputs
 		   .clk			(clk),
 		   .nreset		(nreset),
@@ -60,9 +65,9 @@ module spi_slave(/*AUTOARG*/
 		   .spi_data		(spi_data[7:0]),
 		   .spi_write		(spi_write),
 		   .spi_addr		(spi_addr[5:0]),
-		   .core_access		(core_access),
-		   .core_packet		(core_packet[PW-1:0]),
-		   .core_spi_read	(core_spi_read));
+		   .access_in		(access_in),
+		   .packet_in		(packet_in[PW-1:0]),
+		   .spi_request		(spi_request));
    
 
    spi_slave_io #(.AW(AW),
@@ -75,9 +80,9 @@ module spi_slave(/*AUTOARG*/
 		 .spi_write		(spi_write),
 		 .spi_addr		(spi_addr[6:0]),
 		 .spi_data		(spi_data[7:0]),
-		 .core_spi_access	(core_spi_access),
-		 .core_spi_packet	(core_spi_packet[PW-1:0]),
-		 .core_spi_read		(core_spi_read),
+		 .access_out		(access_out),
+		 .packet_out		(packet_out[PW-1:0]),
+		 .spi_request		(spi_request),
 		 // Inputs
 		 .sclk			(sclk),
 		 .mosi			(mosi),
