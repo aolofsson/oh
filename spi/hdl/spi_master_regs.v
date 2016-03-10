@@ -10,8 +10,8 @@ module spi_master_regs (/*AUTOARG*/
    cpol, cpha, lsbfirst, emode, spi_en, clkdiv_reg, wait_out,
    access_out, packet_out,
    // Inputs
-   clk, nreset, rx_data, rx_access, spi_state, access_in, packet_in,
-   wait_in
+   clk, nreset, rx_data, rx_access, spi_state, fifo_prog_full,
+   access_in, packet_in, wait_in
    );
 
    //parameters
@@ -25,7 +25,7 @@ module spi_master_regs (/*AUTOARG*/
    input 	     nreset;          // async active low reset
 
    //io interface
-   input [PW-1:0]    rx_data;         // rx data
+   input [63:0]      rx_data;         // rx data
    input 	     rx_access;       // rx access pulse
 
    //control
@@ -36,6 +36,7 @@ module spi_master_regs (/*AUTOARG*/
    output 	     spi_en;          // enable transmitter   
    output [7:0]      clkdiv_reg;      // baud rate setting
    input [1:0] 	     spi_state;       // transmit state
+   input 	     fifo_prog_full;  // fifo reached half/full
    
    //packet to transmit
    input 	     access_in;       // access from core
@@ -53,18 +54,23 @@ module spi_master_regs (/*AUTOARG*/
 
    reg [7:0] 	     config_reg;
    reg [7:0] 	     status_reg;
-   reg [7:0] 	     cmd_reg;   
-   reg [31:0] 	     psize_reg;   
    reg [7:0] 	     clkdiv_reg;
-   reg [63:0] 	     tx_reg[3:0];
-   reg [7:0] 	     rx_reg;
-   
+   reg [63:0] 	     rx_reg;
+   reg 		     autotran;
+   reg [63:0] 	     rx_addr;
+   reg [31:0] 	     read_data;
+
+   integer 	     i;
+
    wire [63:0] 	     reg_wdata;
    wire [255:0]      tx_vector;   
    wire [63:0] 	     write_mask;
+   wire [1:0] 	     datamode_out;
+   wire [AW-1:0]     dstaddr_out;
+   wire [AW-1:0]     data_out;
+   wire [AW-1:0]     srcaddr_out;
+   wire [4:0] 	     ctrlmode_out;
    
-   integer 	     i;
-
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [4:0]		ctrlmode_in;		// From pe2 of packet2emesh.v
@@ -115,8 +121,7 @@ module spi_master_regs (/*AUTOARG*/
    assign cpha         = config_reg[3];  // cpha
    assign lsbfirst     = config_reg[4];  // send lsb first
    assign manual_ss    = config_reg[5];  // manually control ss pin
-   assign rxauto_mode  = config_reg[6];  // rx auto return mode
-   assign emode        = config_reg[7];  // emesh transfer mode
+   assign emode        = config_reg[6];  // epiphany transfer mode
     
    //####################################
    //# STATUS
@@ -128,7 +133,8 @@ module spi_master_regs (/*AUTOARG*/
      else if(status_write)
        status_reg[7:0] <= reg_wdata[7:0];
      else
-       status_reg[7:0] <= {4'b0,                        //7:3
+       status_reg[7:0] <= {4'b0,                        //7:4
+			   fifo_prog_full,              //3
 			   spi_state[1:0],              //2:1
 			   (rx_access | status_reg[0])};//0
    			       
@@ -147,7 +153,53 @@ module spi_master_regs (/*AUTOARG*/
    //####################################
    always @ (posedge clk)
      if(rx_access)
-       rx_reg[7:0] <= rx_data[7:0];
+       rx_reg[63:0] <= rx_data[63:0];
+
+   //####################################
+   //# AUTOTRANSFER
+   //####################################
+
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       autotran <= 1'b0;   
+     else if(rx_access & emode)
+       autotran <= 1'b1;   
+     else if(~wait_in)
+       autotran <= 1'b1;   
+
+   //####################################
+   //# READBACK
+   //####################################
+
+   always @ (posedge clk)
+     read_data[31:0] <= 64'b0;
+   
+   //wait circuit
+   oh_edge2pulse 
+     e2pulse (.out (wait_pulse),
+   	      .clk (clk),
+	      .in  (access));
+   
+   assign wait_out = wait_in | 
+		     autotran |
+		     wait_pulse;
+   
+   assign dstaddr_out[AW-1:0] = autotran ? rx_addr[AW-1:0] : srcaddr_in[AW-1:0];
+   assign data_out[31:0]      = autotran ? rx_reg[31:0]    : read_data[31:0];
+   assign srcaddr_out[31:0]   = 32'b0;   
+   assign ctrlmode_out[4:0]   = autotran ? 5'b0            : ctrlmode_in[4:0];
+   assign ctrlmode_out[4:0]   = autotran ? 5'b0            : datamode_in[4:0];
+   
+   emesh2packet e2p (.write_out		(1'b1),
+		     /*AUTOINST*/
+		     // Outputs
+		     .packet_out	(packet_out[PW-1:0]),
+		     // Inputs
+		     .datamode_out	(datamode_out[1:0]),
+		     .ctrlmode_out	(ctrlmode_out[4:0]),
+		     .dstaddr_out	(dstaddr_out[AW-1:0]),
+		     .data_out		(data_out[AW-1:0]),
+		     .srcaddr_out	(srcaddr_out[AW-1:0]));
    
 endmodule // spi_master_regs
 

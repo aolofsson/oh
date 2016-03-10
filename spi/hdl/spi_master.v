@@ -49,14 +49,14 @@ module spi_master(/*AUTOARG*/
    wire			emode;			// From spi_master_regs of spi_master_regs.v
    wire [7:0]		fifo_dout;		// From spi_master_fifo of spi_master_fifo.v
    wire			fifo_empty;		// From spi_master_fifo of spi_master_fifo.v
+   wire			fifo_prog_full;		// From spi_master_fifo of spi_master_fifo.v
    wire			fifo_read;		// From spi_master_io of spi_master_io.v
    wire			lsbfirst;		// From spi_master_regs of spi_master_regs.v
    wire			rx_access;		// From spi_master_io of spi_master_io.v
-   wire [7:0]		rx_data;		// From spi_master_io of spi_master_io.v
+   wire [63:0]		rx_data;		// From spi_master_io of spi_master_io.v
    wire			spi_en;			// From spi_master_regs of spi_master_regs.v
    wire [1:0]		spi_state;		// From spi_master_io of spi_master_io.v
    // End of automatics
-
 
    //#####################################################
    //# Master control registers
@@ -77,9 +77,10 @@ module spi_master(/*AUTOARG*/
 		    // Inputs
 		    .clk		(clk),
 		    .nreset		(nreset),
-		    .rx_data		(rx_data[PW-1:0]),
+		    .rx_data		(rx_data[63:0]),
 		    .rx_access		(rx_access),
 		    .spi_state		(spi_state[1:0]),
+		    .fifo_prog_full	(fifo_prog_full),
 		    .access_in		(access_in),
 		    .packet_in		(packet_in[PW-1:0]),
 		    .wait_in		(wait_in));
@@ -97,6 +98,7 @@ module spi_master(/*AUTOARG*/
 
    spi_master_fifo(/*AUTOINST*/
 		   // Outputs
+		   .fifo_prog_full	(fifo_prog_full),
 		   .wait_out		(wait_out),
 		   .fifo_empty		(fifo_empty),
 		   .fifo_dout		(fifo_dout[7:0]),	 // Templated
@@ -117,7 +119,7 @@ module spi_master(/*AUTOARG*/
 		  // Outputs
 		  .spi_state		(spi_state[1:0]),
 		  .fifo_read		(fifo_read),
-		  .rx_data		(rx_data[7:0]),
+		  .rx_data		(rx_data[63:0]),
 		  .rx_access		(rx_access),
 		  .sclk			(sclk),
 		  .mosi			(mosi),

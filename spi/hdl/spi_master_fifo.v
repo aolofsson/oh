@@ -1,7 +1,7 @@
 `include "spi_regmap.vh"
 module spi_master_fifo (/*AUTOARG*/
    // Outputs
-   wait_out, fifo_empty, fifo_dout,
+   fifo_prog_full, wait_out, fifo_empty, fifo_dout,
    // Inputs
    clk, nreset, emode, access_in, packet_in, fifo_read
    );
@@ -18,19 +18,20 @@ module spi_master_fifo (/*AUTOARG*/
    localparam SRW   = $clog2(PW/SW); // serializer cycle count width
    
    //clk,reset, cfg
-   input            clk;          // clk
-   input 	    nreset;       // async active low reset
-   input  	    emode;        // epiphany transfer mode
-                                     
+   input            clk;            // clk
+   input 	    nreset;         // async active low reset
+   input  	    emode;          // epiphany transfer mode
+   output 	    fifo_prog_full; // fifo full indicator for status
+   
    // Incoming interface 
-   input            access_in;    // access by core
-   input [PW-1:0]   packet_in;    
-   output 	    wait_out;   
+   input            access_in;      // access by core
+   input [PW-1:0]   packet_in;      // packet from core
+   output 	    wait_out;       // pushback to core
    
    // IO interface
-   input 	    fifo_read;
-   output 	    fifo_empty;
-   output [SW-1:0]  fifo_dout;
+   input 	    fifo_read;      // pull a byte to IO
+   output 	    fifo_empty;     // fifo is empty
+   output [SW-1:0]  fifo_dout;      // byte for IO
 
    //##################################
    //# BODY
@@ -103,7 +104,7 @@ module spi_master_fifo (/*AUTOARG*/
 	       .load	    (tx_write),
 	       .lsbfirst    (1'b1),
 	       .fill	    (1'b0),
-	       .wait_in	    (fifo_prog_full)
+	       .wait_in	    (fifo_full)
 	       );
       
    //##################################
@@ -114,7 +115,7 @@ module spi_master_fifo (/*AUTOARG*/
 		  .DW(SW))   
    fifo(// Outputs
 	.dout		(fifo_dout[7:0]),
-	.full		(),
+	.full		(fifo_full),
 	.prog_full	(fifo_prog_full),
 	.empty		(fifo_empty),
 	.rd_count	(),

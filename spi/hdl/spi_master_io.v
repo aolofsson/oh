@@ -40,8 +40,8 @@ module spi_master_io(/*AUTOARG*/
    output 	   fifo_read;  // read new byte
    
    //receive data (for sregs)
-   output [7:0]    rx_data;    // rx data
-   output 	   rx_access;  // rx ready pulse
+   output [63:0]   rx_data;    // rx data
+   output 	   rx_access;  // transfer done
    
    //IO interface
    output 	   sclk;       // spi clock
@@ -52,30 +52,57 @@ module spi_master_io(/*AUTOARG*/
    reg [7:0] 	   baud_counter = 'b0; //works b/c of free running counter!
    reg [1:0] 	   spi_state;
    reg [2:0] 	   bit_count;
-   reg 		   sclk;
-
-   //#################################
-   //# STATE MACHINE
-   //#################################
+   reg 		   fifo_empty_reg;
    
+   /*AUTOWIRE*/
+   // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire			clkout;			// From oh_clockdiv of oh_clockdiv.v
+   wire			period_match;		// From oh_clockdiv of oh_clockdiv.v
+   wire			phase_match;		// From oh_clockdiv of oh_clockdiv.v
+   // End of automatics
+   
+//states
 `define SPI_IDLE    2'b00  // set ss to 1
 `define SPI_SETUP   2'b01  // setup time
 `define SPI_DATA    2'b10  // send data
 `define SPI_HOLD    2'b11  // hold time
    
-   //state machine
-   //NOTE: tx access pulse is lost if there is ongoing transactio (makes sense..)
+   //#################################
+   //# CLOCK GENERATOR
+   //#################################
+   
+   oh_clockdiv #(.DW(8))
+   oh_clockdiv (.clkdiv		(clkdiv_reg[2:0]),
+		.en			(1'b1),
+		/*AUTOINST*/
+		// Outputs
+		.period_match		(period_match),
+		.phase_match		(phase_match),
+		.clkout			(clkout),
+		// Inputs
+		.clk			(clk),
+		.nreset			(nreset));
+    
+   assign sclk = clkout & (spi_state[1:0]==`SPI_DATA);
+    
+   //#################################
+   //# STATE MACHINE
+   //#################################
+      
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        spi_state[1:0] <=  `SPI_IDLE;
-     else if(baud_match)
+     else if(period_match)
        case (spi_state[1:0])
 	 `SPI_IDLE : 
 	   spi_state[1:0] <= ~fifo_empty ? `SPI_SETUP : `SPI_IDLE;
 	 `SPI_SETUP :
 	   spi_state[1:0] <=`SPI_DATA;
 	 `SPI_DATA : 
-	   spi_state[1:0] <= fifo_empty_reg & byte_done ? `SPI_HOLD : `SPI_DATA;
+	   begin
+	      spi_state[1:0] <= fifo_empty_reg & byte_done ? `SPI_HOLD : `SPI_DATA;
+	      fifo_empty_reg <= fifo_empty;
+	   end
 	 `SPI_HOLD : 
 	   spi_state[1:0] <= `SPI_IDLE;
      endcase // case (spi_state[1:0])
@@ -84,61 +111,30 @@ module spi_master_io(/*AUTOARG*/
    always @ (posedge clk)
      if(spi_state[1:0]==`SPI_IDLE)
        bit_count[2:0] <= 'b0;
-     else if(baud_match)
+     else if(period_match)
        bit_count[2:0] <=  bit_count[2:0] + 1'b1;
 
+   //byte done indicator
    assign byte_done  = (bit_count[2:0]==3'b000);
 
+   //read fifo on phase match (due to one cycle pipeline latency
    assign fifo_read = ((spi_state[1:0]==`SPI_IDLE) & phase_match ) |
 		      ((spi_state[1:0]==`SPI_DATA) & phase_match & byte_done);
 
-   assign load_byte = baud_match & byte_done & (spi_state[1:0]!=`SPI_IDLE);
+   //load once per byte
+   assign load_byte = period_match & byte_done & (spi_state[1:0]!=`SPI_IDLE);
    
-   assign shift = baud_match & (spi_state[1:0]==`SPI_DATA);
+   //shift on every clock cycle while in datamode
+   assign shift     = period_match & (spi_state[1:0]==`SPI_DATA);
 
-   //TODO: Ugly Fifo goes empty on one clk cycle, need to add hold time using baud match
-   //better solution?
-
-   reg 		   fifo_empty_reg;
-   
-   always @ (posedge clk)
-     if(baud_match)
-       fifo_empty_reg <= fifo_empty;
-   
-   //#################################
-   //# BAUD COUNTER
-   //#################################
-
-   always @ (posedge clk)
-     if(baud_match)
-       baud_counter[7:0] <= 'b0;
-     else
-       baud_counter[7:0] <= baud_counter[7:0] + 1'b1;
-
-   assign baud_match  = (baud_counter[7:0]==((1 << clkdiv_reg[7:0]) - 1'b1));
-   assign phase_match = (baud_counter[7:0]==((1 << (clkdiv_reg[7:0]) >> 1) - 1'b1));
-   
    //#################################
    //# CHIP SELECT
    //#################################
+   
    assign ss = (spi_state[1:0]==`SPI_IDLE);
-   
+         
    //#################################
-   //# SCLK GENERATOR
-   //#################################
-
-   //TODO: implement cpol/cpha (cpha=0 for now)
-   
-   always @ (posedge clk)
-     if(spi_state[1:0]!=`SPI_DATA)
-       sclk <= 1'b0;
-     else if(phase_match)
-       sclk <= 1'b1;
-     else if(baud_match)
-       sclk <= 1'b0;
-      
-   //#################################
-   //# RX/TX SHIFT REGISTER
+   //# TX SHIFT REGISTER
    //#################################
 
    oh_par2ser  #(.PW(8),
@@ -155,9 +151,28 @@ module spi_master_io(/*AUTOARG*/
 	    .datasize	(3'b111),         // 8 bits
 	    .load	(load_byte),      // load data from fifo
 	    .lsbfirst	(lsbfirst),       // serializer direction
-	    .fill	(miso),           // fill with slave data
+	    .fill	(1'b0),           // fill with slave data
 	    .wait_in	(1'b0)            // no wait
 	    );
+
+   //#################################
+   //# RX SHIFT REGISTER
+   //#################################
+
+   //generate access pulse at rise of ss
+   oh_rise2pulse 
+     pulse (.out (rx_access),
+	    .clk (clk),
+	    .in	 (ss));
+   
+   oh_ser2par #(.PW(64))
+   ser2par (//output
+	    .dout	(rx_data[63:0]),  // parallel data out
+	    //inputs
+	    .din	(miso),           // serial data in
+	    .clk	(clk),            // shift clk
+	    .lsbfirst	(lsbfirst),       // shift direction
+	    .shift	(shift));         // shift data
          
 endmodule // spi_slave_io
 

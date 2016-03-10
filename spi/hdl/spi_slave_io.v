@@ -140,7 +140,7 @@ module spi_slave_io(/*AUTOARG*/
      else if(~ss)
        spi_tx[7:0] <= {spi_tx[6:0],1'b0};   
 
-   assign miso = spi_tx[7];
+   assign miso = ~ss & spi_tx[7];
      
    //#################################
    //# REGISTER FILE INTERFACE
