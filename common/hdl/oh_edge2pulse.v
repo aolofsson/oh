@@ -16,19 +16,21 @@ module oh_edge2pulse(/*AUTOARG*/
    //# INTERFACE
    //########################################
 
-   input  clk;     // clock  
-   input  in;      // edge input
-   output out;     // one cycle pulse
+   parameter DW  = 1;       // width of data inputs
+
+   input           clk;     // clock  
+   input [DW-1:0]  in;      // edge input
+   output [DW-1:0] out;     // one cycle pulse
 
    //########################################
    //# BODY
    //########################################
-   reg 	  in_reg;
+   reg [DW-1:0]    in_reg;
    
    always @ (posedge clk)
-     in_reg <= in;
+     in_reg[DW-1:0]  <= in[DW-1:0] ;
    
-   assign out = in_reg ^ in;
+   assign out[DW-1:0]  = in_reg[DW-1:0]  ^ in[DW-1:0] ;
    
 endmodule // oh_edge2pulse
 
