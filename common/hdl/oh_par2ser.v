@@ -68,9 +68,8 @@ module oh_par2ser (/*AUTOARG*/
 
 
    //wait until valid data is finished
-   assign wait_out  = busy |
+   assign wait_out  = (busy & ~access_out) |
 		      wait_in;
-
    
    //##########################
    //# SHIFT REGISTER
