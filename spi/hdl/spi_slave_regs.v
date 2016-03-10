@@ -61,7 +61,6 @@ module spi_slave_regs (/*AUTOARG*/
    //#####################################
    
    assign spi_config_write  = spi_write & (spi_addr[5:0]==`SPI_CONFIG);
-   assign spi_psize_write   = spi_write & (spi_addr[5:0]==`SPI_PSIZE);
    assign spi_user_write    = spi_write & (|spi_addr[5:4]);
 
    //#####################################
@@ -108,17 +107,7 @@ module spi_slave_regs (/*AUTOARG*/
    //#####################################
 
    //TBD
-   
-   //#####################################
-   //# PACKET SIZE [3]
-   //#####################################
-
-   always @ (posedge spi_clk or negedge nreset)
-     if(!nreset)
-       spi_psize[7:0] <= PW;
-     else if(spi_psize_write)
-       spi_psize[7:0] <= spi_data[7:0];
-   
+     
    //#####################################
    //# CORE DATA [15:8]
    //#####################################
@@ -147,10 +136,10 @@ module spi_slave_regs (/*AUTOARG*/
 	//8 standard regs
 	spi_vector[7:0]     = spi_config[7:0];    //0
 	spi_vector[15:8]    = spi_status[7:0];    //1
-	spi_vector[23:16]   = spi_cmd[7:0];       //2
-	spi_vector[31:24]   = spi_psize[7:0];     //3
+	spi_vector[23:16]   = 8'b0;               //2
+	spi_vector[31:24]   = spi_cmd[7:0];       //3
 	spi_vector[63:32]   = 32'b0;              //7:4
-	spi_vector[127:64]  = 64'b0;              //15:8	
+	spi_vector[127:64]  = 64'b0;              //15:8
 	//16 core data tx vector
 	spi_vector[255:128] = core_regs[63:0];
 	//16 core data rx vector
@@ -159,8 +148,6 @@ module spi_slave_regs (/*AUTOARG*/
 	for(i=0;i<SREGS-40;i=i+1)
 	  spi_vector[512+i*8 +:8] = user_regs[i];
      end
-   
-
    
 endmodule // spi_slave_regs
 

@@ -1,5 +1,5 @@
 //#############################################################################
-//# Purpose: SPI top (configuravbe as master or slave)                        #
+//# Purpose: SPI top (configurable as master or slave)                        #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see below)                                                 # 

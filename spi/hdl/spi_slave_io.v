@@ -46,23 +46,31 @@ module spi_slave_io(/*AUTOARG*/
    //#################################
 
    reg [2:0] 	       spi_state;   
-   reg [7:0] 	       bit_count;
-   reg [PW-1:0]        spi_rx;
+   reg [7:0] 	       bit_count; 
    reg [PW-1:0]        spi_tx;
    reg 		       spi_access;
    reg 		       packet_done_reg;
    reg 		       spi_request;
    reg [PW-1:0]        packet_out;   
    wire [7:0] 	       psize;
-      
+   wire [PW-1:0]       rx_data;
+   
    //#################################
    //# RX SHIFT REGISTER
    //#################################
- 
-   always @ (posedge sclk)
-     if(~ss)
-       spi_rx[PW-1:0] <= {spi_rx[PW-2:0],mosi};
+
+   oh_ser2par #(.PW(PW),
+		.SW(1))
+   ser2par (// Outputs
+	    .dout			(rx_data[PW-1:0]),
+	    // Inputs
+	    .clk			(sclk),
+	    .din			(mosi),
+	    .lsbfirst			(1'b0), //msb first
+	    .shift			(~ss)
+	    );
    
+        
    //#################################
    //# STATE MACHINE
    //#################################
@@ -106,17 +114,18 @@ module spi_slave_io(/*AUTOARG*/
      else
        bit_count[7:0] <=  bit_count[7:0] + 1'b1;
 
-   assign read_cmd      = (spi_rx[7:6]==2'b10) &
+   assign read_cmd      = (rx_data[7:6]==2'b10) &
 			  (spi_state[2:0]==`SPI_CMD);
 
-   assign write_cmd     = (spi_rx[7:6]==2'b00) &
+   assign write_cmd     = (rx_data[7:6]==2'b00) &
 			  (spi_state[2:0]==`SPI_CMD);
    
-   assign remote_cmd    = (spi_rx[7:6]==2'b11) &
+   assign remote_cmd    = (rx_data[7:6]==2'b11) &
 			  (spi_state[2:0]==`SPI_CMD);
       
    assign byte_done     = &bit_count[2:0];
 
+   //change to sl?
    assign packet_done   = (bit_count[7:0]==psize[7:0]);
 
    //#################################
@@ -127,7 +136,7 @@ module spi_slave_io(/*AUTOARG*/
     
    always @ (posedge sclk)
      if(load_tx)
-       spi_tx[7:0] <= spi_regs[spi_rx[6:0]]; // 
+       spi_tx[7:0] <= spi_regs[rx_data[6:0]]; // 
      else if(~ss)
        spi_tx[7:0] <= {spi_tx[6:0],1'b0};   
 
@@ -137,10 +146,10 @@ module spi_slave_io(/*AUTOARG*/
    //# REGISTER FILE INTERFACE
    //#################################
    assign spi_clk       = sclk;
-   assign spi_addr[5:0] = spi_rx[5:0];
+   assign spi_addr[5:0] = rx_data[5:0];
    assign spi_write     = byte_done & (spi_state[2:0]==`SPI_WRITE);
    assign spi_read      = byte_done & (spi_state[2:0]==`SPI_READ);
-   assign spi_data[7:0] = spi_rx[7:0];
+   assign spi_data[7:0] = rx_data[7:0];
  
    //#################################
    //# CLOCK SYNCHRONIZATION
@@ -173,9 +182,34 @@ module spi_slave_io(/*AUTOARG*/
    //sample rx data
    always @ (posedge clk)
      if(spi_access_pulse)
-       packet_out[PW-1:0] <= spi_rx[PW-1:0];
+       packet_out[PW-1:0] <= rx_data[PW-1:0];
    
 endmodule // spi_slave_io
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")
-// 
+// End:
+
+///////////////////////////////////////////////////////////////////////////////
+// The MIT License (MIT)                                                     //
+//                                                                           //
+// Copyright (c) 2015-2016, Adapteva, Inc.                                   //
+//                                                                           //
+// Permission is hereby granted, free of charge, to any person obtaining a   //
+// copy of this software and associated documentation files (the "Software") //
+// to deal in the Software without restriction, including without limitation // 
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,  //
+// and/or sell copies of the Software, and to permit persons to whom the     //
+// Software is furnished to do so, subject to the following conditions:      //
+//                                                                           //
+// The above copyright notice and this permission notice shall be included   // 
+// in all copies or substantial portions of the Software.                    //
+//                                                                           //
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS   //
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF                //
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.    //
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY      //
+// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT //
+// OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR  //
+// THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                //
+//                                                                           //  
+///////////////////////////////////////////////////////////////////////////////

@@ -13,6 +13,7 @@ module spi_master(/*AUTOARG*/
    );
 
    //parameters
+   parameter  DEPTH = 16;                // fifo depth   
    parameter  REGS  = 16;                // total regs   
    parameter  AW    = 32;                // addresss width
    localparam PW    = (2*AW+40);         // packet width
@@ -43,28 +44,32 @@ module spi_master(/*AUTOARG*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [7:0]		clkdiv_reg;		// From spi_master_regs of spi_master_regs.v
-   wire [7:0]		cmd_reg;		// From spi_master_regs of spi_master_regs.v
    wire			cpha;			// From spi_master_regs of spi_master_regs.v
    wire			cpol;			// From spi_master_regs of spi_master_regs.v
-   wire [7:0]		psize_reg;		// From spi_master_regs of spi_master_regs.v
+   wire			emode;			// From spi_master_regs of spi_master_regs.v
+   wire [7:0]		fifo_dout;		// From spi_master_fifo of spi_master_fifo.v
+   wire			fifo_empty;		// From spi_master_fifo of spi_master_fifo.v
+   wire			fifo_read;		// From spi_master_io of spi_master_io.v
+   wire			lsbfirst;		// From spi_master_regs of spi_master_regs.v
    wire			rx_access;		// From spi_master_io of spi_master_io.v
    wire [7:0]		rx_data;		// From spi_master_io of spi_master_io.v
    wire			spi_en;			// From spi_master_regs of spi_master_regs.v
-   wire [2:0]		spi_state;		// From spi_master_io of spi_master_io.v
-   wire			tx_access;		// From spi_master_regs of spi_master_regs.v
-   wire [PW-1:0]	tx_data;		// From spi_master_regs of spi_master_regs.v
+   wire [1:0]		spi_state;		// From spi_master_io of spi_master_io.v
    // End of automatics
+
+
+   //#####################################################
+   //# Master control registers
+   //#####################################################
    
    spi_master_regs #(.AW(AW))
    spi_master_regs (/*AUTOINST*/
 		    // Outputs
-		    .tx_access		(tx_access),
-		    .cmd_reg		(cmd_reg[7:0]),
-		    .tx_data		(tx_data[PW-1:0]),
 		    .cpol		(cpol),
 		    .cpha		(cpha),
+		    .lsbfirst		(lsbfirst),
+		    .emode		(emode),
 		    .spi_en		(spi_en),
-		    .psize_reg		(psize_reg[7:0]),
 		    .clkdiv_reg		(clkdiv_reg[7:0]),
 		    .wait_out		(wait_out),
 		    .access_out		(access_out),
@@ -74,16 +79,44 @@ module spi_master(/*AUTOARG*/
 		    .nreset		(nreset),
 		    .rx_data		(rx_data[PW-1:0]),
 		    .rx_access		(rx_access),
-		    .spi_state		(spi_state[2:0]),
+		    .spi_state		(spi_state[1:0]),
 		    .access_in		(access_in),
 		    .packet_in		(packet_in[PW-1:0]),
 		    .wait_in		(wait_in));
    
-   spi_master_io #(.AW(AW)
-		  )
+   //#####################################################
+   //# Transmit FIFO (SPI_TX)
+   //#####################################################
+
+   /* spi_master_fifo AUTO_TEMPLATE (.fifo_dout		(fifo_dout[7:0]),
+    );
+        */
+   
+   spi_master_fifo #(.AW(AW),
+		     .DEPTH(DEPTH))
+
+   spi_master_fifo(/*AUTOINST*/
+		   // Outputs
+		   .wait_out		(wait_out),
+		   .fifo_empty		(fifo_empty),
+		   .fifo_dout		(fifo_dout[7:0]),	 // Templated
+		   // Inputs
+		   .clk			(clk),
+		   .nreset		(nreset),
+		   .emode		(emode),
+		   .access_in		(access_in),
+		   .packet_in		(packet_in[PW-1:0]),
+		   .fifo_read		(fifo_read));
+   
+   //#####################################################
+   //# SPI IO (8 bit)
+   //#####################################################
+     
+   spi_master_io #(.AW(AW))
    spi_master_io (/*AUTOINST*/
 		  // Outputs
-		  .spi_state		(spi_state[2:0]),
+		  .spi_state		(spi_state[1:0]),
+		  .fifo_read		(fifo_read),
 		  .rx_data		(rx_data[7:0]),
 		  .rx_access		(rx_access),
 		  .sclk			(sclk),
@@ -95,16 +128,14 @@ module spi_master(/*AUTOARG*/
 		  .spi_en		(spi_en),
 		  .cpol			(cpol),
 		  .cpha			(cpha),
+		  .lsbfirst		(lsbfirst),
 		  .clkdiv_reg		(clkdiv_reg[7:0]),
-		  .psize_reg		(psize_reg[7:0]),
-		  .cmd_reg		(cmd_reg[7:0]),
-		  .tx_data		(tx_data[PW-1:0]),
-		  .tx_access		(tx_access),
+		  .fifo_dout		(fifo_dout[7:0]),
+		  .fifo_empty		(fifo_empty),
 		  .miso			(miso));
    
    
-endmodule // spi_slave
-
+endmodule // spi_master
 
 //////////////////////////////////////////////////////////////////////////////
 // The MIT License (MIT)                                                    //
