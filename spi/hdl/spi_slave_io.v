@@ -147,8 +147,7 @@ module spi_slave_io(/*AUTOARG*/
 			  (command_reg[7:6]==2'b00) &
 			  (spi_state[1:0]==`SPI_DATA);
   
-   assign spi_read      = 
-			  command_reg[7:6]==2'b11; //read from sclk reg  
+   assign spi_read      = command_reg[7:6]==2'b11; //read from sclk reg  
 
    assign spi_remote    = command_reg[7:6]==2'b10; //send remote request
    

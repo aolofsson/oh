@@ -117,7 +117,7 @@ module spi_master_io(/*AUTOARG*/
    assign byte_done  = (bit_count[2:0]==3'b000);
 
    //read fifo on phase match (due to one cycle pipeline latency
-   assign fifo_read = ((spi_state[1:0]==`SPI_IDLE) & phase_match ) |
+   assign fifo_read = ((spi_state[1:0]==`SPI_SETUP) & phase_match) |
 		      ((spi_state[1:0]==`SPI_DATA) & phase_match & byte_done);
 
    //load once per byte
