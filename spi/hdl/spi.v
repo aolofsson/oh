@@ -20,7 +20,7 @@ module spi (/*AUTOARG*/
 
    parameter AW     = 32;      // data width of fifo
    parameter PW     = 2*AW+40; // packet size
-   parameter SREGS  = 40;      // number of slave addresses (min 40)
+   parameter UREGS  = 13;      // number of user slave regs
    
    //clk, reset, irq
    input           nreset;     // asynch active low reset
@@ -62,7 +62,7 @@ module spi (/*AUTOARG*/
    wire			m_wait_out;		// From spi_master of spi_master.v
    wire			s_access_out;		// From spi_slave of spi_slave.v
    wire [PW-1:0]	s_packet_out;		// From spi_slave of spi_slave.v
-   wire [SREGS*8-1:0]	s_spi_regs;		// From spi_slave of spi_slave.v
+   wire [511:0]		s_spi_regs;		// From spi_slave of spi_slave.v
    wire			s_wait_out;		// From spi_slave of spi_slave.v
    // End of automatics
 
@@ -107,10 +107,10 @@ module spi (/*AUTOARG*/
     */
    
    spi_slave #(.AW(AW),
-	       .SREGS(SREGS))
+	       .UREGS(UREGS))
    spi_slave (/*AUTOINST*/
 	      // Outputs
-	      .spi_regs			(s_spi_regs[SREGS*8-1:0]), // Templated
+	      .spi_regs			(s_spi_regs[511:0]),	 // Templated
 	      .spi_irq			(spi_irq),		 // Templated
 	      .miso			(s_miso),		 // Templated
 	      .access_out		(s_access_out),		 // Templated
@@ -130,10 +130,12 @@ module spi (/*AUTOARG*/
    //# EMESH MUX
    //###########################################################
 
+   assign wait_out = s_wait_out | m_wait_out;
+   
    emesh_mux #(.N(2),
 	       .AW(AW))
    emesh_mux (// Outputs
-	      .wait_out	   ({s_wait_out, m_wait_out}),
+	      .wait_out	   (),
 	      .access_out  (access_out),
 	      .packet_out  (packet_out[PW-1:0]),
 	      // Inputs

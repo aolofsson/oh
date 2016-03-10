@@ -5,7 +5,7 @@ module dut(/*AUTOARG*/
    clk1, clk2, nreset, vdd, vss, access_in, packet_in, wait_in
    );
 
-   parameter SREGS = 40;   
+   parameter UREGS = 13;   
    parameter AW    = 32;
    parameter DW    = 32;
    parameter CW    = 2; 
@@ -58,15 +58,16 @@ module dut(/*AUTOARG*/
    //###################
    assign clkout     = clk1;
    assign clk        = clk1;
-   assign wait_out   = 1'b0;
    assign dut_active = 1'b1;
 
    //######################################################################
    //# DUT
    //######################################################################
 
+   //drive through master, observe on slave
+   
    spi #(.AW(AW),
-	 .SREGS(SREGS)
+	 .UREGS(UREGS)
 	 )
 
    master  (.m_miso			(s_miso),
@@ -92,7 +93,7 @@ module dut(/*AUTOARG*/
 	    .packet_in			(packet_in[PW-1:0]));
    
    spi #(.AW(AW),
-	 .SREGS(SREGS)
+	 .UREGS(UREGS)
 	 )
 
    slave ( .s_sclk			(m_sclk),
@@ -105,12 +106,12 @@ module dut(/*AUTOARG*/
 	   .m_sclk			(),
 	   .m_mosi			(),
 	   .m_ss			(),
+	   .wait_out			(),
 	  /*AUTOINST*/
 	  // Outputs
 	  .spi_irq			(spi_irq),
 	  .access_out			(access_out),
 	  .packet_out			(packet_out[PW-1:0]),
-	  .wait_out			(wait_out),
 	  .s_miso			(s_miso),
 	  // Inputs
 	  .nreset			(nreset),
