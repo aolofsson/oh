@@ -57,16 +57,20 @@ module oh_par2ser (/*AUTOARG*/
      if(~nreset)
        count[CW-1:0] <= 'b0;   
      else if(start_transfer)
-       count[CW-1:0] <= datasize[CW-1:0];
-     else if(shift & access_out)
+       count[CW-1:0] <= datasize[CW-1:0];   //1=1 byte
+     else if(shift & busy)
        count[CW-1:0] <= count[CW-1:0] - 1'b1;
-        
+
+   assign access_out = (count[CW-1:0]==1'b1);
+
    //output data is valid while count>0
-   assign access_out = |count[CW-1:0];
-   
+   assign busy = |count[CW-1:0];
+
+
    //wait until valid data is finished
-   assign wait_out  = access_out |
+   assign wait_out  = busy |
 		      wait_in;
+
    
    //##########################
    //# SHIFT REGISTER
