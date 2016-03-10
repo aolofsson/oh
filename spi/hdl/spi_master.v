@@ -31,11 +31,11 @@ module spi_master(/*AUTOARG*/
    //packet to transmit
    input 		access_in;       // access from core
    input [PW-1:0] 	packet_in;       // data to core
-   output 		wait_out;        // pushback from spi master
+   output 		wait_out;        // pushback from spi register
 
    //return packet
-   output 		access_out;      // writeback from spi 
-   output [PW-1:0] 	packet_out;      // writeback data from spi
+   output 		access_out;      // readback access 
+   output [PW-1:0] 	packet_out;      // packet from spi register
    input 		wait_in;         // pushback by core
  
    /*AUTOINPUT*/
@@ -44,6 +44,7 @@ module spi_master(/*AUTOARG*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [7:0]		clkdiv_reg;		// From spi_master_regs of spi_master_regs.v
+   wire [7:0]		cmd_reg;		// From spi_master_regs of spi_master_regs.v
    wire			cpha;			// From spi_master_regs of spi_master_regs.v
    wire			cpol;			// From spi_master_regs of spi_master_regs.v
    wire			emode;			// From spi_master_regs of spi_master_regs.v
@@ -71,6 +72,7 @@ module spi_master(/*AUTOARG*/
 		    .emode		(emode),
 		    .spi_en		(spi_en),
 		    .clkdiv_reg		(clkdiv_reg[7:0]),
+		    .cmd_reg		(cmd_reg[7:0]),
 		    .wait_out		(wait_out),
 		    .access_out		(access_out),
 		    .packet_out		(packet_out[PW-1:0]),
@@ -132,6 +134,8 @@ module spi_master(/*AUTOARG*/
 		  .cpha			(cpha),
 		  .lsbfirst		(lsbfirst),
 		  .clkdiv_reg		(clkdiv_reg[7:0]),
+		  .cmd_reg		(cmd_reg[7:0]),
+		  .emode		(emode),
 		  .fifo_dout		(fifo_dout[7:0]),
 		  .fifo_empty		(fifo_empty),
 		  .miso			(miso));

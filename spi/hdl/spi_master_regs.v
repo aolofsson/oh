@@ -4,10 +4,11 @@
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see below)                                                 # 
 //#############################################################################
+
 `include "spi_regmap.vh"
 module spi_master_regs (/*AUTOARG*/
    // Outputs
-   cpol, cpha, lsbfirst, emode, spi_en, clkdiv_reg, wait_out,
+   cpol, cpha, lsbfirst, emode, spi_en, clkdiv_reg, cmd_reg, wait_out,
    access_out, packet_out,
    // Inputs
    clk, nreset, rx_data, rx_access, spi_state, fifo_prog_full,
@@ -29,12 +30,13 @@ module spi_master_regs (/*AUTOARG*/
    input 	     rx_access;       // rx access pulse
 
    //control
-   output 	     cpol;
-   output 	     cpha;
+   output 	     cpol;            // clk polarity (default is 0)
+   output 	     cpha;            // clk phase shift (default is 0)
    output            lsbfirst;        // send lsbfirst
    output 	     emode;           // send emesh transaction
    output 	     spi_en;          // enable transmitter   
    output [7:0]      clkdiv_reg;      // baud rate setting
+   output [7:0]      cmd_reg;         // command register for emode   
    input [1:0] 	     spi_state;       // transmit state
    input 	     fifo_prog_full;  // fifo reached half/full
    
@@ -55,16 +57,16 @@ module spi_master_regs (/*AUTOARG*/
    reg [7:0] 	     config_reg;
    reg [7:0] 	     status_reg;
    reg [7:0] 	     clkdiv_reg;
-   reg [63:0] 	     rx_reg;
+   reg [7:0] 	     cmd_reg;
+   reg [7:0] 	     rx_reg[7:0];
+   
    reg 		     autotran;
-   reg [63:0] 	     rx_addr;
    reg [31:0] 	     read_data;
-
+   reg 		     access_out;
+   
    integer 	     i;
 
-   wire [63:0] 	     reg_wdata;
-   wire [255:0]      tx_vector;   
-   wire [63:0] 	     write_mask;
+   wire [31:0] 	     reg_wdata;
    wire [1:0] 	     datamode_out;
    wire [AW-1:0]     dstaddr_out;
    wire [AW-1:0]     data_out;
@@ -99,12 +101,12 @@ module spi_master_regs (/*AUTOARG*/
 
    assign reg_write       = access_in & write_in;
    assign reg_read        = access_in & ~write_in;
-   assign reg_wdata[63:0] = {srcaddr_in[AW-1:0],data_in[AW-1:0]};
+   assign reg_wdata[31:0] = data_in[AW-1:0];
   
    assign config_write    = reg_write & (dstaddr_in[7:2]==`SPI_CONFIG);
    assign status_write    = reg_write & (dstaddr_in[7:2]==`SPI_STATUS);
    assign clkdiv_write    = reg_write & (dstaddr_in[7:2]==`SPI_CLKDIV);
-
+   assign cmd_write       = reg_write & (dstaddr_in[7:2]==`SPI_CMD);
    //####################################
    //# CONFIG
    //####################################
@@ -115,7 +117,7 @@ module spi_master_regs (/*AUTOARG*/
      else if(config_write)
        config_reg[7:0] <= data_in[7:0];
    
-   assign spi_en       = config_reg[0];  // enable spi
+   assign spi_en       = ~config_reg[0]; // disable spi (on by default)
    assign irq_en       = config_reg[1];  // enable interrupt
    assign cpol         = config_reg[2];  // cpol
    assign cpha         = config_reg[3];  // cpha
@@ -133,9 +135,9 @@ module spi_master_regs (/*AUTOARG*/
      else if(status_write)
        status_reg[7:0] <= reg_wdata[7:0];
      else
-       status_reg[7:0] <= {4'b0,                        //7:4
-			   fifo_prog_full,              //3
-			   spi_state[1:0],              //2:1
+       status_reg[7:0] <= {5'b0,                        //7:3
+			   fifo_prog_full,              //2
+			   |spi_state[1:0],             //1
 			   (rx_access | status_reg[0])};//0
    			       
    //####################################
@@ -147,13 +149,22 @@ module spi_master_regs (/*AUTOARG*/
        clkdiv_reg[7:0] <= CLKDIV;   
      else if(clkdiv_write)
        clkdiv_reg[7:0] <= reg_wdata[7:0];
+
+   //####################################
+   //# COMMAND (for emode) 
+   //####################################
+
+   always @ (posedge clk)
+     if(cmd_write)
+       cmd_reg[7:0] <= reg_wdata[7:0];
      
    //####################################
    //# RX REG
    //####################################
    always @ (posedge clk)
      if(rx_access)
-       rx_reg[63:0] <= rx_data[63:0];
+       for(i=0;i<8;i=i+1)
+	 rx_reg[i] <= rx_data[i*8+:8];
 
    //####################################
    //# AUTOTRANSFER
@@ -172,6 +183,9 @@ module spi_master_regs (/*AUTOARG*/
    //####################################
 
    always @ (posedge clk)
+     access_out <= access_in;
+      
+   always @ (posedge clk)
      read_data[31:0] <= 64'b0;
    
    //wait circuit
@@ -180,15 +194,17 @@ module spi_master_regs (/*AUTOARG*/
    	      .clk (clk),
 	      .in  (access));
    
-   assign wait_out = wait_in | 
+   assign wait_out = wait_in  | 
 		     autotran |
 		     wait_pulse;
-   
-   assign dstaddr_out[AW-1:0] = autotran ? rx_addr[AW-1:0] : srcaddr_in[AW-1:0];
-   assign data_out[31:0]      = autotran ? rx_reg[31:0]    : read_data[31:0];
+
+   assign dstaddr_out[AW-1:0] = srcaddr_in[AW-1:0];
+   assign data_out[31:0]      = read_data[31:0];
    assign srcaddr_out[31:0]   = 32'b0;   
-   assign ctrlmode_out[4:0]   = autotran ? 5'b0            : ctrlmode_in[4:0];
-   assign ctrlmode_out[4:0]   = autotran ? 5'b0            : datamode_in[4:0];
+   assign ctrlmode_out[4:0]   = ctrlmode_in[4:0];
+   assign ctrlmode_out[4:0]   = datamode_in[4:0];
+
+			      
    
    emesh2packet e2p (.write_out		(1'b1),
 		     /*AUTOINST*/

@@ -9,8 +9,8 @@ module spi_master_io(/*AUTOARG*/
    // Outputs
    spi_state, fifo_read, rx_data, rx_access, sclk, mosi, ss,
    // Inputs
-   clk, nreset, spi_en, cpol, cpha, lsbfirst, clkdiv_reg, fifo_dout,
-   fifo_empty, miso
+   clk, nreset, spi_en, cpol, cpha, lsbfirst, clkdiv_reg, cmd_reg,
+   emode, fifo_dout, fifo_empty, miso
    );
 
    //#################################
@@ -32,6 +32,8 @@ module spi_master_io(/*AUTOARG*/
    input 	   cpha;       // cpha
    input 	   lsbfirst;   // send lsbfirst   
    input [7:0] 	   clkdiv_reg; // baudrate	 
+   input [7:0] 	   cmd_reg; 	   
+   input 	   emode;       
    output [1:0]    spi_state;  // current spi tx state
      
    //data to transmit
@@ -49,10 +51,10 @@ module spi_master_io(/*AUTOARG*/
    output 	   ss;         // slave select
    input 	   miso;       // slave output
 
-   reg [7:0] 	   baud_counter = 'b0; //works b/c of free running counter!
    reg [1:0] 	   spi_state;
    reg [2:0] 	   bit_count;
    reg 		   fifo_empty_reg;
+   wire [7:0] 	   data_out;
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
@@ -61,19 +63,13 @@ module spi_master_io(/*AUTOARG*/
    wire			phase_match;		// From oh_clockdiv of oh_clockdiv.v
    // End of automatics
    
-//states
-`define SPI_IDLE    2'b00  // set ss to 1
-`define SPI_SETUP   2'b01  // setup time
-`define SPI_DATA    2'b10  // send data
-`define SPI_HOLD    2'b11  // hold time
-   
    //#################################
    //# CLOCK GENERATOR
    //#################################
    
    oh_clockdiv #(.DW(8))
    oh_clockdiv (.clkdiv		(clkdiv_reg[2:0]),
-		.en			(1'b1),
+		.en		(1'b1),
 		/*AUTOINST*/
 		// Outputs
 		.period_match		(period_match),
@@ -83,12 +79,15 @@ module spi_master_io(/*AUTOARG*/
 		.clk			(clk),
 		.nreset			(nreset));
     
-   assign sclk = clkout & (spi_state[1:0]==`SPI_DATA);
-    
    //#################################
    //# STATE MACHINE
    //#################################
-      
+
+`define SPI_IDLE    2'b00  // set ss to 1
+`define SPI_SETUP   2'b01  // setup time
+`define SPI_DATA    2'b10  // send data
+`define SPI_HOLD    2'b11  // hold time
+
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        spi_state[1:0] <=  `SPI_IDLE;
@@ -126,17 +125,28 @@ module spi_master_io(/*AUTOARG*/
    
    //shift on every clock cycle while in datamode
    assign shift     = period_match & (spi_state[1:0]==`SPI_DATA);
+    
 
    //#################################
    //# CHIP SELECT
    //#################################
    
    assign ss = (spi_state[1:0]==`SPI_IDLE);
-         
+
+   //#################################
+   //# DRIVE OUTPUT CLOCK
+   //#################################
+   
+   assign sclk = clkout & (spi_state[1:0]==`SPI_DATA);
+
    //#################################
    //# TX SHIFT REGISTER
    //#################################
-
+   
+   assign data_out[7:0] = (emode & spi_state[1:0]==`SPI_IDLE) ? cmd_reg[7:0] : 
+			                                        fifo_dout[7:0];
+   
+   
    oh_par2ser  #(.PW(8),
 		 .SW(1))
    par2ser (// Outputs
@@ -146,7 +156,7 @@ module spi_master_io(/*AUTOARG*/
 	    // Inputs
 	    .clk	(clk),
 	    .nreset	(nreset),         // async active low reset
-	    .din	(fifo_dout[7:0]), // 8 bit data from fifo
+	    .din	(data_out[7:0] ), // 8 bit data from fifo
 	    .shift	(shift),          // shift on neg edge
 	    .datasize	(3'b111),         // 8 bits
 	    .load	(load_byte),      // load data from fifo
