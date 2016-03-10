@@ -7,10 +7,10 @@
 
 module spi_slave_io(/*AUTOARG*/
    // Outputs
-   miso, spi_clk, spi_write, spi_addr, spi_data, access_out,
-   packet_out,
+   miso, spi_clk, spi_write, spi_addr, spi_wdata, spi_rdata,
+   access_out, packet_out,
    // Inputs
-   sclk, mosi, ss, spi_en, cpol, cpha, lsbfirst, spi_regs, clk
+   sclk, mosi, ss, spi_en, cpol, cpha, lsbfirst, clk
    );
 
    //#################################
@@ -38,8 +38,8 @@ module spi_slave_io(/*AUTOARG*/
    output 	       spi_clk;         // spi clock for regfile
    output 	       spi_write;       // regfile write
    output [5:0]        spi_addr;        // regfile addres
-   output [7:0]        spi_data;        // data for regfile
-   input [SREGS*8-1:0] spi_regs;        // all registers
+   output [7:0]        spi_wdata;       // data for regfile
+   output [7:0]        spi_rdata;       // data for regfile
    
    //core interface (synced to core clk)
    input 	       clk;             // core clock
@@ -58,7 +58,6 @@ module spi_slave_io(/*AUTOARG*/
 
    wire [7:0] 	       rx_data;
    wire [63:0] 	       tx_data;
-  
    //#################################
    //# STATE MACHINE
    //#################################
@@ -90,6 +89,8 @@ module spi_slave_io(/*AUTOARG*/
         
    // command/address register
    // auto increment for every byte
+
+
    always @ (posedge sclk)
      if((spi_state[1:0]==`SPI_CMD) & byte_done)
        command_reg[7:0] <= rx_data[7:0];
@@ -117,20 +118,19 @@ module spi_slave_io(/*AUTOARG*/
    //#################################
 
    assign tx_load        = byte_done & (spi_state[1:0]==`SPI_CMD);
-   assign tx_data[63:0]  = spi_regs[spi_addr[5:0]+:64];
-
-   oh_par2ser #(.PW(64),
+   
+   oh_par2ser #(.PW(8),
 		.SW(1))
    par2ser (.dout	(miso),
 	    .access_out (),
 	    .wait_out	(),
-	    .clk	(clk),
+	    .clk	(~sclk),
 	    .nreset	(nreset),
-	    .din	(tx_data[63:0]),
+	    .din	(spi_rdata[7:0]),
 	    .shift      (~ss),
 	    .lsbfirst	(lsbfirst),
 	    .load       (tx_load),
-	    .datasize   (6'b111111),//TODO:simplify
+	    .datasize   (3'b111),//TODO:simplify
 	    .fill       (1'b0),
 	    .wait_in    (1'b0)
 	    );
@@ -138,12 +138,21 @@ module spi_slave_io(/*AUTOARG*/
    //#################################
    //# REGISTER FILE INTERFACE
    //#################################
+
    assign spi_clk       = sclk;
+
    assign spi_addr[5:0] = command_reg[5:0];   
-   assign spi_read      = command_reg[7:6]==2'b11;   
-   assign spi_write     = command_reg[7:6]==2'b00;
-   assign spi_remote    = command_reg[7:6]==2'b01;   
-   assign spi_data[7:0] = rx_data[7:0];
+
+   assign spi_write     = byte_done &
+			  (command_reg[7:6]==2'b00) &
+			  (spi_state[1:0]==`SPI_DATA);
+  
+   assign spi_read      = 
+			  command_reg[7:6]==2'b11; //read from sclk reg  
+
+   assign spi_remote    = command_reg[7:6]==2'b10; //send remote request
+   
+   assign spi_wdata[7:0] = rx_data[7:0];
  
    //###################################
    //# SYNCHRONIZATION TO CORE
