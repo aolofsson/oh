@@ -41,8 +41,7 @@ module oh_fifo_sync (/*AUTOARG*/
    
    assign empty       = (rd_count[AW-1:0] == 0);   
    assign prog_full   = (rd_count[AW-1:0] >= PROG_FULL);   
-   assign full        = (rd_count[AW-1:0] == DEPTH);
-
+   assign full        = (rd_count[AW-1:0] == (DEPTH-1));
    assign fifo_read   = rd_en & ~empty;
    assign fifo_write  = wr_en & ~full;
    
