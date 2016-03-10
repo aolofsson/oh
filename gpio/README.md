@@ -10,16 +10,16 @@ GPIO: General Purpose Software Programmable IO
  
 ## Registers
 
-| Register Name | Access | Default | Description                 | 
-|---------------|--------|---------|-----------------------------|
-| GPIO_OEN      | RD/WR  | L       | Output enable (1=enable)    |
-| GPIO_OUT      | RD/WR  | n/a     | OUT = VALUE                 |
-| GPIO_IEN      | RD/WR  | H       | Input pin enable            |
-| GPIO_IN       | RD     | n/a     | Input pin value             |
-| GPIO_OUTAND   | WR     | n/a     | OUT = OUT & VALUE           |
-| GPIO_OUTORR   | WR     | n/a     | OUT = OUT 'or' VALUE        |
-| GPIO_OUTXOR   | WR     | n/a     | OUT = OUT ^ VALUE           |
-| GPIO_IMASK    | RD/WR  | L       | Masks interupt on input pin |
+| Register Name |Addr[7:3]| Access | Default | Description                 | 
+|---------------|---------|--------|---------|-----------------------------|
+| GPIO_OEN      |  0x0    | RD/WR  | L       | Output enable (1=enable)    |
+| GPIO_OUT      |  0x1    | RD/WR  | n/a     | OUT = VALUE                 |
+| GPIO_IEN      |  0x2    | RD/WR  | H       | Input pin enable            |
+| GPIO_IN       |  0x3    | RD     | n/a     | Input pin value             |
+| GPIO_OUTAND   |  0x4    | WR     | n/a     | OUT = OUT & VALUE           |
+| GPIO_OUTORR   |  0x5    | WR     | n/a     | OUT = OUT 'or' VALUE        |
+| GPIO_OUTXOR   |  0x6    | WR     | n/a     | OUT = OUT ^ VALUE           |
+| GPIO_IMASK    |  0x7    | WR     | n/a     | OUT = OUT ^ VALUE           |
 
 ## Interface
 
