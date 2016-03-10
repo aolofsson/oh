@@ -13,14 +13,14 @@ module spi_slave(/*AUTOARG*/
    );
 
    //parameters
-   parameter  SREGS = 16;                // total spi slave regs   
+   parameter  UREGS = 13;                // total spi slave regs   
    parameter  AW    = 32;                // addresss width
    localparam PW    = (2*AW+40);         // packet width
  
    //clk,reset, cfg
    input 		clk;             // core clock
    input 	        nreset;          // async active low reset
-   output [SREGS*8-1:0] spi_regs;        // all registers for control
+   output [511:0] 	spi_regs;        // all registers for control
    output 		spi_irq;         // interrupt
    
    //IO interface
@@ -53,45 +53,46 @@ module spi_slave(/*AUTOARG*/
    wire			lsbfirst;		// From spi_slave_regs of spi_slave_regs.v
    wire [5:0]		spi_addr;		// From spi_slave_io of spi_slave_io.v
    wire			spi_clk;		// From spi_slave_io of spi_slave_io.v
-   wire [7:0]		spi_data;		// From spi_slave_io of spi_slave_io.v
    wire			spi_en;			// From spi_slave_regs of spi_slave_regs.v
+   wire [7:0]		spi_rdata;		// From spi_slave_regs of spi_slave_regs.v, ...
+   wire [7:0]		spi_wdata;		// From spi_slave_io of spi_slave_io.v
    wire			spi_write;		// From spi_slave_io of spi_slave_io.v
    // End of automatics
    
    spi_slave_regs #(.AW(AW),
-		    .SREGS(SREGS)
+		    .UREGS(UREGS)
 		    )
    spi_slave_regs (/*AUTOINST*/
 		   // Outputs
+		   .spi_rdata		(spi_rdata[7:0]),
+		   .spi_en		(spi_en),
 		   .cpol		(cpol),
 		   .cpha		(cpha),
 		   .lsbfirst		(lsbfirst),
-		   .spi_en		(spi_en),
 		   .irq_en		(irq_en),
 		   .emode		(emode),
-		   .spi_regs		(spi_regs[SREGS*8-1:0]),
+		   .spi_regs		(spi_regs[511:0]),
 		   .wait_out		(wait_out),
 		   // Inputs
 		   .clk			(clk),
 		   .nreset		(nreset),
 		   .spi_clk		(spi_clk),
-		   .spi_data		(spi_data[7:0]),
+		   .spi_wdata		(spi_wdata[7:0]),
 		   .spi_write		(spi_write),
 		   .spi_addr		(spi_addr[5:0]),
 		   .access_in		(access_in),
 		   .packet_in		(packet_in[PW-1:0]));
    
 
-   spi_slave_io #(.AW(AW),
-		  .SREGS(SREGS)
-		  )
+   spi_slave_io #(.AW(AW))
    spi_slave_io (/*AUTOINST*/
 		 // Outputs
 		 .miso			(miso),
 		 .spi_clk		(spi_clk),
 		 .spi_write		(spi_write),
 		 .spi_addr		(spi_addr[5:0]),
-		 .spi_data		(spi_data[7:0]),
+		 .spi_wdata		(spi_wdata[7:0]),
+		 .spi_rdata		(spi_rdata[7:0]),
 		 .access_out		(access_out),
 		 .packet_out		(packet_out[PW-1:0]),
 		 // Inputs
@@ -102,7 +103,6 @@ module spi_slave(/*AUTOARG*/
 		 .cpol			(cpol),
 		 .cpha			(cpha),
 		 .lsbfirst		(lsbfirst),
-		 .spi_regs		(spi_regs[SREGS*8-1:0]),
 		 .clk			(clk));
    
    

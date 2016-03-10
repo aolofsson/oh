@@ -12,7 +12,7 @@ module spi_master_regs (/*AUTOARG*/
    access_out, packet_out,
    // Inputs
    clk, nreset, rx_data, rx_access, spi_state, fifo_prog_full,
-   access_in, packet_in, wait_in
+   fifo_wait, access_in, packet_in, wait_in
    );
 
    //parameters
@@ -39,6 +39,7 @@ module spi_master_regs (/*AUTOARG*/
    output [7:0]      cmd_reg;         // command register for emode   
    input [1:0] 	     spi_state;       // transmit state
    input 	     fifo_prog_full;  // fifo reached half/full
+   input 	     fifo_wait;       // tx transfer wait
    
    //packet to transmit
    input 	     access_in;       // access from core
@@ -102,11 +103,13 @@ module spi_master_regs (/*AUTOARG*/
    assign reg_write       = access_in & write_in;
    assign reg_read        = access_in & ~write_in;
    assign reg_wdata[31:0] = data_in[AW-1:0];
-  
-   assign config_write    = reg_write & (dstaddr_in[7:2]==`SPI_CONFIG);
-   assign status_write    = reg_write & (dstaddr_in[7:2]==`SPI_STATUS);
-   assign clkdiv_write    = reg_write & (dstaddr_in[7:2]==`SPI_CLKDIV);
-   assign cmd_write       = reg_write & (dstaddr_in[7:2]==`SPI_CMD);
+   
+   assign config_write    = reg_write & (dstaddr_in[7:0]==`SPI_CONFIG);
+   assign status_write    = reg_write & (dstaddr_in[7:0]==`SPI_STATUS);
+   assign clkdiv_write    = reg_write & (dstaddr_in[7:0]==`SPI_CLKDIV);
+   assign cmd_write       = reg_write & (dstaddr_in[7:0]==`SPI_CMD);
+   assign tx_write        = reg_write & (dstaddr_in[7:0]==`SPI_TX);
+
    //####################################
    //# CONFIG
    //####################################
@@ -176,7 +179,7 @@ module spi_master_regs (/*AUTOARG*/
      else if(rx_access & emode)
        autotran <= 1'b1;   
      else if(~wait_in)
-       autotran <= 1'b1;   
+       autotran <= 1'b0;   
 
    //####################################
    //# READBACK
@@ -188,16 +191,20 @@ module spi_master_regs (/*AUTOARG*/
    always @ (posedge clk)
      read_data[31:0] <= 64'b0;
    
-   //wait circuit
+   //create a pulse on register reads
    oh_edge2pulse 
      e2pulse (.out (wait_pulse),
    	      .clk (clk),
-	      .in  (access));
+	      .in  (reg_read));
    
-   assign wait_out = wait_in  | 
-		     autotran |
-		     wait_pulse;
+   assign wait_out = fifo_wait;
+   
 
+/*wait_in   | 
+		     fifo_wait |
+		     autotran  |
+		     wait_pulse;
+*/
    assign dstaddr_out[AW-1:0] = srcaddr_in[AW-1:0];
    assign data_out[31:0]      = read_data[31:0];
    assign srcaddr_out[31:0]   = 32'b0;   
@@ -205,7 +212,6 @@ module spi_master_regs (/*AUTOARG*/
    assign ctrlmode_out[4:0]   = datamode_in[4:0];
 
 			      
-   
    emesh2packet e2p (.write_out		(1'b1),
 		     /*AUTOINST*/
 		     // Outputs

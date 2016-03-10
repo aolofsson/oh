@@ -13,7 +13,7 @@ module spi_master(/*AUTOARG*/
    );
 
    //parameters
-   parameter  DEPTH = 16;                // fifo depth   
+   parameter  DEPTH = 32;                // fifo depth   
    parameter  REGS  = 16;                // total regs   
    parameter  AW    = 32;                // addresss width
    localparam PW    = (2*AW+40);         // packet width
@@ -52,6 +52,7 @@ module spi_master(/*AUTOARG*/
    wire			fifo_empty;		// From spi_master_fifo of spi_master_fifo.v
    wire			fifo_prog_full;		// From spi_master_fifo of spi_master_fifo.v
    wire			fifo_read;		// From spi_master_io of spi_master_io.v
+   wire			fifo_wait;		// From spi_master_fifo of spi_master_fifo.v
    wire			lsbfirst;		// From spi_master_regs of spi_master_regs.v
    wire			rx_access;		// From spi_master_io of spi_master_io.v
    wire [63:0]		rx_data;		// From spi_master_io of spi_master_io.v
@@ -83,6 +84,7 @@ module spi_master(/*AUTOARG*/
 		    .rx_access		(rx_access),
 		    .spi_state		(spi_state[1:0]),
 		    .fifo_prog_full	(fifo_prog_full),
+		    .fifo_wait		(fifo_wait),
 		    .access_in		(access_in),
 		    .packet_in		(packet_in[PW-1:0]),
 		    .wait_in		(wait_in));
@@ -91,7 +93,8 @@ module spi_master(/*AUTOARG*/
    //# Transmit FIFO (SPI_TX)
    //#####################################################
 
-   /* spi_master_fifo AUTO_TEMPLATE (.fifo_dout		(fifo_dout[7:0]),
+   /* spi_master_fifo AUTO_TEMPLATE (.wait_out		(fifo_wait), 
+                                    .fifo_dout		(fifo_dout[7:0]),
     );
         */
    
@@ -101,7 +104,7 @@ module spi_master(/*AUTOARG*/
    spi_master_fifo(/*AUTOINST*/
 		   // Outputs
 		   .fifo_prog_full	(fifo_prog_full),
-		   .wait_out		(wait_out),
+		   .wait_out		(fifo_wait),		 // Templated
 		   .fifo_empty		(fifo_empty),
 		   .fifo_dout		(fifo_dout[7:0]),	 // Templated
 		   // Inputs
