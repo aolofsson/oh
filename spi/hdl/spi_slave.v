@@ -33,7 +33,7 @@ module spi_slave(/*AUTOARG*/
    // read request to core
    output 		access_out;      // valid transaction
    output [PW-1:0] 	packet_out;      // data to core
-   input 		wait_in;         // pushback from core
+   input 		wait_in;         // pushback from core (ignored!)
 
    // return from core
    input 		access_in;       // read response from core
@@ -41,14 +41,20 @@ module spi_slave(/*AUTOARG*/
    output 		wait_out;        // pushback (not used)
       
    /*AUTOINPUT*/
-   /*AUTOOUTPUT*/
+  
+   // End of automatics
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [6:0]		spi_addr;		// From spi_slave_io of spi_slave_io.v
+   wire			cpha;			// From spi_slave_regs of spi_slave_regs.v
+   wire			cpol;			// From spi_slave_regs of spi_slave_regs.v
+   wire			emode;			// From spi_slave_regs of spi_slave_regs.v
+   wire			irq_en;			// From spi_slave_regs of spi_slave_regs.v
+   wire			lsbfirst;		// From spi_slave_regs of spi_slave_regs.v
+   wire [5:0]		spi_addr;		// From spi_slave_io of spi_slave_io.v
    wire			spi_clk;		// From spi_slave_io of spi_slave_io.v
    wire [7:0]		spi_data;		// From spi_slave_io of spi_slave_io.v
-   wire			spi_request;		// From spi_slave_io of spi_slave_io.v
+   wire			spi_en;			// From spi_slave_regs of spi_slave_regs.v
    wire			spi_write;		// From spi_slave_io of spi_slave_io.v
    // End of automatics
    
@@ -57,6 +63,12 @@ module spi_slave(/*AUTOARG*/
 		    )
    spi_slave_regs (/*AUTOINST*/
 		   // Outputs
+		   .cpol		(cpol),
+		   .cpha		(cpha),
+		   .lsbfirst		(lsbfirst),
+		   .spi_en		(spi_en),
+		   .irq_en		(irq_en),
+		   .emode		(emode),
 		   .spi_regs		(spi_regs[SREGS*8-1:0]),
 		   .wait_out		(wait_out),
 		   // Inputs
@@ -67,8 +79,7 @@ module spi_slave(/*AUTOARG*/
 		   .spi_write		(spi_write),
 		   .spi_addr		(spi_addr[5:0]),
 		   .access_in		(access_in),
-		   .packet_in		(packet_in[PW-1:0]),
-		   .spi_request		(spi_request));
+		   .packet_in		(packet_in[PW-1:0]));
    
 
    spi_slave_io #(.AW(AW),
@@ -79,15 +90,18 @@ module spi_slave(/*AUTOARG*/
 		 .miso			(miso),
 		 .spi_clk		(spi_clk),
 		 .spi_write		(spi_write),
-		 .spi_addr		(spi_addr[6:0]),
+		 .spi_addr		(spi_addr[5:0]),
 		 .spi_data		(spi_data[7:0]),
 		 .access_out		(access_out),
 		 .packet_out		(packet_out[PW-1:0]),
-		 .spi_request		(spi_request),
 		 // Inputs
 		 .sclk			(sclk),
 		 .mosi			(mosi),
 		 .ss			(ss),
+		 .spi_en		(spi_en),
+		 .cpol			(cpol),
+		 .cpha			(cpha),
+		 .lsbfirst		(lsbfirst),
 		 .spi_regs		(spi_regs[SREGS*8-1:0]),
 		 .clk			(clk));
    

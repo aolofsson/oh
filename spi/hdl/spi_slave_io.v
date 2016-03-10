@@ -8,9 +8,9 @@
 module spi_slave_io(/*AUTOARG*/
    // Outputs
    miso, spi_clk, spi_write, spi_addr, spi_data, access_out,
-   packet_out, spi_request,
+   packet_out,
    // Inputs
-   sclk, mosi, ss, spi_regs, clk
+   sclk, mosi, ss, spi_en, cpol, cpha, lsbfirst, spi_regs, clk
    );
 
    //#################################
@@ -27,11 +27,17 @@ module spi_slave_io(/*AUTOARG*/
    input 	       mosi;           // slave input
    input 	       ss;             // slave select
    output 	       miso;           // slave output
+
+   //Control
+   input 	       spi_en;         // spi enable
+   input 	       cpol;           // cpol
+   input 	       cpha;           // cpha
+   input 	       lsbfirst;       // lsbfirst
    
    //register file interface
    output 	       spi_clk;         // spi clock for regfile
    output 	       spi_write;       // regfile write
-   output [6:0]        spi_addr;        // regfile addre
+   output [5:0]        spi_addr;        // regfile addres
    output [7:0]        spi_data;        // data for regfile
    input [SREGS*8-1:0] spi_regs;        // all registers
    
@@ -39,49 +45,28 @@ module spi_slave_io(/*AUTOARG*/
    input 	       clk;             // core clock
    output 	       access_out;      // read or write core command   
    output [PW-1:0]     packet_out;      // packet
-   output 	       spi_request;     // read core command (for regfile)
    
    //#################################
    //# BODY
    //#################################
 
-   reg [2:0] 	       spi_state;   
+   reg [1:0] 	       spi_state;   
    reg [7:0] 	       bit_count; 
-   reg [PW-1:0]        spi_tx;
-   reg 		       spi_access;
+   reg [7:0] 	       command_reg;   
    reg 		       packet_done_reg;
-   reg 		       spi_request;
    reg [PW-1:0]        packet_out;   
-   wire [7:0] 	       psize;
-   wire [PW-1:0]       rx_data;
-   
-   //#################################
-   //# RX SHIFT REGISTER
-   //#################################
 
-   oh_ser2par #(.PW(PW),
-		.SW(1))
-   ser2par (// Outputs
-	    .dout			(rx_data[PW-1:0]),
-	    // Inputs
-	    .clk			(sclk),
-	    .din			(mosi),
-	    .lsbfirst			(1'b0), //msb first
-	    .shift			(~ss)
-	    );
-   
-        
+   wire [7:0] 	       rx_data;
+   wire [63:0] 	       tx_data;
+  
    //#################################
    //# STATE MACHINE
    //#################################
 
-   assign psize[7:0] = spi_regs[15:8];
-   
-`define SPI_IDLE   3'b000  // when ss is high
-`define SPI_CMD    3'b001  // 8 cycles for command/addr
-`define SPI_READ   3'b010  // 8 cycles to shift out data
-`define SPI_WRITE  3'b011  // 8 cycles for data to write
-`define SPI_REMOTE 3'b100  // PW cycles (split transaction)
+`define SPI_IDLE   2'b00  // when ss is high
+`define SPI_CMD    2'b01  // 8 cycles for command/addr
+`define SPI_DATA   2'b10  // stay in datamode until done
+
       
    //state machine
    always @ (posedge sclk or posedge ss)
@@ -89,22 +74,9 @@ module spi_slave_io(/*AUTOARG*/
        spi_state[1:0] <=  `SPI_IDLE;
      else
        case (spi_state[1:0])
-	 `SPI_IDLE     : 
-	   spi_state[2:0] <= `SPI_CMD;
-	 `SPI_CMD      : 
-	   spi_state[2:0] <= read_cmd   ? `SPI_READ  :
-			     write_cmd  ? `SPI_WRITE :
-			     remote_cmd ? `SPI_REMOTE :
-			                  `SPI_CMD;
-	 `SPI_READ     : 
-	   spi_state[2:0] <= byte_done   ? `SPI_IDLE : 
-			                   `SPI_READ;
-	 `SPI_WRITE    : 
-	   spi_state[2:0] <= byte_done   ? `SPI_IDLE : 
-					   `SPI_WRITE;
-	 `SPI_REMOTE   : 
-	   spi_state[2:0] <= packet_done ? `SPI_IDLE : 
-					   `SPI_REMOTE;
+	 `SPI_IDLE :  spi_state[1:0] <= `SPI_CMD;
+	 `SPI_CMD  :  spi_state[1:0] <= byte_done ? `SPI_DATA : `SPI_CMD;
+	 `SPI_DATA :  spi_state[1:0] <= `SPI_DATA;
        endcase // case (spi_state[1:0])
    
    //bit counter
@@ -113,77 +85,82 @@ module spi_slave_io(/*AUTOARG*/
        bit_count[7:0] <= 'b0;
      else
        bit_count[7:0] <=  bit_count[7:0] + 1'b1;
-
-   assign read_cmd      = (rx_data[7:6]==2'b10) &
-			  (spi_state[2:0]==`SPI_CMD);
-
-   assign write_cmd     = (rx_data[7:6]==2'b00) &
-			  (spi_state[2:0]==`SPI_CMD);
    
-   assign remote_cmd    = (rx_data[7:6]==2'b11) &
-			  (spi_state[2:0]==`SPI_CMD);
-      
-   assign byte_done     = &bit_count[2:0];
+   assign byte_done  = (bit_count[2:0]==3'b000);
+        
+   // command/address register
+   // auto increment for every byte
+   always @ (posedge sclk)
+     if((spi_state[1:0]==`SPI_CMD) & byte_done)
+       command_reg[7:0] <= rx_data[7:0];
+     else if(byte_done)
+       command_reg[7:0] <= {command_reg[7:6],
+			    command_reg[5:0] + 1'b1};
+              
+   //#################################
+   //# RX SHIFT REGISTER
+   //#################################
 
-   //change to sl?
-   assign packet_done   = (bit_count[7:0]==psize[7:0]);
+   oh_ser2par #(.PW(8),
+		.SW(1))
+   ser2par (// Outputs
+	    .dout	(rx_data[7:0]),
+	    // Inputs
+	    .clk	(sclk),
+	    .din	(mosi),
+	    .lsbfirst	(lsbfirst), //msb first
+	    .shift	(~ss)
+	    );
 
    //#################################
    //# TX SHIFT REGISTER
    //#################################
 
-   assign load_tx  = byte_done & (spi_state[1:0]==`SPI_CMD);
-    
-   always @ (posedge sclk)
-     if(load_tx)
-       spi_tx[7:0] <= spi_regs[rx_data[6:0]]; // 
-     else if(~ss)
-       spi_tx[7:0] <= {spi_tx[6:0],1'b0};   
+   assign tx_load        = byte_done & (spi_state[1:0]==`SPI_CMD);
+   assign tx_data[63:0]  = spi_regs[spi_addr[5:0]+:64];
 
-   assign miso = ~ss & spi_tx[7];
-     
+   oh_par2ser #(.PW(64),
+		.SW(1))
+   par2ser (.dout	(miso),
+	    .access_out (),
+	    .wait_out	(),
+	    .clk	(clk),
+	    .nreset	(nreset),
+	    .din	(tx_data[63:0]),
+	    .shift      (~ss),
+	    .lsbfirst	(lsbfirst),
+	    .load       (tx_load),
+	    .datasize   (6'b111111),//TODO:simplify
+	    .fill       (1'b0),
+	    .wait_in    (1'b0)
+	    );
+   
    //#################################
    //# REGISTER FILE INTERFACE
    //#################################
    assign spi_clk       = sclk;
-   assign spi_addr[5:0] = rx_data[5:0];
-   assign spi_write     = byte_done & (spi_state[2:0]==`SPI_WRITE);
-   assign spi_read      = byte_done & (spi_state[2:0]==`SPI_READ);
+   assign spi_addr[5:0] = command_reg[5:0];   
+   assign spi_read      = command_reg[7:6]==2'b11;   
+   assign spi_write     = command_reg[7:6]==2'b00;
+   assign spi_remote    = command_reg[7:6]==2'b01;   
    assign spi_data[7:0] = rx_data[7:0];
  
-   //#################################
-   //# CLOCK SYNCHRONIZATION
-   //#################################
-
-   //!!! CLK_CORE FRE MUST BE > 2 * SCLK FREQ !!!
+   //###################################
+   //# SYNCHRONIZATION TO CORE
+   //###################################
    
-   //synchronizer
-   oh_dsync dsync (.dout (packet_done_sync),
+   //sync the ss to free running clk
+   oh_dsync dsync (.dout (ss_sync),
 		   .clk  (clk),
-		   .din  (packet_done)
+		   .din  (ss & spi_remote)
 		   );
 
-   //posedge detect and pipeline to line up with data
-   always @ (posedge clk)
-     begin
-	packet_done_reg <= packet_done_sync;	
-	spi_access      <= spi_access_pulse;	
-     end
+   //create single cycle pulse
+   oh_rise2pulse r2p (.out  (access_out),
+		      .clk  (clk),
+		      .in   (ss_sync)
+		      );
 
-   assign spi_access_pulse = packet_done_sync & ~packet_done_reg;	
-   
-   //spi read
-   always @ (posedge clk)
-     if(spi_access_pulse)
-       spi_request <= spi_read;
-     else
-       spi_request <= 1'b0;
-         
-   //sample rx data
-   always @ (posedge clk)
-     if(spi_access_pulse)
-       packet_out[PW-1:0] <= rx_data[PW-1:0];
-   
 endmodule // spi_slave_io
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl")
