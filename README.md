@@ -1,9 +1,9 @@
 =======
-# OH! Open hardware for Chips and FPGAs
+# OH! Open Hardware
 
 ![alt tag](common/docs/lego.jpg)
 
-## CONTENT
+## Content
 
 1. [Philosophy](#philosophy)
 2. [Modules](#modules)
@@ -18,7 +18,7 @@
 
 ----
 
-## PHILOSOPHY
+## Philosophy
 
 1. Make it work
 2. Make it simple
@@ -28,26 +28,25 @@
 
 ## Modules
 
-| FOLDER                   | STATUS| DESCRIPTION                           |
-|--------------------------|-------|---------------------------------------|
-|[accelerator](accelerator)| FPGA  | Accelerator tutorial                  |
-|[axi](axi)                | FPGA  | AXI master and slave interfaces       |
-|[c2c](c2c)                | HH    | Protocol agnostic chip to chip link   |
-|[chip](chip)              | SI    | Chip design reference flow            |
-|[common](common)          | SI    | Library of basic components           |
-|[elink](elink)            | SI    | Point to point LVDS link              |
-|[emailbox](emailbox)      | FPGA  | Mailbox with interrupt output         |
-|[emesh](emesh)            | SI    | Emesh interface utility circuits      |
-|[emmu](emmu)              | FPGA  | Memory transaction translation unit   |
-|[etrace](etrace)          | HH    | Logic Analyzer                        |
-|[gpio](gpio)              | HH    | General Purpose IO                    |
-|[mio](mio)                | HH    | Mini-IO: lightweight parallel link    |
-|[pic](pic)                | SI    | Programmable interrupt controller     |
-|[parallella](parallella)  | FPGA  | Parallella FPGA logic                 |
-|[risc-v](risc-v)          | HH    | RISC-V implementation                 |
-|[spi](spi)                | HH    | SPI master/slave                      |
-|[verilog](verilog)        | HH    | Verilog referenca material            |
-|[xilibs](xilibs)          | FPGA  | Xilinx simulation models              |
+| FOLDER                             | STATUS| DESCRIPTION                    |
+|------------------------------------|-------|--------------------------------|
+|[accelerator](accelerator/README.md)| FPGA  | Accelerator tutorial           |
+|[axi](axi/README.md)                | FPGA  | AXI master and slave interfaces|
+|[chip](chip/README.md)              | SI    | Chip design reference flow     |
+|[common](common/README.md)          | SI    | Library of basic components    |
+|[elink](elink/README.md)            | SI    | Point to point LVDS link       |
+|[emailbox](emailbox/README.md)      | FPGA  | Mailbox with interrupt output  |
+|[emesh](emesh/README.md)            | SI    | Emesh interface circuits       |
+|[emmu](emmu/README.md)              | FPGA  | Memory translation unit        |
+|[etrace](etrace/README.md)          | HH    | Logic Analyzer                 |
+|[gpio](gpio/README.md)              | HH    | General Purpose IO             |
+|[mio](mio/README.md)                | HH    | Lightweight parallel link      |
+|[pic](pic/README.md)                | SI    | Interrupt controller           |
+|[parallella](parallella/README.md)  | FPGA  | Parallella FPGA logic          |
+|[risc-v](risc-v/README.md)          | HH    | RISC-V implementation          |
+|[spi](spi/README.md)                | HH    | SPI master/slave               |
+|[verilog](verilog/README.md)        | HH    | Verilog referenca material     |
+|[xilibs](xilibs/README.md)          | FPGA  | Xilinx simulation models       |
 
 **NOTES:**
 * "SI"= Silicon validated
@@ -56,7 +55,7 @@
 
 ----
 
-## HOW TO SIMULATE
+## How to simulate
 
 ```sh
 ./build.sh gpio/dv/dut_gpio.v         # compile gpio testbench (example)
@@ -81,13 +80,13 @@
 
 ----
 
-## HOW TO BUILD
+## How to build
 
 TBD
 
 ----
 
-## DESIGN GUIDE
+## Design Guide
 
 * Separate control from the datapath
 * Separate configuration from design
@@ -101,7 +100,7 @@ TBD
 
 ----
 
-# CODING GUIDE
+# Coding Guide
 
 * Max 80 chars per line
 * One input/output statement per line
@@ -155,7 +154,7 @@ TBD
 
 ----
 
-## DOCUMENTATION GUIDE
+## Documentation Guide
 
 * Write docs in markdown
 * Specify which registers are reset
@@ -179,7 +178,7 @@ TBD
 
 ----
 
-## DESIGN CHECKLIST
+## Design Checklist
 
 * Is the block datasheet complete and accurate?
 * Is there a user guide?
@@ -192,7 +191,7 @@ TBD
 
 ----
 
-## RECOMMENDED READING
+## Recommended Reading
 
 * [Verilog Reference](verilog/verilog_reference.md)
 * [Glossary](chip/docs/glossary.md)
@@ -204,7 +203,7 @@ TBD
 * [Wavedrom](http://wavedrom.com/editor.html)
 * [FuseSoC](https://github.com/olofk/fusesoc)
 
-## LICENSE
+## License
 The OH! repository source code is licensed under the MIT license unless otherwise specified. See [LICENSE](LICENSE) for MIT copyright terms. Design specific licenses can be found in the folder root (eg: aes/LICENSE) 
 
 ----
