@@ -27,7 +27,11 @@ module dut(/*AUTOARG*/
    output [N-1:0]    access_out;
    output [N*PW-1:0] packet_out;
    input [N-1:0]     wait_in;
-    
+
+   assign dut_active = 1'b1;
+   assign clkout     = clkin1;
+   assign clk        = clkin1;
+       
 endmodule // dut
 
 
