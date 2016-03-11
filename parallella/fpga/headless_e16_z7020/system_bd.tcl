@@ -186,6 +186,7 @@ proc create_root_design { parentCell } {
 
   # Create instance: parallella_base_0, and set properties
   set parallella_base_0 [ create_bd_cell -type ip -vlnv www.parallella.org:user:parallella_base:1.0 parallella_base_0 ]
+  set_property -dict [ list CONFIG.NGPIO {24}  ] $parallella_base_0
 
   # Create instance: proc_sys_reset_0, and set properties
   set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
