@@ -1,3 +1,4 @@
+
 //#############################################################################
 //# Purpose: SPI master (configurable)                                        #
 //#############################################################################
@@ -59,20 +60,17 @@ module spi_master_regs (/*AUTOARG*/
    reg [7:0] 	     status_reg;
    reg [7:0] 	     clkdiv_reg;
    reg [7:0] 	     cmd_reg;
-   reg [7:0] 	     rx_reg[7:0];
-   
+   reg [63:0] 	     rx_reg; 
+   reg [31:0] 	     reg_rdata;
    reg 		     autotran;
-   reg [31:0] 	     read_data;
    reg 		     access_out;
+   reg [AW-1:0]      dstaddr_out;   
+   reg [4:0] 	     ctrlmode_out;   
+   reg [1:0] 	     datamode_out;
    
    integer 	     i;
 
    wire [31:0] 	     reg_wdata;
-   wire [1:0] 	     datamode_out;
-   wire [AW-1:0]     dstaddr_out;
-   wire [AW-1:0]     data_out;
-   wire [AW-1:0]     srcaddr_out;
-   wire [4:0] 	     ctrlmode_out;
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
@@ -104,11 +102,11 @@ module spi_master_regs (/*AUTOARG*/
    assign reg_read        = access_in & ~write_in;
    assign reg_wdata[31:0] = data_in[AW-1:0];
    
-   assign config_write    = reg_write & (dstaddr_in[7:0]==`SPI_CONFIG);
-   assign status_write    = reg_write & (dstaddr_in[7:0]==`SPI_STATUS);
-   assign clkdiv_write    = reg_write & (dstaddr_in[7:0]==`SPI_CLKDIV);
-   assign cmd_write       = reg_write & (dstaddr_in[7:0]==`SPI_CMD);
-   assign tx_write        = reg_write & (dstaddr_in[7:0]==`SPI_TX);
+   assign config_write    = reg_write & (dstaddr_in[5:0]==`SPI_CONFIG);
+   assign status_write    = reg_write & (dstaddr_in[5:0]==`SPI_STATUS);
+   assign clkdiv_write    = reg_write & (dstaddr_in[5:0]==`SPI_CLKDIV);
+   assign cmd_write       = reg_write & (dstaddr_in[5:0]==`SPI_CMD);
+   assign tx_write        = reg_write & (dstaddr_in[5:0]==`SPI_TX);
 
    //####################################
    //# CONFIG
@@ -166,9 +164,8 @@ module spi_master_regs (/*AUTOARG*/
    //####################################
    always @ (posedge clk)
      if(rx_access)
-       for(i=0;i<8;i=i+1)
-	 rx_reg[i] <= rx_data[i*8+:8];
-
+       rx_reg[63:0] <= rx_data[63:0];
+   
    //####################################
    //# AUTOTRANSFER
    //####################################
@@ -184,12 +181,27 @@ module spi_master_regs (/*AUTOARG*/
    //####################################
    //# READBACK
    //####################################
+  
+   //read back registers
+   always @ (posedge clk)
+     if(reg_read)
+       case(dstaddr_in[4:0])
+	 `SPI_CONFIG : reg_rdata[31:0] <= {24'b0,config_reg[7:0]};
+	 `SPI_STATUS : reg_rdata[31:0] <= {24'b0,status_reg[7:0]};
+	 `SPI_CLKDIV : reg_rdata[31:0] <= {24'b0,clkdiv_reg[7:0]};
+	 `SPI_CMD    : reg_rdata[31:0] <= {24'b0,cmd_reg[7:0]};
+	 `SPI_RX0    : reg_rdata[31:0] <= rx_reg[31:0];
+	 `SPI_RX1    : reg_rdata[31:0] <= rx_reg[63:32];	 
+	 default : reg_rdata[31:0] <= 32'hDEADBEEF;	 
+       endcase // case (dstaddr_in[5:0])
 
    always @ (posedge clk)
-     access_out <= access_in;
-      
-   always @ (posedge clk)
-     read_data[31:0] <= 64'b0;
+     begin
+	access_out          <= access_in;
+	dstaddr_out[AW-1:0] <= srcaddr_in[AW-1:0];
+	ctrlmode_out[4:0]   <= ctrlmode_in[4:0];
+	datamode_out[1:0]   <= datamode_in[1:0];
+     end
    
    //create a pulse on register reads
    oh_edge2pulse 
@@ -199,29 +211,25 @@ module spi_master_regs (/*AUTOARG*/
    
    assign wait_out = fifo_wait;
    
-
+   
 /*wait_in   | 
 		     fifo_wait |
 		     autotran  |
 		     wait_pulse;
 */
-   assign dstaddr_out[AW-1:0] = srcaddr_in[AW-1:0];
-   assign data_out[31:0]      = read_data[31:0];
-   assign srcaddr_out[31:0]   = 32'b0;   
-   assign ctrlmode_out[4:0]   = ctrlmode_in[4:0];
-   assign ctrlmode_out[4:0]   = datamode_in[4:0];
+  
 
 			      
    emesh2packet e2p (.write_out		(1'b1),
+		     .srcaddr_out	(32'b0),
+		     .data_out		(reg_rdata[31:0]),
 		     /*AUTOINST*/
 		     // Outputs
 		     .packet_out	(packet_out[PW-1:0]),
 		     // Inputs
 		     .datamode_out	(datamode_out[1:0]),
 		     .ctrlmode_out	(ctrlmode_out[4:0]),
-		     .dstaddr_out	(dstaddr_out[AW-1:0]),
-		     .data_out		(data_out[AW-1:0]),
-		     .srcaddr_out	(srcaddr_out[AW-1:0]));
+		     .dstaddr_out	(dstaddr_out[AW-1:0]));
    
 endmodule // spi_master_regs
 
