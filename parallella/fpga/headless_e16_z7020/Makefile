@@ -24,7 +24,7 @@ all: $(M_DEPS)
 	rm -f system_wrapper.bit.bin bit2bin.bin
 	$(M_VIVADO) run.tcl
 	bootgen -image bit2bin.bif -split bin
-	cp -f system_wrapper.bit.bin parallella.bit.bin
+	cp -f system_wrapper.bit.bin parallella_e16_headless_gpiose_7020.bit.bin
 
 clean:
 	rm -rf $(M_FLIST)
