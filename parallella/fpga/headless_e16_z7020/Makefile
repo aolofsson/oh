@@ -15,7 +15,7 @@ M_FLIST += *.runs
 M_FLIST += *.srcs
 M_FLIST += *.sdk
 M_FLIST += .Xil
-M_FLIST += parallella.bit.bin
+M_FLIST += parallella_e16_headless_gpiose_7020.bit.bin
 M_FLIST += system_wrapper.bit.bin
 
 .PHONY: all clean
