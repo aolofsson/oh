@@ -74,7 +74,7 @@ Up to 16 user specified byte wide registers
 | SPI_CONFIG    |  0x0    | RD/WR  | L       | Configuration register          |
 | SPI_STATUS    |  0x1    | RD/WR  | n/a     | Status register                 |
 | SPI_TX        |  0x8    | RD     | n/a     | Split transaction return data   |
-| SPI_RX        |  0x10   | RD/WR  | n/a     | Receiver data register          |
+| SPI_USER      |  0x20   | RD/WR  | n/a     | User defined registers          |
 
 **SPI_CONFIG:**
 

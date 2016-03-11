@@ -85,12 +85,11 @@ module spi_slave_io(/*AUTOARG*/
      else
        bit_count[7:0] <=  bit_count[7:0] + 1'b1;
    
-   assign byte_done  = (bit_count[2:0]==3'b000);
+   assign byte_done  = (spi_state[1:0]!=`SPI_IDLE) &
+		       (bit_count[2:0]==3'b000);
         
    // command/address register
    // auto increment for every byte
-
-
    always @ (posedge sclk)
      if((spi_state[1:0]==`SPI_CMD) & byte_done)
        command_reg[7:0] <= rx_data[7:0];
@@ -147,9 +146,10 @@ module spi_slave_io(/*AUTOARG*/
 			  (command_reg[7:6]==2'b00) &
 			  (spi_state[1:0]==`SPI_DATA);
   
-   assign spi_read      = command_reg[7:6]==2'b11; //read from sclk reg  
+   assign spi_read      = command_reg[7:6]==2'b10; //read from sclk reg  
 
-   assign spi_remote    = command_reg[7:6]==2'b10; //send remote request
+   assign spi_remote    = command_reg[7:6]==2'b11; //send remote request
+
    
    assign spi_wdata[7:0] = rx_data[7:0];
  

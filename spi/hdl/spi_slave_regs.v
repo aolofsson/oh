@@ -16,11 +16,11 @@ module spi_slave_regs (/*AUTOARG*/
    );
 
    //parameters
-   parameter  UREGS  = 13;        // number of user regs
+   parameter  UREGS  = 13;        // number of user regs (max 48)
    parameter  CHIPID = 0;         // reset chipid value   
    parameter  AW     = 32;        // address width
    localparam PW     = (2*AW+40); // packet width
-   localparam SREGS  = UREGS+16;  // total regs
+   localparam SREGS  = UREGS+32;  // total regs
            
    // clk, rest, chipid
    input 	   clk;           // core clock
@@ -55,6 +55,7 @@ module spi_slave_regs (/*AUTOARG*/
    
    reg [63:0] 	   core_regs;
    reg [7:0] 	   user_regs[UREGS-1:0];
+   reg [511:0]     spi_regs;
    wire [63:0] 	   core_data;   
    integer 	   i;
 
@@ -64,7 +65,7 @@ module spi_slave_regs (/*AUTOARG*/
    
    assign spi_config_write  = spi_write & (spi_addr[5:0]==`SPI_CONFIG);
    assign spi_status_write  = spi_write & (spi_addr[5:0]==`SPI_STATUS);
-   assign spi_user_write    = spi_write & (|spi_addr[5:4]);
+   assign spi_user_write    = spi_write & (spi_addr[5]);
 
    //#####################################
    //# CORE DECODE
@@ -85,7 +86,7 @@ module spi_slave_regs (/*AUTOARG*/
    //# CONFIG [0]
    //#####################################
   
-   always @ (posedge spi_clk or negedge nreset)
+   always @ (negedge spi_clk or negedge nreset)
      if(!nreset)
        spi_config[7:0] <= 'b0;
      else if(spi_config_write)
@@ -105,12 +106,12 @@ module spi_slave_regs (/*AUTOARG*/
 
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       spi_status[7:0] <= 'b0;
-     else if(spi_config_write)
-       spi_status[7:0] <= spi_wdata[7:0];
-     else
+       spi_status[7:0] <= 'b0;    
+     else if (1'b0)
+       spi_status[7:0] <= 1'b0; // todo: clear with spi request   
+     else if(access_in)
        spi_status[7:0] <= {7'b0,
-			   access_in}; //data ready
+			   1'b1}; //data ready
         
    //#####################################
    //# DATA FROM SPLIT TRANSACTION (8/16)
@@ -125,14 +126,32 @@ module spi_slave_regs (/*AUTOARG*/
    //# USER SPACE REGISTERS
    //#####################################
 
-   always @ (posedge spi_clk)
+   always @ (negedge spi_clk)
      if(spi_user_write)
-       user_regs[spi_addr[5:0]] <= spi_wdata[7:0]; 
+       user_regs[spi_addr[4:0]] <= spi_wdata[7:0]; 
 
+   //#####################################
+   //# REGISTER VECTOR (FOR FLEXIBILITY)
+   //#####################################
+
+   always @*
+     begin
+	spi_regs[7:0]   = spi_config[7:0];
+	spi_regs[15:8]  = spi_status[7:0];
+	spi_regs[63:16] = 'b0;
+	spi_regs[127:64] = core_regs[63:0];
+	spi_regs[255:128] = 'b0;
+	for(i=0;i<32;i=i+1)
+	  spi_regs[256+8*i+:8] = user_regs[i];
+     end
+
+   
    //#####################################
    //# READBACK
    //#####################################
 
+   assign spi_rdata[7:0] = spi_regs[8*spi_addr[5:0]+:8];
+   
 endmodule // spi_slave_regs
 
 // Local Variables:
