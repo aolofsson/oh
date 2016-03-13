@@ -1,0 +1,1 @@
+`define CFG_TARGET "GENERIC"

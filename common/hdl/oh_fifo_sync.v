@@ -41,7 +41,9 @@ module oh_fifo_sync (/*AUTOARG*/
    
    assign empty       = (rd_count[AW-1:0] == 0);   
    assign prog_full   = (rd_count[AW-1:0] >= PROG_FULL);   
-   assign full        = (rd_count[AW-1:0] == DEPTH);
+   assign full        = (rd_count[AW-1:0] == (DEPTH-1));
+   assign fifo_read   = rd_en & ~empty;
+   assign fifo_write  = wr_en & ~full;
    
    always @ ( posedge clk or negedge nreset) 
      if(!nreset) 
@@ -50,17 +52,17 @@ module oh_fifo_sync (/*AUTOARG*/
           rd_addr[AW-1:0]   <= 'b0;
           rd_count[AW-1:0]  <= 'b0;
        end 
-     else if(wr_en & rd_en) 
+     else if(fifo_write & fifo_read) 
        begin
 	  wr_addr[AW-1:0] <= wr_addr[AW-1:0] + 'd1;
 	  rd_addr[AW-1:0] <= rd_addr[AW-1:0] + 'd1;	      
        end 
-     else if(wr_en) 
+     else if(fifo_write) 
        begin
 	  wr_addr[AW-1:0] <= wr_addr[AW-1:0]  + 'd1;
 	  rd_count[AW-1:0]<= rd_count[AW-1:0] + 'd1;	
        end 
-     else if(rd_en) 
+     else if(fifo_read) 
        begin	      
           rd_addr[AW-1:0] <= rd_addr[AW-1:0]  + 'd1;
           rd_count[AW-1:0]<= rd_count[AW-1:0] - 'd1;
@@ -74,11 +76,11 @@ module oh_fifo_sync (/*AUTOARG*/
 	// read port
 	.rd_dout	(dout[DW-1:0]),
 	.rd_clk		(clk),
-	.rd_en		(rd_en),
+	.rd_en		(fifo_read),
 	.rd_addr	(rd_addr[AW-1:0]),
 	// write port
 	.wr_clk		(clk),
-	.wr_en		(wr_en),
+	.wr_en		(fifo_write),
   	.wr_wem		({(DW){1'b1}}),
 	.wr_addr	(wr_addr[AW-1:0]),
 	.wr_din	        (din[DW-1:0])

@@ -5,6 +5,11 @@
 *.e
 *.d
 bin/
+
+#########################
+# Auto created links
+symlinks
+
 ######################
 # Emacs/vim/gedit backup files
 *~
@@ -19,7 +24,7 @@ bin/
 *.vcd
 *.out
 *.trace
-
+*.bin
 #######################
 # XILINX crap
 *.xpr
@@ -44,3 +49,8 @@ xgui/
 *.dcp
 *.veo
 *_ooc.*
+
+#######################
+#ASIC proprietary files
+proprietary/
+

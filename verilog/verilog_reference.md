@@ -92,18 +92,19 @@ Nets correspond to physical wires that connect instances. The default range of a
 
 **Net types**
 
-|--------|-------|
-| wire   |       |
-| tri    |       |
-| wand   |       |
-| triand |       |
-| wor    |       |
-| trior  |       |
-| tri0   |       |
-| tri1   |       |
-| supply0|       |
-| supply1|       |
-| trireg |       |
+| TYPE   | NOTES   |
+|--------|---------|
+| wire   |         |
+| tri    |         |
+| wand   |         |
+| triand |         |
+| wor    |         |
+| trior  |         |
+| tri0   |         |
+| tri1   |         |
+| supply0|         |
+| supply1|         |
+| trireg |         |
 
 For a wire, if all the drivers have the same value then the wire resolves to this value. If all the drivers except one have a value of z then the wire resolves to the non z value. If two or more non z drivers have different drive strength, then the wire resolves to the stronger driver. If two drivers of equal strength have different values, then the wire resolves to x. A trireg net behaves like a wire except that when all the drivers of the net are in high impedance (z) state, then the net retains its last driven value. trireg ’s are used to model capacitive networks.
 
@@ -156,6 +157,7 @@ If ‘‘SYNTH’’ is a defined macro, then the Verilog code until ‘endif is
 
 The code in <Verilog file> is inserted for the next processing phase. Other standard compiler directives are listed below:
 
+| DIRECTIVE                   | NOTES                                    |
 |-----------------------------|------------------------------------------|
 | ‘resetall                   | resets all compiler directives to default|
 | ‘define                     | text-macro substitution                  |
@@ -182,26 +184,27 @@ System taska are tool specific tasks and functions..
 ```
 
 A list of standard system tasks and functions are listed below:
-
-| $display, $write        | utility to display information
-| $fdisplay, $fwrite      | write to file
-| $strobe, $fstrobe       | display/write simulation data
-| $monitor, $fmonitor     | monitor, display/write information to file
-| $time, $realtime        | current simulation time
-| $finish                 | exit the simulator
-| $stop                   | stop the simulator
-| $setup                  | setup timing check
-| $hold, $width           | hold/width timing check
-| $setuphold              | combines hold and setup
-| $readmemb/$readmemh     | read stimulus patterns into memory
-| $sreadmemb/$sreadmemh   | load data into memory
-| $getpattern             | fast processing of stimulus patterns
-| $history                | print command history
-| $save,$restart,$incsave | saving, restarting, incremental saving
-| $scale                  | scaling timeunits from another module
-| $scope                  | descend to a particular hierarchy level
-| $showscopes             | complete list of named blocks, tasks, modules...
-| $showvars               | show variables at scope
+| COMMAND                 | NOTES                                       |
+|-------------------------|---------------------------------------------|
+| $display, $write        | utility to display information              |
+| $fdisplay, $fwrite      | write to file                               |
+| $strobe, $fstrobe       | display/write simulation data               |
+| $monitor, $fmonitor     | monitor, display/write information to file  |
+| $time, $realtime        | current simulation time                     |
+| $finish                 | exit the simulator                          |
+| $stop                   | stop the simulator                          |
+| $setup                  | setup timing check                          |
+| $hold, $width           | hold/width timing check                     |
+| $setuphold              | combines hold and setup                     |
+| $readmemb/$readmemh     | read stimulus patterns into memory          |
+| $sreadmemb/$sreadmemh   | load data into memory                       |
+| $getpattern             | fast processing of stimulus patterns        |
+| $history                | print command history                       |
+| $save,$restart,$incsave | saving, restarting, incremental saving      |
+| $scale                  | scaling timeunits from another module       |
+| $scope                  | descend to a particular hierarchy level     |
+| $showscopes             | list of named blocks, tasks, modules        |
+| $showvars               | show variables at scope                     |
 
 
 ## 5.0 Reserved Keywords

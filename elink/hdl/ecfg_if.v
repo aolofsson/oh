@@ -1,4 +1,4 @@
-`include "elink_regmap.v"
+`include "elink_regmap.vh"
 module ecfg_if (/*AUTOARG*/
    // Outputs
    mi_mmu_en, mi_dma_en, mi_cfg_en, mi_we, mi_addr, mi_din,

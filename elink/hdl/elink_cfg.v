@@ -1,11 +1,4 @@
-/*
- ########################################################################
- MASTER ENABLE, CLOCKS, CHIP-ID
- ######################################################################## 
- */
-
-`include "elink_regmap.v"
-
+`include "elink_regmap.vh"
 module elink_cfg (/*AUTOARG*/
    // Outputs
    txwr_gated_access, etx_soft_reset, erx_soft_reset, clk_config,

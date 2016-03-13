@@ -21,23 +21,25 @@
 
 #include "common.h"
 
+/* Cache fd */
+static int fd = -1;
+
 /* TODO: Include in e-hal API */
 int e_mailbox_read(struct e_message *msg, int flags)
 {
-	int fd, rc;
-	struct epiphany_mailbox_msg kernel_msg;
+	int rc;
+	struct e_mailbox_msg kernel_msg;
 
 	flags &= O_NONBLOCK;
 
-	fd = open("/dev/epiphany", flags, O_RDONLY);
+	if (fd < 0)
+        fd = open("/dev/epiphany/elink0", flags, O_RDONLY);
 	if (fd < 0)
 		return fd;
 
-	rc = ioctl(fd, EPIPHANY_IOC_MAILBOX_READ, &kernel_msg);
-	if (rc) {
-		close(fd);
+	rc = ioctl(fd, E_IOCTL_MAILBOX_READ, &kernel_msg);
+	if (rc)
 		return rc;
-	}
 
 #if 0
 	msg->from = kernel_msg.from;
@@ -50,23 +52,21 @@ int e_mailbox_read(struct e_message *msg, int flags)
 	msg->data = kernel_msg.from;
 #endif
 
-	close(fd);
-
 	return 0;
 }
 
 int e_mailbox_count()
 {
-	int fd, rc;
+    int rc;
 
-	fd = open("/dev/epiphany", 0, O_RDONLY);
+    if (fd < 0)
+        fd = open("/dev/epiphany/elink0", 0, O_RDONLY);
 	if (fd < 0)
 		return fd;
 
-	rc = ioctl(fd, EPIPHANY_IOC_MAILBOX_COUNT);
+	rc = ioctl(fd, E_IOCTL_MAILBOX_COUNT);
 
-	close(fd);
-	return rc;
+    return rc;
 }
 
 int main(int argc, char *argv[])
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 	e_write(&dev, 0, 0, STOP_ADDR, &zero, sizeof(zero));
 	e_write(&dev, 0, 0, STEP_ADDR, &zero, sizeof(zero));
 
-	e_start_group(&dev);
+	e_start(&dev, 0, 0);
 
 	/* Test blocking wait with interrupts */
 	printf("Testing blocking wait with interrupts\n");
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 
 	/* Test reading using count */
 
-	expected = 1000000;
+	expected = NMESSAGES;
 	received = 0;
 	errors = 0;
 
@@ -131,10 +131,14 @@ int main(int argc, char *argv[])
 			sched_yield();
 
 		while (count--) {
-			if (!e_mailbox_read(&msg, 0))
-				received++;
-			else
+			if (e_mailbox_read(&msg, 0)) {
 				errors++;
+				continue;
+			}
+			if (received != msg.data)
+				errors++;
+
+			received++;
 		}
 		count = e_mailbox_count();
 	}
@@ -148,4 +152,6 @@ int main(int argc, char *argv[])
 
 	e_close(&dev);
 	e_finalize();
+
+	return errors ? EXIT_FAILURE : EXIT_SUCCESS;
 }

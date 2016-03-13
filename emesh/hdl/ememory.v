@@ -6,7 +6,6 @@ module ememory(/*AUTOARG*/
    clk, nreset, coreid, access_in, packet_in, wait_in
    );
 
-
    parameter AW    = 32;   
    parameter IDW   = 12;  
    parameter DEPTH = 65536;   
@@ -139,9 +138,19 @@ module ememory(/*AUTOARG*/
 			   {(8){wen[0]}}
 			   }
 			  ),
-		    .addr	(addr[MAW-1:0]),
-		    .din	(din[63:0]),
-		    .dout	(dout[63:0])
+		    .addr     (addr[MAW-1:0]),
+		    .din      (din[63:0]),
+		    .dout     (dout[63:0]),
+		    .vdd      (1'b1),
+   		    .vddm     (1'b1),
+       		    .sleep    (1'b0),
+       		    .shutdown (1'b0),
+       		    .repair   (32'b0),
+		    .bist_en  (1'b0),
+		    .bist_we  (1'b0),
+    		    .bist_wem (64'b0),
+		    .bist_addr({(MAW){1'b0}}),
+		    .bist_din (64'b0)
 		    );
 
    //Outgoing transaction     

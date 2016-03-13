@@ -41,7 +41,7 @@ module emesh_mux (/*AUTOARG*/
    //arbiter
    generate
       if(CFG=="STATIC")		
-	begin
+	begin : arbiter_static
 	   oh_arbiter #(.N(N))
 	   arbiter(// Outputs
 		   .grants   (grants[N-1:0]),
@@ -50,9 +50,11 @@ module emesh_mux (/*AUTOARG*/
 		   );      
 	end
       else if (CFG=="DYNAMIC")
-	begin
+	begin : arbiter_dynamic
+`ifdef TARGET_SIM
 	   initial
 	     $display("ROUND ROBIN ARBITER NOT IMPLEMENTED\n");	   
+`endif
 	end
    endgenerate
    

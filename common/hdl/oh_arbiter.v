@@ -24,7 +24,7 @@ module oh_arbiter(/*AUTOARG*/
    genvar 	  j;     
    generate       
       if(TYPE=="FIXED")
-	begin
+	begin : arbiter_fixed
 	   assign waitmask[0]   = 1'b0;      
 	   for (j=N-1; j>=1; j=j-1) 
 	     begin : gen_arbiter     

@@ -1,1 +1,0 @@
-Verious fifos and memories

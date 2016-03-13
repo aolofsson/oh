@@ -1,4 +1,4 @@
-`include "elink_regmap.v"
+`include "elink_regmap.vh"
 module erx_arbiter (/*AUTOARG*/
    // Outputs
    rx_rd_wait, rx_wr_wait, edma_wait, ecfg_wait, rxwr_access,

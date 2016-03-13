@@ -1,7 +1,6 @@
 //########################################################
 // ACCELERATOR + AXI_SLAVE + AXI_MASTER
 //########################################################
-`include "accelerator_regmap.v"
 module axi_accelerator(/*AUTOARG*/
    // Outputs
    irq, m_axi_awid, m_axi_awaddr, m_axi_awlen, m_axi_awsize,

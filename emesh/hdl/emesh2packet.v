@@ -46,21 +46,27 @@ module emesh2packet(/*AUTOARG*/
      
    generate   
       if(AW==64)
-	begin
-	   assign packet_out[39:8]    = dstaddr_out[AW/2-1:0];
-	   assign packet_out[71:40]   = data_out[AW/2-1:0];
-	   assign packet_out[103:72]  = srcaddr_out[AW/2-1:0];   
-	   assign packet_out[135:104] = srcaddr_out[AW-1:AW/2];
-	   assign packet_out[167:136] = dstaddr_out[AW-1:AW/2];
+	begin : packet64
+	   assign packet_out[39:8]    = dstaddr_out[31:0];
+	   assign packet_out[71:40]   = data_out[31:0];
+	   assign packet_out[103:72]  = srcaddr_out[31:0];   
+	   assign packet_out[135:104] = srcaddr_out[63:32];
+	   assign packet_out[167:136] = dstaddr_out[63:32];
 	end
-      else
-	begin	  
-	   assign packet_out[39:8]    = dstaddr_out[AW-1:0];
-	   assign packet_out[71:40]   = data_out[AW-1:0];
-	   assign packet_out[103:72]  = srcaddr_out[AW-1:0];
-	end      
+      else if(AW==32)
+	begin : packet32
+	   assign packet_out[39:8]    = dstaddr_out[31:0];
+	   assign packet_out[71:40]   = data_out[31:0];
+	   assign packet_out[103:72]  = srcaddr_out[31:0];
+	end
+      else if(AW==16)
+	begin : packet16
+	   assign packet_out[23:8]    = dstaddr_out[15:0];
+	   assign packet_out[39:24]   = data_out[15:0];
+	   assign packet_out[55:40]   = srcaddr_out[15:0];
+	end
+     
    endgenerate
-
-
+   
 endmodule // emesh2packet
 

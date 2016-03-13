@@ -1,0 +1,3 @@
+## CONTENT
+* All the scripts needed to finish the chip
+* STA, IR DROP, FORMAL, SI, LVS, DRC, ...

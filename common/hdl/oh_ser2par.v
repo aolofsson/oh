@@ -1,37 +1,75 @@
+//#############################################################################
+//# Purpose: Serial to Parallel Converter                                     #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see below)                                                 # 
+//#############################################################################
 
-//convert serial stream to parallel
 module oh_ser2par (/*AUTOARG*/
+   // Outputs
+   dout,
    // Inputs
-   clk, din, dout
+   clk, din, lsbfirst, shift
    );
 
-   //###############################################################
-   //# Interface
-   //###############################################################
+   //###########################
+   //# INTERFACE
+   //###########################
 
-   input           clk;       //sampling clock
-   input           din;       //serial data
-   output [DW-1:0] dout;      //parallel data  
-
-   parameter  DW  = 64;      //width of converter
-   parameter TYPE = "MSB";   //MSB first or LSB first
-
-   //###############################################################
+   // parameters
+   parameter  PW   = 64;             // parallel packet width
+   parameter  SW   = 1;              // serial packet width
+   localparam CW   = $clog2(PW/SW);  // serialization factor (for counter)
+   
+   // reset, clk
+   input           clk;        // sampling clock   
+   
+   //data interface
+   input [SW-1:0]  din;        // serial data
+   output [PW-1:0] dout;       // parallel data  
+   
+   // control interface
+   input 	   lsbfirst;   // lsb first order
+   input 	   shift;      // shift the shifter
+   
+   //##############################
    //# BODY
-   //###############################################################
-   reg [DW-1:0]    dout;
-   generate
-      if(TYPE=="MSB")
-	begin
-	   always @ (posedge clk)
-	     dout[DW-1:0] = {dout[DW-2:0],din};
-	end
-      else
-	begin
-	   always @ (posedge clk)
-	     dout[DW-1:0] = {din,dout[DW-1:1]};
-	end
-   endgenerate
+   //##############################
+
+   reg [PW-1:0]    dout;
+   reg [CW-1:0]    count;
+   wire [PW-1:0]   shiftdata;
+
+   always @ (posedge clk)
+     if(shift & lsbfirst)
+       dout[PW-1:0] <= {din[SW-1:0],dout[PW-1:SW]};
+     else if(shift)
+       dout[PW-1:0] <= {dout[PW-SW-1:0],din[SW-1:0]};
    
 endmodule // oh_ser2par
+
+///////////////////////////////////////////////////////////////////////////////
+// The MIT License (MIT)                                                     //
+//                                                                           //
+// Copyright (c) 2015-2016, Adapteva, Inc.                                   //
+//                                                                           //
+// Permission is hereby granted, free of charge, to any person obtaining a   //
+// copy of this software and associated documentation files (the "Software") //
+// to deal in the Software without restriction, including without limitation // 
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,  //
+// and/or sell copies of the Software, and to permit persons to whom the     //
+// Software is furnished to do so, subject to the following conditions:      //
+//                                                                           //
+// The above copyright notice and this permission notice shall be included   // 
+// in all copies or substantial portions of the Software.                    //
+//                                                                           //
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS   //
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF                //
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.    //
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY      //
+// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT //
+// OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR  //
+// THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                //
+//                                                                           //  
+///////////////////////////////////////////////////////////////////////////////
 

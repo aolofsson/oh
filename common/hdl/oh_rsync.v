@@ -23,12 +23,15 @@ module oh_rsync (/*AUTOARG*/
    
    genvar 	i;
    genvar 	j;   
+
+   //TODO: simplify logic
    generate          
       for(i=0;i<PS;i=i+1)
+	begin : stage
 	if(i==0)
-	  begin
+	  begin : first_stage
 	     for(j=0;j<DW;j=j+1)		 
-	       begin
+	       begin : first_stage_in
 		  always @ (posedge clk or negedge nrst_in[j])		 
 		    if(!nrst_in[j])
 		      sync_pipe[0][j] <= 1'b0;
@@ -37,9 +40,9 @@ module oh_rsync (/*AUTOARG*/
 	       end
 	  end
 	else
-	  begin
+	  begin : second_stage
 	     for(j=0;j<DW;j=j+1)		 
-	       begin
+	       begin : second_stage_in
 		  always @ (posedge clk or negedge nrst_in[j])		 
 		    if(!nrst_in[j])
 		      sync_pipe[i][j] <= 1'b0;
@@ -47,6 +50,7 @@ module oh_rsync (/*AUTOARG*/
 		      sync_pipe[i][j] <=  sync_pipe[i-1][j]; 
 	       end
 	  end	  	 
+	end
    endgenerate
    
    assign nrst_out[DW-1:0] = sync_pipe[PS-1][DW-1:0];

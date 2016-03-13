@@ -1,9 +1,7 @@
-/*
- ########################################################################
- ELINK TX CONFIGURATION REGISTER FILE
- ######################################################################## 
- */
-`include "elink_regmap.v"
+//########################################################################
+//# ELINK TX CONFIGURATION REGISTER FILE
+//######################################################################## 
+`include "elink_regmap.vh"
 module etx_cfg (/*AUTOARG*/
    // Outputs
    cfg_mmu_access, etx_cfg_access, etx_cfg_packet, tx_enable,
@@ -17,6 +15,8 @@ module etx_cfg (/*AUTOARG*/
    //##################################################################
    //# INTERFACE
    //##################################################################
+
+   //parameters
    parameter AW       = 32;   
    parameter PW       = 2*AW+40;   
    parameter RFAW     = 6;
@@ -136,7 +136,7 @@ module etx_cfg (/*AUTOARG*/
    assign ctrlmode[3:0]   = tx_cfg_reg[7:4];
    assign ctrlmode_bypass = tx_cfg_reg[9];
    assign burst_enable    = tx_cfg_reg[10];
-   assign gpio_enable     = (tx_cfg_reg[11:10]==2'b01);
+   assign gpio_enable     = (tx_cfg_reg[12:11]==2'b01);
    
    //###########################
    //# STATUS REGISTER

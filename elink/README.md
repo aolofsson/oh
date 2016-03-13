@@ -45,7 +45,7 @@ The default elink communication protocol uses source synchronous clocks, a packe
            
 BYTE     | DESCRIPTION 
 ---------|--------------
-B00      | R00000B0 (R set to 1 for reads, B set to 1 for bursts)
+B00      | R0000A00 (R=1 for reads, A=1 burst with autoincrement)
 B01      | {ctrlmode[3:0],dstaddr[31:28]}
 B02      | dstaddr[27:20]
 B03      | dstaddr[19:12]
@@ -67,7 +67,7 @@ B15      | data[23:16] in 64 bit write burst mode only
 ++B09: is the last byte of 32 bit write or read transaction    
 +++B14: is the first data byte of bursting transaction  
  
-The rising edge FRAME signal (sampled on the positive edge of LCLK) indicates the start of a new transmission. The byte captured on the first positive clock edge of the new packet is B00.  If the FRAME control signal stays high after B13, then the the elink automatically enters “bursting mode”, meaning that the  last byte of the previous transaction (B13) will be followed by B06 of a new transaction.  
+The rising edge FRAME signal (sampled on the positive edge of LCLK) indicates the start of a new transmission. The byte captured on the first positive clock edge of the new packet is B00.  If the FRAME control signal stays high after B13, then the elink automatically enters “bursting mode”, meaning that the  last byte of the previous transaction (B13) will be followed by B06 of a new transaction.  
 
 Read and write wait signals are used to stall transmission when a receiver is unable to accept more transactions. The receiver will raise its WAIT output signal during an active transmission indicating that it can receive ONLY one more transaction. The wait signal seen by the transmitter is of unspecified phase delay (while still of the LCLK clock period) and therefore has to be sampled with the two-cycle synchronizer.  If the transaction is in the middle of the transmission when the synchronized WAIT control goes high, the transmission process is to be completed without interruption.    
 
@@ -296,7 +296,7 @@ FIELD    | DESCRIPTION
          | 1: ctrlmode field taken E_TXCFG
  [10]    | 0: Burst mode disabled
          | 1: Burst mode enabled
- [11:10] | 00: Normal transmit mode
+ [12:11] | 00: Normal transmit mode
          | 01: GPIO direct drive mode
 	 
 -------------------------------
