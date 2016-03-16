@@ -1,3 +1,8 @@
+// HACK
+`ifndef CFG_TARGET
+`define CFG_TARGET "XILINX"
+`endif
+
 module oh_fifo_async (/*AUTOARG*/
    // Outputs
    dout, full, prog_full, empty, rd_count,
