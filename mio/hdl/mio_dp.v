@@ -13,9 +13,9 @@ module mio_dp (/*AUTOARG*/
    //#####################################################################
 
    //parameters
-   parameter PW    = 104;           // data width (core)
-   parameter N     = 8;             // Mini IO width
-   localparam CW   = $clog2(2*PW/N);// transfer count width
+   parameter PW     = 104;          // data width (core)
+   parameter N      = 8;            // Mini IO width
+   parameter TARGET = "GENERIC";    // GENERIC,XILINX,ALTERA,GENERIC,ASIC
    
    // reset, clk, config
    input           clk;          // main core clock   

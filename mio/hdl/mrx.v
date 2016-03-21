@@ -1,3 +1,4 @@
+`include "mio_constants.vh"
 module mrx (/*AUTOARG*/
    // Outputs
    rx_empty, rx_full, rx_prog_full, rx_wait, access_out, packet_out,
@@ -11,10 +12,10 @@ module mrx (/*AUTOARG*/
    //#####################################################################
 
    //parameters
-   parameter PW         = 104;              // data width (core)
-   parameter N          = 8;                // IO data width
-   parameter FIFO_DEPTH = 32;               // fifo depth  
-   localparam CW        = $clog2(2*PW/N);// transfer count width
+   parameter PW         = 104;           // data width (core)
+   parameter N          = 8;             // IO data width
+   parameter FIFO_DEPTH = 32;            // fifo depth  
+   parameter TARGET     = "GENERIC";     // GENERIC,XILINX,ALTERA,GENERIC,ASIC
    
    //reset, clk, cfg
    input           clk;         // main core clock   
@@ -79,7 +80,8 @@ module mrx (/*AUTOARG*/
     );
    */
 
-   oh_fifo_cdc  #(.DW(PW),
+   oh_fifo_cdc  #(.TARGET(TARGET),
+		  .DW(PW),
 		  .DEPTH(FIFO_DEPTH))
    fifo  (/*AUTOINST*/
 	  // Outputs

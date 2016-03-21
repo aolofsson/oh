@@ -1,3 +1,4 @@
+`include "mio_constants.vh"
 module mtx (/*AUTOARG*/
    // Outputs
    wait_out, tx_access, tx_packet,
@@ -14,6 +15,7 @@ module mtx (/*AUTOARG*/
    parameter PW         = 104;            // data width (core)
    parameter N          = 16;             // IO data width
    parameter FIFO_DEPTH = 32;             // fifo depth  
+   parameter TARGET     = "GENERIC";      // GENERIC,XILINX,ALTERA,GENERIC,ASIC
    localparam CW        = $clog2(2*PW/N); // transfer count width
 
    //reset, clk, cfg
@@ -72,7 +74,8 @@ module mtx (/*AUTOARG*/
     );
    */
    
-   oh_fifo_cdc  #(.DW(PW),
+   oh_fifo_cdc  #(.TARGET(TARGET),
+		  .DW(PW),
 		  .DEPTH(FIFO_DEPTH))
    fifo  (.access_in			(tx_en & access_in),
 	  /*AUTOINST*/

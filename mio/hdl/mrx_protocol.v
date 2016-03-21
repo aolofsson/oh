@@ -63,8 +63,9 @@ module mrx_protocol (/*AUTOARG*/
      else if(mrx_state[2:0]==`MRX_BUSY)
        mrx_count[CW-1:0] <= mrx_count[CW-1:0] - 1'b1;   
    
-   assign transfer_done = ~(|mrx_count[CW-1:0]) & (mrx_state[2:0]==`MRX_BUSY);
-
+   assign transfer_done = (mrx_count[CW-1:0]==1'b1) & (mrx_state[2:0]==`MRX_BUSY);
+   assign shift         = (mrx_state[2:0]==`MRX_BUSY);
+   
    //pipeline access signal
    always @ (posedge clk or negedge nreset)
      if(!nreset)
@@ -85,7 +86,7 @@ module mrx_protocol (/*AUTOARG*/
 	    .clk	(clk),
 	    .din	(io_packet),
 	    .lsbfirst	(lsbfirst),
-	    .shift	(1'b1)
+	    .shift	(shift)
 	    );
     
    

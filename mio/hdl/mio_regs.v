@@ -2,17 +2,29 @@
 module mio_regs (/*AUTOARG*/
    // Outputs
    wait_out, access_out, packet_out, tx_en, rx_en, ddr_mode, emode,
-   amode, dmode, datasize, lsbfirst, dstaddr, clkdiv, clkphase0,
-   clkphase1,
+   amode, dmode, datasize, lsbfirst, ctrlmode, dstaddr, clkdiv,
+   clkphase0, clkphase1,
    // Inputs
-   clk, nreset, access_in, packet_in, wait_in, tx_full, tx_prog_full,
-   tx_empty, rx_full, rx_prog_full, rx_empty
+   clk, nreset, access_in, packet_in, wait_in, addrincr, tx_full,
+   tx_prog_full, tx_empty, rx_full, rx_prog_full, rx_empty
    );
 
    // parameters
-   parameter   AW     = 32;      // address width
-   localparam  PW     = 2*AW+40; // packet width   
-      
+   parameter   N         = 8;                      // number of I/O pins  
+   parameter   AW        = 32;                     // address width
+   localparam  PW        = 2*AW+40;                // packet width
+   parameter   DEF_EN    = 1;                      // default enable value (1 is on)
+   parameter   DEF_CLK   = 7;                      // default CLKDIV value (divide by 8)
+   parameter   DEF_DDR   = 1;                      // default transsfer mode 
+   parameter   DEF_SIZE  = (PW+8)/(N*(1+DEF_DDR)); // flits per packet (ddr mode)  
+   parameter   DEF_MODE  = 0;                      // default as emode
+   parameter   DEF_MSB   = 0;                      // MSB first default
+   localparam  DEF_RISE0 = 0;                      // 0 degrees
+   localparam  DEF_FALL0 = ((DEF_CLK+8'd1)>>8'd1); // 180 degrees
+   localparam  DEF_RISE1 = ((DEF_CLK+8'd1)>>8'd2); // 90 degrees
+   localparam  DEF_FALL1 = ((DEF_CLK+8'd1)>>8'd2)+
+			   ((DEF_CLK+8'd1)>>8'd1); // 270 degrees
+
    // clk,reset
    input            clk;
    input            nreset;
@@ -34,7 +46,9 @@ module mio_regs (/*AUTOARG*/
    output 	    dmode;       // mio packet mode
    output [7:0]     datasize;    // mio datasize   
    output 	    lsbfirst;    // lsb shift first
-   
+   output [4:0]     ctrlmode;    // emode ctrlmode
+   input [3:0] 	    addrincr;    // address update in amode   
+
    //address
    output [AW-1:0]  dstaddr;     // destination address for RX dmode
    
@@ -66,7 +80,7 @@ module mio_regs (/*AUTOARG*/
    // End of automatics
 
    //regs
-   reg [15:0] 		config_reg;   
+   reg [18:0] 		config_reg;   
    reg [7:0] 		status_reg;
    wire [7:0] 		status_in;   
    reg [31:0] 		clkdiv_reg;
@@ -105,18 +119,27 @@ module mio_regs (/*AUTOARG*/
 
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       config_reg[15:0] <= 'b0;   
+       begin
+	  config_reg[0]    <= DEF_EN;
+	  config_reg[1]    <= DEF_EN;
+	  config_reg[3:2]  <= DEF_MODE;   
+	  config_reg[11:4] <= DEF_SIZE;
+	  config_reg[12]   <= DEF_DDR;
+	  config_reg[13]   <= DEF_MSB;   
+	  config_reg[18:14]<= 'b0;
+       end
      else if(config_write)
-       config_reg[15:0] <= data_in[15:0];
+       config_reg[18:0] <= data_in[18:0];
 
-   assign tx_en         = ~config_reg[0];         // tx disable
-   assign rx_en         = ~config_reg[1];         // rx disable
+   assign tx_en         = config_reg[0];          // tx enable
+   assign rx_en         = config_reg[1];          // rx disable
    assign emode         = config_reg[3:2]==2'b00; // emesh packets
    assign dmode         = config_reg[3:2]==2'b01; // pure data mode (streaming)
    assign amode         = config_reg[3:2]==2'b10; // auto address mode
    assign datasize[7:0] = config_reg[11:4];       // number of flits per packet
-   assign lsbfirst      = ~config_reg[12];        // msb first transmit
-   assign ddr_mode      = config_reg[13];         // dual data rate mode   
+   assign ddr_mode      = config_reg[12];         // dual data rate mode   
+   assign lsbfirst      = ~config_reg[13];        // msb first transmit
+   assign ctrlmode[4:0] = config_reg[18:14];      // amode ctrlmode
 
    //###############################
    //# STATUS
@@ -137,16 +160,14 @@ module mio_regs (/*AUTOARG*/
        status_reg[7:0] <= data_in[7:0];
      else
        status_reg[7:0] <= {(status_reg[15:8] | status_in[7:0]), // sticky bits
-			   status_in[7:0]};                    // immediate bits
+			   status_in[7:0]};                     // immediate bits
 
-   
    //###############################
    //# CLKDIV
    //################################ 
-
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       clkdiv_reg[7:0] <= 'b0;   
+       clkdiv_reg[7:0] <= DEF_CLK;   
      else if(clkdiv_write)
        clkdiv_reg[7:0] <= data_in[7:0];
 
@@ -155,21 +176,30 @@ module mio_regs (/*AUTOARG*/
    //###############################
    //# CLKPHASE
    //################################ 
-   always @ (posedge clk)
-     if(clkdiv_write)
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       begin
+	  clkphase_reg[7:0]   <= DEF_RISE0;
+	  clkphase_reg[15:8]  <= DEF_FALL0;
+	  clkphase_reg[23:16] <= DEF_RISE1;
+	  clkphase_reg[31:24] <= DEF_FALL1;	  
+       end
+     else if(clkdiv_write)
        clkphase_reg[31:0] <= data_in[31:0];
 
-   assign clkphase0[15:0]  = clkphase_reg[15:0];
+   assign clkphase0[15:0] = clkphase_reg[15:0];
    assign clkphase1[15:0] = clkphase_reg[31:16];
      
    //###############################
-   //# RX DESTINATION ADDR (DMODE)
+   //# RX DESTINATION ADDR ("AMODE")
    //################################ 
    always @ (posedge clk)
      if(addr0_write)
        addr_reg[31:0]  <= data_in[31:0];
      else if(addr1_write)
        addr_reg[63:32] <= data_in[31:0];
+     else
+       addr_reg[63:0] <= addr_reg[63:0] + addrincr[3:0];
    
    assign dstaddr[AW-1:0] = addr_reg[AW-1:0];
    
