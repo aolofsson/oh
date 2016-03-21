@@ -5,7 +5,7 @@ module mtx_io (/*AUTOARG*/
    // Outputs
    tx_packet, tx_access, io_wait,
    // Inputs
-   nreset, io_clk, ddr_mode, tx_wait, io_access, io_packet
+   nreset, io_clk, ddr_mode, lsbfirst, tx_wait, io_access, io_packet
    );
 
    //#####################################################################
@@ -17,9 +17,10 @@ module mtx_io (/*AUTOARG*/
    
    //reset, clk, cfg
    input           nreset;        // async active low reset
-   input           io_clk;           // clock from divider
+   input           io_clk;        // clock from divider
    input 	   ddr_mode;      // send data as ddr
-      
+   input 	   lsbfirst;      // send data lsbfirst
+   
    //IO interface
    output [N-1:0]  tx_packet;     // data for IO
    output 	   tx_access;     // access signal for IO
@@ -35,6 +36,7 @@ module mtx_io (/*AUTOARG*/
    wire [N-1:0]    tx_packet_ddr;
    reg [N-1:0] 	   tx_packet_sdr;
    reg 		   byte0_sel;
+   wire [2*N-1:0]  ddr_data;
    
    //########################################
    //# RESET
@@ -63,7 +65,7 @@ module mtx_io (/*AUTOARG*/
    always @ (posedge io_clk)
      if(io_access)
        tx_packet_sdr[N-1:0] <= byte0_sel ? io_packet[N-1:0] :
-	                                io_packet[2*N-1:N];   
+	                                   io_packet[2*N-1:N];   
 
    //select 2nd byte (stall on this signal)
    always @ (posedge io_clk)
@@ -78,13 +80,17 @@ module mtx_io (/*AUTOARG*/
    //########################################
    //# DATA SAMPLING (DDR/SDR) 
    //########################################      
-   
+
+   // shuffle bits when in msb mode
+   assign ddr_data[2*N-1:0] = (~lsbfirst & ddr_mode) ? {io_packet[N-1:0],
+					               io_packet[2*N-1:N]} : 
+			                               io_packet[2*N-1:0];
    oh_oddr#(.DW(N))
    data_oddr (.out	(tx_packet_ddr[N-1:0]),
               .clk	(io_clk),
 	      .ce	(1'b1),
-	      .din1	(io_packet[N-1:0]),
-	      .din2	(io_packet[2*N-1:N])
+	      .din1	(ddr_data[N-1:0]),
+	      .din2	(ddr_data[2*N-1:N])
 	      );
 
    //select between ddr/sdr data
