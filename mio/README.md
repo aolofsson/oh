@@ -45,8 +45,15 @@ Mini-IO: A lightweight IO interface
 |         | 01=Data streaming mode "dmode"      |
 |         | 10=Auto address mode "amode"        |
 | [11:4]  | Number of flits/packet              |
-| [12]    | Transfer MSB first                  |
-| [13]    | DDR mode                            |
+|         | For emode:
+|         | 0=1 (byte)                          |
+|         | 0=2 (16 bit)                        |
+|         | 0=4 (32 bit)                        |
+|         | 0=8 (64 bit)                        |
+| [12]    | DDR mode                            |
+| [13]    | Transfer MSB first                  |
+| [18:14] | Emesh ctrlmode                      |
+
 
 **MIO_STATUS:**
 
