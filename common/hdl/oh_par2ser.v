@@ -1,5 +1,5 @@
 //#############################################################################
-//# Purpose: Parallel to Serial Converter                                     #
+//# Function: Parallel to Serial Converter                                    #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see below)                                                 # 
@@ -33,7 +33,7 @@ module oh_par2ser (/*AUTOARG*/
    // control interface
    input 	   load;      // load parallel data (priority)   
    input 	   shift;     // shift data
-   input [CW-1:0]  datasize;  // size of data to to shift 
+   input [7:0] 	   datasize;  // size of data to shift 
    input 	   lsbfirst;  // lsb first order
    input 	   fill;      // fill bit  
    input 	   wait_in;   // wait input  
@@ -49,24 +49,23 @@ module oh_par2ser (/*AUTOARG*/
    //# STATE MACHINE
    //##########################
    
-   assign start_transfer = load & 
-			   ~wait_in;
+   assign start_transfer = load & ~wait_in;
    
    //transfer counter
    always @ (posedge clk or negedge nreset)
      if(~nreset)
        count[CW-1:0] <= 'b0;   
      else if(start_transfer)
-       count[CW-1:0] <= datasize[CW-1:0];   //1=1 byte
+       count[CW-1:0] <= datasize[CW-1:0];  //one "SW sized" transfers
      else if(shift & busy)
        count[CW-1:0] <= count[CW-1:0] - 1'b1;
 
-   assign access_out = (count[CW-1:0]==1'b1);
-
-   //output data is valid while count>0
+   //output data is valid while count > 0
    assign busy = |count[CW-1:0];
-
-
+   
+   //data valid while shifter is busy
+   assign access_out = busy;
+      
    //wait until valid data is finished
    assign wait_out  = (busy & ~access_out) |
 		      wait_in;
@@ -79,7 +78,7 @@ module oh_par2ser (/*AUTOARG*/
      if(start_transfer)
        shiftreg[PW-1:0] = din[PW-1:0];	   
      else if(shift & lsbfirst)		 
-       shiftreg[PW-1:0] = {{(SW){fill}}, shiftreg[PW-SW-1:SW]};
+       shiftreg[PW-1:0] = {{(SW){fill}}, shiftreg[PW-1:SW]};
      else if(shift)
        shiftreg[PW-1:0] = {shiftreg[PW-SW-1:0],{(SW){fill}}};
 
