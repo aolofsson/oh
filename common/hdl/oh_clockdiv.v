@@ -20,7 +20,7 @@ module oh_clockdiv(/*AUTOARG*/
    input          clk;          // main clock
    input          nreset;       // async active low reset
    input          clken;        // clock enable enable
-   input [7:0]	  clkdiv;       // [7:0]=period
+   input [7:0]	  clkdiv;       // [7:0]=period (0==off, 1=div/2, 2=div/3, etc)
    input [15:0]	  clkphase0;    // [7:0]=rising,[15:8]=falling
    input [15:0]	  clkphase1;    // [7:0]=rising,[15:8]=falling
    
@@ -40,11 +40,13 @@ module oh_clockdiv(/*AUTOARG*/
 
    //regs
    reg [DW-1:0]   counter;      // free running counter
-   reg 		  clkout0;
+   reg 		  clkout0_reg;
    reg 		  clkout1_reg;
    reg 		  clkout1_shift;
    
-   //baud counter
+   //###########################################
+   //# CYCLE COUNTER
+   //###########################################
    always @ (posedge clk or negedge nreset)
      if (~nreset)
        counter[DW-1:0]   <= 'b0;
@@ -53,22 +55,34 @@ module oh_clockdiv(/*AUTOARG*/
 	 counter[DW-1:0] <= 'b0;
        else
 	 counter[DW-1:0] <= counter[DW-1:0] + 1'b1;
-   
    assign period_match = (counter[DW-1:0]==clkdiv[7:0]);   
+
+   //###########################################
+   //# RISING/FALLING EDGE SELECTORS
+   //###########################################
+     
    assign clkrise0     = (counter[DW-1:0]==clkphase0[7:0]);   
    assign clkfall0     = (counter[DW-1:0]==clkphase0[15:8]);   
    assign clkrise1     = (counter[DW-1:0]==clkphase1[7:0]);   
    assign clkfall1     = (counter[DW-1:0]==clkphase1[15:8]);   
        
-   //clock generators
+   //###########################################
+   //# CLKOUT0
+   //###########################################
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       clkout0 <= 1'b0;      
+       clkout0_reg <= 1'b0;      
      else if(clkrise0)
-       clkout0 <= 1'b1;
+       clkout0_reg <= 1'b1;
      else if(clkfall0)
-       clkout0 <= 1'b0;
-   
+       clkout0_reg <= 1'b0;
+
+   //bypass divider on "divide by 1"
+   assign clkout0 = (clkdiv[7:0]==8'd0) ? clk : clkout0_reg;
+
+   //###########################################
+   //# CLKOUT1
+   //###########################################
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        clkout1_reg <= 1'b0;      
@@ -77,11 +91,10 @@ module oh_clockdiv(/*AUTOARG*/
      else if(clkfall1)
        clkout1_reg <= 1'b0;
    
-   // creating shifted clock for divide by 2
+   // creating divide by 2 shifted clock with negedge
    always @ (negedge clk)
      clkout1_shift <= clkout1_reg;
       
-   //special case for divide by 2
    assign clkout1 = (clkdiv[7:0]==8'd1) ? clkout1_shift: 
 		                          clkout1_reg;
       
