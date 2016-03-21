@@ -43,12 +43,15 @@ module mtx (/*AUTOARG*/
    /*AUTOINPUT*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire			empty;			// From fifo of oh_fifo_cdc.v
    wire			fifo_access;		// From fifo of oh_fifo_cdc.v
    wire [PW-1:0]	fifo_packet;		// From fifo of oh_fifo_cdc.v
    wire			fifo_wait;		// From par2ser of oh_par2ser.v
+   wire			full;			// From fifo of oh_fifo_cdc.v
    wire			io_access;		// From par2ser of oh_par2ser.v
    wire [2*N-1:0]	io_packet;		// From par2ser of oh_par2ser.v
    wire			io_wait;		// From mtx_io of mtx_io.v
+   wire			prog_full;		// From fifo of oh_fifo_cdc.v
    // End of automatics
 
    //########################################
@@ -77,6 +80,9 @@ module mtx (/*AUTOARG*/
 	  .wait_out			(wait_out),		 // Templated
 	  .access_out			(fifo_access),		 // Templated
 	  .packet_out			(fifo_packet[PW-1:0]),	 // Templated
+	  .prog_full			(prog_full),
+	  .full				(full),
+	  .empty			(empty),
 	  // Inputs
 	  .nreset			(nreset),		 // Templated
 	  .clk_in			(clk),			 // Templated
@@ -126,10 +132,7 @@ module mtx (/*AUTOARG*/
    //########################################
    //# FAST IO (DDR)
    //########################################
-   /*mtx_io  AUTO_TEMPLATE (
-    .clk	(io_clk),
-    );
-   */
+ 
    mtx_io #(.N(N))
    mtx_io (/*AUTOINST*/
 	   // Outputs
@@ -138,7 +141,7 @@ module mtx (/*AUTOARG*/
 	   .io_wait			(io_wait),
 	   // Inputs
 	   .nreset			(nreset),
-	   .clk				(io_clk),		 // Templated
+	   .io_clk			(io_clk),
 	   .ddr_mode			(ddr_mode),
 	   .tx_wait			(tx_wait),
 	   .io_access			(io_access),

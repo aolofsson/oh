@@ -1,4 +1,4 @@
-module mio (/*AUTOARG*/
+module mio_dp (/*AUTOARG*/
    // Outputs
    tx_full, tx_prog_full, tx_empty, rx_full, rx_prog_full, rx_empty,
    tx_access, tx_packet, rx_wait, wait_out, access_out, packet_out,
@@ -99,6 +99,7 @@ module mio (/*AUTOARG*/
 	.rx_packet			(rx_packet[N-1:0]),
 	.wait_in			(wait_in));
       
-endmodule // mio
+endmodule // mio_dp
+
 
 
