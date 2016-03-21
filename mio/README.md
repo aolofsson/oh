@@ -1,21 +1,109 @@
-Mini-IO: A lightweight parallel interface
+Mini-IO: A lightweight IO interface
 =============================================
 
+1. [Features](#features)
+2. [Registers](#registers)
+3. [Interface](#interface)
+4. [Parameters](#parameters)
+5. [Code](#code)
+6. [Driver](#driver)
+7. [Authors](#authors)
+8. [License](#license)
 
 ## Introduction
 * Mini-IO (MIO) is a generic protocol agnostic link for moving data between chips (or silicon dies). 
 
-## Key Features
+## Features
 
-* Dual data rate data transfers
 * Source synchronous
 * Clock aligned by transmitter at 90 degrees
 * Parametrized I/O and system side bus width
-* Data transmitted MSB first
+* Configurable as single or dual data rate
+* Configurable as lsb or msb first transfer
 
-## Protocol
+## Registers
 
-![alt tag](docs/c2c_waveform.png)
+| Register Name |Addr[5:2]| Access | Default | Description                    | 
+|---------------|---------|--------|---------|--------------------------------|
+| MIO_CONFIG    |  0x0    | RD/WR  | L       | Configuration register         |
+| MIO_STATUS    |  0x1    | RD/WR  | n/a     | Status register                |
+| MIO_CLKDIV    |  0x2    | RD/WR  | H       | TX frequency setting           |
+| MIO_CLKPHASE  |  0x3    | RD/WR  | n/a     | TX phase setting               |
+| MIO_ODELAY    |  0x5    | RD/WR  | n/a     | TX output data delay           |
+| MIO_IDELAY    |  0x4    | RD/WR  | n/a     | RX input data delay            |
+| MIO_ADDR0     |  0x6    | RD/WR  | n/a     | Lower 32 bits of auto-address  |
+| MIO_ADDR1     |  0x7    | RD/WR  | n/a     | Upper 32 bits of auto-address  |
+
+**MIO_CONFIG:**
+
+| FIELD   | DESCRIPTION                         |
+|-------- |-------------------------------------| 
+| [0]     | TX disable                          |
+| [1]     | RX disable                          |
+| [3:2]   | Transfer mode                       |
+|         | 00=Emesh packet mode "emode"        |
+|         | 01=Data streaming mode "dmode"      |
+|         | 10=Auto address mode "amode"        |
+| [11:4]  | Number of flits/packet              |
+| [12]    | Transfer MSB first                  |
+| [13]    | DDR mode                            |
+
+**MIO_STATUS:**
+
+| FIELD   | DESCRIPTION                         |
+|-------- |-------------------------------------| 
+| [0]     | RX fifo empty                       |
+| [1]     | RX programmable full reached        |
+| [2]     | RX full reached                     |
+| [3]     | TX fifo empty                       |
+| [4]     | TX programmable full reached        |
+| [5]     | TX full reached                     |
+| [7:6]   | Reserved                            |
+| [15:8]  | Sticky versions fo bit [7:0]        |
+
+
+**MIO_CLKDIV:**
+
+| FIELD   | DESCRIPTION                         |
+|-------- |-------------------------------------| 
+| [7:0]   | Clock period setting                |
+|         | 0:clkout=clkin                      |
+|         | 1:clkout=clkin/2                    |
+|         | 2:clkout=clkin/3                    |
+|         | 3:clkout=clkin/4                    |
+|         | etc...                              |
+
+
+
+**MIO_CLKPHASE:**
+
+| FIELD   | DESCRIPTION                         |
+|-------- |-------------------------------------| 
+| [7:0]   | TX IO clock rising edge             |
+| [15:8]  | TX IO clock falling edge            |
+| [23:16] | TX transmit clock rising edge       |
+| [31:24] | TX transmit clock rising edge       |
+
+**MIO_ODELAY:**
+
+* TBD
+
+**MIO_IDELAY:**
+
+* TBD
+
+**MIO_ADDR0:**
+
+| FIELD   | DESCRIPTION                         |
+|-------- |-------------------------------------| 
+| [31:0]  | Lower 32 bits of address in amode   |
+
+
+**MIO_ADDR1:**
+
+| FIELD   | DESCRIPTION                         |
+|-------- |-------------------------------------| 
+| [31:0]  | Upper 32 bits of address in amode   |
 
 ## Interface
 | SIGNAL             | DIR| DESCRIPTION 
@@ -37,26 +125,25 @@ Mini-IO: A lightweight parallel interface
 | clk                | I  | Core side clock
 | nreset             | I  | Active low async reset
 | io_clk             | I  | Clock for transmit side
-| datasize           | I  | Size of data to transmit (<PW)
-| divcfg[3:0]        | I  | Divider setting for TX clock divider
+| datasize[7:0]      | I  | Size of data to transmit (<PW)
+| divcfg[7:0]        | I  | Divider setting for TX clock divider
 
-## Top level file
-* c2c.v
 
 ## Parameters
-* `CFG_MIOPW : System interface packet width
-* `CFG_MIOW  : IO data width (number of data pins)
+* N : IO data width
+* PW: core side packet width
 
-## Registers
-* None
+## Code
+* [mio.v](hdl/mio.v)
+* [mio_regs.v](hdl/mio_regs.v)
 
-## Simulation
+## Authors
+* Andreas Olofsson
 
-```
-cd $OH_HOME/mio/dv
-./build.sh
-./run.sh dut_mio.bin tests/test_random.emf
-```
+## License
+* MIT
+
+
 
 
 
