@@ -1,7 +1,7 @@
 `include "mio_constants.vh"
 module mtx (/*AUTOARG*/
    // Outputs
-   wait_out, tx_access, tx_packet,
+   tx_empty, tx_full, tx_prog_full, wait_out, tx_access, tx_packet,
    // Inputs
    clk, io_clk, nreset, tx_en, datasize, ddr_mode, lsbfirst,
    access_in, packet_in, tx_wait
@@ -19,24 +19,29 @@ module mtx (/*AUTOARG*/
    localparam CW        = $clog2(2*PW/N); // transfer count width
 
    //reset, clk, cfg
-   input              clk;       // main core clock   
-   input              io_clk;    // clock for tx logic
-   input              nreset;    // async active low reset
-   input 	      tx_en;     // transmit enable   
-   input [7:0] 	      datasize;  // size of data transmitted/received
-   input              ddr_mode;  // configure mio in ddr mode
-   input 	      lsbfirst;  // send bits lsb first
+   input           clk;         // main core clock   
+   input 	   io_clk;      // clock for tx logic
+   input 	   nreset;      // async active low reset
+   input 	   tx_en;       // transmit enable   
+   input [7:0] 	   datasize;    // size of data transmitted/received
+   input 	   ddr_mode;    // configure mio in ddr mode
+   input 	   lsbfirst;    // send bits lsb first
+   
+   //status
+   output 	   tx_empty;    // tx fifo is empty
+   output 	   tx_full;	// tx fifo is full (should never happen!) 
+   output 	   tx_prog_full;// tx is getting full (stop sending!)
    
    // data to transmit
-   input 	      access_in; // fifo data valid
-   input [PW-1:0]     packet_in; // fifo packet  
-   output 	      wait_out;  // wait pushback for fifo
-
+   input 	   access_in;   // fifo data valid
+   input [PW-1:0]  packet_in;   // fifo packet  
+   output 	   wait_out;    // wait pushback for fifo
+   
    //IO interface (90 deg clock supplied outside this block)
-   output 	      tx_access; // access signal for IO
-   output [N-1:0]     tx_packet; // packet for IO
-   input 	      tx_wait;   // pushback from IO
- 
+   output 	   tx_access;   // access signal for IO
+   output [N-1:0]  tx_packet;   // packet for IO
+   input 	   tx_wait;     // pushback from IO
+   
    //#####################################################################
    //# BODY
    //#####################################################################
@@ -45,15 +50,12 @@ module mtx (/*AUTOARG*/
    /*AUTOINPUT*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			empty;			// From fifo of oh_fifo_cdc.v
    wire			fifo_access;		// From fifo of oh_fifo_cdc.v
    wire [PW-1:0]	fifo_packet;		// From fifo of oh_fifo_cdc.v
    wire			fifo_wait;		// From par2ser of oh_par2ser.v
-   wire			full;			// From fifo of oh_fifo_cdc.v
    wire			io_access;		// From par2ser of oh_par2ser.v
    wire [2*N-1:0]	io_packet;		// From par2ser of oh_par2ser.v
    wire			io_wait;		// From mtx_io of mtx_io.v
-   wire			prog_full;		// From fifo of oh_fifo_cdc.v
    // End of automatics
 
    //########################################
@@ -61,6 +63,10 @@ module mtx (/*AUTOARG*/
    //########################################
 
   /*oh_fifo_cdc  AUTO_TEMPLATE (
+   // outputs
+   .prog_full	(tx_prog_full),
+   .full	(tx_full),
+   .empty	(tx_empty),
    .wait_out    (wait_out),
    .access_out  (fifo_access),
    .packet_out  (fifo_packet[PW-1:0]),
@@ -83,9 +89,9 @@ module mtx (/*AUTOARG*/
 	  .wait_out			(wait_out),		 // Templated
 	  .access_out			(fifo_access),		 // Templated
 	  .packet_out			(fifo_packet[PW-1:0]),	 // Templated
-	  .prog_full			(prog_full),
-	  .full				(full),
-	  .empty			(empty),
+	  .prog_full			(tx_prog_full),		 // Templated
+	  .full				(tx_full),		 // Templated
+	  .empty			(tx_empty),		 // Templated
 	  // Inputs
 	  .nreset			(nreset),		 // Templated
 	  .clk_in			(clk),			 // Templated

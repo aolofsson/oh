@@ -22,45 +22,45 @@ module mio_regs (/*AUTOARG*/
 			   ((DEF_CLK+8'd1)>>8'd1); // 270 degrees
 
    // clk,reset
-   input            clk;
-   input            nreset;
+   input           clk;
+   input           nreset;
    
    // packet interface
-   input 	    access_in;   // incoming access
-   input [PW-1:0]   packet_in;   // incoming packet
-   output 	    wait_out;    
-   output 	    access_out;  // outgoing read packet
-   output [PW-1:0]  packet_out;  // outgoing read packet
-   input 	    wait_in;
+   input 	   access_in;   // incoming access
+   input [PW-1:0]  packet_in;   // incoming packet
+   output 	   wait_out;    
+   output 	   access_out;  // outgoing read packet
+   output [PW-1:0] packet_out;  // outgoing read packet
+   input 	   wait_in;
    
    // config
-   output 	    tx_en;       // enable tx
-   output 	    rx_en;       // enable rx
-   output 	    ddr_mode;    // ddr mode for mio
-   output 	    emode;       // epiphany packet mode
-   output 	    amode;       // mio packet mode
-   output 	    dmode;       // mio packet mode
-   output [7:0]     datasize;    // mio datasize   
-   output 	    lsbfirst;    // lsb shift first
-   output [4:0]     ctrlmode;    // emode ctrlmode
-   input [3:0] 	    addrincr;    // address update in amode   
-
+   output 	   tx_en;        // enable tx
+   output 	   rx_en;        // enable rx
+   output 	   ddr_mode;     // ddr mode for mio
+   output 	   emode;        // epiphany packet mode
+   output 	   amode;        // mio packet mode
+   output 	   dmode;        // mio packet mode
+   output [7:0]    datasize;     // mio datasize   
+   output 	   lsbfirst;     // lsb shift first
+   output [4:0]    ctrlmode;     // emode ctrlmode
+   input [3:0] 	   addrincr;     // address update in amode   
+   
    //address
-   output [AW-1:0]  dstaddr;     // destination address for RX dmode
+   output [AW-1:0] dstaddr;      // destination address for RX dmode
    
    // clock
-   output [7:0]     clkdiv;     // mio clk clock setting
-   output [15:0]    clkphase0;  // [7:0]=rising,[15:8]=falling
-   output [15:0]    clkphase1;  // [7:0]=rising,[15:8]=falling
-        
+   output [7:0]    clkdiv;       // mio clk clock setting
+   output [15:0]   clkphase0;    // [7:0]=rising,[15:8]=falling
+   output [15:0]   clkphase1;    // [7:0]=rising,[15:8]=falling
+   
    // status
-   input 	    tx_full;
-   input 	    tx_prog_full;
-   input 	    tx_empty;
-   input 	    rx_full;
-   input 	    rx_prog_full;
-   input 	    rx_empty;
-
+   input 	   tx_full;      //tx fifo is full (should not happen!)  
+   input 	   tx_prog_full; //tx fifo is nearing full
+   input 	   tx_empty;     //tx fifo is empty
+   input 	   rx_full;      //rx fifo is full (should not happen!)  
+   input 	   rx_prog_full; //rx fifo is nearing full
+   input 	   rx_empty;     //rx fifo is empty
+   
    //######################################################################
    //# BODY
    //######################################################################

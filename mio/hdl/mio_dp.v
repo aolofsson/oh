@@ -63,6 +63,9 @@ module mio_dp (/*AUTOARG*/
 	 .PW(PW))
    mtx (/*AUTOINST*/
 	// Outputs
+	.tx_empty			(tx_empty),
+	.tx_full			(tx_full),
+	.tx_prog_full			(tx_prog_full),
 	.wait_out			(wait_out),
 	.tx_access			(tx_access),
 	.tx_packet			(tx_packet[N-1:0]),
