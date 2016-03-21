@@ -8,8 +8,8 @@
 `include "gpio_regmap.vh"
 module gpio(/*AUTOARG*/
    // Outputs
-   wait_out, access_out, packet_out, gpio_out, gpio_oen, gpio_irq,
-   gpio_data,
+   wait_out, access_out, packet_out, gpio_out, gpio_oen, gpio_ie,
+   gpio_irq, gpio_data,
    // Inputs
    nreset, clk, access_in, packet_in, wait_in, gpio_in
    );
@@ -37,7 +37,8 @@ module gpio(/*AUTOARG*/
    
    //IO signals
    output [N-1:0]  gpio_out;    // data to drive to IO pins
-   output [N-1:0]  gpio_oen;    // tristate enables for IO pins
+   output [N-1:0]  gpio_oen;    // output enable (bar)
+   output [N-1:0]  gpio_ie;     // input enable
    input [N-1:0]   gpio_in;     // data from IO pins
    
    //global interrupt   
@@ -82,22 +83,23 @@ module gpio(/*AUTOARG*/
    dsync (.dout	(gpio_sync[N-1:0]),
           .clk	(clk),
           .din	(gpio_in[N-1:0]));
-   
+
    //################################
    //# REGISTER ACCESS DECODE
    //################################  
    
-   packet2emesh p2e(
-		    /*AUTOINST*/
-		    // Outputs
-		    .write_in		(write_in),
-		    .datamode_in	(datamode_in[1:0]),
-		    .ctrlmode_in	(ctrlmode_in[4:0]),
-		    .dstaddr_in		(dstaddr_in[AW-1:0]),
-		    .srcaddr_in		(srcaddr_in[AW-1:0]),
-		    .data_in		(data_in[AW-1:0]),
-		    // Inputs
-		    .packet_in		(packet_in[PW-1:0]));
+   packet2emesh #(.AW(AW))
+   p2e(
+       /*AUTOINST*/
+       // Outputs
+       .write_in			(write_in),
+       .datamode_in			(datamode_in[1:0]),
+       .ctrlmode_in			(ctrlmode_in[4:0]),
+       .dstaddr_in			(dstaddr_in[AW-1:0]),
+       .srcaddr_in			(srcaddr_in[AW-1:0]),
+       .data_in				(data_in[AW-1:0]),
+       // Inputs
+       .packet_in			(packet_in[PW-1:0]));
 
    assign reg_write        = access_in & write_in;
    assign reg_read         = access_in & ~write_in;
@@ -113,7 +115,7 @@ module gpio(/*AUTOARG*/
    assign outxor_write  = reg_write & (dstaddr_in[6:3]==`GPIO_OUTXOR);
    assign imask_write   = reg_write & (dstaddr_in[6:3]==`GPIO_IMASK);
 
-   assign out_reg_write = out_write |
+   assign out_reg_write = out_write    |
 	                  outand_write |
 			  outorr_write |
 			  outxor_write;
@@ -148,9 +150,11 @@ module gpio(/*AUTOARG*/
        out_reg[31:0] <= out_dmux[31:0];
  
    assign gpio_out[N-1:0] = out_reg[N-1:0];
-
+   
+   
+   
    //################################
-   //# INPUT
+   //# INPUT ENABLE
    //################################ 
 
    //ien
@@ -162,12 +166,12 @@ module gpio(/*AUTOARG*/
      else if(ien_write)
        ien_reg[31:0] <= reg_wdata[31:0];
 
-   //idata
-   always @ (posedge clk)
-     in_reg[63:0] <= gpio_sync[N-1:0] & ien_reg[63:0];
+   assign gpio_ie[N-1:0] = ien_reg[N-1:0];
 
-   assign gpio_data[N-1:0] = in_reg[63:0];
-
+   //anding here too, just in case IO lib doesn't have input enable
+   assign gpio_data[N-1:0] = gpio_ie[N-1:0] & gpio_sync[N-1:0];
+   
+   
    //################################
    //# EDGE DETECTOR
    //################################ 
@@ -222,9 +226,6 @@ module gpio(/*AUTOARG*/
 		   .packet_in		(packet_in[PW-1:0]),
 		   .read_data		(read_data[63:0]),
 		   .wait_in		(wait_in));
-   
-   
-   
    
 endmodule // gpio
 // Local Variables:
