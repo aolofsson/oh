@@ -12,11 +12,13 @@ module mio (/*AUTOARG*/
    //#####################################################################
 
    //parameters
-   parameter  AW      = 32;          // address width
-   parameter  N       = 8;           // Mini IO width
-   parameter  TARGET    = "GENERIC"; // GENERIC,XILINX,ALTERA,GENERIC,ASIC
-   localparam PW      = 2*AW+40;     // emesh packet width
-   localparam MPW     = PW+8;        // mio packet width   
+   parameter  AW      = 32;         // address width
+   localparam PW      = 2*AW+40;    // emesh packet width
+   parameter  MPW     = 128;        // mio packet width (>PW)  
+   parameter  N       = 8;          // Mini IO width
+   parameter  DEF_CFG = 0;          // Default config   
+   parameter  DEF_CLK = 0;          // Default clock
+   parameter  TARGET  = "GENERIC";  // GENERIC,XILINX,ALTERA,GENERIC,ASIC
 
    // reset, clk, config
    input           clk;           // main core clock   
@@ -97,7 +99,9 @@ module mio (/*AUTOARG*/
     );
     */
 
-   mio_regs  #(.AW(AW))
+   mio_regs  #(.AW(AW),
+	       .DEF_CFG(DEF_CFG),
+	       .DEF_CLK(DEF_CLK))	       
    mio_regs (.dmode			(),
 	     /*AUTOINST*/
 	     // Outputs
@@ -226,6 +230,7 @@ module mio (/*AUTOARG*/
 	   .nreset			(nreset),
 	   .amode			(amode),
 	   .emode			(emode),
+	   .lsbfirst			(lsbfirst),
 	   .datasize			(datasize[7:0]),
 	   .ctrlmode			(ctrlmode[4:0]),
 	   .dstaddr			(dstaddr[AW-1:0]),

@@ -2,7 +2,7 @@ module mrx_protocol (/*AUTOARG*/
    // Outputs
    fifo_access, fifo_packet,
    // Inputs
-   clk, nreset, datasize, lsbfirst, io_access, io_packet
+   rx_clk, nreset, datasize, lsbfirst, io_access, io_packet
    );
 
    //#####################################################################
@@ -15,7 +15,7 @@ module mrx_protocol (/*AUTOARG*/
    localparam CW  = $clog2(2*PW/N); // transfer count width
    
    //clock and reset
-   input           clk;           // core clock
+   input           rx_clk;        // rx clock
    input 	   nreset;        // async active low reset
    
    //config
@@ -46,7 +46,7 @@ module mrx_protocol (/*AUTOARG*/
    `define MRX_IDLE     3'b000
    `define MRX_BUSY     3'b001
 
-   always @ (posedge clk or negedge nreset)
+   always @ (posedge rx_clk or negedge nreset)
      if(!nreset)
        mrx_state[2:0] <= `MRX_IDLE;
      else
@@ -57,7 +57,7 @@ module mrx_protocol (/*AUTOARG*/
        endcase // case (mrx_state[2:0])
 
    //tx word counter
-   always @ (posedge clk)    
+   always @ (posedge rx_clk)    
      if((mrx_state[2:0]==`MRX_IDLE) | transfer_done)
        mrx_count[CW-1:0] <= datasize[CW-1:0];
      else if(mrx_state[2:0]==`MRX_BUSY)
@@ -67,7 +67,7 @@ module mrx_protocol (/*AUTOARG*/
    assign shift         = (mrx_state[2:0]==`MRX_BUSY);
    
    //pipeline access signal
-   always @ (posedge clk or negedge nreset)
+   always @ (posedge rx_clk or negedge nreset)
      if(!nreset)
        fifo_access <= 'b0;
      else
@@ -83,7 +83,7 @@ module mrx_protocol (/*AUTOARG*/
    ser2par (// Outputs
 	    .dout	(fifo_packet[PW-1:0]),
 	    // Inputs
-	    .clk	(clk),
+	    .clk	(rx_clk),
 	    .din	(io_packet),
 	    .lsbfirst	(lsbfirst),
 	    .shift	(shift)

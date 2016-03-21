@@ -44,9 +44,8 @@ module mrx (/*AUTOARG*/
    //# BODY
    //#####################################################################
 
-   // End of automatics
-   /*AUTOOUTPUT*/
 
+   /*AUTOOUTPUT*/
    /*AUTOINPUT*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
@@ -102,10 +101,7 @@ module mrx (/*AUTOARG*/
    //########################################
    //# PROTOCOL
    //########################################
-   /*mrx_protocol  AUTO_TEMPLATE (
-    .clk	(rx_clk),
-        );
-   */
+  
    mrx_protocol #(.PW(PW),
 		  .N(N))
    mrx_protocol (/*AUTOINST*/
@@ -113,7 +109,7 @@ module mrx (/*AUTOARG*/
 		 .fifo_access		(fifo_access),
 		 .fifo_packet		(fifo_packet[PW-1:0]),
 		 // Inputs
-		 .clk			(rx_clk),		 // Templated
+		 .rx_clk		(rx_clk),
 		 .nreset		(nreset),
 		 .datasize		(datasize[7:0]),
 		 .lsbfirst		(lsbfirst),
@@ -123,10 +119,7 @@ module mrx (/*AUTOARG*/
    //########################################
    //# FAST IO (DDR)
    //########################################
-   /*mrx_io  AUTO_TEMPLATE (
-          .clk	(rx_clk),
-        );
-   */
+   
    mrx_io #(.N(N))
    mrx_io (
 	   /*AUTOINST*/
@@ -135,7 +128,9 @@ module mrx (/*AUTOARG*/
 	   .io_packet			(io_packet[2*N-1:0]),
 	   // Inputs
 	   .nreset			(nreset),
-	   .clk				(rx_clk),		 // Templated
+	   .rx_clk			(rx_clk),
+	   .ddr_mode			(ddr_mode),
+	   .lsbfirst			(lsbfirst),
 	   .rx_packet			(rx_packet[N-1:0]),
 	   .rx_access			(rx_access));
   

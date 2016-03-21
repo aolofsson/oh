@@ -4,8 +4,9 @@ module mio_if (/*AUTOARG*/
    addrincr, access_out, packet_out, wait_out, rx_wait_out,
    tx_access_out, tx_packet_out,
    // Inputs
-   clk, nreset, amode, emode, datasize, ctrlmode, dstaddr, wait_in,
-   access_in, packet_in, rx_access_in, rx_packet_in, tx_wait_in
+   clk, nreset, amode, emode, lsbfirst, datasize, ctrlmode, dstaddr,
+   wait_in, access_in, packet_in, rx_access_in, rx_packet_in,
+   tx_wait_in
    );
 
    //#####################################################################
@@ -15,6 +16,7 @@ module mio_if (/*AUTOARG*/
    //parameters
    parameter  AW  = 32;            // address width
    parameter  PW  = 2*AW +40;      // emesh packet width
+   parameter  N   = 8;             // number of extra bits in    
    parameter  MPW = PW+8;          // mio packet width  
    
    // reset, clk, config
@@ -22,6 +24,7 @@ module mio_if (/*AUTOARG*/
    input 	    nreset;        // async active low reset
    input 	    amode;         // auto address mode
    input 	    emode;         // emesh mode
+   input 	    lsbfirst;      // lsbfirst transfer
    input [7:0] 	    datasize;      // datasize
    input [4:0] 	    ctrlmode;      // emesh ctrlmode
    input [AW-1:0]   dstaddr;       // destination address for amode
@@ -69,7 +72,6 @@ module mio_if (/*AUTOARG*/
    // End of automatics
    /*AUTOINPUT*/
 
-
    // pass throughs
    assign rx_wait_out   = wait_in;
    assign access_out    = rx_access_in;
@@ -77,7 +79,10 @@ module mio_if (/*AUTOARG*/
    assign wait_out      = tx_wait_in;
    
    // adapter for PW-->MPW width (MPW>=PW)
-   assign tx_packet_out[MPW-1:0] = packet_in[PW-1:0];
+   // shift up data on msbfirst shift 
+   assign tx_packet_out[MPW-1:0] = (~lsbfirst & emode ) ? {packet_in[PW-1:0],{(MPW-PW-8){1'b0}}} :
+				   (~lsbfirst )         ? {packet_in[PW-1:0],{(MPW-PW){1'b0}}} :
+				                          packet_in[PW-1:0];
 
    //#################################################
    // TRANSACTION FOR CORE (FROM RX)
@@ -140,12 +145,12 @@ module mio_if (/*AUTOARG*/
                                         dstaddr_in[AW-1:0];
    
    // data in first 64 bits for amode
-   assign data_out[AW-1:0]    = amode ? rx_packet_in[AW-1:0] :
+   
+   assign data_out[AW-1:0]    = amode ? rx_packet_in[31:0] :
                                         data_in[AW-1:0];
 
-   assign srcaddr_out[AW-1:0] = amode ? 'b0 :
+   assign srcaddr_out[AW-1:0] = amode ? rx_packet_in[63:32] :
                                         srcaddr_in[AW-1:0];
-
 
    //Construct outgoing packet
    emesh2packet e2p (/*AUTOINST*/

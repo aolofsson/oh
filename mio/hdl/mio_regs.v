@@ -13,12 +13,8 @@ module mio_regs (/*AUTOARG*/
    parameter   N         = 8;                      // number of I/O pins  
    parameter   AW        = 32;                     // address width
    localparam  PW        = 2*AW+40;                // packet width
-   parameter   DEF_EN    = 1;                      // default enable value (1 is on)
-   parameter   DEF_CLK   = 7;                      // default CLKDIV value (divide by 8)
-   parameter   DEF_DDR   = 1;                      // default transsfer mode 
-   parameter   DEF_SIZE  = (PW+8)/(N*(1+DEF_DDR)); // flits per packet (ddr mode)  
-   parameter   DEF_MODE  = 0;                      // default as emode
-   parameter   DEF_MSB   = 0;                      // MSB first default
+   parameter   DEF_CFG   = 0;                      // default enable value (1 is on)
+   parameter   DEF_CLK   = 0;                      // default CLKDIV value (divide by 8)
    localparam  DEF_RISE0 = 0;                      // 0 degrees
    localparam  DEF_FALL0 = ((DEF_CLK+8'd1)>>8'd1); // 180 degrees
    localparam  DEF_RISE1 = ((DEF_CLK+8'd1)>>8'd2); // 90 degrees
@@ -120,25 +116,19 @@ module mio_regs (/*AUTOARG*/
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        begin
-	  config_reg[0]    <= DEF_EN;
-	  config_reg[1]    <= DEF_EN;
-	  config_reg[3:2]  <= DEF_MODE;   
-	  config_reg[11:4] <= DEF_SIZE;
-	  config_reg[12]   <= DEF_DDR;
-	  config_reg[13]   <= DEF_MSB;   
-	  config_reg[18:14]<= 'b0;
+	  config_reg[18:0] <= DEF_CFG;
        end
      else if(config_write)
        config_reg[18:0] <= data_in[18:0];
 
-   assign tx_en         = config_reg[0];          // tx enable
-   assign rx_en         = config_reg[1];          // rx disable
+   assign tx_en         = ~config_reg[0];         // tx disable
+   assign rx_en         = ~config_reg[1];         // rx disable
    assign emode         = config_reg[3:2]==2'b00; // emesh packets
    assign dmode         = config_reg[3:2]==2'b01; // pure data mode (streaming)
    assign amode         = config_reg[3:2]==2'b10; // auto address mode
    assign datasize[7:0] = config_reg[11:4];       // number of flits per packet
    assign ddr_mode      = config_reg[12];         // dual data rate mode   
-   assign lsbfirst      = ~config_reg[13];        // msb first transmit
+   assign lsbfirst      = config_reg[13];         // lsb-first transmit
    assign ctrlmode[4:0] = config_reg[18:14];      // amode ctrlmode
 
    //###############################
@@ -184,7 +174,7 @@ module mio_regs (/*AUTOARG*/
 	  clkphase_reg[23:16] <= DEF_RISE1;
 	  clkphase_reg[31:24] <= DEF_FALL1;	  
        end
-     else if(clkdiv_write)
+     else if(clkphase_write)
        clkphase_reg[31:0] <= data_in[31:0];
 
    assign clkphase0[15:0] = clkphase_reg[15:0];

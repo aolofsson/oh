@@ -146,6 +146,7 @@ module mtx (/*AUTOARG*/
 	   .nreset			(nreset),
 	   .io_clk			(io_clk),
 	   .ddr_mode			(ddr_mode),
+	   .lsbfirst			(lsbfirst),
 	   .tx_wait			(tx_wait),
 	   .io_access			(io_access),
 	   .io_packet			(io_packet[2*N-1:0]));
