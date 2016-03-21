@@ -10,11 +10,12 @@ module dut(/*AUTOARG*/
    //#####################################################################
 
    //parameters
-   parameter N     =  1;   
-   parameter AW    = 32;               // address width
-   parameter NMIO =  8;                // IO data width
-   localparam PW   = 2*AW + 40;        // standard packet   
-   localparam CW   = $clog2(2*PW/NMIO);// transfer count width
+   parameter N       =  1;   
+   parameter AW      = 32;               // address width
+   parameter NMIO    =  8;               // IO data width
+   parameter DEF_CFG =  18'h1070;        // for 104 bits   
+   parameter DEF_CLK =  7;   
+   localparam PW     = 2*AW + 40;        // standard packet   
    
    //clock, reset
    input            clk1;
@@ -35,14 +36,16 @@ module dut(/*AUTOARG*/
    output [N*PW-1:0] packet_out;
    input [N-1:0]     wait_in;
 
+   //########################################
+   //# BODY
+   //########################################
 
    //wires
    wire 	     reg_access_in;   
    wire [PW-1:0]     reg_packet_in;
-   wire [7:0] 	     datasize;
-   wire [3:0] 	     divcfg;   
-   wire [7:0] 	     clkdiv;
-  
+   wire 	     reg_wait_in;
+   wire 	     mio_access_in;
+   
    /*AUTOINPUT*/
    // End of automatics
    /*AUTOWIRE*/
@@ -58,12 +61,17 @@ module dut(/*AUTOARG*/
  
    
    assign dut_active       = 1'b1;
-   assign datasize[CW-1:0] = PW/(2*NMIO);
-   assign divcfg           = 4'b1;   
    assign clkout           = clk1;
-   assign reg_access_in    = 'b0;
-   assign reg_packet_in    = 'b0;
-   assign reg_wait_in      =  wait_in;
+
+   //########################################
+   //# DECODE (SPLITTING CTRL+DATA)
+   //########################################
+
+   //hack: send to regfile if addr[31:20] is zero
+   assign mio_access_in    = access_in & |packet_in[39:28];
+   assign reg_access_in    = access_in & ~(|packet_in[39:28]);   
+   assign reg_packet_in    = packet_in;
+   assign reg_wait_in      = wait_in;
 
    //########################################
    //# DUT: MIO IN LOOPBACK
@@ -77,41 +85,40 @@ module dut(/*AUTOARG*/
             .rx_packet	    (tx_packet[NMIO-1:0]),
             .tx_packet	    (tx_packet[NMIO-1:0]),
 	    .tx_wait        (rx_wait),
-            .reg_access_in  (reg_access_in),
-	    .reg_packet_in  (reg_packet_in[PW-1:0]),
-	    .reg_wait_in    (wait_in),
+            .access_in	    (mio_access_in),
+         
     );
     */
    
-   mio mio (/*AUTOINST*/
-	    // Outputs
-	    .tx_clk			(tx_clk),
-	    .tx_access			(tx_access),
-	    .tx_packet			(tx_packet[NMIO-1:0]),	 // Templated
-	    .rx_wait			(rx_wait),
-	    .wait_out			(wait_out),
-	    .access_out			(access_out),
-	    .packet_out			(packet_out[PW-1:0]),
-	    .reg_wait_out		(reg_wait_out),
-	    .reg_access_out		(reg_access_out),
-	    .reg_packet_out		(reg_packet_out[PW-1:0]),
-	    // Inputs
-	    .clk			(clk1),			 // Templated
-	    .nreset			(nreset),
-	    .tx_wait			(rx_wait),		 // Templated
-	    .rx_clk			(tx_clk),		 // Templated
-	    .rx_access			(tx_access),		 // Templated
-	    .rx_packet			(tx_packet[NMIO-1:0]),	 // Templated
-	    .access_in			(access_in),
-	    .packet_in			(packet_in[PW-1:0]),
-	    .wait_in			(wait_in),
-	    .reg_access_in		(reg_access_in),	 // Templated
-	    .reg_packet_in		(reg_packet_in[PW-1:0]), // Templated
-	    .reg_wait_in		(wait_in));		 // Templated
+   mio #(.AW(AW),
+	 .DEF_CFG(DEF_CFG),
+	 .DEF_CLK(DEF_CLK))
+   mio (/*AUTOINST*/
+	// Outputs
+	.tx_clk				(tx_clk),
+	.tx_access			(tx_access),
+	.tx_packet			(tx_packet[NMIO-1:0]),	 // Templated
+	.rx_wait			(rx_wait),
+	.wait_out			(wait_out),
+	.access_out			(access_out),
+	.packet_out			(packet_out[PW-1:0]),
+	.reg_wait_out			(reg_wait_out),
+	.reg_access_out			(reg_access_out),
+	.reg_packet_out			(reg_packet_out[PW-1:0]),
+	// Inputs
+	.clk				(clk1),			 // Templated
+	.nreset				(nreset),
+	.tx_wait			(rx_wait),		 // Templated
+	.rx_clk				(tx_clk),		 // Templated
+	.rx_access			(tx_access),		 // Templated
+	.rx_packet			(tx_packet[NMIO-1:0]),	 // Templated
+	.access_in			(mio_access_in),	 // Templated
+	.packet_in			(packet_in[PW-1:0]),
+	.wait_in			(wait_in),
+	.reg_access_in			(reg_access_in),
+	.reg_packet_in			(reg_packet_in[PW-1:0]),
+	.reg_wait_in			(reg_wait_in));
    
-
-  
-
      
 endmodule // dv_elink
 // Local Variables:
