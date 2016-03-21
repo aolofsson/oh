@@ -37,7 +37,7 @@ module spi_master_fifo (/*AUTOARG*/
    //# BODY
    //##################################
 
-   wire [SRW-1:0]   datasize;
+   wire [7:0] 	    datasize;
    wire [PW-1:0]    tx_data;
    wire [SW-1:0]    fifo_din;
    
@@ -67,8 +67,8 @@ module spi_master_fifo (/*AUTOARG*/
 		     .packet_in		(packet_in[PW-1:0]));
    
    
-   assign datasize[SRW-1:0] = emode ? (PW/SW-1'b1) :
-			      ((1<<datamode_in[1:0]));
+   assign datasize[7:0] = emode ? (PW/SW-1'b1) :
+			  ((1<<datamode_in[1:0]));
    
 
    assign tx_write =  write_in & 
@@ -100,7 +100,7 @@ module spi_master_fifo (/*AUTOARG*/
 	       .nreset	    (nreset),
 	       .din	    (tx_data[PW-1:0]),
 	       .shift	    (1'b1),
-	       .datasize    (datasize[SRW-1:0]),
+	       .datasize    (datasize[7:0]),
 	       .load	    (tx_write),
 	       .lsbfirst    (1'b1),
 	       .fill	    (1'b0),

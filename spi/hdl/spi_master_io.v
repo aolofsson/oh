@@ -55,29 +55,37 @@ module spi_master_io(/*AUTOARG*/
    reg [2:0] 	   bit_count;
    reg 		   fifo_empty_reg;
    wire [7:0] 	   data_out;
+   wire [15:0] 	   clkphase0;
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			clkout;			// From oh_clockdiv of oh_clockdiv.v
-   wire			period_match;		// From oh_clockdiv of oh_clockdiv.v
-   wire			phase_match;		// From oh_clockdiv of oh_clockdiv.v
+   wire			clkfall1;		// From oh_clockdiv of oh_clockdiv.v
+   wire			clkout1;		// From oh_clockdiv of oh_clockdiv.v
+   wire			clkrise1;		// From oh_clockdiv of oh_clockdiv.v
    // End of automatics
    
    //#################################
    //# CLOCK GENERATOR
    //#################################
+   assign clkphase0[7:0]  = 'b0;
+   assign clkphase0[15:8] = (clkdiv_reg[7:0]+1'b1)>>1;
    
    oh_clockdiv #(.DW(8))
-   oh_clockdiv (.clkdiv		(clkdiv_reg[2:0]),
-		.en		(1'b1),
+   oh_clockdiv (.clkdiv		(clkdiv_reg[7:0]),
+		.clken		(1'b1),	
+		.clkrise0	(period_match),
+		.clkfall0	(phase_match),	
+		.clkphase1	(16'b0),
+		.clkout0	(clkout),
 		/*AUTOINST*/
 		// Outputs
-		.period_match		(period_match),
-		.phase_match		(phase_match),
-		.clkout			(clkout),
+		.clkout1		(clkout1),
+		.clkrise1		(clkrise1),
+		.clkfall1		(clkfall1),
 		// Inputs
 		.clk			(clk),
-		.nreset			(nreset));
+		.nreset			(nreset),
+		.clkphase0		(clkphase0[15:0]));
     
    //#################################
    //# STATE MACHINE
@@ -146,7 +154,6 @@ module spi_master_io(/*AUTOARG*/
    assign data_out[7:0] = (emode & spi_state[1:0]==`SPI_IDLE) ? cmd_reg[7:0] : 
 			                                        fifo_dout[7:0];
    
-   
    oh_par2ser  #(.PW(8),
 		 .SW(1))
    par2ser (// Outputs
@@ -158,7 +165,7 @@ module spi_master_io(/*AUTOARG*/
 	    .nreset	(nreset),         // async active low reset
 	    .din	(data_out[7:0] ), // 8 bit data from fifo
 	    .shift	(shift),          // shift on neg edge
-	    .datasize	(3'b111),         // 8 bits
+	    .datasize	(8'd7),           // 8 bits
 	    .load	(load_byte),      // load data from fifo
 	    .lsbfirst	(lsbfirst),       // serializer direction
 	    .fill	(1'b0),           // fill with slave data
@@ -175,7 +182,8 @@ module spi_master_io(/*AUTOARG*/
 	    .clk (clk),
 	    .in	 (ss));
    
-   oh_ser2par #(.PW(64))
+   oh_ser2par #(.PW(64),
+		.SW(1))
    ser2par (//output
 	    .dout	(rx_data[63:0]),  // parallel data out
 	    //inputs

@@ -129,7 +129,7 @@ module spi_slave_io(/*AUTOARG*/
 	    .shift      (~ss),
 	    .lsbfirst	(lsbfirst),
 	    .load       (tx_load),
-	    .datasize   (3'b111),//TODO:simplify
+	    .datasize   (8'd7),
 	    .fill       (1'b0),
 	    .wait_in    (1'b0)
 	    );
