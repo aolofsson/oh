@@ -49,16 +49,19 @@ module oh_par2ser (/*AUTOARG*/
    //# STATE MACHINE
    //##########################
    
-   assign start_transfer = load & ~wait_in;
+   assign start_transfer = load     & 
+			   ~wait_in &
+			   ~busy;
+
    
    //transfer counter
    always @ (posedge clk or negedge nreset)
      if(~nreset)
        count[CW-1:0] <= 'b0;   
-     else if(start_transfer)
-       count[CW-1:0] <= datasize[CW-1:0];  //one "SW sized" transfers
      else if(shift & busy)
        count[CW-1:0] <= count[CW-1:0] - 1'b1;
+     else if(start_transfer)
+       count[CW-1:0] <= datasize[CW-1:0];  //one "SW sized" transfers
 
    //output data is valid while count > 0
    assign busy = |count[CW-1:0];
@@ -67,8 +70,9 @@ module oh_par2ser (/*AUTOARG*/
    assign access_out = busy;
       
    //wait until valid data is finished
-   assign wait_out  = (busy & ~access_out) |
-		      wait_in;
+   assign wait_out  = wait_in |
+		      busy;
+
    
    //##########################
    //# SHIFT REGISTER
@@ -76,11 +80,12 @@ module oh_par2ser (/*AUTOARG*/
    
    always @ (posedge clk)
      if(start_transfer)
-       shiftreg[PW-1:0] = din[PW-1:0];	   
+       shiftreg[PW-1:0] = din[PW-1:0];
      else if(shift & lsbfirst)		 
        shiftreg[PW-1:0] = {{(SW){fill}}, shiftreg[PW-1:SW]};
      else if(shift)
        shiftreg[PW-1:0] = {shiftreg[PW-SW-1:0],{(SW){fill}}};
+   
 
    assign dout[SW-1:0] = lsbfirst ? shiftreg[SW-1:0] : 
 			            shiftreg[PW-1:PW-SW];	
