@@ -8,32 +8,37 @@
 `include "gpio_regmap.vh"
 module gpio(/*AUTOARG*/
    // Outputs
-   reg_rdata, gpio_out, gpio_oen, gpio_irq, gpio_data,
+   wait_out, access_out, packet_out, gpio_out, gpio_oen, gpio_ie,
+   gpio_irq, gpio_data,
    // Inputs
-   nreset, clk, reg_access, reg_packet, gpio_in
+   nreset, clk, access_in, packet_in, wait_in, gpio_in
    );
   
    //##########################################
    //# INTERFACE
    //##########################################
 
-   parameter  N      = 24;      // number of gpio pins
-   parameter  AW     = 32;      // address width
-   parameter  PW     = 2*AW+40; // packet width   
-   parameter  ID     = 0;       // block id to match to, bits [10:8]
+   parameter   N      = 24;      // number of gpio pins
+   parameter   AW     = 32;      // address width
+   localparam  PW     = 2*AW+40; // packet width   
       
    //clk, reset
    input           nreset;      // asynchronous active low reset
    input 	   clk;         // clock
-
+   
    //register access interface
-   input 	   reg_access;  // register access
-   input [PW-1:0]  reg_packet;  // data/address
-   output [31:0]   reg_rdata;   // readback data
+   input 	   access_in;   // register access
+   input [PW-1:0]  packet_in;   // data/address
+   output 	   wait_out;    // pushback from mesh
 
+   output 	   access_out;  // register access
+   output [PW-1:0] packet_out;  // data/address
+   input 	   wait_in;     // pushback from mesh
+   
    //IO signals
    output [N-1:0]  gpio_out;    // data to drive to IO pins
-   output [N-1:0]  gpio_oen;    // tristate enables for IO pins
+   output [N-1:0]  gpio_oen;    // output enable (bar)
+   output [N-1:0]  gpio_ie;     // input enable
    input [N-1:0]   gpio_in;     // data from IO pins
    
    //global interrupt   
@@ -50,7 +55,7 @@ module gpio(/*AUTOARG*/
    reg [63:0] 	   ien_reg;
    reg [63:0] 	   in_reg;
    reg [63:0] 	   imask_reg;
-   reg [31:0] 	   reg_rdata;
+   reg [63:0] 	   read_data;
 
    //nets
    wire [N-1:0]    gpio_sync;
@@ -78,36 +83,39 @@ module gpio(/*AUTOARG*/
    dsync (.dout	(gpio_sync[N-1:0]),
           .clk	(clk),
           .din	(gpio_in[N-1:0]));
-   
+
    //################################
    //# REGISTER ACCESS DECODE
    //################################  
    
-   packet2emesh p2e(.packet_in		(reg_packet[PW-1:0]),
-		    /*AUTOINST*/
-		    // Outputs
-		    .write_in		(write_in),
-		    .datamode_in	(datamode_in[1:0]),
-		    .ctrlmode_in	(ctrlmode_in[4:0]),
-		    .dstaddr_in		(dstaddr_in[AW-1:0]),
-		    .srcaddr_in		(srcaddr_in[AW-1:0]),
-		    .data_in		(data_in[AW-1:0]));
+   packet2emesh #(.AW(AW))
+   p2e(
+       /*AUTOINST*/
+       // Outputs
+       .write_in			(write_in),
+       .datamode_in			(datamode_in[1:0]),
+       .ctrlmode_in			(ctrlmode_in[4:0]),
+       .dstaddr_in			(dstaddr_in[AW-1:0]),
+       .srcaddr_in			(srcaddr_in[AW-1:0]),
+       .data_in				(data_in[AW-1:0]),
+       // Inputs
+       .packet_in			(packet_in[PW-1:0]));
 
-   assign reg_write        = reg_access & write_in;
-   assign reg_read         = reg_access & ~write_in;
+   assign reg_write        = access_in & write_in;
+   assign reg_read         = access_in & ~write_in;
    assign reg_double       = datamode_in[1:0]==2'b11;
    assign reg_wdata[63:0]  = {srcaddr_in[31:0],data_in[31:0]};
    
-   assign oen_write     = reg_write & (dstaddr_in[7:3]==`GPIO_OEN);
-   assign out_write     = reg_write & (dstaddr_in[7:3]==`GPIO_OUT);
-   assign ien_write     = reg_write & (dstaddr_in[7:3]==`GPIO_IEN);
-   assign in_write      = reg_write & (dstaddr_in[7:3]==`GPIO_IN);
-   assign outand_write  = reg_write & (dstaddr_in[7:3]==`GPIO_OUTAND);
-   assign outorr_write  = reg_write & (dstaddr_in[7:3]==`GPIO_OUTORR);
-   assign outxor_write  = reg_write & (dstaddr_in[7:3]==`GPIO_OUTXOR);
-   assign imask_write   = reg_write & (dstaddr_in[7:3]==`GPIO_IMASK);
+   assign oen_write     = reg_write & (dstaddr_in[6:3]==`GPIO_OEN);
+   assign out_write     = reg_write & (dstaddr_in[6:3]==`GPIO_OUT);
+   assign ien_write     = reg_write & (dstaddr_in[6:3]==`GPIO_IEN);
+   assign in_write      = reg_write & (dstaddr_in[6:3]==`GPIO_IN);
+   assign outand_write  = reg_write & (dstaddr_in[6:3]==`GPIO_OUTAND);
+   assign outorr_write  = reg_write & (dstaddr_in[6:3]==`GPIO_OUTORR);
+   assign outxor_write  = reg_write & (dstaddr_in[6:3]==`GPIO_OUTXOR);
+   assign imask_write   = reg_write & (dstaddr_in[6:3]==`GPIO_IMASK);
 
-   assign out_reg_write = out_write |
+   assign out_reg_write = out_write    |
 	                  outand_write |
 			  outorr_write |
 			  outxor_write;
@@ -142,9 +150,11 @@ module gpio(/*AUTOARG*/
        out_reg[31:0] <= out_dmux[31:0];
  
    assign gpio_out[N-1:0] = out_reg[N-1:0];
-
+   
+   
+   
    //################################
-   //# INPUT
+   //# INPUT ENABLE
    //################################ 
 
    //ien
@@ -156,12 +166,12 @@ module gpio(/*AUTOARG*/
      else if(ien_write)
        ien_reg[31:0] <= reg_wdata[31:0];
 
-   //idata
-   always @ (posedge clk)
-     in_reg[63:0] <= gpio_sync[N-1:0] & ien_reg[63:0];
+   assign gpio_ie[N-1:0] = ien_reg[N-1:0];
 
-   assign gpio_data[N-1:0] = in_reg[63:0];
-
+   //anding here too, just in case IO lib doesn't have input enable
+   assign gpio_data[N-1:0] = gpio_ie[N-1:0] & gpio_sync[N-1:0];
+   
+   
    //################################
    //# EDGE DETECTOR
    //################################ 
@@ -194,20 +204,29 @@ module gpio(/*AUTOARG*/
          
    always @ (posedge clk)
      if(reg_read)
-       case(dstaddr_in[7:3])		 
-	 `GPIO_OEN     :  reg_rdata[31:0] <= odd ? oen_reg[63:32]     : 
-					           oen_reg[31:0];
-	 `GPIO_OUT     :  reg_rdata[31:0] <= odd ? out_reg[63:32]     : 
-					           out_reg[31:0];
-	 `GPIO_IEN     :  reg_rdata[31:0] <= odd ? ien_reg[63:32]     : 
-					           ien_reg[31:0]; 
-	 `GPIO_IN      :  reg_rdata[31:0] <= odd ? in_reg[63:32]      : 
-					           in_reg[31:0];	 
-	 `GPIO_IMASK   :  reg_rdata[31:0] <= odd ? imask_reg[63:32]   : 
-					           imask_reg[31:0];	 
-	 default       :  reg_rdata[31:0] <='b0;
+       case(dstaddr_in[6:3])		 
+	 `GPIO_OEN  :read_data[31:0]<= odd ? oen_reg[63:32]  : oen_reg[31:0];
+	 `GPIO_OUT  :read_data[31:0]<= odd ? out_reg[63:32]  : out_reg[31:0];
+	 `GPIO_IEN  :read_data[31:0]<= odd ? ien_reg[63:32]  : ien_reg[31:0]; 
+	 `GPIO_IN   :read_data[31:0]<= odd ? in_reg[63:32]   : in_reg[31:0];
+ 	 `GPIO_IMASK:read_data[31:0]<= odd ? imask_reg[63:32]:imask_reg[31:0]; 
+	 default    :read_data[31:0]<='b0;
        endcase // case (dstaddr_in[7:3])
-
+   
+   emesh_readback #(.AW(AW))
+   emesh_readback (/*AUTOINST*/
+		   // Outputs
+		   .wait_out		(wait_out),
+		   .access_out		(access_out),
+		   .packet_out		(packet_out[PW-1:0]),
+		   // Inputs
+		   .nreset		(nreset),
+		   .clk			(clk),
+		   .access_in		(access_in),
+		   .packet_in		(packet_in[PW-1:0]),
+		   .read_data		(read_data[63:0]),
+		   .wait_in		(wait_in));
+   
 endmodule // gpio
 // Local Variables:
 // verilog-library-directories:("." "../../emesh/hdl" "../../common/hdl")

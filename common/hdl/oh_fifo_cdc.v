@@ -3,7 +3,7 @@
 //########################################################################
 module oh_fifo_cdc (/*AUTOARG*/
    // Outputs
-   wait_out, access_out, packet_out,
+   wait_out, access_out, packet_out, prog_full, full, empty,
    // Inputs
    nreset, clk_in, access_in, packet_in, clk_out, wait_in
    );
@@ -11,15 +11,15 @@ module oh_fifo_cdc (/*AUTOARG*/
    //#####################################################################
    //# INTERFACE
    //#####################################################################
-   parameter DW    = 104;
-   parameter DEPTH = 32;
-   parameter WAIT  = 0;
-
+   parameter DW         = 104;          // FIFO width
+   parameter DEPTH      = 32;           // FIFO depth (entries)
+   parameter TARGET     = "GENERIC";    // GENERIC,XILINX,ALTERA,GENERIC,ASIC
+   parameter WAIT       = 0;            // assert random prog_full wait
+   
    //shared async reset
    input              nreset;      
 
    //input packet
-
    input              clk_in;     
    input 	      access_in;   
    input [DW-1:0]     packet_in;   
@@ -30,7 +30,12 @@ module oh_fifo_cdc (/*AUTOARG*/
    output 	      access_out;   
    output [DW-1:0]    packet_out;   
    input 	      wait_in;   
-   
+
+   //status
+   output 	      prog_full;
+   output 	      full;
+   output 	      empty;
+      
    //#####################################################################
    //# BODY
    //#####################################################################
@@ -56,7 +61,8 @@ module oh_fifo_cdc (/*AUTOARG*/
        access_out <= rd_en;
 
    //Read response fifo (from master)
-   oh_fifo_async  #(.DW(DW),
+   oh_fifo_async  #(.TARGET(TARGET),
+		    .DW(DW),
 		    .DEPTH(DEPTH),
 		    .WAIT(WAIT))
    fifo (.prog_full (prog_full),

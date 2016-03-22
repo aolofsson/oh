@@ -66,7 +66,6 @@ module spi_slave_io(/*AUTOARG*/
 `define SPI_CMD    2'b01  // 8 cycles for command/addr
 `define SPI_DATA   2'b10  // stay in datamode until done
 
-      
    //state machine
    always @ (posedge sclk or posedge ss)
      if(ss)
@@ -90,8 +89,10 @@ module spi_slave_io(/*AUTOARG*/
         
    // command/address register
    // auto increment for every byte
-   always @ (posedge sclk)
-     if((spi_state[1:0]==`SPI_CMD) & byte_done)
+   always @ (negedge sclk or posedge ss)
+     if(ss)
+       command_reg[7:0] <= 'b0;   
+     else if((spi_state[1:0]==`SPI_CMD) & byte_done)
        command_reg[7:0] <= rx_data[7:0];
      else if(byte_done)
        command_reg[7:0] <= {command_reg[7:6],
@@ -122,14 +123,14 @@ module spi_slave_io(/*AUTOARG*/
 		.SW(1))
    par2ser (.dout	(miso),
 	    .access_out (),
-	    .wait_out	(),
-	    .clk	(~sclk),
-	    .nreset	(nreset),
+	    .wait_out	(tx_wait),
+	    .clk	(sclk), // shift out on positive edge
+	    .nreset	(~ss),
 	    .din	(spi_rdata[7:0]),
 	    .shift      (~ss),
 	    .lsbfirst	(lsbfirst),
 	    .load       (tx_load),
-	    .datasize   (3'b111),//TODO:simplify
+	    .datasize   (8'd7),
 	    .fill       (1'b0),
 	    .wait_in    (1'b0)
 	    );
@@ -150,7 +151,6 @@ module spi_slave_io(/*AUTOARG*/
 
    assign spi_remote    = command_reg[7:6]==2'b11; //send remote request
 
-   
    assign spi_wdata[7:0] = rx_data[7:0];
  
    //###################################
@@ -158,6 +158,7 @@ module spi_slave_io(/*AUTOARG*/
    //###################################
    
    //sync the ss to free running clk
+   //look for rising edge
    oh_dsync dsync (.dout (ss_sync),
 		   .clk  (clk),
 		   .din  (ss & spi_remote)

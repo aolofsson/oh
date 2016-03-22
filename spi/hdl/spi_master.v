@@ -100,7 +100,6 @@ module spi_master(/*AUTOARG*/
    
    spi_master_fifo #(.AW(AW),
 		     .DEPTH(DEPTH))
-
    spi_master_fifo(/*AUTOINST*/
 		   // Outputs
 		   .fifo_prog_full	(fifo_prog_full),

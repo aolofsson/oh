@@ -7,15 +7,16 @@ module oh_clockgate(/*AUTOARG*/
 
    parameter DW=1;
 
-   input  nrst;//active low reset   
-   input  clk; //clock input 
-   input  se;  //scan enable   
-   input  [DW-1:0] en;  //enable (from positive edge FF)
-   output [DW-1:0] eclk;//enabled clock
+   input  nrst;         // active low reset (synced to clk)   
+   input  clk;          // clock input 
+   input  se;           // scan enable   
+   input  [DW-1:0] en;  // enable (from positive edge FF)
+   output [DW-1:0] eclk;// enabled clock
      
 `ifdef CFG_ASIC
 
 `else
+
    wire [DW-1:0]   en_sh;
    wire [DW-1:0]   en_sl;
 

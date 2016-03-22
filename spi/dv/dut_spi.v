@@ -42,6 +42,8 @@ module dut(/*AUTOARG*/
 
 
    wire 	     clk;
+   wire [PW-1:0]     mem_packet_out;
+   wire [PW-1:0]     mem_packet_in;
    
    /*AUTOINPUT*/ 
    /*AUTOWIRE*/
@@ -73,12 +75,12 @@ module dut(/*AUTOARG*/
    master  (.m_miso			(s_miso),
 	    .master_mode		(1'b1),
 	    .s_miso			(),	
-	    .s_sclk			(1'b0),
+	    .s_sclk			(m_sclk),
 	    .s_mosi			(1'b0),
 	    .s_ss			(1'b1),
 	    .wait_in			(1'b0),
-	    .access_out			(),
-	    .packet_out			(),
+	    .access_out			(access_out),
+	    .packet_out			(packet_out),
 	    /*AUTOINST*/
 	    // Outputs
 	    .spi_irq			(spi_irq),
@@ -100,27 +102,43 @@ module dut(/*AUTOARG*/
 	   .s_mosi			(m_mosi),
 	   .s_ss			(m_ss),
 	   .master_mode			(1'b0),
-	   .access_in			(1'b0),
-	   .packet_in			(),
 	   .m_miso			(),
 	   .m_sclk			(),
 	   .m_mosi			(),
 	   .m_ss			(),
 	   .wait_out			(),
-	  /*AUTOINST*/
+	   .access_out			(mem_access_in),
+	   .packet_out			(mem_packet_in[PW-1:0]),
+	   .access_in			(mem_access_out),
+	   .packet_in			(mem_packet_out[PW-1:0]),
+	   /*AUTOINST*/
 	  // Outputs
 	  .spi_irq			(spi_irq),
-	  .access_out			(access_out),
-	  .packet_out			(packet_out[PW-1:0]),
 	  .s_miso			(s_miso),
 	  // Inputs
 	  .nreset			(nreset),
 	  .clk				(clk),
 	  .wait_in			(wait_in));
+
+   
+   ememory ememory (// Outputs
+		    .wait_out		(wait_out),
+		    .access_out		(mem_access_out),
+		    .packet_out		(mem_packet_out[PW-1:0]),
+		    // Inputs
+		    .clk		(clk),
+		    .nreset		(nreset),
+		    .coreid		(12'b0),
+		    .access_in		(mem_access_in),
+		    .packet_in		(mem_packet_in[PW-1:0]),
+		    .wait_in		(1'b0)
+		    );
+   
+
    
 endmodule // dut
 
 // Local Variables:
-// verilog-library-directories:("." "../hdl" "../../emesh/hdl")
+// verilog-library-directories:("." "../hdl" "../../emesh/hdl" "../../emesh/dv")
 // End:
 

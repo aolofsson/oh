@@ -1,9 +1,6 @@
 //#############################################################################
-//# Purpose: Simple clock divider (modulo 2)                                  #
-//#          clkdiv: 0-->divide by 1                                          #
-//#          clkdiv: 1-->divide by 2                                          #
-//#          clkdiv: 2-->divide by 4                                          #
-//#          clkdiv: 2-->divide by 8  etc..                                   #
+//# Purpose: Clock divider with 2 outputs                                     #
+//           Secondary clock must be multiple of first clock                  #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see below)                                                 # 
@@ -11,50 +8,97 @@
 
 module oh_clockdiv(/*AUTOARG*/
    // Outputs
-   period_match, phase_match, clkout,
+   clkout0, clkrise0, clkfall0, clkout1, clkrise1, clkfall1,
    // Inputs
-   clk, nreset, en, clkdiv
+   clk, nreset, clken, clkdiv, clkphase0, clkphase1
    );
 
+   //parameters
    parameter DW   = 8;          // divider counter width
-   parameter CW   = $clog2(DW); // config width
       
+   //inputs
    input          clk;          // main clock
    input          nreset;       // async active low reset
-   input          en;           // counter enable
-   input [CW-1:0] clkdiv;       // counter width
+   input          clken;        // clock enable enable
+   input [7:0]	  clkdiv;       // [7:0]=period (0==off, 1=div/2, 2=div/3, etc)
+   input [15:0]	  clkphase0;    // [7:0]=rising,[15:8]=falling
+   input [15:0]	  clkphase1;    // [7:0]=rising,[15:8]=falling
    
-   output         period_match; // period match
-   output         phase_match;  // phase match
-   output 	  clkout;       // output clock
+   //primary clock
+   output 	  clkout0;      // primary output clock
+   output         clkrise0;     // rising edge match
+   output         clkfall0;     // falling edge match
+  
+   //secondary clock
+   output 	  clkout1;      // secondary output clock
+   output         clkrise1;     // rising edge match
+   output         clkfall1;     // falling edge match 
    
-   reg [DW-1:0]   counter;      //free running counter!
-   reg 		  clkout;
+   //################################
+   //# BODY
+   //################################
+
+   //regs
+   reg [DW-1:0]   counter;      // free running counter
+   reg 		  clkout0_reg;
+   reg 		  clkout1_reg;
+   reg 		  clkout1_shift;
    
-   //baud counter
+   //###########################################
+   //# CYCLE COUNTER
+   //###########################################
    always @ (posedge clk or negedge nreset)
-     if(!nreset)
-       counter[7:0] <= 'b0;
-     else if(en)
+     if (~nreset)
+       counter[DW-1:0]   <= 'b0;
+     else if(clken)
        if(period_match)
-	 counter[7:0] <= 'b0;
+	 counter[DW-1:0] <= 'b0;
        else
-	 counter[7:0] <= counter[7:0] + 1'b1;
+	 counter[DW-1:0] <= counter[DW-1:0] + 1'b1;
+   assign period_match = (counter[DW-1:0]==clkdiv[7:0]);   
 
-   assign period_match=(counter[DW-1:0]==((1<<clkdiv[CW-1:0])-1'b1));
-   assign phase_match =(counter[DW-1:0]==((1<<(clkdiv[CW-1:0])>> 1)-1'b1));
-      
-   //clock generator
+   //###########################################
+   //# RISING/FALLING EDGE SELECTORS
+   //###########################################
+     
+   assign clkrise0     = (counter[DW-1:0]==clkphase0[7:0]);   
+   assign clkfall0     = (counter[DW-1:0]==clkphase0[15:8]);   
+   assign clkrise1     = (counter[DW-1:0]==clkphase1[7:0]);   
+   assign clkfall1     = (counter[DW-1:0]==clkphase1[15:8]);   
+       
+   //###########################################
+   //# CLKOUT0
+   //###########################################
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       clkout <= 1'b0;      
-     else if(phase_match)
-       clkout <= 1'b1;
-     else if(period_match)
-       clkout <= 1'b0;
+       clkout0_reg <= 1'b0;      
+     else if(clkrise0)
+       clkout0_reg <= 1'b1;
+     else if(clkfall0)
+       clkout0_reg <= 1'b0;
 
+   //bypass divider on "divide by 1"
+   assign clkout0 = (clkdiv[7:0]==8'd0) ? clk : clkout0_reg;
+
+   //###########################################
+   //# CLKOUT1
+   //###########################################
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       clkout1_reg <= 1'b0;      
+     else if(clkrise1)
+       clkout1_reg <= 1'b1;
+     else if(clkfall1)
+       clkout1_reg <= 1'b0;
+   
+   // creating divide by 2 shifted clock with negedge
+   always @ (negedge clk)
+     clkout1_shift <= clkout1_reg;
+      
+   assign clkout1 = (clkdiv[7:0]==8'd1) ? clkout1_shift: 
+		                          clkout1_reg;
+      
 endmodule // oh_clockdiv
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // The MIT License (MIT)                                                     //
@@ -78,7 +122,7 @@ endmodule // oh_clockdiv
 // CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT //
 // OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR  //
 // THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                //
-//                                                                           //  
+//                                                                           // 
 ///////////////////////////////////////////////////////////////////////////////
 
 

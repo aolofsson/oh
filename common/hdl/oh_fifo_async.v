@@ -1,3 +1,4 @@
+`include "mio_constants.vh"
 module oh_fifo_async (/*AUTOARG*/
    // Outputs
    dout, full, prog_full, empty, rd_count,
@@ -10,11 +11,11 @@ module oh_fifo_async (/*AUTOARG*/
    //#####################################################################
    parameter DW         = 104;          // FIFO width
    parameter DEPTH      = 32;           // FIFO depth (entries)
-   parameter TARGET     = "XILINX";     // "XILINX", "ALTERA", "GENERIC"
+   parameter TARGET     = "GENERIC";    // GENERIC,XILINX,ALTERA,GENERIC,ASIC
    parameter WAIT       = 0;            // assert random prog_full wait
-   parameter PROG_FULL  = DEPTH/2;      // program full threshold
+   parameter PROG_FULL  = DEPTH/2;      // program full threshold   
    parameter AW         = $clog2(DEPTH);// binary read count width
-   
+      
    //clk/reset
    input 	   nreset;    // async reset
 
@@ -45,8 +46,8 @@ module oh_fifo_async (/*AUTOARG*/
    assign prog_full = fifo_prog_full | wait_random;
    
 generate
-if(TARGET=="GENERIC") begin : basic   
-   oh_fifo_generic 
+   if(TARGET=="GENERIC") begin : basic   
+      oh_fifo_generic 
      #(.DEPTH(DEPTH),
        .DW(DW))
    fifo_generic (
