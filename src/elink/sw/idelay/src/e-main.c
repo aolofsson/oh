@@ -102,6 +102,90 @@ typedef union {
 	};
 } e_sys_rx_dmacfg_t;
 
+
+#define EPIPHANY_DEV "/dev/epiphany/mesh0"
+#define ESYS_REGS_BASE       0x81000000UL
+static ssize_t ee_write_esys(off_t to_addr, int data)
+{
+       e_mmap_t  esys;
+       int               memfd;
+       int              *pto;
+
+       // Open memory device
+       memfd = open(EPIPHANY_DEV, O_RDWR | O_SYNC);
+       if (memfd == -1)
+       {
+               warnx("ee_write_esys(): EPIPHANY_DEV file open failure.");
+               return E_ERR;
+       }
+
+       esys.phy_base = (ESYS_REGS_BASE + to_addr);
+       esys.page_base = ee_rndl_page(esys.phy_base);
+       esys.page_offset = esys.phy_base - esys.page_base;
+       esys.map_size = sizeof(int) + esys.page_offset;
+
+       esys.mapped_base = mmap(NULL, esys.map_size, PROT_READ|PROT_WRITE, MAP_SHARED, memfd, esys.page_base);
+       esys.base = esys.mapped_base + esys.page_offset;
+
+       // diag(H_D2) { fprintf(diag_fd, "ee_write_esys(): esys.phy_base = 0x%08x, esys.page_base = 0x%08x, esys.page_offset = 0x%08x, esys.base = 0x%08x, esys.size = 0x%08x\n", (uint) esys.phy_base, (uint) esys.page_base, (uint) esys.page_offset, (uint) esys.base, (uint) esys.map_size); }
+
+       if (esys.mapped_base == MAP_FAILED)
+       {
+               warnx("ee_write_esys(): ESYS mmap failure.");
+               return E_ERR;
+       }
+
+       pto = (int *) (esys.base);
+       // diag(H_D2) { fprintf(diag_fd, "ee_write_esys(): writing to to_addr=0x%08x, pto=0x%08x\n", (uint) (platform.regs_base + to_addr), (uint) pto); }
+       *pto = data;
+
+       munmap(esys.mapped_base, esys.map_size);
+       close(memfd);
+
+       return sizeof(int);
+}
+
+static int ee_read_esys(off_t from_addr)
+{
+       e_mmap_t          esys;
+       int                       memfd;
+       volatile int *pfrom;
+       int                       data;
+
+       // Open memory device
+       memfd = open(EPIPHANY_DEV, O_RDWR | O_SYNC);
+       if (memfd == -1)
+       {
+               warnx("ee_read_esys(): EPIPHANY_DEV file open failure.");
+               return E_ERR;
+       }
+
+       esys.phy_base = (ESYS_REGS_BASE + from_addr);
+       esys.page_base = ee_rndl_page(esys.phy_base);
+       esys.page_offset = esys.phy_base - esys.page_base;
+       esys.map_size = sizeof(int) + esys.page_offset;
+
+       esys.mapped_base = mmap(NULL, esys.map_size, PROT_READ|PROT_WRITE, MAP_SHARED, memfd, esys.page_base);
+       esys.base = esys.mapped_base + esys.page_offset;
+
+       // diag(H_D2) { fprintf(diag_fd, "ee_read_esys(): esys.phy_base = 0x%08x, esys.base = 0x%08x, esys.size = 0x%08x\n", (uint) esys.phy_base, (uint) esys.base, (uint) esys.map_size); }
+
+       if (esys.mapped_base == MAP_FAILED)
+       {
+               warnx("ee_read_esys(): ESYS mmap failure.");
+               return E_ERR;
+       }
+
+       pfrom = (int *) (esys.base);
+       // diag(H_D2) { fprintf(diag_fd, "ee_read_esys(): reading from from_addr=0x%08x, pto=0x%08x\n", (uint) from_addr, (uint) pfrom); }
+       data  = *pfrom;
+
+       munmap(esys.mapped_base, esys.map_size);
+       close(memfd);
+
+       return data;
+}
+
 int main(int argc, char *argv[]){
   e_loader_diag_t e_verbose;
   e_platform_t platform;
@@ -151,7 +235,7 @@ int main(int argc, char *argv[]){
 		  0xffffffff,0x0000001f};//31
 
   //Gets ELF file name from command line
-  strcpy(elfFile, "./bin/e-task.elf");
+  strcpy(elfFile, "e-task.elf");
 
   //Initalize Epiphany device
   e_set_host_verbosity(H_D0);
