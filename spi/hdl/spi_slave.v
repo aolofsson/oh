@@ -60,8 +60,7 @@ module spi_slave(/*AUTOARG*/
    // End of automatics
    
    spi_slave_regs #(.AW(AW),
-		    .UREGS(UREGS)
-		    )
+		    .UREGS(UREGS))
    spi_slave_regs (/*AUTOINST*/
 		   // Outputs
 		   .spi_rdata		(spi_rdata[7:0]),

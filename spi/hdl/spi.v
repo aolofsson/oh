@@ -140,7 +140,7 @@ module spi (/*AUTOARG*/
 	      .packet_out  (packet_out[PW-1:0]),
 	      // Inputs
 	      .access_in   ({s_access_out,m_access_out}),
-	      .packet_in   ({s_packet_out[PW-1:0],s_packet_out[PW-1:0]}),
+	      .packet_in   ({s_packet_out[PW-1:0],m_packet_out[PW-1:0]}),
 	      .wait_in	   (wait_in)	      
 	      );
    
