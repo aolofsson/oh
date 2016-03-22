@@ -197,7 +197,7 @@ module spi_master_regs (/*AUTOARG*/
 
    always @ (posedge clk)
      begin
-	access_out          <= access_in;
+	access_out          <= reg_read;
 	dstaddr_out[AW-1:0] <= srcaddr_in[AW-1:0];
 	ctrlmode_out[4:0]   <= ctrlmode_in[4:0];
 	datamode_out[1:0]   <= datamode_in[1:0];
@@ -211,15 +211,6 @@ module spi_master_regs (/*AUTOARG*/
    
    assign wait_out = fifo_wait;
    
-   
-/*wait_in   | 
-		     fifo_wait |
-		     autotran  |
-		     wait_pulse;
-*/
-  
-
-			      
    emesh2packet e2p (.write_out		(1'b1),
 		     .srcaddr_out	(32'b0),
 		     .data_out		(reg_rdata[31:0]),
