@@ -1,7 +1,7 @@
 =======
 # OH! Open Hardware
 
-![alt tag](common/docs/lego.jpg)
+![alt tag](docs/lego.jpg)
 
 ## Content
 
@@ -28,25 +28,24 @@
 
 ## Modules
 
-| FOLDER                             | STATUS| DESCRIPTION                    |
-|------------------------------------|-------|--------------------------------|
-|[accelerator](accelerator/README.md)| FPGA  | Accelerator tutorial           |
-|[axi](axi/README.md)                | FPGA  | AXI master and slave interfaces|
-|[chip](chip/README.md)              | SI    | Chip design reference flow     |
-|[common](common/README.md)          | SI    | Library of basic components    |
-|[elink](elink/README.md)            | SI    | Point to point LVDS link       |
-|[emailbox](emailbox/README.md)      | FPGA  | Mailbox with interrupt output  |
-|[emesh](emesh/README.md)            | SI    | Emesh interface circuits       |
-|[emmu](emmu/README.md)              | FPGA  | Memory translation unit        |
-|[etrace](etrace/README.md)          | HH    | Logic Analyzer                 |
-|[gpio](gpio/README.md)              | HH    | General Purpose IO             |
-|[mio](mio/README.md)                | HH    | Lightweight parallel link      |
-|[pic](pic/README.md)                | SI    | Interrupt controller           |
-|[parallella](parallella/README.md)  | FPGA  | Parallella FPGA logic          |
-|[risc-v](risc-v/README.md)          | HH    | RISC-V implementation          |
-|[spi](spi/README.md)                | HH    | SPI master/slave               |
-|[verilog](verilog/README.md)        | HH    | Verilog referenca material     |
-|[xilibs](xilibs/README.md)          | FPGA  | Xilinx simulation models       |
+| FOLDER                                 | STATUS| DESCRIPTION                    |
+|----------------------------------------|-------|--------------------------------|
+|[accelerator](src/accelerator/README.md)| FPGA  | Accelerator tutorial           |
+|[axi](src/axi/README.md)                | FPGA  | AXI master and slave interfaces|
+|[chip](src/chip/README.md)              | SI    | Chip design reference flow     |
+|[common](src/common/README.md)          | SI    | Library of basic components    |
+|[elink](src/elink/README.md)            | SI    | Point to point LVDS link       |
+|[emailbox](src/emailbox/README.md)      | FPGA  | Mailbox with interrupt output  |
+|[emesh](src/emesh/README.md)            | SI    | Emesh interface circuits       |
+|[emmu](src/emmu/README.md)              | FPGA  | Memory translation unit        |
+|[etrace](src/etrace/README.md)          | HH    | Logic Analyzer                 |
+|[gpio](src/gpio/README.md)              | HH    | General Purpose IO             |
+|[mio](src/mio/README.md)                | HH    | Lightweight parallel link      |
+|[pic](src/pic/README.md)                | SI    | Interrupt controller           |
+|[parallella](src/parallella/README.md)  | FPGA  | Parallella FPGA logic          |
+|[risc-v](src/risc-v/README.md)          | HH    | RISC-V implementation          |
+|[spi](src/spi/README.md)                | HH    | SPI master/slave               |
+|[xilibs](src/xilibs/README.md)          | FPGA  | Xilinx simulation models       |
 
 **NOTES:**
 * "SI"= Silicon validated
@@ -58,9 +57,9 @@
 ## How to simulate
 
 ```sh
-./build.sh gpio/dv/dut_gpio.v         # compile gpio testbench (example)
-./sim.sh gpio/dv/tests/test_basic.emf # run a simulation with "test_regs.emf"
-./view.sh                             # open the waveform with gtkwave
+./scripts/build.sh gpio/dv/dut_gpio.v         # compile gpio testbench (example)
+./scripts/sim.sh gpio/dv/tests/test_basic.emf # run a simulation with "test_regs.emf"
+./scripts/view.sh                             # open the waveform with gtkwave
 ```
 
 **Short-cut:**
@@ -193,9 +192,9 @@ TBD
 
 ## Recommended Reading
 
-* [Verilog Reference](verilog/verilog_reference.md)
-* [Glossary](chip/docs/glossary.md)
-* [Chip constants](chip/docs/constants.md)
+* [Verilog Reference](docs/verilog_reference.md)
+* [Glossary](docs/chip_glossary.md)
+* [Chip constants](docs/chip_constants.md)
 * [Verilator Simulator](http://www.veripool.org/wiki/verilator)
 * [Emacs Verilog Mode](http://www.veripool.org/wiki/verilog-mode)
 * [Icarus Simulator](http://iverilog.icarus.com)
