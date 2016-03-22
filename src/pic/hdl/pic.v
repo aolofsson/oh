@@ -1,6 +1,6 @@
 `include "pic_regmap.vh"
 //###########################################################################
-//# IRQC: Simple nessted interrupt controller
+//# IRQC: Simple nested interrupt controller
 //# 
 //############################################################################
 module pic(/*AUTOARG*/
