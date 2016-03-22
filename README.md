@@ -1,5 +1,5 @@
 =======
-# OH! Open Hardware
+# OH! Open Hardware for Chip Designers
 
 ![alt tag](docs/lego.jpg)
 
@@ -16,15 +16,11 @@
 7. [Recommended Reading](#recommended-reading)
 8. [License](#license)
 
-----
-
 ## Philosophy
 
 1. Make it work
 2. Make it simple
 3. Make it modular
-
-----
 
 ## Modules
 
@@ -80,13 +76,9 @@ Scripts are located in the './scripts' directory.
 ./run.sh pic          # Run pic simulation
 ```
 
-----
-
 ## How to build
 
 TBD
-
-----
 
 ## Design Guide
 
@@ -100,9 +92,7 @@ TBD
 * Only reset register if absolutely necessary
 * More to come...
 
-----
-
-# Coding Guide
+## Coding Guide
 
 * Max 80 chars per line
 * One input/output statement per line
@@ -153,9 +143,6 @@ TBD
 * Allowed keywords: assign, always, input, output, wire, reg, module, endmodule, if/else, case, casez, ~,|,&,^,==, >>, <<, >, <,?,posedge, negedge, generate, for(...), begin, end, $signed,
 
 
-
-----
-
 ## Documentation Guide
 
 * Write docs in markdown
@@ -178,8 +165,6 @@ TBD
 * Show how to synthesize/build..
 * Show how to use..
 
-----
-
 ## Design Checklist
 
 * Is the block datasheet complete and accurate?
@@ -190,8 +175,6 @@ TBD
 * Is the driver written?
 * Is there a demo example?
 * Is the the block Silicon and FPGA validated?
-
-----
 
 ## Recommended Reading
 
