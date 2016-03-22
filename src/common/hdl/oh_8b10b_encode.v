@@ -1,4 +1,4 @@
-module oh_8b10b_encoder (/*AUTOARG*/
+module oh_8b10b_encode (/*AUTOARG*/
    // Outputs
    data_out,
    // Inputs
