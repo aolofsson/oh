@@ -56,13 +56,13 @@ module oh_par2ser (/*AUTOARG*/
    
    //transfer counter
    always @ (posedge clk or negedge nreset)
-     if(~nreset)
+     if(!nreset)
        count[CW-1:0] <= 'b0;   
-     else if(shift & busy)
-       count[CW-1:0] <= count[CW-1:0] - 1'b1;
      else if(start_transfer)
        count[CW-1:0] <= datasize[CW-1:0];  //one "SW sized" transfers
-
+     else if(shift & busy)
+       count[CW-1:0] <= count[CW-1:0] - 1'b1;
+   
    //output data is valid while count > 0
    assign busy = |count[CW-1:0];
    
@@ -72,7 +72,6 @@ module oh_par2ser (/*AUTOARG*/
    //wait until valid data is finished
    assign wait_out  = wait_in |
 		      busy;
-
    
    //##########################
    //# SHIFT REGISTER
