@@ -56,9 +56,11 @@
 
 ## How to simulate
 
+Scripts are located in the './scripts' directory.
+
 ```sh
 ./scripts/build.sh gpio/dv/dut_gpio.v         # compile gpio testbench (example)
-./scripts/sim.sh gpio/dv/tests/test_basic.emf # run a simulation with "test_regs.emf"
+./scripts/sim.sh gpio/dv/tests/test_basic.emf # run "test_basic.emf" test
 ./scripts/view.sh                             # open the waveform with gtkwave
 ```
 
@@ -68,13 +70,14 @@
 * Runs test $name/dv/tests/test_basic.emf
 
 ```sh
-./run.sh accelerator
-./run.sh elink
-./run.sh emailbox
-./run.sh emmu
-./run.sh gpio
-./run.sh spi
-./run.sh pic
+./run.sh accelerator  # Run accelerator simulation
+./run.sh elink        # Run elink simulation
+./run.sh emailbox     # Run emailbox simulation
+./run.sh emmu         # Run emmu simulation
+./run.sh gpio         # Run gpio simulation
+./run.sh mio          # run mio simulation
+./run.sh spi          # Run spi simulation
+./run.sh pic          # Run pic simulation
 ```
 
 ----

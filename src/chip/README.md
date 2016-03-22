@@ -10,8 +10,8 @@ This folder contains a recommended reference flow for implementing chips using O
 * [Signoff](signoff/README.md)
 
 ## Other Resources
-* [Glossary](docs/glossary.md)
-* [Constants](docs/constants.md)
+* [Glossary](../../docs/chip_glossary.md)
+* [Constants](../../docs/chip_constants.md)
 
 ## Required Shell Variables
 

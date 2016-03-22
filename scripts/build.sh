@@ -2,9 +2,11 @@
 
 ############################################################################
 # Icarus Verilog build script for OH! 
+#
 # Requires $OH_HOME variable to be set
-# Input argument should be the "device under test". In general this 
-# would be something like "elink/hdl/dut_elink.v"
+#
+# Example: ./scripts/build.sh elink/hdl/dut_elink.v
+#
 ############################################################################
 
 DUT=$1
@@ -12,17 +14,8 @@ DUT=$1
 ##############################
 #Create directory of all links
 ##############################
-if [ -d "symlinks" ]
-then
-    rm -r symlinks
-fi
-mkdir -p $OH_HOME/symlinks/hdl
-mkdir -p $OH_HOME/symlinks/dv
-pushd $OH_HOME/symlinks/hdl > /dev/null
-ln -s ../../*/hdl/*.{v,vh} .
-cd ../dv
-ln -s ../../*/dv/*.v .
-popd > /dev/null
+$OH_HOME/scripts/link.sh
+
 ##############################
 #Build
 ###############################

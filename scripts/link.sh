@@ -10,8 +10,8 @@ fi
 mkdir -p $OH_HOME/symlinks/hdl
 mkdir -p $OH_HOME/symlinks/dv
 pushd $OH_HOME/symlinks/hdl > /dev/null
-ln -s ../../*/hdl/*.{v,vh} .
+ln -s ../../src/*/hdl/*.{v,vh} .
 cd ../dv
-ln -s ../../*/dv/*.v .
+ln -s ../../src/*/dv/*.v .
 popd > /dev/null
 
