@@ -42,8 +42,8 @@ module stimulus (/*AUTOARG*/
    reg [1:0] 	   state;
    reg [31:0] 	   stim_count;
    reg [15:0]      wait_counter;
-   reg [PW-1:0]    stim_packet_reg;
-   reg 		   stim_access_reg;
+   reg [PW-1:0]    stim_packet;
+   reg 		   stim_access;
    
    //Read in stimulus
    integer 	   i,j;
@@ -121,24 +121,20 @@ module stimulus (/*AUTOARG*/
    always @ (posedge clk or negedge nreset)
      if(~nreset)
        begin
-	  stim_packet_reg <= 'b0;	  
-	  stim_access_reg <= 'b0;	  
+	  stim_packet <= 'b0;	  
+	  stim_access <= 'b0;	  
        end
      else if(~dut_wait)
        begin
-	  stim_packet_reg <= mem_data[PW+16-1:16];
-	  stim_access_reg <= mem_access;	  
+	  stim_packet <= mem_data[PW+16-1:16];
+	  stim_access <= mem_access;	  
        end
 
-   assign stim_packet = dut_wait ? stim_packet_reg : mem_data[PW+16-1:16];
+   //assign stim_packet = dut_wait ? stim_packet_reg : mem_data[PW+16-1:16];
    //assign stim_access = dut_wait ? stim_access_reg : mem_access;
-   assign stim_access = dut_wait ? 1'b0 : mem_access;
+   //assign stim_access = dut_wait ? 1'b0 : mem_access;
    
    //TODO: Implement
-   //lfsr?
-   //seed from command line?
-   //walk through the waits:0,1,2,3,4,5,6,7,8,16,32,64,128 cycles
-   //randomize where you start in state machine
    assign stim_wait = stall_random;
 
    //Random wait generator
