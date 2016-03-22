@@ -52,8 +52,9 @@ module spi_master_io(/*AUTOARG*/
    input 	   miso;       // slave output
 
    reg [1:0] 	   spi_state;
-   reg [2:0] 	   bit_count;
    reg 		   fifo_empty_reg;
+   reg 		   load_byte;   
+
    wire [7:0] 	   data_out;
    wire [15:0] 	   clkphase0;
    
@@ -99,42 +100,31 @@ module spi_master_io(/*AUTOARG*/
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        spi_state[1:0] <=  `SPI_IDLE;
-     else if(period_match)
-       case (spi_state[1:0])
-	 `SPI_IDLE : 
-	   spi_state[1:0] <= ~fifo_empty ? `SPI_SETUP : `SPI_IDLE;
-	 `SPI_SETUP :
-	   spi_state[1:0] <=`SPI_DATA;
-	 `SPI_DATA : 
-	   begin
-	      spi_state[1:0] <= fifo_empty_reg & byte_done ? `SPI_HOLD : `SPI_DATA;
-	      fifo_empty_reg <= fifo_empty;
-	   end
-	 `SPI_HOLD : 
-	   spi_state[1:0] <= `SPI_IDLE;
+   else
+     case (spi_state[1:0])
+       `SPI_IDLE : 
+	 spi_state[1:0] <= fifo_read ? `SPI_SETUP : `SPI_IDLE;
+       `SPI_SETUP :
+	 spi_state[1:0] <= period_match ? `SPI_DATA : `SPI_SETUP;       
+       `SPI_DATA : 
+	 spi_state[1:0] <= data_done ? `SPI_HOLD : `SPI_DATA;
+       `SPI_HOLD : 
+	 spi_state[1:0] <= period_match ? `SPI_IDLE : `SPI_HOLD;
      endcase // case (spi_state[1:0])
    
-   //Bit counter
-   always @ (posedge clk)
-     if(spi_state[1:0]==`SPI_IDLE)
-       bit_count[2:0] <= 'b0;
-     else if(period_match)
-       bit_count[2:0] <=  bit_count[2:0] + 1'b1;
-
-   //byte done indicator
-   assign byte_done  = (bit_count[2:0]==3'b000);
-
    //read fifo on phase match (due to one cycle pipeline latency
-   assign fifo_read = ((spi_state[1:0]==`SPI_SETUP) & phase_match) |
-		      ((spi_state[1:0]==`SPI_DATA) & phase_match & byte_done);
+   assign fifo_read = ~fifo_empty & ~spi_wait & period_match;
 
-   //load once per byte
-   assign load_byte = period_match & byte_done & (spi_state[1:0]!=`SPI_IDLE);
-   
+   //data done whne
+   assign data_done = fifo_empty & ~spi_wait & period_match;
+
    //shift on every clock cycle while in datamode
    assign shift     = period_match & (spi_state[1:0]==`SPI_DATA);
-    
-
+   
+   //load is the result of the fifo_read
+   always @ (posedge clk)
+     load_byte <= fifo_read;
+   
    //#################################
    //# CHIP SELECT
    //#################################
@@ -159,7 +149,7 @@ module spi_master_io(/*AUTOARG*/
    par2ser (// Outputs
 	    .dout	(mosi),           // serial output
 	    .access_out	(),
-	    .wait_out	(),
+	    .wait_out	(spi_wait),
 	    // Inputs
 	    .clk	(clk),
 	    .nreset	(nreset),         // async active low reset
