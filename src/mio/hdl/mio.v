@@ -62,7 +62,6 @@ module mio (/*AUTOARG*/
    /*AUTOINPUT*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [3:0]		addrincr;		// From mio_if of mio_if.v
    wire			amode;			// From mio_regs of mio_regs.v
    wire [7:0]		clkdiv;			// From mio_regs of mio_regs.v
    wire [15:0]		clkphase0;		// From mio_regs of mio_regs.v
@@ -126,7 +125,6 @@ module mio (/*AUTOARG*/
 	     .access_in			(reg_access_in),	 // Templated
 	     .packet_in			(reg_packet_in[PW-1:0]), // Templated
 	     .wait_in			(reg_wait_in),		 // Templated
-	     .addrincr			(addrincr[3:0]),
 	     .tx_full			(tx_full),
 	     .tx_prog_full		(tx_prog_full),
 	     .tx_empty			(tx_empty),
@@ -218,7 +216,6 @@ module mio (/*AUTOARG*/
    mio_if (
 	   /*AUTOINST*/
 	   // Outputs
-	   .addrincr			(addrincr[3:0]),
 	   .access_out			(access_out),
 	   .packet_out			(packet_out[PW-1:0]),
 	   .wait_out			(wait_out),

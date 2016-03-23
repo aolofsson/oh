@@ -7,8 +7,8 @@
  `define MIO_CLKPHASE 4'd3 // clk divider config
  `define MIO_ODELAY   4'd4 // output data delay element
  `define MIO_IDELAY   4'd5 // input data delay element
- `define MIO_ADDR0    4'd6 // destination address in amode
- `define MIO_ADDR1    4'd7 // destination address in amode
+ `define MIO_ADDR0    4'd6 // destination address for amode
+ `define MIO_ADDR1    4'd7 // destination address for amode
 
 `endif //  `ifndef MIO_REGMAP_VH_
 

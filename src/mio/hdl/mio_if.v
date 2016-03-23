@@ -1,8 +1,8 @@
 `include "mio_regmap.vh"
 module mio_if (/*AUTOARG*/
    // Outputs
-   addrincr, access_out, packet_out, wait_out, rx_wait_out,
-   tx_access_out, tx_packet_out,
+   access_out, packet_out, wait_out, rx_wait_out, tx_access_out,
+   tx_packet_out,
    // Inputs
    clk, nreset, amode, emode, lsbfirst, datasize, ctrlmode, dstaddr,
    wait_in, access_in, packet_in, rx_access_in, rx_packet_in,
@@ -28,7 +28,6 @@ module mio_if (/*AUTOARG*/
    input [7:0] 	    datasize;      // datasize
    input [4:0] 	    ctrlmode;      // emesh ctrlmode
    input [AW-1:0]   dstaddr;       // destination address for amode
-   output [3:0]     addrincr;      // increment address for amode
    
    // core interface
    output 	    access_out;    // pass through
@@ -81,7 +80,7 @@ module mio_if (/*AUTOARG*/
    // adapter for PW-->MPW width (MPW>=PW)
    // shift up data on msbfirst shift 
    assign tx_packet_out[MPW-1:0] = (~lsbfirst & emode ) ? {packet_in[PW-1:0],{(MPW-PW-8){1'b0}}} :
-				   (~lsbfirst )         ? {packet_in[PW-1:0],{(MPW-PW){1'b0}}} :
+				   (~lsbfirst )         ? {packet_in[PW-1:0],{(MPW-PW){1'b0}}}   :
 				                          packet_in[PW-1:0];
 
    //#################################################
@@ -104,25 +103,6 @@ module mio_if (/*AUTOARG*/
 			  (datasize[3:0]==4'd2) ? 2'b01 :
 			  (datasize[3:0]==4'd4) ? 2'b10 :
 			                          2'b11;
-   
-
-   //#################################################
-   // AUTOINCREMENT LOGIC ("AMODE")
-   //#################################################
-
-   //creating datamode based on data size
-   assign addr_stride[3:0] = (datamode[1:0]==2'b00) ? 4'd1 :
-		  	     (datamode[1:0]==2'b01) ? 4'd2 :
-			     (datamode[1:0]==2'b10) ? 4'd4 :
-			                            4'd8 ;
-
-
-   // only update when in amode and no wait
-   assign addr_update = amode & ~wait_in & access_out;
-
-   // send address increment to mio_regs
-   assign addrincr[3:0] = addr_update ? addr_stride[3:0] :
-			                4'b0;
    
    //#################################################
    // TRANSACTION FOR CORE (FROM RX)
@@ -167,7 +147,7 @@ module mio_if (/*AUTOARG*/
 endmodule // mio_if
 
 // Local Variables:
-// verilog-library-directories:("." "../hdl" "../../../oh/emesh/hdl")
+// verilog-library-directories:("." "../../emesh/hdl")
 // End:
 
 
