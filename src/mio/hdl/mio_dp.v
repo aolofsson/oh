@@ -3,8 +3,8 @@ module mio_dp (/*AUTOARG*/
    tx_full, tx_prog_full, tx_empty, rx_full, rx_prog_full, rx_empty,
    tx_access, tx_packet, rx_wait, wait_out, access_out, packet_out,
    // Inputs
-   clk, io_clk, nreset, datasize, ddr_mode, lsbfirst, tx_en, rx_en,
-   tx_wait, rx_clk, rx_access, rx_packet, access_in, packet_in,
+   clk, io_clk, nreset, datasize, ddr_mode, lsbfirst, framepol, tx_en,
+   rx_en, tx_wait, rx_clk, rx_access, rx_packet, access_in, packet_in,
    wait_in
    );
 
@@ -24,6 +24,7 @@ module mio_dp (/*AUTOARG*/
    input [7:0] 	   datasize;     // size of data transmitted
    input 	   ddr_mode;	 // dual data rate mode
    input 	   lsbfirst;     // send data lsbfirst
+   input 	   framepol;     // polarity of frame signal   
    input 	   tx_en;        // enable transmit
    input 	   rx_en;        // enable receive
    
@@ -97,6 +98,7 @@ module mio_dp (/*AUTOARG*/
 	.datasize			(datasize[7:0]),
 	.ddr_mode			(ddr_mode),
 	.lsbfirst			(lsbfirst),
+	.framepol			(framepol),
 	.rx_clk				(rx_clk),
 	.rx_access			(rx_access),
 	.rx_packet			(rx_packet[N-1:0]),

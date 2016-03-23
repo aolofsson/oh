@@ -5,7 +5,7 @@ module mrx_io (/*AUTOARG*/
    // Outputs
    io_access, io_packet,
    // Inputs
-   nreset, rx_clk, ddr_mode, lsbfirst, rx_packet, rx_access
+   nreset, rx_clk, ddr_mode, lsbfirst, framepol, rx_packet, rx_access
    );
 
    //#####################################################################
@@ -20,6 +20,7 @@ module mrx_io (/*AUTOARG*/
    input 	    rx_clk;        // clock for IO
    input 	    ddr_mode;      // select between sdr/ddr data
    input 	    lsbfirst;      // shufle data in msbfirst mode
+   input 	    framepol;      // frame polarity
    
    //IO interface
    input [N-1:0]    rx_packet;     // data for IO
@@ -46,14 +47,20 @@ module mrx_io (/*AUTOARG*/
 		     );
       
    //########################################
+   //# SELECT FRAME POLARITY
+   //########################################
+
+   assign rx_frame =  framepol ^ rx_access;
+   
+   //########################################
    //# ACCESS (SDR)
    //########################################
 
    always @ (posedge rx_clk or negedge io_nreset)
      if(!nreset)
-       io_access   <= 1'b0;
+       io_access <= 1'b0;
      else
-       io_access   <= rx_access;
+       io_access <= rx_frame;
    
    //########################################
    //# DATA (DDR) 
@@ -63,7 +70,7 @@ module mrx_io (/*AUTOARG*/
    data_iddr(.q1			(ddr_data[N-1:0]),
 	     .q2			(ddr_data[2*N-1:N]),
 	     .clk			(rx_clk),
-	     .ce			(rx_access),
+	     .ce			(rx_frame),
 	     .din			(rx_packet[N-1:0])
 	     );
    //########################################
@@ -72,10 +79,10 @@ module mrx_io (/*AUTOARG*/
    //select 2nd byte (stall on this signal)
 
    always @ (posedge rx_clk)
-     if(~rx_access)
+     if(~rx_frame)
        byte0_sel <= 1'b1;
      else if (~ddr_mode)
-       byte0_sel <= rx_access ^ byte0_sel;
+       byte0_sel <= rx_frame ^ byte0_sel;
    
    always @ (posedge rx_clk)
      if(byte0_sel)

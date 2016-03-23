@@ -2,8 +2,8 @@
 module mio_regs (/*AUTOARG*/
    // Outputs
    wait_out, access_out, packet_out, tx_en, rx_en, ddr_mode, emode,
-   amode, dmode, datasize, lsbfirst, ctrlmode, dstaddr, clkdiv,
-   clkphase0, clkphase1,
+   amode, dmode, datasize, lsbfirst, framepol, ctrlmode, dstaddr,
+   clkdiv, clkphase0, clkphase1,
    // Inputs
    clk, nreset, access_in, packet_in, wait_in, tx_full, tx_prog_full,
    tx_empty, rx_full, rx_prog_full, rx_empty
@@ -42,6 +42,7 @@ module mio_regs (/*AUTOARG*/
    output 	   dmode;        // mio packet mode
    output [7:0]    datasize;     // mio datasize   
    output 	   lsbfirst;     // lsb shift first
+   output 	   framepol;     // framepolarity (0=actrive high)   
    output [4:0]    ctrlmode;     // emode ctrlmode
    
    //address

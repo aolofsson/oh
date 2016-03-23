@@ -3,8 +3,8 @@ module mrx (/*AUTOARG*/
    // Outputs
    rx_empty, rx_full, rx_prog_full, rx_wait, access_out, packet_out,
    // Inputs
-   clk, nreset, datasize, ddr_mode, lsbfirst, rx_clk, rx_access,
-   rx_packet, wait_in
+   clk, nreset, datasize, ddr_mode, lsbfirst, framepol, rx_clk,
+   rx_access, rx_packet, wait_in
    );
 
    //#####################################################################
@@ -23,7 +23,8 @@ module mrx (/*AUTOARG*/
    input [7:0] 	   datasize;    // size of data transmitted (in bytes, 0=1 byte)
    input 	   ddr_mode;
    input 	   lsbfirst;
-
+   input 	   framepol;
+   
    //status
    output 	   rx_empty;	// rx fifo is empty
    output 	   rx_full;	// rx fifo is full (should never happen!) 
@@ -131,6 +132,7 @@ module mrx (/*AUTOARG*/
 	   .rx_clk			(rx_clk),
 	   .ddr_mode			(ddr_mode),
 	   .lsbfirst			(lsbfirst),
+	   .framepol			(framepol),
 	   .rx_packet			(rx_packet[N-1:0]),
 	   .rx_access			(rx_access));
   

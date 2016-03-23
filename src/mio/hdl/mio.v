@@ -71,6 +71,7 @@ module mio (/*AUTOARG*/
    wire			ddr_mode;		// From mio_regs of mio_regs.v
    wire [AW-1:0]	dstaddr;		// From mio_regs of mio_regs.v
    wire			emode;			// From mio_regs of mio_regs.v
+   wire			framepol;		// From mio_regs of mio_regs.v
    wire			io_clk;			// From oh_clockdiv of oh_clockdiv.v
    wire			lsbfirst;		// From mio_regs of mio_regs.v
    wire			rx_access_io2c;		// From mio_dp of mio_dp.v
@@ -114,6 +115,7 @@ module mio (/*AUTOARG*/
 	     .amode			(amode),
 	     .datasize			(datasize[7:0]),
 	     .lsbfirst			(lsbfirst),
+	     .framepol			(framepol),
 	     .ctrlmode			(ctrlmode[4:0]),
 	     .dstaddr			(dstaddr[AW-1:0]),
 	     .clkdiv			(clkdiv[7:0]),
@@ -193,6 +195,7 @@ module mio (/*AUTOARG*/
 	  .datasize			(datasize[7:0]),
 	  .ddr_mode			(ddr_mode),
 	  .lsbfirst			(lsbfirst),
+	  .framepol			(framepol),
 	  .tx_en			(tx_en),
 	  .rx_en			(rx_en),
 	  .tx_wait			(tx_wait),
