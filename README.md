@@ -30,6 +30,7 @@
 |[axi](src/axi/README.md)                | FPGA  | AXI master and slave interfaces|
 |[chip](src/chip/README.md)              | SI    | Chip design reference flow     |
 |[common](src/common/README.md)          | SI    | Library of basic components    |
+|[edma](src/edma/README.md)              | HH    | DMA engine                     |
 |[elink](src/elink/README.md)            | SI    | Point to point LVDS link       |
 |[emailbox](src/emailbox/README.md)      | FPGA  | Mailbox with interrupt output  |
 |[emesh](src/emesh/README.md)            | SI    | Emesh interface circuits       |
