@@ -78,7 +78,8 @@ module oh_clockdiv(/*AUTOARG*/
        clkout0_reg <= 1'b0;
 
    //bypass divider on "divide by 1"
-   assign clkout0 = (clkdiv[7:0]==8'd0) ? clk : clkout0_reg;
+   assign clkout0 = (clkdiv[7:0]==8'd0) ? clk :        // bypass
+		                          clkout0_reg; // all others
 
    //###########################################
    //# CLKOUT1
@@ -95,8 +96,9 @@ module oh_clockdiv(/*AUTOARG*/
    always @ (negedge clk)
      clkout1_shift <= clkout1_reg;
       
-   assign clkout1 = (clkdiv[7:0]==8'd1) ? clkout1_shift: 
-		                          clkout1_reg;
+   assign clkout1 = (clkdiv[7:0]==8'd0) ? clk           : //bypass
+		    (clkdiv[7:0]==8'd1) ? clkout1_shift : //div2
+		                          clkout1_reg;    //all others
       
 endmodule // oh_clockdiv
 
