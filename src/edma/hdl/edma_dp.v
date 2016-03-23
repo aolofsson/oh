@@ -8,7 +8,7 @@ module edma_dp (/*AUTOARG*/
    // Outputs
    count, srcaddr, dstaddr, wait_out, access_out, packet_out,
    // Inputs
-   clk, nreset, master_active, outerloop, datamode, ctrlmode,
+   clk, nreset, master_active, update2d, datamode, ctrlmode,
    stride_reg, count_reg, srcaddr_reg, dstaddr_reg, access_in,
    packet_in, wait_in
    );
@@ -20,18 +20,18 @@ module edma_dp (/*AUTOARG*/
    input           clk;           // main clock
    input 	   nreset;        // async active low reset
    input 	   master_active; // master mode active
-   input 	   outerloop;     // outer loop transfer
+   input 	   update2d;      // outer loop transfer
    input [1:0] 	   datamode;      // datamode for master mode
    input [4:0] 	   ctrlmode;      // ctrlmode for master mode    
 
    // data registers
-   input [AW-1:0]  stride_reg;    // transfer stride
-   input [AW-1:0]  count_reg;     // starting count
+   input [31:0]    stride_reg;    // transfer stride
+   input [31:0]    count_reg;     // starting count
    input [AW-1:0]  srcaddr_reg;   // starting source address
    input [AW-1:0]  dstaddr_reg;   // starting destination address
 
    // output to register file
-   output [AW-1:0] count;         // current count
+   output [31:0]   count;         // current count
    output [AW-1:0] srcaddr;       // current source address
    output [AW-1:0] dstaddr;       // current source address
 
@@ -49,8 +49,8 @@ module edma_dp (/*AUTOARG*/
    //######################################################################
 
    // regs
-   reg [PW-1:0] packet_out;
-   reg 		access_out;
+   reg [PW-1:0]    packet_out;
+   reg 		   access_out;
    
    // wires
    wire [4:0] 	   ctrlmode_out;
@@ -77,8 +77,8 @@ module edma_dp (/*AUTOARG*/
    //# COUNT
    //################################ 
    
-   assign count[31:0]  = outerloop ? {(count_reg[31:16] - 1'b1),count_reg[15:0]} :
-		   	              count_reg[31:0] - 1'b1;
+   assign count[31:0] = update2d ? {(count_reg[31:16] - 1'b1),count_reg[15:0]} :
+		                     count_reg[31:0] - 1'b1;
    
    //################################
    //# SRCADDR
