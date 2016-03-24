@@ -12,10 +12,10 @@ module mio (/*AUTOARG*/
    //#####################################################################
 
    //parameters
+   parameter  N       = 8;          // Mini IO width
    parameter  AW      = 32;         // address width
    localparam PW      = 2*AW+40;    // emesh packet width
    parameter  MPW     = 128;        // mio packet width (>PW)  
-   parameter  N       = 8;          // Mini IO width
    parameter  DEF_CFG = 0;          // Default config   
    parameter  DEF_CLK = 0;          // Default clock
    parameter  TARGET  = "GENERIC";  // GENERIC,XILINX,ALTERA,GENERIC,ASIC
@@ -24,13 +24,13 @@ module mio (/*AUTOARG*/
    input           clk;           // main core clock   
    input 	   nreset;        // async active low reset
       
-   // tx chip interface
+   // tx chip interface (to IO)
    output 	   tx_clk;        // phase shited io_clk   
    output 	   tx_access;     // access signal for IO
    output [N-1:0]  tx_packet;     // packet for IO
    input 	   tx_wait;       // pushback from IO
    
-   // rx chip interface
+   // rx chip interface (from IO)
    input 	   rx_clk;        // rx clock
    input 	   rx_access;     // rx access
    input [N-1:0]   rx_packet;     // rx packet

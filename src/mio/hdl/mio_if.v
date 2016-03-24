@@ -16,7 +16,6 @@ module mio_if (/*AUTOARG*/
    //parameters
    parameter  AW  = 32;            // address width
    parameter  PW  = 2*AW +40;      // emesh packet width
-   parameter  N   = 8;             // number of extra bits in    
    parameter  MPW = PW+8;          // mio packet width  
    
    // reset, clk, config
@@ -88,15 +87,16 @@ module mio_if (/*AUTOARG*/
    //#################################################
 
    // parse packet
-   packet2emesh pe2 (.packet_in		(rx_packet_in[PW-1:0]),
-		     /*AUTOINST*/
-		     // Outputs
-		     .write_in		(write_in),
-		     .datamode_in	(datamode_in[1:0]),
-		     .ctrlmode_in	(ctrlmode_in[4:0]),
-		     .dstaddr_in	(dstaddr_in[AW-1:0]),
-		     .srcaddr_in	(srcaddr_in[AW-1:0]),
-		     .data_in		(data_in[AW-1:0]));
+   packet2emesh #(.AW(AW))
+   pe2 (.packet_in		(rx_packet_in[PW-1:0]),
+	/*AUTOINST*/
+	// Outputs
+	.write_in			(write_in),
+	.datamode_in			(datamode_in[1:0]),
+	.ctrlmode_in			(ctrlmode_in[4:0]),
+	.dstaddr_in			(dstaddr_in[AW-1:0]),
+	.srcaddr_in			(srcaddr_in[AW-1:0]),
+	.data_in			(data_in[AW-1:0]));
       
    // datamode
    assign datamode[1:0] = (datasize[3:0]==4'd1) ? 2'b00 :
@@ -133,16 +133,17 @@ module mio_if (/*AUTOARG*/
                                         srcaddr_in[AW-1:0];
 
    //Construct outgoing packet
-   emesh2packet e2p (/*AUTOINST*/
-		     // Outputs
-		     .packet_out	(packet_out[PW-1:0]),
-		     // Inputs
-		     .write_out		(write_out),
-		     .datamode_out	(datamode_out[1:0]),
-		     .ctrlmode_out	(ctrlmode_out[4:0]),
-		     .dstaddr_out	(dstaddr_out[AW-1:0]),
-		     .data_out		(data_out[AW-1:0]),
-		     .srcaddr_out	(srcaddr_out[AW-1:0]));
+   emesh2packet #(.AW(AW))
+   e2p (/*AUTOINST*/
+	// Outputs
+	.packet_out			(packet_out[PW-1:0]),
+	// Inputs
+	.write_out			(write_out),
+	.datamode_out			(datamode_out[1:0]),
+	.ctrlmode_out			(ctrlmode_out[4:0]),
+	.dstaddr_out			(dstaddr_out[AW-1:0]),
+	.data_out			(data_out[AW-1:0]),
+	.srcaddr_out			(srcaddr_out[AW-1:0]));
    
 endmodule // mio_if
 
