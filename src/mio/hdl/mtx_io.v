@@ -13,30 +13,34 @@ module mtx_io (/*AUTOARG*/
    //#####################################################################
 
    //parameters
-   parameter N  = 16;  
+   parameter NMIO  = 16;  
    
    //reset, clk, cfg
-   input           nreset;        // async active low reset
-   input           io_clk;        // clock from divider
-   input 	   ddr_mode;      // send data as ddr
-   input 	   lsbfirst;      // send data lsbfirst
+   input              nreset;        // async active low reset
+   input 	      io_clk;        // clock from divider
+   input 	      ddr_mode;      // send data as ddr
+   input 	      lsbfirst;      // send data lsbfirst
    
    //IO interface
-   output [N-1:0]  tx_packet;     // data for IO
-   output 	   tx_access;     // access signal for IO
-   input 	   tx_wait;       // IO wait signals
+   output [NMIO-1:0]  tx_packet;     // data for IO
+   output 	      tx_access;     // access signal for IO
+   input 	      tx_wait;       // IO wait signals
    
    //Core side 
-   input           io_access;     // valid packet
-   input [2*N-1:0] io_packet;     // packet
-   output 	   io_wait;       // pushback to serializer in sdr mode   
+   input 	      io_access;     // valid packet
+   input [2*NMIO-1:0] io_packet;     // packet
+   output 	      io_wait;       // pushback to serializer in sdr mode   
+
+   //#####################################################################
+   //# BODYINTER
+   //#####################################################################
 
    //regs
-   reg 		   tx_access;
-   wire [N-1:0]    tx_packet_ddr;
-   reg [N-1:0] 	   tx_packet_sdr;
-   reg 		   byte0_sel;
-   wire [2*N-1:0]  ddr_data;
+   reg 		      tx_access;
+   wire [NMIO-1:0]    tx_packet_ddr;
+   reg [NMIO-1:0]     tx_packet_sdr;
+   reg 		      byte0_sel;
+   wire [2*NMIO-1:0]  ddr_data;
    
    //########################################
    //# RESET
@@ -64,8 +68,8 @@ module mtx_io (/*AUTOARG*/
    // sampling data for sdr
    always @ (posedge io_clk)
      if(io_access)
-       tx_packet_sdr[N-1:0] <= byte0_sel ? io_packet[N-1:0] :
-	                                   io_packet[2*N-1:N];   
+       tx_packet_sdr[NMIO-1:0] <= byte0_sel ? io_packet[NMIO-1:0] :
+	                                   io_packet[2*NMIO-1:NMIO];   
 
    //select 2nd byte (stall on this signal)
    always @ (posedge io_clk)
@@ -82,20 +86,20 @@ module mtx_io (/*AUTOARG*/
    //########################################      
 
    // shuffle bits when in msb mode
-   assign ddr_data[2*N-1:0] = (~lsbfirst & ddr_mode) ? {io_packet[N-1:0],
-					               io_packet[2*N-1:N]} : 
-			                               io_packet[2*N-1:0];
-   oh_oddr#(.DW(N))
-   data_oddr (.out	(tx_packet_ddr[N-1:0]),
+   assign ddr_data[2*NMIO-1:0] = (~lsbfirst & ddr_mode) ? {io_packet[NMIO-1:0],
+							   io_packet[2*NMIO-1:NMIO]} : 
+			                                   io_packet[2*NMIO-1:0];
+   oh_oddr#(.DW(NMIO))
+   data_oddr (.out	(tx_packet_ddr[NMIO-1:0]),
               .clk	(io_clk),
 	      .ce	(1'b1),
-	      .din1	(ddr_data[N-1:0]),
-	      .din2	(ddr_data[2*N-1:N])
+	      .din1	(ddr_data[NMIO-1:0]),
+	      .din2	(ddr_data[2*NMIO-1:NMIO])
 	      );
 
    //select between ddr/sdr data
-   assign tx_packet[N-1:0] = ddr_mode ? tx_packet_ddr[N-1:0] :
-		                        tx_packet_sdr[N-1:0];
+   assign tx_packet[NMIO-1:0] = ddr_mode ? tx_packet_ddr[NMIO-1:0] :
+		                           tx_packet_sdr[NMIO-1:0];
          
 endmodule // mtx_io
 // Local Variables:

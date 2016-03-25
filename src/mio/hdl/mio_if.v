@@ -16,7 +16,7 @@ module mio_if (/*AUTOARG*/
    //parameters
    parameter  AW  = 32;            // address width
    parameter  PW  = 2*AW +40;      // emesh packet width
-   parameter  MPW = PW+8;          // mio packet width  
+   parameter  MPW = 128;           // mio packet width  (> PW) 
    
    // reset, clk, config
    input            clk;           // main core clock   

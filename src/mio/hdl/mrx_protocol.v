@@ -10,25 +10,25 @@ module mrx_protocol (/*AUTOARG*/
    //#####################################################################
 
    //parameters
-   parameter  PW  = 104;            // packet width (core)
-   parameter  N   = 16;             // io packet width
-   localparam CW  = $clog2(2*PW/N); // transfer count width
+   parameter  PW   = 104;               // packet width (core)
+   parameter  NMIO = 8;                 // io packet width
+   localparam CW   = $clog2(2*PW/NMIO); // transfer count width
    
    //clock and reset
-   input           rx_clk;        // rx clock
-   input 	   nreset;        // async active low reset
+   input              rx_clk;        // rx clock
+   input 	      nreset;        // async active low reset
    
    //config
-   input [7:0] 	   datasize;      // dynamic width of output data
-   input 	   lsbfirst;
-
+   input [7:0] 	      datasize;      // dynamic width of output data
+   input 	      lsbfirst;
+   
    //16 bit interface
-   input 	   io_access;     // access signal from IO
-   input [2*N-1:0] io_packet;     // data from IO 
+   input 	      io_access;     // access signal from IO
+   input [2*NMIO-1:0] io_packet;     // data from IO 
    
    //wide input interface
-   output 	   fifo_access;   // access for fifo
-   output [PW-1:0] fifo_packet;   // packet for fifo
+   output 	      fifo_access;   // access for fifo
+   output [PW-1:0]    fifo_packet;   // packet for fifo
 
    //#####################################################################
    //# BODY
@@ -78,13 +78,13 @@ module mrx_protocol (/*AUTOARG*/
    //##########################
 
    oh_ser2par #(.PW(PW),
-		.SW(2*N))
+		.SW(2*NMIO))
    
    ser2par (// Outputs
 	    .dout	(fifo_packet[PW-1:0]),
 	    // Inputs
 	    .clk	(rx_clk),
-	    .din	(io_packet),
+	    .din	(io_packet[2*NMIO-1:0]),
 	    .lsbfirst	(lsbfirst),
 	    .shift	(shift)
 	    );

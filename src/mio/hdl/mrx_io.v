@@ -13,28 +13,32 @@ module mrx_io (/*AUTOARG*/
    //#####################################################################
 
    //parameters
-   parameter  N  = 16;  
+   parameter  NMIO  = 16;  
 
    //RESET
-   input            nreset;        // async active low reset
-   input 	    rx_clk;        // clock for IO
-   input 	    ddr_mode;      // select between sdr/ddr data
-   input 	    lsbfirst;      // shufle data in msbfirst mode
-   input 	    framepol;      // frame polarity
+   input               nreset;        // async active low reset
+   input 	       rx_clk;        // clock for IO
+   input 	       ddr_mode;      // select between sdr/ddr data
+   input 	       lsbfirst;      // shufle data in msbfirst mode
+   input 	       framepol;      // frame polarity
    
    //IO interface
-   input [N-1:0]    rx_packet;     // data for IO
-   input 	    rx_access;     // access signal for IO
+   input [NMIO-1:0]    rx_packet;     // data for IO
+   input 	       rx_access;     // access signal for IO
    
    //FIFO interface (core side)
-   output 	    io_access;     // fifo packet valid
-   output [2*N-1:0] io_packet;     // fifo packet
-   
+   output 	       io_access;     // fifo packet valid
+   output [2*NMIO-1:0] io_packet;     // fifo packet
+
+   //#####################################################################
+   //# BODY
+   //#####################################################################
+
    //regs
-   reg 		    io_access;
-   wire [2*N-1:0]   ddr_data;
-   reg [2*N-1:0]    sdr_data;
-   reg 		    byte0_sel;
+   reg 		       io_access;
+   wire [2*NMIO-1:0]   ddr_data;
+   reg [2*NMIO-1:0]    sdr_data;
+   reg 		       byte0_sel;
    
    //########################################
    //# CLOCK, RESET
@@ -66,12 +70,12 @@ module mrx_io (/*AUTOARG*/
    //# DATA (DDR) 
    //########################################
    
-   oh_iddr #(.DW(N))
-   data_iddr(.q1			(ddr_data[N-1:0]),
-	     .q2			(ddr_data[2*N-1:N]),
+   oh_iddr #(.DW(NMIO))
+   data_iddr(.q1			(ddr_data[NMIO-1:0]),
+	     .q2			(ddr_data[2*NMIO-1:NMIO]),
 	     .clk			(rx_clk),
 	     .ce			(rx_frame),
-	     .din			(rx_packet[N-1:0])
+	     .din			(rx_packet[NMIO-1:0])
 	     );
    //########################################
    //# DATA (SDR) 
@@ -86,18 +90,18 @@ module mrx_io (/*AUTOARG*/
    
    always @ (posedge rx_clk)
      if(byte0_sel)
-       sdr_data[N-1:0]  <= rx_packet[N-1:0];
+       sdr_data[NMIO-1:0]  <= rx_packet[NMIO-1:0];
      else
-       sdr_data[2*N-1:N] <= rx_packet[N-1:0];
+       sdr_data[2*NMIO-1:NMIO] <= rx_packet[NMIO-1:0];
 
    //########################################
    //# HANDL DDR/SDR
    //########################################
    
-   assign io_packet[2*N-1:0] =  ~ddr_mode            ? sdr_data[2*N-1:0] :
-				ddr_mode & ~lsbfirst ? {ddr_data[N-1:0],
-						       ddr_data[2*N-1:N]} :
-			                               ddr_data[2*N-1:0];
+   assign io_packet[2*NMIO-1:0] =  ~ddr_mode             ? sdr_data[2*NMIO-1:0] :
+			  	    ddr_mode & ~lsbfirst ? {ddr_data[NMIO-1:0],
+				   		           ddr_data[2*NMIO-1:NMIO]} :
+			                                   ddr_data[2*NMIO-1:0];
    
 endmodule // mrx_io
 

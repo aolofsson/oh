@@ -13,33 +13,33 @@ module mrx (/*AUTOARG*/
 
    //parameters
    parameter PW         = 104;           // data width (core)
-   parameter N          = 8;             // IO data width
+   parameter NMIO       = 8;             // IO data width
    parameter FIFO_DEPTH = 32;            // fifo depth  
    parameter TARGET     = "GENERIC";     // GENERIC,XILINX,ALTERA,GENERIC,ASIC
    
    //reset, clk, cfg
-   input           clk;         // main core clock   
-   input 	   nreset;      // async active low reset
-   input [7:0] 	   datasize;    // size of data transmitted (in bytes, 0=1 byte)
-   input 	   ddr_mode;
-   input 	   lsbfirst;
-   input 	   framepol;
+   input            clk;         // main core clock   
+   input 	    nreset;      // async active low reset
+   input [7:0] 	    datasize;    // size of data transmitted (in bytes, 0=1 byte)
+   input 	    ddr_mode;
+   input 	    lsbfirst;
+   input 	    framepol;
    
    //status
-   output 	   rx_empty;	// rx fifo is empty
-   output 	   rx_full;	// rx fifo is full (should never happen!) 
-   output 	   rx_prog_full;// rx is getting full (stop sending!)
+   output 	    rx_empty;	// rx fifo is empty
+   output 	    rx_full;	// rx fifo is full (should never happen!) 
+   output 	    rx_prog_full;// rx is getting full (stop sending!)
 
    //IO interface
-   input 	   rx_clk;      // clock from IO
-   input 	   rx_access;   // access signal for IO
-   input [N-1:0]   rx_packet;   // packet from IO
-   output 	   rx_wait;     // pushback for IO
+   input 	    rx_clk;      // clock from IO
+   input 	    rx_access;   // access signal for IO
+   input [NMIO-1:0] rx_packet;   // packet from IO
+   output 	    rx_wait;     // pushback for IO
    
    // data 
-   output 	   access_out;  // fifo data valid
-   output [PW-1:0] packet_out;  // fifo packet
-   input 	   wait_in;     // wait pushback for fifo
+   output 	    access_out;  // fifo data valid
+   output [PW-1:0]  packet_out;  // fifo packet
+   input 	    wait_in;     // wait pushback for fifo
 
    //#####################################################################
    //# BODY
@@ -53,7 +53,7 @@ module mrx (/*AUTOARG*/
    wire			fifo_access;		// From mrx_protocol of mrx_protocol.v
    wire [PW-1:0]	fifo_packet;		// From mrx_protocol of mrx_protocol.v
    wire			io_access;		// From mrx_io of mrx_io.v
-   wire [2*N-1:0]	io_packet;		// From mrx_io of mrx_io.v
+   wire [2*NMIO-1:0]	io_packet;		// From mrx_io of mrx_io.v
    // End of automatics
 
 
@@ -104,7 +104,7 @@ module mrx (/*AUTOARG*/
    //########################################
   
    mrx_protocol #(.PW(PW),
-		  .N(N))
+		  .NMIO(NMIO))
    mrx_protocol (/*AUTOINST*/
 		 // Outputs
 		 .fifo_access		(fifo_access),
@@ -115,25 +115,25 @@ module mrx (/*AUTOARG*/
 		 .datasize		(datasize[7:0]),
 		 .lsbfirst		(lsbfirst),
 		 .io_access		(io_access),
-		 .io_packet		(io_packet[2*N-1:0]));
+		 .io_packet		(io_packet[2*NMIO-1:0]));
    
    //########################################
    //# FAST IO (DDR)
    //########################################
    
-   mrx_io #(.N(N))
+   mrx_io #(.NMIO(NMIO))
    mrx_io (
 	   /*AUTOINST*/
 	   // Outputs
 	   .io_access			(io_access),
-	   .io_packet			(io_packet[2*N-1:0]),
+	   .io_packet			(io_packet[2*NMIO-1:0]),
 	   // Inputs
 	   .nreset			(nreset),
 	   .rx_clk			(rx_clk),
 	   .ddr_mode			(ddr_mode),
 	   .lsbfirst			(lsbfirst),
 	   .framepol			(framepol),
-	   .rx_packet			(rx_packet[N-1:0]),
+	   .rx_packet			(rx_packet[NMIO-1:0]),
 	   .rx_access			(rx_access));
   
 endmodule // ctx

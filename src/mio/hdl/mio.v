@@ -12,48 +12,48 @@ module mio (/*AUTOARG*/
    //#####################################################################
 
    //parameters
-   parameter  N       = 8;          // Mini IO width
-   parameter  AW      = 32;         // address width
-   localparam PW      = 2*AW+40;    // emesh packet width
-   parameter  MPW     = 128;        // mio packet width (>PW)  
-   parameter  DEF_CFG = 0;          // Default config   
-   parameter  DEF_CLK = 0;          // Default clock
-   parameter  TARGET  = "GENERIC";  // GENERIC,XILINX,ALTERA,GENERIC,ASIC
+   parameter  NMIO    = 8;        // IO width
+   parameter  AW      = 32;       // address width
+   localparam PW      = 2*AW+40;  // emesh packet width
+   parameter  MPW     = 128;      // mio packet width (>PW)  
+   parameter  DEF_CFG = 0;        // Default config   
+   parameter  DEF_CLK = 0;        // Default clock
+   parameter  TARGET  = "GENERIC";// GENERIC,XILINX,ALTERA,GENERIC,ASIC
 
    // reset, clk, config
-   input           clk;           // main core clock   
-   input 	   nreset;        // async active low reset
+   input             clk;           // main core clock   
+   input 	     nreset;        // async active low reset
       
    // tx chip interface (to IO)
-   output 	   tx_clk;        // phase shited io_clk   
-   output 	   tx_access;     // access signal for IO
-   output [N-1:0]  tx_packet;     // packet for IO
-   input 	   tx_wait;       // pushback from IO
+   output 	     tx_clk;        // phase shited io_clk   
+   output 	     tx_access;     // access signal for IO
+   output [NMIO-1:0] tx_packet;     // packet for IO
+   input 	     tx_wait;       // pushback from IO
    
    // rx chip interface (from IO)
-   input 	   rx_clk;        // rx clock
-   input 	   rx_access;     // rx access
-   input [N-1:0]   rx_packet;     // rx packet
-   output 	   rx_wait;       // pushback from IO
-
+   input 	     rx_clk;        // rx clock
+   input 	     rx_access;     // rx access
+   input [NMIO-1:0]  rx_packet;     // rx packet
+   output 	     rx_wait;       // pushback from IO
+   
    // core emesh interface
-   input 	   access_in;     // access for tx
-   input [PW-1:0]  packet_in;     // access for tx
-   output 	   wait_out;      // access from tx fifo
-
-   output 	   access_out;    // access from rx
-   output [PW-1:0] packet_out;    // packet from rx
-   input 	   wait_in;       // pushback for rx fifo
-
+   input 	     access_in;     // access for tx
+   input [PW-1:0]    packet_in;     // access for tx
+   output 	     wait_out;      // access from tx fifo
+   
+   output 	     access_out;    // access from rx
+   output [PW-1:0]   packet_out;    // packet from rx
+   input 	     wait_in;       // pushback for rx fifo
+   
    // register config interface
-   input 	   reg_access_in; // config register access
-   input [PW-1:0]  reg_packet_in; // config register packet
-   output          reg_wait_out;  // pushback by register read
-
-   output 	   reg_access_out;// config readback
-   output [PW-1:0] reg_packet_out;// config reacback packet
-   input 	   reg_wait_in;   // pushback for readback
-
+   input 	     reg_access_in; // config register access
+   input [PW-1:0]    reg_packet_in; // config register packet
+   output 	     reg_wait_out;  // pushback by register read
+   
+   output 	     reg_access_out;// config readback
+   output [PW-1:0]   reg_packet_out;// config reacback packet
+   input 	     reg_wait_in;   // pushback for readback
+   
    //#####################################################################
    //# BODY
    //#####################################################################
@@ -172,7 +172,7 @@ module mio (/*AUTOARG*/
     */
 
    mio_dp  #(.TARGET(TARGET),
-	     .N(N),
+	     .NMIO(NMIO),
 	     .PW(MPW))
    mio_dp(/*AUTOINST*/
 	  // Outputs
@@ -183,7 +183,7 @@ module mio (/*AUTOARG*/
 	  .rx_prog_full			(rx_prog_full),
 	  .rx_empty			(rx_empty),
 	  .tx_access			(tx_access),
-	  .tx_packet			(tx_packet[N-1:0]),
+	  .tx_packet			(tx_packet[NMIO-1:0]),
 	  .rx_wait			(rx_wait),
 	  .wait_out			(tx_wait_io2c),		 // Templated
 	  .access_out			(rx_access_io2c),	 // Templated
@@ -201,7 +201,7 @@ module mio (/*AUTOARG*/
 	  .tx_wait			(tx_wait),
 	  .rx_clk			(rx_clk),
 	  .rx_access			(rx_access),
-	  .rx_packet			(rx_packet[N-1:0]),
+	  .rx_packet			(rx_packet[NMIO-1:0]),
 	  .access_in			(tx_access_c2io),	 // Templated
 	  .packet_in			(tx_packet_c2io[MPW-1:0]), // Templated
 	  .wait_in			(rx_wait_c2io));		 // Templated

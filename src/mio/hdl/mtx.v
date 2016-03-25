@@ -13,34 +13,34 @@ module mtx (/*AUTOARG*/
 
    //parameters
    parameter PW         = 104;            // data width (core)
-   parameter N          = 16;             // IO data width
+   parameter NMIO       = 8;              // IO data width
    parameter FIFO_DEPTH = 32;             // fifo depth  
    parameter TARGET     = "GENERIC";      // GENERIC,XILINX,ALTERA,GENERIC,ASIC
-   localparam CW        = $clog2(2*PW/N); // transfer count width
+   localparam CW        = $clog2(2*PW/NMIO); // transfer count width
 
    //reset, clk, cfg
-   input           clk;         // main core clock   
-   input 	   io_clk;      // clock for tx logic
-   input 	   nreset;      // async active low reset
-   input 	   tx_en;       // transmit enable   
-   input [7:0] 	   datasize;    // size of data transmitted/received
-   input 	   ddr_mode;    // configure mio in ddr mode
-   input 	   lsbfirst;    // send bits lsb first
+   input             clk;         // main core clock   
+   input 	     io_clk;      // clock for tx logic
+   input 	     nreset;      // async active low reset
+   input 	     tx_en;       // transmit enable   
+   input [7:0] 	     datasize;    // size of data transmitted/received
+   input 	     ddr_mode;    // configure mio in ddr mode
+   input 	     lsbfirst;    // send bits lsb first
    
    //status
-   output 	   tx_empty;    // tx fifo is empty
-   output 	   tx_full;	// tx fifo is full (should never happen!) 
-   output 	   tx_prog_full;// tx is getting full (stop sending!)
+   output 	      tx_empty;    // tx fifo is empty
+   output 	      tx_full;	   // tx fifo is full (should never happen!) 
+   output 	      tx_prog_full;// tx is getting full (stop sending!)
    
    // data to transmit
-   input 	   access_in;   // fifo data valid
-   input [PW-1:0]  packet_in;   // fifo packet  
-   output 	   wait_out;    // wait pushback for fifo
+   input 	      access_in;   // fifo data valid
+   input [PW-1:0]     packet_in;   // fifo packet  
+   output 	      wait_out;    // wait pushback for fifo
    
    //IO interface (90 deg clock supplied outside this block)
-   output 	   tx_access;   // access signal for IO
-   output [N-1:0]  tx_packet;   // packet for IO
-   input 	   tx_wait;     // pushback from IO
+   output 	      tx_access;   // access signal for IO
+   output [NMIO-1:0]  tx_packet;   // packet for IO
+   input 	      tx_wait;     // pushback from IO
    
    //#####################################################################
    //# BODY
@@ -54,7 +54,7 @@ module mtx (/*AUTOARG*/
    wire [PW-1:0]	fifo_packet;		// From fifo of oh_fifo_cdc.v
    wire			fifo_wait;		// From par2ser of oh_par2ser.v
    wire			io_access;		// From par2ser of oh_par2ser.v
-   wire [2*N-1:0]	io_packet;		// From par2ser of oh_par2ser.v
+   wire [2*NMIO-1:0]	io_packet;		// From par2ser of oh_par2ser.v
    wire			io_wait;		// From mtx_io of mtx_io.v
    // End of automatics
 
@@ -104,7 +104,7 @@ module mtx (/*AUTOARG*/
    //########################################
 
    /*oh_par2ser  AUTO_TEMPLATE (// outputs
-	    .dout			(io_packet[2*N-1:0]),
+	    .dout			(io_packet[2*NMIO-1:0]),
 	    .access_out			(io_access),
 	    .wait_out			(fifo_wait),
 	    // inputs
@@ -121,10 +121,10 @@ module mtx (/*AUTOARG*/
     */
  
    oh_par2ser #(.PW(PW),
-		.SW(2*N))
+		.SW(2*NMIO))
    par2ser (/*AUTOINST*/
 	    // Outputs
-	    .dout			(io_packet[2*N-1:0]),	 // Templated
+	    .dout			(io_packet[2*NMIO-1:0]), // Templated
 	    .access_out			(io_access),		 // Templated
 	    .wait_out			(fifo_wait),		 // Templated
 	    // Inputs
@@ -142,10 +142,10 @@ module mtx (/*AUTOARG*/
    //# FAST IO (DDR)
    //########################################
  
-   mtx_io #(.N(N))
+   mtx_io #(.NMIO(NMIO))
    mtx_io (/*AUTOINST*/
 	   // Outputs
-	   .tx_packet			(tx_packet[N-1:0]),
+	   .tx_packet			(tx_packet[NMIO-1:0]),
 	   .tx_access			(tx_access),
 	   .io_wait			(io_wait),
 	   // Inputs
@@ -155,7 +155,7 @@ module mtx (/*AUTOARG*/
 	   .lsbfirst			(lsbfirst),
 	   .tx_wait			(tx_wait),
 	   .io_access			(io_access),
-	   .io_packet			(io_packet[2*N-1:0]));
+	   .io_packet			(io_packet[2*NMIO-1:0]));
    
 endmodule // mtx
 // Local Variables:
