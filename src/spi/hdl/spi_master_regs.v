@@ -61,7 +61,7 @@ module spi_master_regs (/*AUTOARG*/
    reg [7:0] 	     clkdiv_reg;
    reg [7:0] 	     cmd_reg;
    reg [63:0] 	     rx_reg; 
-   reg [31:0] 	     reg_rdata;
+   reg [AW-1:0]      reg_rdata;
    reg 		     autotran;
    reg 		     access_out;
    reg [AW-1:0]      dstaddr_out;   
@@ -211,16 +211,17 @@ module spi_master_regs (/*AUTOARG*/
    
    assign wait_out = fifo_wait;
    
-   emesh2packet e2p (.write_out		(1'b1),
-		     .srcaddr_out	(32'b0),
-		     .data_out		(reg_rdata[31:0]),
-		     /*AUTOINST*/
-		     // Outputs
-		     .packet_out	(packet_out[PW-1:0]),
-		     // Inputs
-		     .datamode_out	(datamode_out[1:0]),
-		     .ctrlmode_out	(ctrlmode_out[4:0]),
-		     .dstaddr_out	(dstaddr_out[AW-1:0]));
+   emesh2packet #(.AW(AW))
+   e2p (.write_out	(1'b1),
+	.srcaddr_out	({(AW){1'b0}}),
+	.data_out	(reg_rdata[AW-1:0]),
+	/*AUTOINST*/
+	// Outputs
+	.packet_out			(packet_out[PW-1:0]),
+	// Inputs
+	.datamode_out			(datamode_out[1:0]),
+	.ctrlmode_out			(ctrlmode_out[4:0]),
+	.dstaddr_out			(dstaddr_out[AW-1:0]));
    
 endmodule // spi_master_regs
 

@@ -69,9 +69,7 @@ module dut(/*AUTOARG*/
    //drive through master, observe on slave
    
    spi #(.AW(AW),
-	 .UREGS(UREGS)
-	 )
-
+	 .UREGS(UREGS))
    master  (.m_miso			(s_miso),
 	    .master_mode		(1'b1),
 	    .s_miso			(),	

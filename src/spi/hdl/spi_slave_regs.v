@@ -59,6 +59,16 @@ module spi_slave_regs (/*AUTOARG*/
    wire [63:0] 	   core_data;   
    integer 	   i;
 
+   /*AUTOWIRE*/
+   // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire [4:0]		ctrlmode_in;		// From pe2 of packet2emesh.v
+   wire [AW-1:0]	data_in;		// From pe2 of packet2emesh.v
+   wire [1:0]		datamode_in;		// From pe2 of packet2emesh.v
+   wire [AW-1:0]	dstaddr_in;		// From pe2 of packet2emesh.v
+   wire [AW-1:0]	srcaddr_in;		// From pe2 of packet2emesh.v
+   wire			write_in;		// From pe2 of packet2emesh.v
+   // End of automatics
+   
    //#####################################
    //# SPI DECODE
    //#####################################
@@ -70,18 +80,23 @@ module spi_slave_regs (/*AUTOARG*/
    //#####################################
    //# CORE DECODE
    //#####################################
-
    assign wait_out = 1'b0;
-   packet2emesh #(.AW(AW))
-   pe2 (.write_in	(),
-	.datamode_in	(),
-	.ctrlmode_in	(),
-	.dstaddr_in	(),
-	.srcaddr_in	(core_data[63:32]),
-	.data_in	(core_data[31:0]),
+   
+   packet2emesh #(.AW(AW))  
+   pe2 (/*AUTOINST*/
+	// Outputs
+	.write_in			(write_in),
+	.datamode_in			(datamode_in[1:0]),
+	.ctrlmode_in			(ctrlmode_in[4:0]),
+	.dstaddr_in			(dstaddr_in[AW-1:0]),
+	.srcaddr_in			(srcaddr_in[AW-1:0]),
+	.data_in			(data_in[AW-1:0]),
 	// Inputs
-	.packet_in	(packet_in[PW-1:0]));
+	.packet_in			(packet_in[PW-1:0]));
 
+   assign core_data[63:0]={srcaddr_in[31:0],data_in[31:0]};
+   
+   
    //#####################################
    //# CONFIG [0]
    //#####################################

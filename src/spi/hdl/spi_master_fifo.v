@@ -55,16 +55,17 @@ module spi_master_fifo (/*AUTOARG*/
    //# DECODE
    //###################################
 
-   packet2emesh p2e (/*AUTOINST*/
-		     // Outputs
-		     .write_in		(write_in),
-		     .datamode_in	(datamode_in[1:0]),
-		     .ctrlmode_in	(ctrlmode_in[4:0]),
-		     .dstaddr_in	(dstaddr_in[AW-1:0]),
-		     .srcaddr_in	(srcaddr_in[AW-1:0]),
-		     .data_in		(data_in[AW-1:0]),
-		     // Inputs
-		     .packet_in		(packet_in[PW-1:0]));
+   packet2emesh #(.AW(AW))
+   p2e (/*AUTOINST*/
+	// Outputs
+	.write_in			(write_in),
+	.datamode_in			(datamode_in[1:0]),
+	.ctrlmode_in			(ctrlmode_in[4:0]),
+	.dstaddr_in			(dstaddr_in[AW-1:0]),
+	.srcaddr_in			(srcaddr_in[AW-1:0]),
+	.data_in			(data_in[AW-1:0]),
+	// Inputs
+	.packet_in			(packet_in[PW-1:0]));
    
    
    assign datasize[7:0] = emode ? (PW/SW-1'b1) :
