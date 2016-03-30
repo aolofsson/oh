@@ -11,8 +11,8 @@ module spi_slave_regs (/*AUTOARG*/
    spi_rdata, spi_en, cpol, cpha, lsbfirst, irq_en, emode, spi_regs,
    wait_out,
    // Inputs
-   clk, nreset, spi_clk, spi_wdata, spi_write, spi_addr, access_in,
-   packet_in
+   clk, nreset, hw_en, spi_clk, spi_wdata, spi_write, spi_addr,
+   access_in, packet_in
    );
 
    //parameters
@@ -25,7 +25,8 @@ module spi_slave_regs (/*AUTOARG*/
    // clk, rest, chipid
    input 	   clk;           // core clock
    input 	   nreset;        // asych active low 
-
+   input 	   hw_en;         // block enable pin
+   
    // sclk io domain
    input 	   spi_clk;       // slave clock
    input [7:0] 	   spi_wdata;     // slave write data in (for write)
@@ -95,8 +96,7 @@ module spi_slave_regs (/*AUTOARG*/
 	.packet_in			(packet_in[PW-1:0]));
 
    assign core_data[63:0]={srcaddr_in[31:0],data_in[31:0]};
-   
-   
+      
    //#####################################
    //# CONFIG [0]
    //#####################################
@@ -107,13 +107,13 @@ module spi_slave_regs (/*AUTOARG*/
      else if(spi_config_write)
        spi_config[7:0] <= spi_wdata[7:0];
 
-   assign spi_en   = ~spi_config[0]; // disable spi (for security)
-   assign irq_en   = spi_config[1];  // enable interrupt
-   assign cpol     = spi_config[2];  // cpol
-   assign cpha     = spi_config[3];  // cpha
-   assign lsbfirst = spi_config[4];  // lsb shifted in first
-   assign valid    = spi_config[5];  // user regs enable
-   assign emode    = spi_config[6];  // epiphany mode
+   assign spi_en   = hw_en & ~spi_config[0]; // disable spi (for security)
+   assign irq_en   = spi_config[1];          // enable interrupt
+   assign cpol     = spi_config[2];          // cpol
+   assign cpha     = spi_config[3];          // cpha
+   assign lsbfirst = spi_config[4];          // lsb shifted in first
+   assign valid    = spi_config[5];          // user regs enable
+   assign emode    = spi_config[6];          // epiphany mode
    
    //#####################################
    //# STATUS [1]

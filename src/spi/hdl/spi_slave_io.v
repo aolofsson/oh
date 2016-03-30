@@ -102,6 +102,8 @@ module spi_slave_io(/*AUTOARG*/
    //# RX SHIFT REGISTER
    //#################################
 
+   assign rx_shift = ~ss & spi_en;
+   
    oh_ser2par #(.PW(8),
 		.SW(1))
    ser2par (// Outputs
@@ -110,14 +112,15 @@ module spi_slave_io(/*AUTOARG*/
 	    .clk	(sclk),
 	    .din	(mosi),
 	    .lsbfirst	(lsbfirst), //msb first
-	    .shift	(~ss)
+	    .shift	(rx_shift)
 	    );
 
    //#################################
    //# TX SHIFT REGISTER
    //#################################
 
-   assign tx_load        = byte_done & (spi_state[1:0]==`SPI_CMD);
+   assign tx_load   = byte_done & (spi_state[1:0]==`SPI_CMD);
+   assign tx_shift  = ~ss & spi_en;
    
    oh_par2ser #(.PW(8),
 		.SW(1))
@@ -127,7 +130,7 @@ module spi_slave_io(/*AUTOARG*/
 	    .clk	(sclk), // shift out on positive edge
 	    .nreset	(~ss),
 	    .din	(spi_rdata[7:0]),
-	    .shift      (~ss),
+	    .shift      (tx_shift),
 	    .lsbfirst	(lsbfirst),
 	    .load       (tx_load),
 	    .datasize   (8'd7),
@@ -143,13 +146,14 @@ module spi_slave_io(/*AUTOARG*/
 
    assign spi_addr[5:0] = command_reg[5:0];   
 
-   assign spi_write     = byte_done &
+   assign spi_write     = spi_en &
+			  byte_done &
 			  (command_reg[7:6]==2'b00) &
 			  (spi_state[1:0]==`SPI_DATA);
   
-   assign spi_read      = command_reg[7:6]==2'b10; //read from sclk reg  
-
-   assign spi_remote    = command_reg[7:6]==2'b11; //send remote request
+   assign spi_remote    = spi_en &
+			  ss     &                 // wait until signal goes high
+			  command_reg[7:6]==2'b11; // send remote request
 
    assign spi_wdata[7:0] = rx_data[7:0];
  
@@ -161,7 +165,7 @@ module spi_slave_io(/*AUTOARG*/
    //look for rising edge
    oh_dsync dsync (.dout (ss_sync),
 		   .clk  (clk),
-		   .din  (ss & spi_remote)
+		   .din  (spi_remote)
 		   );
 
    //create single cycle pulse

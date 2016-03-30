@@ -10,8 +10,8 @@ module spi (/*AUTOARG*/
    spi_irq, access_out, packet_out, wait_out, m_sclk, m_mosi, m_ss,
    s_miso,
    // Inputs
-   nreset, clk, master_mode, access_in, packet_in, wait_in, m_miso,
-   s_sclk, s_mosi, s_ss
+   nreset, clk, hw_en, access_in, packet_in, wait_in, m_miso, s_sclk,
+   s_mosi, s_ss
    );
 
    //##################################################################
@@ -23,10 +23,10 @@ module spi (/*AUTOARG*/
    parameter UREGS  = 13;      // number of user slave regs
    
    //clk, reset, irq
-   input           nreset;     // asynch active low reset
-   input 	   clk;        // core clock   
-   input 	   master_mode;// master mode selector
-      
+   input           nreset;     // asynch active low reset   
+   input 	   clk;        // core clock
+   input 	   hw_en;      // block enable pin
+   
    //interrupt output
    output 	   spi_irq;    // interrupt output
    
@@ -72,6 +72,7 @@ module spi (/*AUTOARG*/
    
    /*spi_master AUTO_TEMPLATE (.clk	  (clk),
 			       .nreset	  (nreset),
+    			       .hw_en	  (hw_en),
                                .\(.*\)_in (\1_in[]),
                                .\(.*\)    (m_\1[]),
     );
@@ -89,6 +90,7 @@ module spi (/*AUTOARG*/
 	       // Inputs
 	       .clk			(clk),			 // Templated
 	       .nreset			(nreset),		 // Templated
+	       .hw_en			(hw_en),		 // Templated
 	       .miso			(m_miso),		 // Templated
 	       .access_in		(access_in),		 // Templated
 	       .packet_in		(packet_in[PW-1:0]),	 // Templated
@@ -101,6 +103,7 @@ module spi (/*AUTOARG*/
    /*spi_slave AUTO_TEMPLATE (.clk	 (clk),
                               .spi_irq	 (spi_irq),
 			      .nreset	 (nreset),
+                              .hw_en	 (hw_en),
                               .\(.*\)_in (\1_in[]),
                               .\(.*\)    (s_\1[]),
     );
@@ -119,6 +122,7 @@ module spi (/*AUTOARG*/
 	      // Inputs
 	      .clk			(clk),			 // Templated
 	      .nreset			(nreset),		 // Templated
+	      .hw_en			(hw_en),		 // Templated
 	      .sclk			(s_sclk),		 // Templated
 	      .mosi			(s_mosi),		 // Templated
 	      .ss			(s_ss),			 // Templated

@@ -9,8 +9,8 @@ module spi_master_io(/*AUTOARG*/
    // Outputs
    spi_state, fifo_read, rx_data, rx_access, sclk, mosi, ss,
    // Inputs
-   clk, nreset, spi_en, cpol, cpha, lsbfirst, clkdiv_reg, cmd_reg,
-   emode, fifo_dout, fifo_empty, miso
+   clk, nreset, cpol, cpha, lsbfirst, clkdiv_reg, cmd_reg, emode,
+   fifo_dout, fifo_empty, miso
    );
 
    //#################################
@@ -27,7 +27,6 @@ module spi_master_io(/*AUTOARG*/
    input 	   nreset;     // async active low reset
    
    //cfg
-   input 	   spi_en;     // spi enable
    input 	   cpol;       // cpol
    input 	   cpha;       // cpha
    input 	   lsbfirst;   // send lsbfirst   
@@ -63,6 +62,7 @@ module spi_master_io(/*AUTOARG*/
    wire			clkfall1;		// From oh_clockdiv of oh_clockdiv.v
    wire			clkout1;		// From oh_clockdiv of oh_clockdiv.v
    wire			clkrise1;		// From oh_clockdiv of oh_clockdiv.v
+   wire			clkstable;		// From oh_clockdiv of oh_clockdiv.v
    // End of automatics
    
    //#################################
@@ -83,9 +83,11 @@ module spi_master_io(/*AUTOARG*/
 		.clkout1		(clkout1),
 		.clkrise1		(clkrise1),
 		.clkfall1		(clkfall1),
+		.clkstable		(clkstable),
 		// Inputs
 		.clk			(clk),
 		.nreset			(nreset),
+		.clkchange		(clkchange),
 		.clkphase0		(clkphase0[15:0]));
     
    //#################################

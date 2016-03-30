@@ -3,7 +3,7 @@ module spi_master_fifo (/*AUTOARG*/
    // Outputs
    fifo_prog_full, wait_out, fifo_empty, fifo_dout,
    // Inputs
-   clk, nreset, emode, access_in, packet_in, fifo_read
+   clk, nreset, spi_en, emode, access_in, packet_in, fifo_read
    );
    //#####################################################################
    //# INTERFACE
@@ -20,6 +20,7 @@ module spi_master_fifo (/*AUTOARG*/
    //clk,reset, cfg
    input            clk;            // clk
    input 	    nreset;         // async active low reset
+   input 	    spi_en;         // spi enable   
    input  	    emode;          // epiphany transfer mode
    output 	    fifo_prog_full; // fifo full indicator for status
    
@@ -72,7 +73,8 @@ module spi_master_fifo (/*AUTOARG*/
 			  ((1<<datamode_in[1:0]));
    
 
-   assign tx_write =  write_in & 
+   assign tx_write =  spi_en &
+		      write_in & 
 		      access_in &
 		      (dstaddr_in[5:0]==`SPI_TX);
      

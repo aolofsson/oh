@@ -12,7 +12,7 @@ module spi_master_regs (/*AUTOARG*/
    cpol, cpha, lsbfirst, emode, spi_en, clkdiv_reg, cmd_reg, wait_out,
    access_out, packet_out,
    // Inputs
-   clk, nreset, rx_data, rx_access, spi_state, fifo_prog_full,
+   clk, nreset, hw_en, rx_data, rx_access, spi_state, fifo_prog_full,
    fifo_wait, access_in, packet_in, wait_in
    );
 
@@ -25,7 +25,8 @@ module spi_master_regs (/*AUTOARG*/
    //clk,reset, cfg
    input 	     clk;             // core clock
    input 	     nreset;          // async active low reset
-
+   input 	     hw_en;           // block enable pin
+   
    //io interface
    input [63:0]      rx_data;         // rx data
    input 	     rx_access;       // rx access pulse
@@ -118,13 +119,13 @@ module spi_master_regs (/*AUTOARG*/
      else if(config_write)
        config_reg[7:0] <= data_in[7:0];
    
-   assign spi_en       = ~config_reg[0]; // disable spi (on by default)
-   assign irq_en       = config_reg[1];  // enable interrupt
-   assign cpol         = config_reg[2];  // cpol
-   assign cpha         = config_reg[3];  // cpha
-   assign lsbfirst     = config_reg[4];  // send lsb first
-   assign manual_ss    = config_reg[5];  // manually control ss pin
-   assign emode        = config_reg[6];  // epiphany transfer mode
+   assign spi_en       = hw_en & ~config_reg[0]; // disable spi (on by default)
+   assign irq_en       = config_reg[1];          // enable interrupt
+   assign cpol         = config_reg[2];          // cpol
+   assign cpha         = config_reg[3];          // cpha
+   assign lsbfirst     = config_reg[4];          // send lsb first
+   assign manual_ss    = config_reg[5];          // manually control ss pin
+   assign emode        = config_reg[6];          // epiphany transfer mode
     
    //####################################
    //# STATUS

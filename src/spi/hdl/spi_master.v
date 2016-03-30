@@ -9,7 +9,7 @@ module spi_master(/*AUTOARG*/
    // Outputs
    sclk, mosi, ss, wait_out, access_out, packet_out,
    // Inputs
-   clk, nreset, miso, access_in, packet_in, wait_in
+   clk, nreset, hw_en, miso, access_in, packet_in, wait_in
    );
 
    //parameters
@@ -21,6 +21,7 @@ module spi_master(/*AUTOARG*/
    //clk,reset, cfg
    input 		clk;             // core clock
    input 	        nreset;          // async active low reset
+   input 		hw_en;           // hardware enable pin
    
    //IO interface
    output 		sclk;            // spi clock
@@ -80,6 +81,7 @@ module spi_master(/*AUTOARG*/
 		    // Inputs
 		    .clk		(clk),
 		    .nreset		(nreset),
+		    .hw_en		(hw_en),
 		    .rx_data		(rx_data[63:0]),
 		    .rx_access		(rx_access),
 		    .spi_state		(spi_state[1:0]),
@@ -100,7 +102,8 @@ module spi_master(/*AUTOARG*/
    
    spi_master_fifo #(.AW(AW),
 		     .DEPTH(DEPTH))
-   spi_master_fifo(/*AUTOINST*/
+   spi_master_fifo(
+		   /*AUTOINST*/
 		   // Outputs
 		   .fifo_prog_full	(fifo_prog_full),
 		   .wait_out		(fifo_wait),		 // Templated
@@ -109,6 +112,7 @@ module spi_master(/*AUTOARG*/
 		   // Inputs
 		   .clk			(clk),
 		   .nreset		(nreset),
+		   .spi_en		(spi_en),
 		   .emode		(emode),
 		   .access_in		(access_in),
 		   .packet_in		(packet_in[PW-1:0]),
@@ -131,7 +135,6 @@ module spi_master(/*AUTOARG*/
 		  // Inputs
 		  .clk			(clk),
 		  .nreset		(nreset),
-		  .spi_en		(spi_en),
 		  .cpol			(cpol),
 		  .cpha			(cpha),
 		  .lsbfirst		(lsbfirst),
