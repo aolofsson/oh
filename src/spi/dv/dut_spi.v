@@ -2,7 +2,7 @@ module dut(/*AUTOARG*/
    // Outputs
    dut_active, clkout, wait_out, access_out, packet_out,
    // Inputs
-   clk1, clk2, nreset, vdd, vss, access_in, packet_in, wait_in
+   hw_en, clk1, clk2, nreset, vdd, vss, access_in, packet_in, wait_in
    );
 
    parameter UREGS = 13;   
@@ -46,6 +46,9 @@ module dut(/*AUTOARG*/
    wire [PW-1:0]     mem_packet_in;
    
    /*AUTOINPUT*/ 
+   // Beginning of automatic inputs (from unused autoinst inputs)
+   input		hw_en;			// To master of spi.v, ...
+   // End of automatics
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			m_mosi;			// From master of spi.v
@@ -61,7 +64,8 @@ module dut(/*AUTOARG*/
    assign clkout     = clk1;
    assign clk        = clk1;
    assign dut_active = 1'b1;
-
+   assign hw_en      = 1'b1;
+   
    //######################################################################
    //# DUT
    //######################################################################
@@ -71,7 +75,6 @@ module dut(/*AUTOARG*/
    spi #(.AW(AW),
 	 .UREGS(UREGS))
    master  (.m_miso			(s_miso),
-	    .master_mode		(1'b1),
 	    .s_miso			(),	
 	    .s_sclk			(m_sclk),
 	    .s_mosi			(1'b0),
@@ -89,6 +92,7 @@ module dut(/*AUTOARG*/
 	    // Inputs
 	    .nreset			(nreset),
 	    .clk			(clk),
+	    .hw_en			(hw_en),
 	    .access_in			(access_in),
 	    .packet_in			(packet_in[PW-1:0]));
    
@@ -99,7 +103,6 @@ module dut(/*AUTOARG*/
    slave ( .s_sclk			(m_sclk),
 	   .s_mosi			(m_mosi),
 	   .s_ss			(m_ss),
-	   .master_mode			(1'b0),
 	   .m_miso			(),
 	   .m_sclk			(),
 	   .m_mosi			(),
@@ -116,6 +119,7 @@ module dut(/*AUTOARG*/
 	  // Inputs
 	  .nreset			(nreset),
 	  .clk				(clk),
+	  .hw_en			(hw_en),
 	  .wait_in			(wait_in));
 
    
