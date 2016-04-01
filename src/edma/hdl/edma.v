@@ -9,8 +9,8 @@ module edma (/*AUTOARG*/
    irq, wait_out, access_out, packet_out, reg_wait_out,
    reg_access_out, reg_packet_out,
    // Inputs
-   clk, nreset, access_in, packet_in, wait_in, reg_access_in,
-   reg_packet_in, reg_wait_in
+   vdd, vss, clk, nreset, access_in, packet_in, wait_in,
+   reg_access_in, reg_packet_in, reg_wait_in
    );
 
    //#####################################################################
@@ -20,6 +20,10 @@ module edma (/*AUTOARG*/
    //parameters
    parameter  AW  = 32;           // address width
    localparam PW  = 2*AW+40;      // emesh packet width
+
+   // power
+   input           vdd;           // supply
+   input           vss;           // common ground
 
    // reset, clk, config
    input           clk;           // main core clock   
@@ -43,9 +47,6 @@ module edma (/*AUTOARG*/
    output 	   reg_access_out;// config readback
    output [PW-1:0] reg_packet_out;// config reacback packet
    input 	   reg_wait_in;   // pushback for readback
-
-  
-   
    
    //#####################################################################
    //# BODY
