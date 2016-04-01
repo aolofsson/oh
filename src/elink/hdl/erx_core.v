@@ -49,14 +49,13 @@ module erx_core (/*AUTOARG*/
    output		mailbox_irq;    
    
    /*AUTOINPUT*/
-   /*AUTOOUTPUT*/
+  
+   // End of automatics
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			dma_access;		// From erx_cfg of erx_cfg.v
    wire			ecfg_access;		// From erx_cfg of erx_cfg.v
    wire [PW-1:0]	ecfg_packet;		// From erx_cfg of erx_cfg.v
-   wire			edma_access;		// From erx_dma of edma.v
-   wire [31:0]		edma_rdata;		// From erx_dma of edma.v
    wire			edma_wait;		// From erx_arbiter of erx_arbiter.v
    wire			emesh_remap_access;	// From erx_remap of erx_remap.v
    wire [PW-1:0]	emesh_remap_packet;	// From erx_remap of erx_remap.v
@@ -206,7 +205,8 @@ module erx_core (/*AUTOARG*/
 					  rxwr_wait		       
 					 }
 					),
-		     /*AUTOINST*/
+		    .edma_rdata		(32'b0),
+		    /*AUTOINST*/
 		    // Outputs
 		    .mmu_access		(mmu_access),
 		    .dma_access		(dma_access),
@@ -227,33 +227,9 @@ module erx_core (/*AUTOARG*/
 		    .clk		(clk),
 		    .erx_cfg_access	(erx_cfg_access),
 		    .erx_cfg_packet	(erx_cfg_packet[PW-1:0]),
-		    .edma_rdata		(edma_rdata[31:0]),
 		    .mailbox_rdata	(mailbox_rdata[31:0]),
 		    .erx_access		(erx_access),
 		    .erx_packet		(erx_packet[PW-1:0]));
-   
-   /************************************************************/
-   /*ELINK DMA                                                 */
-   /************************************************************/
-   
-   /*edma AUTO_TEMPLATE (.reg_access	(dma_access),
-                         .reg_\(.*\)	(erx_cfg_\1[]),
-                         .reg_rdata	(edma_rdata[31:0]),
-                         .edma_access	(edma_access),   
-                         .\(.*\)_\(.*\) (edma_\1),      
-                         );
-   */   
-   edma erx_dma(/*AUTOINST*/
-		// Outputs
-		.reg_rdata		(edma_rdata[31:0]),	 // Templated
-		.access_out		(edma_access),		 // Templated
-		.packet_out		(edma_packet),		 // Templated
-		// Inputs
-		.nreset			(nreset),
-		.clk			(clk),
-		.reg_access		(dma_access),		 // Templated
-		.reg_packet		(erx_cfg_packet[PW-1:0]), // Templated
-		.wait_in		(edma_wait));		 // Templated
    
 				 
    /************************************************************/
@@ -270,7 +246,9 @@ module erx_core (/*AUTOARG*/
     */
 
    erx_arbiter #(.ID(ID))
-   erx_arbiter (/*AUTOINST*/
+   erx_arbiter (.edma_access		(1'b0),
+		.edma_packet		({(PW){1'b0}}),
+		/*AUTOINST*/
 		// Outputs
 		.rx_rd_wait		(rx_rd_wait),
 		.rx_wr_wait		(rx_wr_wait),
@@ -286,8 +264,6 @@ module erx_core (/*AUTOARG*/
 		.erx_access		(emmu_access),		 // Templated
 		.erx_packet		(emmu_packet[PW-1:0]),	 // Templated
 		.mailbox_wait		(mailbox_wait),
-		.edma_access		(edma_access),
-		.edma_packet		(edma_packet[PW-1:0]),
 		.ecfg_access		(ecfg_access),
 		.ecfg_packet		(ecfg_packet[PW-1:0]),
 		.rxwr_wait		(rxwr_wait),
