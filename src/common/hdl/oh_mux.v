@@ -12,7 +12,7 @@ module oh_mux (/*AUTOARG*/
    //#####################################################################
    //# INTERFACE
    //#####################################################################
-   parameter DW      = 32; // width of data inputs
+   parameter DW      = 1; // width of data inputs
    parameter N       = 1; // number of inputs
 
    input [N-1:0]    sel;  // select vector

@@ -6,7 +6,7 @@ module oh_mux8(/*AUTOARG*/
    sel4, sel5, sel6, sel7
    );
 
-   parameter DW=99;
+   parameter DW=1;
    
 
    //data inputs

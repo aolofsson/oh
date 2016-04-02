@@ -7,7 +7,7 @@ module oh_mux12(/*AUTOARG*/
    sel0
    );
 
-   parameter DW=99;
+   parameter DW=1;
 
    //data inputs
    input [DW-1:0]  in11;
