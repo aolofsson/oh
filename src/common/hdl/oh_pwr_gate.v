@@ -1,4 +1,9 @@
-module oh_pwr_gate (/*AUTOARG*/);
+module oh_pwr_gate (/*AUTOARG*/
+   // Outputs
+   vddg,
+   // Inputs
+   npower, vdd
+   );
 
    input  npower;   // active low power on
    input  vdd;      // input supply
@@ -8,5 +13,5 @@ module oh_pwr_gate (/*AUTOARG*/);
    assign vddg = ((vdd===1'b1) && (npower===1'b0)) ? 1'b1 : 1'bX; 		  
 `else
 `endif
-      
+   
 endmodule // oh_pwr_gate
