@@ -83,6 +83,7 @@ TBD
 
 ## Design Guide
 
+* Separate circuit from logic
 * Separate control from the datapath
 * Separate configuration from design
 * Separate design from testbench
