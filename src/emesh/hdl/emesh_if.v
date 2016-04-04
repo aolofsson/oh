@@ -11,7 +11,8 @@ module emesh_if (/*AUTOARG*/
    xmesh_wait_in, emesh_access_in, emesh_packet_in, emesh_wait_in
    );
 
-   parameter PW = 99;  
+   parameter AW   = 32;   
+   parameter PW   = 2*AW+40; 
 
    //##Cmesh##    
    input 	   cmesh_access_in;

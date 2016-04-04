@@ -96,7 +96,7 @@ module dut(/*AUTOARG*/
    wire			elink0_txo_lclk_p;	// From elink0 of elink.v
    wire			elink0_txrd_access;	// From emesh_if of emesh_if.v
    wire [PW-1:0]	elink0_txrd_packet;	// From emesh_if of emesh_if.v
-   wire			elink0_txrd_wait;	// From elink0 of elink.v
+   wire			elink0_txrd_wait;	// From emesh_if of emesh_if.v, ...
    wire			elink0_txwr_access;	// From emesh_if of emesh_if.v
    wire [PW-1:0]	elink0_txwr_packet;	// From emesh_if of emesh_if.v
    wire			elink0_txwr_wait;	// From elink0 of elink.v
@@ -125,48 +125,48 @@ module dut(/*AUTOARG*/
    //######################################################################
 
    /*emesh_if AUTO_TEMPLATE (//Stimulus
-                            .e2c_emesh_\(.*\)_in(\1_in[]),
-                            .e2c_emesh_\(.*\)_out(\1_out[]),
+                            .emesh_\(.*\)_in(\1_in[]),
+                            .emesh_\(.*\)_out(\1_out[]),
                             //Response
-                            .c2e_emesh_\(.*\)_out(\1_out[]),
-                            .c2e_emesh_\(.*\)_in(\1_in[]),
-                            .c2e_cmesh_\(.*\)_in(elink0_rxrr_\1[]),
+                            .emesh_\(.*\)_out(\1_out[]),
+                            .emesh_\(.*\)_in(\1_in[]),
+                            .cmesh_\(.*\)_in(elink0_rxrr_\1[]),
                             //Link side transaction outgoing
-                            .e2c_cmesh_\(.*\)_out(elink0_txwr_\1[]),
-                            .e2c_cmesh_wait_in(elink0_txwr_wait),
-                            .e2c_rmesh_\(.*\)_out(elink0_txrd_\1[]),
-                            .e2c_rmesh_wait_in(elink0_txrd_wait), 
-                            .c2e_\(.*\)_wait_out(),             
+                            .cmesh_\(.*\)_out(elink0_txwr_\1[]),
+                            .cmesh_wait_in(elink0_txwr_wait),
+                            .rmesh_\(.*\)_out(elink0_txrd_\1[]),
+                            .rmesh_wait_in(elink0_txrd_wait), 
+                            .\(.*\)_wait_out(),             
                              );
   */
    
-   emesh_if #(.PW(PW)) emesh_if (.c2e_rmesh_access_in(1'b0),
-				 .c2e_rmesh_packet_in({(PW){1'b0}}),
-				 .c2e_xmesh_access_in(1'b0),
-				 .c2e_xmesh_packet_in({(PW){1'b0}}),
-				 .e2c_xmesh_wait_in(1'b0),
-				 .e2c_xmesh_access_out(),
-				 .e2c_xmesh_packet_out(),
-				 .c2e_cmesh_wait_out  (elink0_rxrr_wait),	
+   emesh_if #(.AW(AW)) emesh_if (.rmesh_access_in(1'b0),
+				 .rmesh_packet_in({(PW){1'b0}}),
+				 .xmesh_access_in(1'b0),
+				 .xmesh_packet_in({(PW){1'b0}}),
+				 .xmesh_wait_in(1'b0),
+				 .xmesh_access_out(),
+				 .xmesh_packet_out(),
+				 .cmesh_wait_out  (elink0_rxrr_wait),
 				 /*AUTOINST*/
 				 // Outputs
-				 .e2c_cmesh_access_out	(elink0_txwr_access), // Templated
-				 .e2c_cmesh_packet_out	(elink0_txwr_packet[PW-1:0]), // Templated
-				 .c2e_rmesh_wait_out	(),		 // Templated
-				 .e2c_rmesh_access_out	(elink0_txrd_access), // Templated
-				 .e2c_rmesh_packet_out	(elink0_txrd_packet[PW-1:0]), // Templated
-				 .c2e_xmesh_wait_out	(),		 // Templated
-				 .e2c_emesh_wait_out	(wait_out),	 // Templated
-				 .c2e_emesh_access_out	(access_out),	 // Templated
-				 .c2e_emesh_packet_out	(packet_out[PW-1:0]), // Templated
+				 .cmesh_access_out	(elink0_txwr_access), // Templated
+				 .cmesh_packet_out	(elink0_txwr_packet[PW-1:0]), // Templated
+				 .rmesh_wait_out	(elink0_txrd_wait), // Templated
+				 .rmesh_access_out	(elink0_txrd_access), // Templated
+				 .rmesh_packet_out	(elink0_txrd_packet[PW-1:0]), // Templated
+				 .xmesh_wait_out	(),		 // Templated
+				 .emesh_wait_out	(wait_out),	 // Templated
+				 .emesh_access_out	(access_out),	 // Templated
+				 .emesh_packet_out	(packet_out[PW-1:0]), // Templated
 				 // Inputs
-				 .c2e_cmesh_access_in	(elink0_rxrr_access), // Templated
-				 .c2e_cmesh_packet_in	(elink0_rxrr_packet[PW-1:0]), // Templated
-				 .e2c_cmesh_wait_in	(elink0_txwr_wait), // Templated
-				 .e2c_rmesh_wait_in	(elink0_txrd_wait), // Templated
-				 .e2c_emesh_access_in	(access_in),	 // Templated
-				 .e2c_emesh_packet_in	(packet_in[PW-1:0]), // Templated
-				 .c2e_emesh_wait_in	(wait_in));	 // Templated
+				 .cmesh_access_in	(elink0_rxrr_access), // Templated
+				 .cmesh_packet_in	(elink0_rxrr_packet[PW-1:0]), // Templated
+				 .cmesh_wait_in		(elink0_txwr_wait), // Templated
+				 .rmesh_wait_in		(elink0_txrd_wait), // Templated
+				 .emesh_access_in	(access_in),	 // Templated
+				 .emesh_packet_in	(packet_in[PW-1:0]), // Templated
+				 .emesh_wait_in		(wait_in));	 // Templated
    
    
    
