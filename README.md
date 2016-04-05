@@ -1,6 +1,13 @@
 =======
 # OH! Open Hardware for Chip Designers
 
+## Introduction 
+
+OH! is an open-source library of hardware building blocks based on silicon proven design practices at 0.35um to 28nm. The library is being used by Adapteva in desgning its next generation ASIC.
+
+The library is written in standard Verilog (2005) and contains over 25,000 lines of Verilog code, over 150 separate modules. Examplse of functionality include: FIFOs, SPI (master/slave), GPIO, high speed links, memories, clock circuits, synchronization primitives,interupt controller, DMA.    
+
+
 ![alt tag](docs/lego.jpg)
 
 ## Content
