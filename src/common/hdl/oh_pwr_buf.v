@@ -19,11 +19,16 @@ module oh_pwr_buf (/*AUTOARG*/
    input [DW-1:0]  in;     // input signal
    output [DW-1:0] out;    // buffered output signal
    
+
 `ifdef TARGET_SIM   
-   assign out = ((vdd===1'b1) && (vss===1'b0)) ? in : 1'bX;
+   assign out[DW-1:0] = ((vdd===1'b1) && (vss===1'b0)) ? in[DW-1:0]:
+		                                         {(DW){1'bX}};
 `else
-   assign out = in;
+   assign out[DW-1:0] = in[DW-1:0];
 `endif
+   
+
+
    
 endmodule // oh_buf
 
