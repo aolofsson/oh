@@ -1,7 +1,7 @@
 /* verilator lint_off STMTDLY */
 module dv_ctrl(/*AUTOARG*/
    // Outputs
-   nreset, clk1, clk2, start,
+   nreset, clk1, clk2, start, vdd, vss,
    // Inputs
    dut_active, stim_done, test_done
    );
@@ -16,12 +16,16 @@ module dv_ctrl(/*AUTOARG*/
    output clk1;       // main clock
    output clk2;       // secondary clock
    output start;      // start test (level)
-
+   output vdd;        // driving vdd
+   output vss;        // driving vss
+   
    input  dut_active; // reset sequence is done
    input  stim_done;  //stimulus is done  
    input  test_done;  //test is done
    
    //signal declarations
+   reg 	     vdd;
+   reg 	     vss;   
    reg 	     nreset;
    reg 	     start;
    reg 	     clk1=0;
@@ -51,26 +55,38 @@ module dv_ctrl(/*AUTOARG*/
    //#################################
    //CLK1 GENERATOR
    //#################################
+
    always
      #(clk1_phase) clk1 = ~clk1; //add one to avoid "DC" state
 
    //#################################
    //CLK2 GENERATOR
    //#################################
+
    always
      #(clk2_phase) clk2 = ~clk2;
 
    //#################################
-   //RESET
+   //ASYNC
    //#################################
+
    initial
      begin	
 	#(1)
-	nreset   = 'b0;	
-	#(clk1_phase * 20 + 100)   //hold reset for 20 clk cycles
+	nreset   = 'b0;
+	vdd      = 'b0;
+	vss      = 'b0;	
+	#(clk1_phase * 10 + 100)   //ramping voltage
+	vdd      = 'bx;
+	#(clk1_phase * 10 + 100)   //voltage is safe
+	vdd      = 'b1;
+	#(clk1_phase * 40 + 100)   //hold reset for 20 clk cycles
 	nreset   = 'b1;
      end
 
+   //#################################
+   //SYNCHRONOUS STIMULUS
+   //#################################
    //START TEST
    always @ (posedge clk1 or negedge nreset)
      if(!nreset)
