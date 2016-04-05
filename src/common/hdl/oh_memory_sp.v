@@ -68,19 +68,22 @@ module oh_memory_sp(/*AUTOARG*/
 `else
 
    //Assume FPGA tool knows what it's doing (single clock...)
+   //Note: shutdown not modeleled properly, should invalidate all entries
+   //Retention should depend on vdd as well
+
    reg [DW-1:0]        ram    [DEPTH-1:0];  
    reg [DW-1:0]        dout;
    integer 	       i;
    
    //read port (one cycle latency)
    always @ (posedge clk)
-     if(en)       
+     if(en & ~sleep & ~shutdown)       
        dout[DW-1:0] <= ram[addr[AW-1:0]];
 
    //write port
    always @ (posedge clk)
      for(i=0;i<DW;i=i+1)	   
-       if(en & wem[i] & we)	       
+       if(en & wem[i] & we & ~sleep & ~shutdown)	       
  	 ram[addr[AW-1:0]][i] <= din[i]; 
 `endif
   
