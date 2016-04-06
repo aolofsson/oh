@@ -100,8 +100,11 @@ module pic(/*AUTOARG*/
    //###########################
    //# RISING EDGE DETECTOR
    //########################### 
-   always @ (posedge clk)    
-     ic_irq_shadow[IRQW-1:0] <= ext_irq[IRQW-1:0] ;
+   always @ (posedge clk or negedge nreset)    
+     if(!nreset)
+       ic_irq_shadow[IRQW-1:0] <= 'b0;   
+     else
+       ic_irq_shadow[IRQW-1:0] <= ext_irq[IRQW-1:0] ;
 
    assign ic_event[IRQW-1:0]  = ext_irq[IRQW-1:0] & ~ic_irq_shadow[IRQW-1:0] ;
 
@@ -250,8 +253,10 @@ module pic(/*AUTOARG*/
    
    //Pipelining interrupt to account for stall signal
    //TODO: Understand this better...
-   always @ (posedge clk)
-     if(~sq_ic_wait)//includes fetch wait
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       ic_irq_entry[IRQW-1:0] <= 'b0;   
+     else if(~sq_ic_wait)//includes fetch wait
        ic_irq_entry[IRQW-1:0] <= ic_irq_select[IRQW-1:0];// & ~ic_irq_entry[IRQW-1:0] ;
    
    assign ic_irq    =|(ic_irq_entry[IRQW-1:0]);
