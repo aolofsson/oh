@@ -2,14 +2,14 @@ module oh_memory_sp(/*AUTOARG*/
    // Outputs
    dout,
    // Inputs
-   clk, en, we, wem, addr, din, vdd, vddm, sleep, shutdown, repair,
+   clk, en, we, wem, addr, din, vdd, vddm, memconfig, memrepair,
    bist_en, bist_we, bist_wem, bist_addr, bist_din
    );
 
    // parameters
    parameter  DW      = 32;             // memory width
    parameter  DEPTH   = 14;             // memory depth
-   parameter  RW      = 32;             // repair vector width
+   parameter  MCW     = 8;              // repair/config vector width
    parameter  PROJ    = "";             // project name (used for IP selection)
    localparam AW      = $clog2(DEPTH);  // address bus width  
  
@@ -25,9 +25,8 @@ module oh_memory_sp(/*AUTOARG*/
    // Power/repai interface (ASICs only)
    input 	       vdd;        // periphery power rail
    input 	       vddm;       // array power rail     
-   input 	       sleep;      // sleep (content retained)
-   input 	       shutdown;   // shutdown (no retention)
-   input [RW-1:0]      repair;     // "wildcard" repair vector   
+   input [MCW-1:0]     memconfig;  // memory config      
+   input [MCW-1:0]     memrepair;  // "wildcard" repair vector   
 
    // BIST interface (ASICs only)
    input 	       bist_en;   // bist enable
@@ -40,11 +39,10 @@ module oh_memory_sp(/*AUTOARG*/
 
    //Actual IP hidden behind wrapper to protect the innocent
 
-   sram_sp #(.DW(DW).
+   sram_sp #(.DW(DW),
 	     .DEPTH(DEPTH),
 	     .PROJ(PROJ),
-	     .RW(RW))	     
-
+	     .MCW(MCW))	     
    sram_sp (// Outputs
 	    .dout			(dout[DW-1:0]),
 	    // Inputs
@@ -56,9 +54,8 @@ module oh_memory_sp(/*AUTOARG*/
 	    .din			(din[DW-1:0]),
 	    .vdd			(vdd),
 	    .vddm			(vddm),
-	    .sleep			(sleep),
-	    .shutdown			(shutdown),
-	    .cfg_repair			(cfg_repair[RW-1:0]),
+	    .memconfig			(memconfig[MCW-1:0]),
+	    .memrepair			(memrepair[MCW-1:0]),
 	    .bist_en			(bist_en),
 	    .bist_we			(bist_we),
 	    .bist_wem			(bist_wem[DW-1:0]),
@@ -77,13 +74,13 @@ module oh_memory_sp(/*AUTOARG*/
    
    //read port (one cycle latency)
    always @ (posedge clk)
-     if(en & ~sleep & ~shutdown)       
+     if(en)       
        dout[DW-1:0] <= ram[addr[AW-1:0]];
 
    //write port
    always @ (posedge clk)
      for(i=0;i<DW;i=i+1)	   
-       if(en & wem[i] & we & ~sleep & ~shutdown)	       
+       if(en & wem[i] & we)	       
  	 ram[addr[AW-1:0]][i] <= din[i]; 
 `endif
   
