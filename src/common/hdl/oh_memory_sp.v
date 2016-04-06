@@ -2,8 +2,8 @@ module oh_memory_sp(/*AUTOARG*/
    // Outputs
    dout,
    // Inputs
-   clk, en, we, wem, addr, din, vdd, vddm, memconfig, memrepair,
-   bist_en, bist_we, bist_wem, bist_addr, bist_din
+   clk, en, we, wem, addr, din, vss, vdd, vddm, shutdown, memconfig,
+   memrepair, bist_en, bist_we, bist_wem, bist_addr, bist_din
    );
 
    // parameters
@@ -22,11 +22,13 @@ module oh_memory_sp(/*AUTOARG*/
    input [DW-1:0]      din;        // data input
    output [DW-1:0]     dout;       // data output
 
-   // Power/repai interface (ASICs only)
+   // Power/repair interface (ASICs only)
+   input 	       vss;        // common ground   
    input 	       vdd;        // periphery power rail
-   input 	       vddm;       // array power rail     
-   input [MCW-1:0]     memconfig;  // memory config      
-   input [MCW-1:0]     memrepair;  // "wildcard" repair vector   
+   input 	       vddm;       // array power rail
+   input 	       shutdown;   // shutdown signal from always on domain   
+   input [MCW-1:0]     memconfig;  // generic memory config      
+   input [MCW-1:0]     memrepair;  // repair vector   
 
    // BIST interface (ASICs only)
    input 	       bist_en;   // bist enable
@@ -54,6 +56,8 @@ module oh_memory_sp(/*AUTOARG*/
 	    .din			(din[DW-1:0]),
 	    .vdd			(vdd),
 	    .vddm			(vddm),
+	    .vss                        (vss),
+	    .shutdown                   (shutdown),
 	    .memconfig			(memconfig[MCW-1:0]),
 	    .memrepair			(memrepair[MCW-1:0]),
 	    .bist_en			(bist_en),
