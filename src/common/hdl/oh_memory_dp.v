@@ -30,12 +30,6 @@ module oh_memory_dp(/*AUTOARG*/
    input [AW-1:0]      rd_addr;//read address
    output[DW-1:0]      rd_dout;//read output data
    
-`ifdef CFG_ASIC
-
-   initial  
-     $display("Need to instantiate process specific macro here");
-   
-`else
    reg [DW-1:0]        ram    [MD-1:0];  
    reg [DW-1:0]        rd_dout;
    integer 	       i;
@@ -50,10 +44,7 @@ module oh_memory_dp(/*AUTOARG*/
      for (i=0;i<DW;i=i+1)
        if (wr_en & wr_wem[i]) 
          ram[wr_addr[AW-1:0]][i] <= wr_din[i];
-   
-`endif // !`ifdef CFG_ASIC
-   
-   
+      
 endmodule // memory_dp
 
 
