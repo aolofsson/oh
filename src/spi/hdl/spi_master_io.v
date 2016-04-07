@@ -9,8 +9,8 @@ module spi_master_io(/*AUTOARG*/
    // Outputs
    spi_state, fifo_read, rx_data, rx_access, sclk, mosi, ss,
    // Inputs
-   clk, nreset, cpol, cpha, lsbfirst, clkdiv_reg, cmd_reg, emode,
-   fifo_dout, fifo_empty, miso
+   clk, nreset, cpol, cpha, lsbfirst, clkdiv_reg, fifo_dout,
+   fifo_empty, miso
    );
 
    //#################################
@@ -31,8 +31,6 @@ module spi_master_io(/*AUTOARG*/
    input 	   cpha;       // cpha
    input 	   lsbfirst;   // send lsbfirst   
    input [7:0] 	   clkdiv_reg; // baudrate	 
-   input [7:0] 	   cmd_reg; 	   
-   input 	   emode;       
    output [1:0]    spi_state;  // current spi tx state
      
    //data to transmit
@@ -105,23 +103,23 @@ module spi_master_io(/*AUTOARG*/
    else
      case (spi_state[1:0])
        `SPI_IDLE : 
-	 spi_state[1:0] <= fifo_read ? `SPI_SETUP : `SPI_IDLE;
+	 spi_state[1:0] <= fifo_read    ? `SPI_SETUP : `SPI_IDLE;
        `SPI_SETUP :
-	 spi_state[1:0] <= period_match ? `SPI_DATA : `SPI_SETUP;       
+	 spi_state[1:0] <= phase_match ? `SPI_DATA : `SPI_SETUP;       
        `SPI_DATA : 
-	 spi_state[1:0] <= data_done ? `SPI_HOLD : `SPI_DATA;
+	 spi_state[1:0] <= data_done   ? `SPI_HOLD : `SPI_DATA;
        `SPI_HOLD : 
-	 spi_state[1:0] <= period_match ? `SPI_IDLE : `SPI_HOLD;
+	 spi_state[1:0] <= phase_match ? `SPI_IDLE : `SPI_HOLD;
      endcase // case (spi_state[1:0])
    
    //read fifo on phase match (due to one cycle pipeline latency
-   assign fifo_read = ~fifo_empty & ~spi_wait & period_match;
+   assign fifo_read = ~fifo_empty & ~spi_wait & phase_match;
 
    //data done whne
-   assign data_done = fifo_empty & ~spi_wait & period_match;
+   assign data_done = fifo_empty & ~spi_wait & phase_match;
 
    //shift on every clock cycle while in datamode
-   assign shift     = period_match & (spi_state[1:0]==`SPI_DATA);
+   assign shift     = phase_match & (spi_state[1:0]==`SPI_DATA);//period_match
    
    //load is the result of the fifo_read
    always @ (posedge clk)
@@ -142,10 +140,7 @@ module spi_master_io(/*AUTOARG*/
    //#################################
    //# TX SHIFT REGISTER
    //#################################
-   
-   assign data_out[7:0] = (emode & spi_state[1:0]==`SPI_IDLE) ? cmd_reg[7:0] : 
-			                                        fifo_dout[7:0];
-   
+      
    oh_par2ser  #(.PW(8),
 		 .SW(1))
    par2ser (// Outputs
@@ -155,14 +150,13 @@ module spi_master_io(/*AUTOARG*/
 	    // Inputs
 	    .clk	(clk),
 	    .nreset	(nreset),         // async active low reset
-	    .din	(data_out[7:0] ), // 8 bit data from fifo
+	    .din	(fifo_dout[7:0]), // 8 bit data from fifo
 	    .shift	(shift),          // shift on neg edge
-	    .datasize	(8'd7),           // 8 bits
+	    .datasize	(8'd7),           // 8 bits at a time (0..7-->8)
 	    .load	(load_byte),      // load data from fifo
 	    .lsbfirst	(lsbfirst),       // serializer direction
 	    .fill	(1'b0),           // fill with slave data
-	    .wait_in	(1'b0)            // no wait
-	    );
+	    .wait_in	(1'b0));          // no wait
 
    //#################################
    //# RX SHIFT REGISTER
