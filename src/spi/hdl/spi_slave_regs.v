@@ -12,7 +12,7 @@ module spi_slave_regs (/*AUTOARG*/
    wait_out,
    // Inputs
    clk, nreset, hw_en, spi_clk, spi_wdata, spi_write, spi_addr,
-   access_in, packet_in
+   access_out, access_in, packet_in
    );
 
    //parameters
@@ -44,9 +44,10 @@ module spi_slave_regs (/*AUTOARG*/
    output [511:0]  spi_regs;      // all regs concatenated for easy read
    
    // split transaction for core clock domain   
+   input 	   access_out;    // signal used to clear status
    input 	   access_in; 
-   input [PW-1:0]  packet_in;    // writeback data
-   output 	   wait_out;     // 0   
+   input [PW-1:0]  packet_in;     // writeback data
+   output 	   wait_out;      // 0
    
    //regs
    reg [7:0] 	   spi_config;
@@ -113,23 +114,19 @@ module spi_slave_regs (/*AUTOARG*/
    assign cpha     = spi_config[3];          // cpha
    assign lsbfirst = spi_config[4];          // lsb shifted in first
    assign valid    = spi_config[5];          // user regs enable
-   assign emode    = spi_config[6];          // epiphany mode
    
    //#####################################
    //# STATUS [1]
    //#####################################
 
-   always @ (posedge clk or negedge nreset)
-     if(!nreset)
-       spi_status[7:0] <= 'b0;    
-     else if (1'b0)
-       spi_status[7:0] <= 1'b0; // todo: clear with spi request   
+   always @ (posedge clk)
+     if (access_out)
+       spi_status[7:0] <= 8'b0; // clears previous data ready
      else if(access_in)
-       spi_status[7:0] <= {7'b0,
-			   1'b1}; //data ready
+       spi_status[7:0] <= 8'd1; // data ready
         
    //#####################################
-   //# DATA FROM SPLIT TRANSACTION (8/16)
+   //# RX DATA FOR FETCH
    //#####################################
 
    //Data to sample
@@ -151,18 +148,20 @@ module spi_slave_regs (/*AUTOARG*/
 
    always @*
      begin
-	spi_regs[7:0]   = spi_config[7:0];
-	spi_regs[15:8]  = spi_status[7:0];
-	spi_regs[63:16] = 'b0;
-	spi_regs[127:64] = core_regs[63:0];
-	spi_regs[255:128] = 'b0;
+	spi_regs[7:0]     = spi_config[7:0]; //config=7:0
+	spi_regs[15:8]    = spi_status[7:0]; //status=15:8	
+	spi_regs[127:16]  = 'b0;             //clkdiv=23:16
+	                                     //cmd=31:24
+	                                     //reserved=63:32
+	                                     //tx=127:64
+	spi_regs[191:128] = core_regs[63:0]; //user=191:128
+	spi_regs[255:192] = 'b0;
 	for(i=0;i<32;i=i+1)
 	  spi_regs[256+8*i+:8] = user_regs[i];
      end
-
    
    //#####################################
-   //# READBACK
+   //# READBACK (TO SPI)
    //#####################################
 
    assign spi_rdata[7:0] = spi_regs[8*spi_addr[5:0]+:8];
