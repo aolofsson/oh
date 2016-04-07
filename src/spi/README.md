@@ -2,12 +2,14 @@ SPI: Serial Peripheral Interface
 =======================================
 
 1. [Features](#features)
-2. [Master Registers](#master-registers)
-3. [Slave Registers](#slave-registers)
-4. [Interface](#interface)
-5. [Parameters](#parameters)
+2. [Examples](#examples)
+3. [Master Registers](#master-registers)
+4. [Slave Registers](#slave-registers)
+5. [Interface](#interface)
 6. [Code](#code)
 7. [Driver](#driver)
+8. [License](#license)
+9. [Author](#author)
 
 ## Features
 * Standalone general purpose SPI master
@@ -15,6 +17,30 @@ SPI: Serial Peripheral Interface
 * Available as configurable master/slave module
 * Support for epiphany mesh transactions
 * Support for 64 bit data and address
+
+## Examples
+
+** SPI_WRITE**
+```
+DEADBEEF_00000020_00000008_01_0000 // write command + slave address
+DEADBEEF_00000042_00000008_01_0100 // byte to write (42)
+```
+
+** SPI_READ**
+```
+DEADBEEF_000000A0_00000008_01_0000 // read command + slave address
+00000000_00000000_00000008_01_0100 // (dummy byte to generate sclk)
+```
+
+** REMOTE SPI WRITE**
+```
+DEADBEEF_00000000_00000008_01_0000 // write command + slave config address
+DEADBEEF_00000010_00000008_01_0200 // lsb-first config
+DEADBEEF_00000010_00000000_03_0200 // configure master as lsbfirst
+DEADBEEF_000007C1_00000008_03_0000 // remote write command + 1st emesh byte
+00000000_82800000_00000008_05_0000 // 32b destination address
+fedcba98_76543210_00000008_07_0400 // 64b data payload
+```
 
 ## Master Registers
  
@@ -99,39 +125,24 @@ Up to 16 user specified byte wide registers
 ## Interface
 
 ```
-   //clk, reset, irq
    input           nreset;      // asynch active low reset
-   input 	   clk;         // core clock  
-   input 	   master_mode; // master/slave selector
-      
-   //interrupt output
-   output 	   spi_irq;     // interrupt output
-   
-   //packet from core
-   input 	   access_in;   // access from core
+   input 	       clk;         // core clock
+   output 	       spi_irq;     // interrupt output
+   input 	       access_in;   // access from core
    input [PW-1:0]  packet_in;   // packet from core
-   input 	   wait_in;     // pushback from io   
-
-   //packet to core
-   output 	   access_out;  // access to core
+   input 	       wait_in;     // pushback from core
+   output 	       access_out;  // access to core
    output [PW-1:0] packet_out;  // packet to core
-   output 	   wait_out;    // pushback from core
-
-   //master io interface
-   output          m_sclk;      // master clock
-   output 	   m_mosi;      // master output
-   output 	   m_ss;        // slave select
-   input 	   m_miso;      // master input
-    
-   //slave io interface
-   input 	   s_sclk;      // slave clock
-   input 	   s_mosi;      // slave input
-   input 	   s_ss;        // slave select
-   output 	   s_miso;      // slave output
+   output 	       wait_out;    // pushback to core
+   output          m_sclk;      // master clock to IO
+   output 	       m_mosi;      // master output to IO
+   output 	       m_ss;        // slave select to IO
+   input 	       m_miso;      // master input from IO
+   input 	       s_sclk;      // slave clock from IO
+   input 	       s_mosi;      // slave input from IO
+   input 	       s_ss;        // slave select from IO
+   output 	       s_miso;      // slave output to IO
 ```
-
-## Parameters
-* AW : address space width (32/64)
 
 ## Code
 * [spi.v](hdl/spi.v)
@@ -140,12 +151,8 @@ Up to 16 user specified byte wide registers
 * driver/spi_driver.c
 * driver/spi_driver.h
 
-## Authors
-* Andreas Olofsson
-
 ## License
 * MIT
 
-## References
-* [Wikipedia](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus)
-
+## Authors
+* Andreas Olofsson
