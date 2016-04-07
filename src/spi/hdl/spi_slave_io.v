@@ -5,12 +5,13 @@
 //# License:  MIT (see below)                                                 # 
 //#############################################################################
 
+`include "spi_regmap.vh"
 module spi_slave_io(/*AUTOARG*/
    // Outputs
    miso, spi_clk, spi_write, spi_addr, spi_wdata, spi_rdata,
    access_out, packet_out,
    // Inputs
-   sclk, mosi, ss, spi_en, cpol, cpha, lsbfirst, clk
+   sclk, mosi, ss, spi_en, cpol, cpha, lsbfirst, clk, wait_in
    );
 
    //#################################
@@ -18,7 +19,7 @@ module spi_slave_io(/*AUTOARG*/
    //#################################
 
    //parameters
-   parameter  SREGS  = 16;         // total regs  (16/32/64) 
+   parameter  SREGS  = 16;        // total regs  (16/32/64) 
    parameter  AW    = 32;         // address width
    localparam PW    = (2*AW+40);  // packet width
    
@@ -45,6 +46,7 @@ module spi_slave_io(/*AUTOARG*/
    input 	       clk;             // core clock
    output 	       access_out;      // read or write core command   
    output [PW-1:0]     packet_out;      // packet
+   input 	       wait_in;         // temporary pushback
    
    //#################################
    //# BODY
@@ -53,11 +55,11 @@ module spi_slave_io(/*AUTOARG*/
    reg [1:0] 	       spi_state;   
    reg [7:0] 	       bit_count; 
    reg [7:0] 	       command_reg;   
-   reg 		       packet_done_reg;
-   reg [PW-1:0]        packet_out;   
-
+   reg 		       access_out;
+   
    wire [7:0] 	       rx_data;
    wire [63:0] 	       tx_data;
+
    //#################################
    //# STATE MACHINE
    //#################################
@@ -89,54 +91,64 @@ module spi_slave_io(/*AUTOARG*/
         
    // command/address register
    // auto increment for every byte
-   always @ (negedge sclk or posedge ss)
-     if(ss)
-       command_reg[7:0] <= 'b0;   
-     else if((spi_state[1:0]==`SPI_CMD) & byte_done)
+   always @ (negedge sclk)
+     if((spi_state[1:0]==`SPI_CMD) & byte_done)
        command_reg[7:0] <= rx_data[7:0];
      else if(byte_done)
        command_reg[7:0] <= {command_reg[7:6],
 			    command_reg[5:0] + 1'b1};
               
    //#################################
-   //# RX SHIFT REGISTER
+   //# SPI RX SHIFT REGISTER
    //#################################
 
    assign rx_shift = ~ss & spi_en;
    
    oh_ser2par #(.PW(8),
 		.SW(1))
-   ser2par (// Outputs
-	    .dout	(rx_data[7:0]),
-	    // Inputs
-	    .clk	(sclk),
-	    .din	(mosi),
-	    .lsbfirst	(lsbfirst), //msb first
-	    .shift	(rx_shift)
-	    );
-
+   rx_ser2par (// Outputs
+	       .dout	 (rx_data[7:0]),
+	       // Inputs
+	       .clk	 (sclk),
+	       .din	 (mosi),
+	       .lsbfirst (lsbfirst), //msb first
+	       .shift	 (rx_shift));
+   
+   //####################################
+   //# REMOTE TRANSAXTION SHIFT REGISTER
+   //####################################
+   
+   oh_ser2par #(.PW(PW),
+		.SW(1))
+   e_ser2par (// Outputs
+	      .dout	(packet_out[PW-1:0]),
+	      // Inputs
+	      .clk	(sclk),
+	      .din	(mosi),
+	      .lsbfirst	(lsbfirst), //msb first
+	      .shift	(rx_shift));//rx_shift
+   
    //#################################
    //# TX SHIFT REGISTER
    //#################################
 
-   assign tx_load   = byte_done & (spi_state[1:0]==`SPI_CMD);
+   assign tx_load   = byte_done; // & (spi_state[1:0]==`SPI_CMD);
    assign tx_shift  = ~ss & spi_en;
    
    oh_par2ser #(.PW(8),
 		.SW(1))
-   par2ser (.dout	(miso),
-	    .access_out (),
-	    .wait_out	(tx_wait),
-	    .clk	(sclk), // shift out on positive edge
-	    .nreset	(~ss),
-	    .din	(spi_rdata[7:0]),
-	    .shift      (tx_shift),
-	    .lsbfirst	(lsbfirst),
-	    .load       (tx_load),
-	    .datasize   (8'd7),
-	    .fill       (1'b0),
-	    .wait_in    (1'b0)
-	    );
+   tx_par2ser (.dout	   (miso),
+	       .access_out (),
+	       .wait_out   (tx_wait),
+	       .clk	   (sclk), // shift out on positive edge
+	       .nreset	   (~ss),
+	       .din	   (spi_rdata[7:0]),
+	       .shift      (tx_shift),
+	       .lsbfirst   (lsbfirst),
+	       .load       (tx_load),
+	       .datasize   (8'd7),
+	       .fill       (1'b0),
+	       .wait_in    (1'b0));
    
    //#################################
    //# REGISTER FILE INTERFACE
@@ -146,33 +158,37 @@ module spi_slave_io(/*AUTOARG*/
 
    assign spi_addr[5:0] = command_reg[5:0];   
 
-   assign spi_write     = spi_en &
+   assign spi_write     = spi_en    &
 			  byte_done &
-			  (command_reg[7:6]==2'b00) &
+			  ~ss       &
+			  (command_reg[7:6]==`SPI_WR) & 
 			  (spi_state[1:0]==`SPI_DATA);
   
    assign spi_remote    = spi_en &
-			  ss     &                 // wait until signal goes high
-			  command_reg[7:6]==2'b11; // send remote request
+			  ss     &                      // wait until ss edge
+			  command_reg[7:6]==`SPI_FETCH; // send remote request
 
    assign spi_wdata[7:0] = rx_data[7:0];
  
    //###################################
-   //# SYNCHRONIZATION TO CORE
+   //# SYNCHRONIZATION SS TO CORE
    //###################################
    
    //sync the ss to free running clk
    //look for rising edge
    oh_dsync dsync (.dout (ss_sync),
 		   .clk  (clk),
-		   .din  (spi_remote)
-		   );
+		   .din  (spi_remote));
 
    //create single cycle pulse
-   oh_rise2pulse r2p (.out  (access_out),
+   oh_rise2pulse r2p (.out  (access_pulse),
 		      .clk  (clk),
-		      .in   (ss_sync)
-		      );
+		      .in   (ss_sync));
+
+   // pipeleining and holding pulse if there is wait
+   always @ (posedge clk)
+     if(~wait_in)
+       access_out <= access_pulse;
 
 endmodule // spi_slave_io
 // Local Variables:
