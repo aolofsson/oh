@@ -3,7 +3,7 @@ module spi_master_fifo (/*AUTOARG*/
    // Outputs
    fifo_prog_full, wait_out, fifo_empty, fifo_dout,
    // Inputs
-   clk, nreset, spi_en, emode, access_in, packet_in, fifo_read
+   clk, nreset, spi_en, access_in, packet_in, fifo_read
    );
    //#####################################################################
    //# INTERFACE
@@ -21,7 +21,6 @@ module spi_master_fifo (/*AUTOARG*/
    input            clk;            // clk
    input 	    nreset;         // async active low reset
    input 	    spi_en;         // spi enable   
-   input  	    emode;          // epiphany transfer mode
    output 	    fifo_prog_full; // fifo full indicator for status
    
    // Incoming interface 
@@ -67,23 +66,22 @@ module spi_master_fifo (/*AUTOARG*/
 	.data_in			(data_in[AW-1:0]),
 	// Inputs
 	.packet_in			(packet_in[PW-1:0]));
+      
+   assign datasize[7:0] = (1<<datamode_in[1:0]);
    
-   
-   assign datasize[7:0] = emode ? (PW/SW-1'b1) :
-			  ((1<<datamode_in[1:0]));
-   
-
-   assign tx_write =  spi_en &
-		      write_in & 
-		      access_in &
+   assign tx_write =  spi_en     & 
+		      write_in   & 
+		      access_in  &
+		      ~fifo_wait &
 		      (dstaddr_in[5:0]==`SPI_TX);
      
+   assign wait_out = fifo_wait; // & tx_write;
+
    //epiphany mode works in msb or lsb mode
    //data mode up to 64 bits works in lsb mode
    //for msb transfer, use byte writes only
 
-   assign tx_data[PW-1:0] = emode ? packet_in[PW-1:0] :
-			    {{(40){1'b0}},
+   assign tx_data[PW-1:0] = {{(40){1'b0}},
 			     srcaddr_in[AW-1:0], 
 			     data_in[AW-1:0]};
    
@@ -93,11 +91,10 @@ module spi_master_fifo (/*AUTOARG*/
 
    oh_par2ser #(.PW(PW),
 		.SW(SW))
-
    oh_par2ser (// Outputs
 	       .dout	    (fifo_din[SW-1:0]),
 	       .access_out  (fifo_wr),
-	       .wait_out    (wait_out),
+	       .wait_out    (fifo_wait),
 	       // Inputs
 	       .clk	    (clk),
 	       .nreset	    (nreset),
@@ -115,7 +112,7 @@ module spi_master_fifo (/*AUTOARG*/
    //###################################
 
    oh_fifo_sync #(.DEPTH(DEPTH),
-		  .DW(SW))   
+                  .DW(SW))   
    fifo(// Outputs
 	.dout		(fifo_dout[7:0]),
 	.full		(fifo_full),
