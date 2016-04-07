@@ -18,14 +18,13 @@ SPI: Serial Peripheral Interface
 
 ## Master Registers
  
-| Register Name |Addr[7:0]| Access | Default | Description                     | 
-|---------------|---------|--------|---------|---------------------------------|
-| SPI_CONFIG    |  0x0    | RD/WR  | L       | Configuration register          |
-| SPI_STATUS    |  0x1    | RD/WR  | n/a     | Status register                 |
-| SPI_CLKDIV    |  0x2    | RD/WR  | H       | Baud rate setting               |
-| SPI_CMD       |  0x3    | RD/WR  | n/a     | Optional command register       |
-| SPI_TX        |  0x8    | WR     | n/a     | Transmit FIFO                   |
-| SPI_RX        |  0x10   | RD     | n/a     | Receiver data register          |
+| Register Name |Addr[7:0]| Access | Default | Description                   | 
+|---------------|---------|--------|---------|-------------------------------|
+| SPI_CONFIG    |  0x0    | RD/WR  | L       | Configuration register        |
+| SPI_STATUS    |  0x1    | RD/WR  | n/a     | Status register               |
+| SPI_CLKDIV    |  0x2    | RD/WR  | H       | Baud rate setting             |
+| SPI_TX        |  0x8    | WR     | n/a     | Transmit FIFO                 |
+| SPI_RX        |  0x10   | RD     | n/a     | Receiver data register        |
 
 
 **SPI_CONFIG:**
@@ -37,8 +36,6 @@ SPI: Serial Peripheral Interface
 | [2]     | cpol                                |
 | [3]     | cpha                                |
 | [4]     | LSB first transfer                  |
-| [5]     | Manual ss control                   |
-| [6]     | Epiphany transfer mode              |
 
 **SPI_STATUS:**
 
@@ -54,9 +51,6 @@ SPI: Serial Peripheral Interface
 |-------- |-------------------------------------| 
 | [7:0]   | Clock divider value                 |
 |         | Ratio=1<<clkdiv[7:0]                |
-
-**SPI_CMD:** 
-Byte wide command register for emode
 
 **SPI_TX:**
 Eight readable byte wide registers. 
@@ -76,7 +70,7 @@ Up to 16 user specified byte wide registers
 | SPI_TX        |  0x8    | RD     | n/a     | Split transaction return data   |
 | SPI_USER      |  0x20   | RD/WR  | n/a     | User defined registers          |
 
-**SPI_CONFIG:**
+**SPI_CONFIG (0x0): **
 
 | FIELD   | DESCRIPTION                         |
 |-------- |-------------------------------------| 
@@ -86,18 +80,17 @@ Up to 16 user specified byte wide registers
 | [3]     | cpha                                |
 | [4]     | LSB first transfer                  |
 | [5]     | User regs enable                    |
-| [6]     | Epiphany transfer mode              |
 
-**SPI_STATUS:**
+**SPI_STATUS (0x1): **
 
 | FIELD   | DESCRIPTION                         |
 |-------- |-------------------------------------| 
 | [0]     | 1: Split transaction data is ready  |
  
-**SPI_TX:**
+**SPI_TX (0x8) :**
 Eight readable byte wide registers. 
 
-**SPI_RX:**
+**SPI_RX (0x20) :**
 Eight addressable byte wide registers. 
 
 **SPI_USER:**
@@ -108,7 +101,7 @@ Up to 16 user specified byte wide registers
 ```
    //clk, reset, irq
    input           nreset;      // asynch active low reset
-   input 	   clk;         // core clock   
+   input 	   clk;         // core clock  
    input 	   master_mode; // master/slave selector
       
    //interrupt output

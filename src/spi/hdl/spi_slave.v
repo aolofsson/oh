@@ -33,8 +33,8 @@ module spi_slave(/*AUTOARG*/
  
    // read request to core
    output 		access_out;      // valid transaction
-   output [PW-1:0] 	packet_out;      // data to core
-   input 		wait_in;         // pushback from core (ignored!)
+   output [PW-1:0] 	packet_out;      // data to core (from spi port)
+   input 		wait_in;         // pushback from core (not implemented)
 
    // return from core
    input 		access_in;       // read response from core
@@ -81,6 +81,7 @@ module spi_slave(/*AUTOARG*/
 		   .spi_wdata		(spi_wdata[7:0]),
 		   .spi_write		(spi_write),
 		   .spi_addr		(spi_addr[5:0]),
+		   .access_out		(access_out),
 		   .access_in		(access_in),
 		   .packet_in		(packet_in[PW-1:0]));
    
@@ -104,7 +105,8 @@ module spi_slave(/*AUTOARG*/
 		 .cpol			(cpol),
 		 .cpha			(cpha),
 		 .lsbfirst		(lsbfirst),
-		 .clk			(clk));
+		 .clk			(clk),
+		 .wait_in		(wait_in));
    
    
 endmodule // spi_slave

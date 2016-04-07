@@ -45,10 +45,8 @@ module spi_master(/*AUTOARG*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [7:0]		clkdiv_reg;		// From spi_master_regs of spi_master_regs.v
-   wire [7:0]		cmd_reg;		// From spi_master_regs of spi_master_regs.v
    wire			cpha;			// From spi_master_regs of spi_master_regs.v
    wire			cpol;			// From spi_master_regs of spi_master_regs.v
-   wire			emode;			// From spi_master_regs of spi_master_regs.v
    wire [7:0]		fifo_dout;		// From spi_master_fifo of spi_master_fifo.v
    wire			fifo_empty;		// From spi_master_fifo of spi_master_fifo.v
    wire			fifo_prog_full;		// From spi_master_fifo of spi_master_fifo.v
@@ -71,10 +69,8 @@ module spi_master(/*AUTOARG*/
 		    .cpol		(cpol),
 		    .cpha		(cpha),
 		    .lsbfirst		(lsbfirst),
-		    .emode		(emode),
 		    .spi_en		(spi_en),
 		    .clkdiv_reg		(clkdiv_reg[7:0]),
-		    .cmd_reg		(cmd_reg[7:0]),
 		    .wait_out		(wait_out),
 		    .access_out		(access_out),
 		    .packet_out		(packet_out[PW-1:0]),
@@ -113,7 +109,6 @@ module spi_master(/*AUTOARG*/
 		   .clk			(clk),
 		   .nreset		(nreset),
 		   .spi_en		(spi_en),
-		   .emode		(emode),
 		   .access_in		(access_in),
 		   .packet_in		(packet_in[PW-1:0]),
 		   .fifo_read		(fifo_read));
@@ -139,8 +134,6 @@ module spi_master(/*AUTOARG*/
 		  .cpha			(cpha),
 		  .lsbfirst		(lsbfirst),
 		  .clkdiv_reg		(clkdiv_reg[7:0]),
-		  .cmd_reg		(cmd_reg[7:0]),
-		  .emode		(emode),
 		  .fifo_dout		(fifo_dout[7:0]),
 		  .fifo_empty		(fifo_empty),
 		  .miso			(miso));

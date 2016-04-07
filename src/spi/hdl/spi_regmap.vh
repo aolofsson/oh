@@ -10,5 +10,10 @@
  `define SPI_RX1      6'd20 // RX upper
  `define SPI_USER     6'd32 // user regs (slave)
 
+//spi command [7:6]
+ `define SPI_WR    2'b00
+ `define SPI_RD    2'b10
+ `define SPI_FETCH 2'b11
+
 `endif //  `ifndef SPI_REGMAP_VH_
 

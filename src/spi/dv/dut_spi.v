@@ -112,6 +112,7 @@ module dut(/*AUTOARG*/
 	   .packet_out			(mem_packet_in[PW-1:0]),
 	   .access_in			(mem_access_out),
 	   .packet_in			(mem_packet_out[PW-1:0]),
+	   .wait_in			(mem_wait_out),
 	   /*AUTOINST*/
 	  // Outputs
 	  .spi_irq			(spi_irq),
@@ -119,12 +120,11 @@ module dut(/*AUTOARG*/
 	  // Inputs
 	  .nreset			(nreset),
 	  .clk				(clk),
-	  .hw_en			(hw_en),
-	  .wait_in			(wait_in));
+	  .hw_en			(hw_en));
 
    
    ememory ememory (// Outputs
-		    .wait_out		(wait_out),
+		    .wait_out		(mem_wait_out),
 		    .access_out		(mem_access_out),
 		    .packet_out		(mem_packet_out[PW-1:0]),
 		    // Inputs
