@@ -9,8 +9,8 @@
 `include "spi_regmap.vh"
 module spi_master_regs (/*AUTOARG*/
    // Outputs
-   cpol, cpha, lsbfirst, emode, spi_en, clkdiv_reg, cmd_reg, wait_out,
-   access_out, packet_out,
+   cpol, cpha, lsbfirst, spi_en, clkdiv_reg, wait_out, access_out,
+   packet_out,
    // Inputs
    clk, nreset, hw_en, rx_data, rx_access, spi_state, fifo_prog_full,
    fifo_wait, access_in, packet_in, wait_in
@@ -35,10 +35,8 @@ module spi_master_regs (/*AUTOARG*/
    output 	     cpol;            // clk polarity (default is 0)
    output 	     cpha;            // clk phase shift (default is 0)
    output            lsbfirst;        // send lsbfirst
-   output 	     emode;           // send emesh transaction
    output 	     spi_en;          // enable transmitter   
    output [7:0]      clkdiv_reg;      // baud rate setting
-   output [7:0]      cmd_reg;         // command register for emode   
    input [1:0] 	     spi_state;       // transmit state
    input 	     fifo_prog_full;  // fifo reached half/full
    input 	     fifo_wait;       // tx transfer wait
@@ -60,7 +58,6 @@ module spi_master_regs (/*AUTOARG*/
    reg [7:0] 	     config_reg;
    reg [7:0] 	     status_reg;
    reg [7:0] 	     clkdiv_reg;
-   reg [7:0] 	     cmd_reg;
    reg [63:0] 	     rx_reg; 
    reg [AW-1:0]      reg_rdata;
    reg 		     autotran;
@@ -124,9 +121,7 @@ module spi_master_regs (/*AUTOARG*/
    assign cpol         = config_reg[2];          // cpol
    assign cpha         = config_reg[3];          // cpha
    assign lsbfirst     = config_reg[4];          // send lsb first
-   assign manual_ss    = config_reg[5];          // manually control ss pin
-   assign emode        = config_reg[6];          // epiphany transfer mode
-    
+  
    //####################################
    //# STATUS
    //####################################
@@ -153,32 +148,12 @@ module spi_master_regs (/*AUTOARG*/
        clkdiv_reg[7:0] <= reg_wdata[7:0];
 
    //####################################
-   //# COMMAND (for emode) 
-   //####################################
-
-   always @ (posedge clk)
-     if(cmd_write)
-       cmd_reg[7:0] <= reg_wdata[7:0];
-     
-   //####################################
    //# RX REG
    //####################################
    always @ (posedge clk)
      if(rx_access)
        rx_reg[63:0] <= rx_data[63:0];
    
-   //####################################
-   //# AUTOTRANSFER
-   //####################################
-
-   always @ (posedge clk or negedge nreset)
-     if(!nreset)
-       autotran <= 1'b0;   
-     else if(rx_access & emode)
-       autotran <= 1'b1;   
-     else if(~wait_in)
-       autotran <= 1'b0;   
-
    //####################################
    //# READBACK
    //####################################
@@ -190,7 +165,6 @@ module spi_master_regs (/*AUTOARG*/
 	 `SPI_CONFIG : reg_rdata[31:0] <= {24'b0,config_reg[7:0]};
 	 `SPI_STATUS : reg_rdata[31:0] <= {24'b0,status_reg[7:0]};
 	 `SPI_CLKDIV : reg_rdata[31:0] <= {24'b0,clkdiv_reg[7:0]};
-	 `SPI_CMD    : reg_rdata[31:0] <= {24'b0,cmd_reg[7:0]};
 	 `SPI_RX0    : reg_rdata[31:0] <= rx_reg[31:0];
 	 `SPI_RX1    : reg_rdata[31:0] <= rx_reg[63:32];	 
 	 default : reg_rdata[31:0] <= 32'hDEADBEEF;	 
@@ -210,6 +184,7 @@ module spi_master_regs (/*AUTOARG*/
    	      .clk (clk),
 	      .in  (reg_read));
    
+   //TODO: fix!
    assign wait_out = fifo_wait;
    
    emesh2packet #(.AW(AW))
