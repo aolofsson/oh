@@ -9,7 +9,7 @@ SPI: Serial Peripheral Interface
 6. [Code](#code)
 7. [Driver](#driver)
 8. [License](#license)
-9. [Author](#author)
+9. [Authors](#authors)
 
 ## Features
 * Standalone general purpose SPI master
@@ -20,19 +20,19 @@ SPI: Serial Peripheral Interface
 
 ## Examples
 
-** SPI_WRITE**
+**SPI_WRITE:**
 ```
 DEADBEEF_00000020_00000008_01_0000 // write command + slave address
 DEADBEEF_00000042_00000008_01_0100 // byte to write (42)
 ```
 
-** SPI_READ**
+**SPI_READ:**
 ```
 DEADBEEF_000000A0_00000008_01_0000 // read command + slave address
 00000000_00000000_00000008_01_0100 // (dummy byte to generate sclk)
 ```
 
-** REMOTE SPI WRITE**
+**REMOTE SPI WRITE:**
 ```
 DEADBEEF_00000000_00000008_01_0000 // write command + slave config address
 DEADBEEF_00000010_00000008_01_0200 // lsb-first config
