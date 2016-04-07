@@ -36,14 +36,16 @@ module stimulus (/*AUTOARG*/
 
    //variables
    reg 		   mem_access;
-   reg [PW+16-1:0] stimarray[MD-1:0];
    reg [PW+16-1:0] mem_data;
+   reg [PW+16-1:0] stimarray[MD-1:0];
    reg [MAW-1:0]   stim_addr;
    reg [1:0] 	   state;
    reg [31:0] 	   stim_count;
    reg [15:0]      wait_counter;
    reg [PW-1:0]    stim_packet;
    reg 		   stim_access;
+   reg [PW-1:0]    mem_packet_reg;
+   reg 		   mem_access_reg;
    
    //Read in stimulus
    integer 	   i,j;
@@ -93,25 +95,26 @@ module stimulus (/*AUTOARG*/
      else if(start & (state[1:0]==`IDLE))//not started
        begin
 	  state[1:0] <= `GO;//going
-       end   
-     else if((wait_counter[15:0]==0) & (stim_count < stim_end) & (state[1:0]==`GO) & ~dut_wait)//going
-       begin
-	  wait_counter[15:0]   <= stimarray[stim_addr];//first 15 bits
-	  mem_data[PW+16-1:0]  <= stimarray[stim_addr];//FIX: used 2D indexiing?
-	  mem_access           <= 1'b1;	  
-	  stim_addr[MAW-1:0]   <= stim_addr[MAW-1:0] + 1'b1; 
-	  stim_count           <= stim_count + 1'b1; 
-       end         
-     else if((wait_counter[15:0]==0) & (stim_count == stim_end) & (state[1:0]==`GO) & ~dut_wait) //not waiting and done
-       begin
-	  state[1:0]          <= `DONE;//gone
-	  mem_access          <= 1'b0;	  
        end
-     else if(wait_counter>0)
-       begin
-	  mem_access          <= 1'b0;	  
-	  wait_counter[15:0]  <= wait_counter[15:0] - 1'b1;
-       end  
+     else if(~dut_wait)
+       if((wait_counter[15:0]==0) & (stim_count < stim_end) & (state[1:0]==`GO))//going
+	 begin
+	    wait_counter[15:0]   <= stimarray[stim_addr];//first 15 bits
+	    mem_data[PW+16-1:0]  <= stimarray[stim_addr];//FIX: used 2D indexiing?
+	    mem_access           <= 1'b1;	  
+	    stim_addr[MAW-1:0]   <= stim_addr[MAW-1:0] + 1'b1; 
+	    stim_count           <= stim_count + 1'b1; 
+       end         
+       else if((wait_counter[15:0]==0) & (stim_count == stim_end) & (state[1:0]==`GO)) //not waiting and done
+	 begin
+	    state[1:0]          <= `DONE;//gone
+	    mem_access          <= 1'b0;	  
+	 end
+       else if(wait_counter>0)
+	 begin
+	    mem_access          <= 1'b0;	  
+	    wait_counter[15:0]  <= wait_counter[15:0] - 1'b1;
+	 end  
 
    //Use to finish simulation
    assign stim_done           = ~dut_wait & (state[1:0]==`DONE);
@@ -121,13 +124,17 @@ module stimulus (/*AUTOARG*/
    always @ (posedge clk or negedge nreset)
      if(~nreset)
        begin
-	  stim_packet <= 'b0;	  
-	  stim_access <= 'b0;	  
+	  mem_access_reg <= 'b0;
+	  mem_packet_reg <= 'b0;	  
+	  stim_packet    <= 'b0;	  
+	  stim_access    <= 'b0;	  
        end
      else if(~dut_wait)
        begin
-	  stim_packet <= mem_data[PW+16-1:16];
-	  stim_access <= mem_access;	  
+	  mem_access_reg <= mem_access;
+	  mem_packet_reg <= mem_data[PW+16-1:16];	  
+	  stim_packet    <= mem_packet_reg;
+	  stim_access    <= mem_access_reg;
        end
 
    //assign stim_packet = dut_wait ? stim_packet_reg : mem_data[PW+16-1:16];
