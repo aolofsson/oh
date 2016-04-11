@@ -1,52 +1,32 @@
- //#####################################################################
-//# Asynchronous FIFO based on article by Clifford Cummings, 
-//# "Simulation and Synthesis Techniques for Asynchronous FIFO Design"
-//# (SNUG2002)
-//#
-//# Modifications: Using binary comparisons for simplicity. This may cost
-//# a few more gates, but the the clarity is worth it. 
-//#####################################################################
-module oh_fifo_generic
-   (/*AUTOARG*/
-   // Outputs
-   dout, empty, full, prog_full, rd_count, wr_count,
-   // Inputs
-   nreset, wr_clk, wr_en, din, rd_clk, rd_en
-   );
+//#############################################################################
+//# Function: Generic Async FIFO                                              #
+//# Based on article by Clifford Cummings,                                    #
+//  "Simulation and Synthesis Techniques for Asynchronous FIFO Design"        #
+//# (SNUG2002)                                                                #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-   //#####################################################################
-   //# INTERFACE
-   //#####################################################################
-   
-   // parameters
-   parameter DW        = 104;            // FIFO width 
-   parameter DEPTH     = 16;             // FIFO depth (entries)         
-   parameter PROG_FULL = DEPTH/2;        // FIFO full threshold 
-   parameter AW        = $clog2(DEPTH);  // FIFO address width (for model)
-
-   // common reset
-   input           nreset;       // asynch active low reset
-
-   // fifo write
-   input           wr_clk;       // write clock   
-   input           wr_en;        // write enable
-   input  [DW-1:0] din;          // write data
-   
-   // fifo read
-   input           rd_clk;       // read clock   
-   input 	   rd_en;        // read enable
-   output [DW-1:0] dout;         // read data
-
-   // status
-   output          empty;        // fifo is empty
-   output          full;         // fifo is full
-   output 	   prog_full;    // fifo is "half empty"
-   output [AW-1:0] rd_count;     // NOT IMPLEMENTED 
-   output [AW-1:0] wr_count;     // NOT IMPLEMENTED
-
-   //#####################################################################
-   //# BODY
-   //#####################################################################
+module oh_fifo_generic #(parameter DW        = 104,      //FIFO width
+			 parameter DEPTH     = 32,       //FIFO depth (entries)
+			 parameter PROG_FULL = (DEPTH/2),//program full threshold   
+			 parameter AW = $clog2(DEPTH)    // binary read count width
+			 )
+   (
+    input 	    nreset, // asynch active low reset
+    input 	    wr_clk, // write clock   
+    input 	    wr_en, // write enable
+    input [DW-1:0]  din, // write data
+    input 	    rd_clk, // read clock   
+    input 	    rd_en, // read enable
+    output [DW-1:0] dout, // read data
+    output 	    empty, // fifo is empty
+    output 	    full, // fifo is full
+    output 	    prog_full, // fifo is "half empty"
+    output [AW-1:0] rd_count, // NOT IMPLEMENTED 
+    output [AW-1:0] wr_count // NOT IMPLEMENTED
+    );
    
    //regs 
    reg [AW:0]    wr_addr;       // extra bit for wraparound comparison
@@ -63,7 +43,7 @@ module oh_fifo_generic
    //# Full/empty indicators
    //###########################
 
-   // uses on extra bit for compare to track wraparound pointers 
+   // uses one extra bit for compare to track wraparound pointers 
    // careful clock synchronization done using gray codes
    // could get rid of gray2bin for rd_addr_sync... 
    
@@ -128,7 +108,6 @@ module oh_fifo_generic
    rd_g2b (.bin  (rd_addr_sync[AW:0]),
 	   .gray (rd_addr_gray_sync[AW:0]));
    
-
    //###########################
    //#dual ported memory
    //###########################

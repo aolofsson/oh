@@ -1,18 +1,21 @@
-module oh_datagate (/*AUTOARG*/
-   // Outputs
-   dout,
-   // Inputs
-   clk, en, din
-   );
+//#############################################################################
+//# Function: Low power data gate                                             #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-   parameter DW = 32;
-   parameter PS = 3;
+module oh_datagate #(parameter DW   = 32, // width of data inputs
+		     parameter PS   = 3   // min quiet time before shutdown
+		     )
+   ( 
+     input 	     clk, // clock
+     input 	     en,  // data valid
+     input [DW-1:0]  din, // data input
+     output [DW-1:0] dout // data output    
+     );
    
-   input           clk;
-   input           en;
-   input [DW-1:0]  din;   
-   output [DW-1:0] dout;	  
-	 
+ 	  	 
    reg [PS-1:0]    enable_pipe;   
    wire 	   enable;
    
@@ -22,6 +25,5 @@ module oh_datagate (/*AUTOARG*/
    assign enable = {enable_pipe[PS-1:0],en};
 
    assign dout[DW-1:0] =  {(DW){enable}} & din[DW-1:0];
-   
   
 endmodule // oh_datagate

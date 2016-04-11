@@ -1,42 +1,40 @@
-module oh_memory_sp(/*AUTOARG*/
-   // Outputs
-   dout,
-   // Inputs
-   clk, en, we, wem, addr, din, vss, vdd, vddm, shutdown, memconfig,
-   memrepair, bist_en, bist_we, bist_wem, bist_addr, bist_din
-   );
+//#############################################################################
+//# Function: Sinle Port Memory                                               #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT  (see LICENSE file in OH! repository)                       # 
+//#############################################################################
 
-   // parameters
-   parameter  DW      = 32;             // memory width
-   parameter  DEPTH   = 14;             // memory depth
-   parameter  MCW     = 8;              // repair/config vector width
-   parameter  PROJ    = "";             // project name (used for IP selection)
+module oh_memory_sp  # (parameter DW    = 104,  //memory width
+			parameter DEPTH = 32,   //memory depth
+			parameter PROJ  = "",   //project name
+			parameter MCW   = 8     //repair/config vector width
+		       ) 
+   (// memory interface 
+    input 	    clk, // clock
+    input 	    en, // memory access   
+    input 	    we, // write enable global signal   
+    input [DW-1:0]  wem, // write enable vector
+    input [AW-1:0]  addr, // address
+    input [DW-1:0]  din, // data input
+    output [DW-1:0] dout, // data output
+    // Power/repair (ASIC)
+    input 	    vss, // common ground   
+    input 	    vdd, // periphery power rail
+    input 	    vddm, // sram array power rail
+    input 	    shutdown, // shutdown signal from always on domain   
+    input [MCW-1:0] memconfig, // generic memory config      
+    input [MCW-1:0] memrepair, // repair vector   
+    // BIST interface (ASICs)
+    input 	    bist_en, // bist enable
+    input 	    bist_we, // write enable global signal   
+    input [DW-1:0]  bist_wem, // write enable vector
+    input [AW-1:0]  bist_addr, // address
+    input [DW-1:0]  bist_din  // data input
+    );
+
    localparam AW      = $clog2(DEPTH);  // address bus width  
- 
-   // standard memory interface 
-   input               clk;        // clock
-   input               en;         // memory access   
-   input 	       we;         // write enable global signal   
-   input [DW-1:0]      wem;        // write enable vector
-   input [AW-1:0]      addr;       // address
-   input [DW-1:0]      din;        // data input
-   output [DW-1:0]     dout;       // data output
-
-   // Power/repair interface (ASICs only)
-   input 	       vss;        // common ground   
-   input 	       vdd;        // periphery power rail
-   input 	       vddm;       // array power rail
-   input 	       shutdown;   // shutdown signal from always on domain   
-   input [MCW-1:0]     memconfig;  // generic memory config      
-   input [MCW-1:0]     memrepair;  // repair vector   
-
-   // BIST interface (ASICs only)
-   input 	       bist_en;   // bist enable
-   input 	       bist_we;   // write enable global signal   
-   input [DW-1:0]      bist_wem;  // write enable vector
-   input [AW-1:0]      bist_addr; // address
-   input [DW-1:0]      bist_din;  // data input
-   
+  
 `ifdef CFG_ASIC
 
    //Actual IP hidden behind wrapper to protect the innocent
@@ -69,7 +67,7 @@ module oh_memory_sp(/*AUTOARG*/
 `else
 
    //Assume FPGA tool knows what it's doing (single clock...)
-   //Note: shutdown not modeleled properly, should invalidate all entries
+   //Note: shutdown not modeled properly, should invalidate all entries
    //Retention should depend on vdd as well
 
    reg [DW-1:0]        ram    [DEPTH-1:0];  

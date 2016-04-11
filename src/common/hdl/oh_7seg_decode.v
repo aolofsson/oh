@@ -1,3 +1,10 @@
+//#############################################################################
+//# Function: BCD Seven Segment Decoderh                                      #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
+
 module oh_7seg_decode ( input [3:0] bcd,  //0-9 
 			output a, //a segment (1=0ff)
 			output b, //b segment
@@ -8,7 +15,7 @@ module oh_7seg_decode ( input [3:0] bcd,  //0-9
 			output g    //g segment
 			);
 
-   reg 			       a,b,c,d,e,f,g;
+   reg 	a,b,c,d,e,f,g;
    
    always @ (*)
      case(bcd[3:0])

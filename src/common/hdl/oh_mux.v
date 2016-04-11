@@ -1,30 +1,21 @@
-//#########################################################################
-//# GENERIC "ONE HOT" N:1 MUX
-//# See also oh_mux2.v, oh_mux3.v, etc
-//#########################################################################
-module oh_mux (/*AUTOARG*/
-   // Outputs
-   out,
-   // Inputs
-   sel, in
-   );
-   
-   //#####################################################################
-   //# INTERFACE
-   //#####################################################################
-   parameter DW      = 1; // width of data inputs
-   parameter N       = 1; // number of inputs
+//#############################################################################
+//# Function: "ONE HOT" N:1 MUX                                               #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-   input [N-1:0]    sel;  // select vector
-   input [N*DW-1:0] in;   // concatenated input {..,in1[DW-1:0],in0[DW-1:0]
-   output [DW-1:0]  out;  // output
+module oh_mux #( parameter DW  = 1, // width of data inputs
+		 parameter N   = 1  // number of inputs
+		 )
+   (
+    input [N-1:0]    sel, // select vector
+    input [N*DW-1:0] in, // concatenated input {..,in1[DW-1:0],in0[DW-1:0]
+    output [DW-1:0]  out  // output
+    );
    
-   //#####################################################################
-   //# BODY
-   //#####################################################################
    reg [DW-1:0]     out;
    
-   //parametrized mux
    integer 	    i;   
    always @*
      begin
@@ -34,5 +25,6 @@ module oh_mux (/*AUTOARG*/
      end
 
 endmodule // oh_mux
+
 
 

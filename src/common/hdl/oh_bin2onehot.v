@@ -5,23 +5,22 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_bitreverse #(parameter DW = 32 // width of data inputs
-		       )
-   (
-    input [DW-1:0]  in, // data input
-    output [DW-1:0] out // bit reversed output
-    );
+module oh_bin2onehot #(parameter DW = 32) // width of data inputs
+(
+ input [NB-1:0]  in, // unsigned binary input  
+ output [DW-1:0] out   // one hot output vector
+ );
    
+   localparam NB = $clog2(DW);  // encoded bit width
    
-   reg [DW-1:0]    out;        
-   integer 	   i;
-   
-   always @*
-     for (i=0;i<DW;i=i+1)
-       out[i]=in[DW-1-i];   
-   
-endmodule // oh_bitreverse
+   integer 	  i;      
+   reg [DW-1:0] 	  out;  
 
+   always @*
+     for(i=0;i<DW;i=i+1)
+       out[i]=(in[NB-1:0]==i);
+   
+endmodule // oh_bin2onehot
 
 
 

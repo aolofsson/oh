@@ -1,52 +1,29 @@
-module oh_counter (/*AUTOARG*/
-   // Outputs
-   count, carry, zero,
-   // Inputs
-   clk, in, en, load, load_data
-   );
- 
-   //###############################################################
-   //# Interface
-   //###############################################################
+//#############################################################################
+//# Function: Binary to gray encoder                                          #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-   parameter DW   = 64;
-   parameter TYPE = "INCREMENT"; //INCREMENT, DECREMENT, GRAY, LFSR
+module oh_counter #(parameter DW   = 32,         // width of data inputs
+		    parameter TYPE = "INCREMENT" // also DECREMENT, GRAY, LFSR
+		    ) 
+   (
+   input 	   clk, // clk input
+   input 	   in, // input to count
+   input 	   en, // enable counter
+   input 	   load, // load counter
+   input [DW-1:0]  load_data,// load data
+   output [DW-1:0] count, // current count value   
+   output 	   carry, // carry out from counter
+   output 	   zero   // counter is zero
+    );
    
-   //clock interface
-   input           clk;      // clk input
-
-   //counter control
-   input 	   in;       // input to count
-   input 	   en;       // enable counter
-   input 	   load;     // load counter
-   input [DW-1:0]  load_data;// load data
-      
-   //outputs
-   output [DW-1:0] count;    // current count value   
-   output 	   carry;    // carry out from counter
-   output 	   zero;     // counter is zero
-   
-   //###############################################################
-   //# Interface
-   //###############################################################
+   // local variables
    reg [DW-1:0]    count;
    reg 		   carry;
    wire [DW-1:0]   count_in;
    wire 	   carry_in;
-   
-   always @(posedge clk)
-     if(load)
-       begin
-	  carry         <= 1'b0;	  
-	  count[DW-1:0] <= load_data[DW-1:0];
-       end
-     else if (en)
-       begin
-	  carry         <= carry_in;
-	  count[DW-1:0] <= count_in[DW-1:0];
-       end
-
-   assign zero = ~(count[DW-1:0]);
    
    // configure counter based on type
    generate
@@ -69,8 +46,23 @@ module oh_counter (/*AUTOARG*/
 	     $display ("NOT IMPLEMENTED");	   
 	end      
    endgenerate
-   
-   
+
+   // counter
+   always @(posedge clk)
+     if(load)
+       begin
+	  carry         <= 1'b0;	  
+	  count[DW-1:0] <= load_data[DW-1:0];
+       end
+     else if (en)
+       begin
+	  carry         <= carry_in;
+	  count[DW-1:0] <= count_in[DW-1:0];
+       end
+
+   // counter expired
+   assign zero = ~(count[DW-1:0]);
+      
 endmodule // oh_counter
 
 

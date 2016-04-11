@@ -1,31 +1,22 @@
-/*
- * This module stretches a pulse by DW+1 clock cycles
- * Can be useful for synchronous clock transfers from fast to slow.
- * The block has one cycle latency 
- * 
- * in 
- * clk
- * out
- * 
- */
-module oh_stretcher (/*AUTOARG*/
-   // Outputs
-   out,
-   // Inputs
-   clk, in, nrst
-   );
+//#############################################################################
+//# Purpose: Stretches a pulse by DW+1 clock cycles                           #
+//#          Adds one cycle latency                                           #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-   parameter CYCLES = 4;
+module oh_stretcher #(parameter CYCLES = 5) // "wakeup" cycles
+   ( input  clk, // clock
+     input  in, // input pulse
+     input  nreset, // async active low reset
+     output out // stretched output pulse
+     );  
    
-   input  clk;
-   input  in; 
-   input  nrst;   
-   output out;
-
    reg [CYCLES-1:0] valid;
       
-   always @ (posedge clk)
-     if(!nrst)       
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)       
        valid[CYCLES-1:0] <='b0;   
      else if(in)
        valid[CYCLES-1:0] <={(CYCLES){1'b1}};   

@@ -1,23 +1,17 @@
-module oh_gray2bin (/*AUTOARG*/
-   // Outputs
-   bin,
-   // Inputs
-   gray
-   );
+//#############################################################################
+//# Function: Gray to binary encoder                                          #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-   //###############################################################
-   //# Interface
-   //###############################################################
-
-   input [DW-1:0]  gray;   //gray encoded input
-   output [DW-1:0] bin;    //binary encoded output
-
-   parameter DW = 64;         //width of converter
+module oh_gray2bin #(parameter DW = 32) // width of data inputs
+   (
+    input [DW-1:0]  gray,//gray encoded input
+    output [DW-1:0] bin  //binary encoded output
+    );
    
-   //###############################################################
-   //# BODY
-   //###############################################################
-   reg [DW-1:0]    bin;   
+   reg [DW-1:0]     bin;   
    integer 	   i,j;
 
    always @*

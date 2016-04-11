@@ -1,24 +1,17 @@
-/* Simple combinatorial priority arbiter
- * bit[0] has highest priority
- *
- */
+//#############################################################################
+//# Function: Statically configured arbiter                                   #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-module oh_arbiter(/*AUTOARG*/
-   // Outputs
-   grants,
-   // Inputs
-   requests
-   );
-   
-   parameter N    = 99;
-   parameter TYPE = "FIXED"; //arbiter type
-                             //"FIXED"
-                             //"ROUNDROBIN"
-                             //"FAIR"
-   
-       
-   input  [N-1:0] requests;  //request vector
-   output [N-1:0] grants;    //grant (one hot)
+module oh_arbiter #( parameter N    = 1,
+		     parameter TYPE = "FIXED" // or ROUNDROBIN, FAIR
+		     ) 
+   (
+    input [N-1:0]  requests, //request vector
+    output [N-1:0] grants    //grant (one hot)
+    );
 
    wire [N-1:0]   waitmask; 
    genvar 	  j;     

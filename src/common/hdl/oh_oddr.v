@@ -2,11 +2,10 @@
 //# Function: Dual data rate output buffer                                    #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see LICENSE file in this repository)                       # 
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_oddr #(parameter DW      = 1 // width of data inputs
-		 )
+module oh_oddr #(parameter DW  = 1) // width of data inputs
    (
     input 	    clk, // clock input
     input [DW-1:0]  din1, // data input1

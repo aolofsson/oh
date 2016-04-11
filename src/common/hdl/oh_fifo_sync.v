@@ -1,40 +1,28 @@
-module oh_fifo_sync (/*AUTOARG*/
-   // Outputs
-   dout, full, prog_full, empty, rd_count,
-   // Inputs
-   clk, nreset, din, wr_en, rd_en
-   );
-      
-   //#####################################################################
-   //# INTERFACE
-   //#####################################################################
-   parameter  DEPTH       = 4;
-   parameter  DW          = 104;
-   parameter  PROG_FULL   = DEPTH/2;
-   parameter  AW          = $clog2(DEPTH);
+//#############################################################################
+//# Function: Synchronous FIFO                                                #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-   //clk/reset
-   input 	   clk;          // clock
-   input 	   nreset;       // active high async reset 
-
-   //write port
-   input [DW-1:0]  din;          // data to write
-   input 	   wr_en;        // write fifo
-
-   //read port
-   input 	   rd_en;        // read fifo
-   output [DW-1:0] dout;         // output data (next cycle)
-
-   //Status    
-   output 	   full;         // fifo full
-   output 	   prog_full;    // fifo is almost full
-   output 	   empty;        // fifo is empty  
-   output [AW-1:0] rd_count;     // valid entries in fifo
-  
-   //#####################################################################
-   //# BODY
-   //#####################################################################
-      
+module oh_fifo_sync #(parameter DW        = 104,      //FIFO width
+		      parameter DEPTH     = 32,       //FIFO depth
+		      parameter PROG_FULL = (DEPTH/2),//prog_full threshold  
+		      parameter AW = $clog2(DEPTH)    //rd_count width
+		      ) 
+(
+   input 	   clk, // clock
+   input 	   nreset, // active high async reset 
+   input [DW-1:0]  din, // data to write
+   input 	   wr_en, // write fifo
+   input 	   rd_en, // read fifo
+   output [DW-1:0] dout, // output data (next cycle)
+   output 	   full, // fifo full
+   output 	   prog_full, // fifo is almost full
+   output 	   empty, // fifo is empty  
+   output [AW-1:0] rd_count     // valid entries in fifo
+ );
+   
    reg [AW-1:0]  wr_addr;
    reg [AW-1:0]  rd_addr;
    reg [AW-1:0]  rd_count;
@@ -72,8 +60,7 @@ module oh_fifo_sync (/*AUTOARG*/
    oh_memory_dp 
      #(.DW(DW),
        .AW(AW))
-   mem (
-	// read port
+   mem (// read port
 	.rd_dout	(dout[DW-1:0]),
 	.rd_clk		(clk),
 	.rd_en		(fifo_read),
@@ -83,11 +70,6 @@ module oh_fifo_sync (/*AUTOARG*/
 	.wr_en		(fifo_write),
   	.wr_wem		({(DW){1'b1}}),
 	.wr_addr	(wr_addr[AW-1:0]),
-	.wr_din	        (din[DW-1:0])
-	);
+	.wr_din	        (din[DW-1:0]));
 
-endmodule // fifo_sync
-
-// Local Variables:
-// verilog-library-directories:(".")
-// End:
+endmodule // oh_fifo_sync

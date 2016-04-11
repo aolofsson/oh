@@ -1,28 +1,19 @@
-module oh_shifter (/*AUTOARG*/
-   // Outputs
-   out, zero,
-   // Inputs
-   a, b
-   );
+//#############################################################################
+//# Function: Barrel shifter                                                  #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-   //###############################################################
-   //# Parameters
-   //###############################################################
-   parameter DW   = 64;
-   parameter TYPE = "LSL"; //shift type
-                           //LSL, LSR, or ASR
-   //###############################################################
-   //# Interface
-   //###############################################################
-
-   //inputs
-   input [DW-1:0]  a;         //first operand
-   input [DW-1:0]  b;         //shift amount
-
-   //outputs
-   output [DW-1:0] out;       
-   output 	   zero;     //set if all output bits are zero
-                             //TODO: catch shift out?
+module oh_shifter #(parameter DW   = 1,   // data width
+		    parameter TYPE = "LSL"// LSR, SR, LSL
+		    ) 
+   (
+    input [DW-1:0]  in,   //first operand
+    input [DW-1:0]  shift,//shift amount
+    output [DW-1:0] out,  // shifted data out
+    output 	    zero  //set if all output bits are zero
+    );
    
 endmodule // oh_shifter
 

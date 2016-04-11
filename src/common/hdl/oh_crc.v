@@ -1,28 +1,20 @@
-module oh_crc (/*AUTOARG*/
-   // Outputs
-   crc_state, crc_next,
-   // Inputs
-   data_in
-   );
+//#############################################################################
+//# Function: CRC combinatorial encoder wrapper                               #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-   //###############################################################
-   //# Interface
-   //###############################################################
-
-   // parameters
-   parameter TYPE    = "ETH";      // type: "ETH", "OTHER"
-   parameter DW      = 8;          // width of data
-   parameter CW      = 32;         // width of polynomial
-      
-   // signals
-   input [DW-1:0]  data_in;
-   output [CW-1:0] crc_state;
-   output [CW-1:0] crc_next;
-
-   //###############################################################
-   //# BODY
-   //###############################################################
+module oh_crc #( parameter TYPE    = "ETH",  // type: "ETH", "OTHER"
+		 parameter DW      = 8)       // width of data
+   (
+    input [DW-1:0]  data_in, // input data
+    input [CW-1:0]  crc_state, // input crc state
+    output [CW-1:0] crc_next // next crc state
+    );
    
+   localparam CW      = 32;         // width of polynomial
+     
    generate
       if(TYPE=="ETH")
 	begin
@@ -45,3 +37,4 @@ module oh_crc (/*AUTOARG*/
    endgenerate
   			 		 		    
 endmodule // oh_crc
+

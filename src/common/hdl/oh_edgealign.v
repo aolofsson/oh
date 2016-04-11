@@ -1,9 +1,11 @@
-/* Detects the common aligned positive edge for a 
- * slow/fast clocks. The circuit uses the negedge of the fast clock
- * to sample the slow clock. Output is positive edge sampled.
- * 
- * NOTE: Assumes clocks are aligned and synchronous!
- *
+//#############################################################################
+//# Function: Aligns positive edge of slow clock to fast clock                #
+//#           !!!Assumes clocks are aligned and synchronous!!!                #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
+/*
  *    ___________             ___________
  * __/           \___________/           \   SLOWCLK
  *    __    __    __    __    __    __ 
@@ -16,10 +18,7 @@
  * ____                  ______               
  *     \________________/      \________     FIRSTEDGE 
  * 
- *                      
- * 
  */
-
 module oh_edgealign (/*AUTOARG*/
    // Outputs
    firstedge,
@@ -43,10 +42,6 @@ module oh_edgealign (/*AUTOARG*/
 	clk90     <= clk45;
 	firstedge <= ~clk45 & clk90;
      end
-   
-   //TODO: parametrized based on 1/N ratios?
-   //TODO: can we do this without using clock as data input?
-   
    
 endmodule // oh_edgealign
 

@@ -2,11 +2,10 @@
 //# Function: Carry Save Adder (4:2)                                          #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see LICENSE file in this repository)                       # 
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_csa42 #( parameter DW    = 1 // data width
-		   )
+module oh_csa42 #( parameter DW    = 1) // data width
    ( input [DW-1:0]  in0, //input
      input [DW-1:0]  in1,//input
      input [DW-1:0]  in2,//input

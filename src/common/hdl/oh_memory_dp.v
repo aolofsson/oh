@@ -1,50 +1,53 @@
+//#############################################################################
+//# Function: Dual Port Memory                                                #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-/*###########################################################################
- # Function: Dual port memory wrapper (one read/ one write port)
- #           To run without hardware platform dependancy, `define:
- #           "TARGET_CLEAN"
- ############################################################################
- */
-
-module oh_memory_dp(/*AUTOARG*/
-   // Outputs
-   rd_dout,
-   // Inputs
-   wr_clk, wr_en, wr_wem, wr_addr, wr_din, rd_clk, rd_en, rd_addr
-   );
-
-   parameter  AW      = 14;   //address width
-   parameter  DW      = 32;   //memory width
-   localparam MD      = 1<<AW;//memory depth
-
-   //write-port
-   input               wr_clk; //write clock
-   input               wr_en;  //write enable
-   input [DW-1:0]      wr_wem; //per bit write enable
-   input [AW-1:0]      wr_addr;//write address
-   input [DW-1:0]      wr_din; //write data
-
-   //read-port   
-   input 	       rd_clk; //read clock
-   input 	       rd_en;  //read enable
-   input [AW-1:0]      rd_addr;//read address
-   output[DW-1:0]      rd_dout;//read output data
+module oh_memory_dp # (parameter DW    = 104,      //memory width
+		       parameter DEPTH = 32,       //memory depth
+		       parameter PROJ  = "",       //project name
+		       parameter MCW   = 8         //repair/config vector width
+		       ) 
+   (//write interface
+    input 	    wr_clk, //write clock
+    input 	    wr_en, //write enable
+    input [DW-1:0]  wr_wem, //per bit write enable
+    input [AW-1:0]  wr_addr,//write address
+    input [DW-1:0]  wr_din, //write data
+    //read interface
+    input 	    rd_clk, //read clock
+    input 	    rd_en, //read enable
+    input [AW-1:0]  rd_addr,//read address
+    output [DW-1:0] rd_dout,//read output data
+    //asic stuff
+    input 	    vss, // common ground   
+    input 	    vdd, // periphery power rail
+    input 	    vddm, // sram array power rail
+    input 	    shutdown, // shutdown signal from always on domain   
+    input [MCW-1:0] memconfig, // generic memory config      
+    input [MCW-1:0] memrepair  // repair vector   
+    );
    
-   reg [DW-1:0]        ram    [MD-1:0];  
+   localparam AW      = $clog2(DEPTH);  // address bus width  
+   
+   reg [DW-1:0]        ram    [DEPTH-1:0];  
    reg [DW-1:0]        rd_dout;
    integer 	       i;
    
-   //read port
+   //registered read port
    always @ (posedge rd_clk)
      if(rd_en)       
        rd_dout[DW-1:0] <= ram[rd_addr[AW-1:0]];
    
-   //write port
+   //write port with vector enable
    always @(posedge wr_clk)    
      for (i=0;i<DW;i=i+1)
        if (wr_en & wr_wem[i]) 
          ram[wr_addr[AW-1:0]][i] <= wr_din[i];
       
-endmodule // memory_dp
+endmodule // oh_memory_dp
+
 
 

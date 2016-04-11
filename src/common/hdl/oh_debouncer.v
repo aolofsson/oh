@@ -1,40 +1,35 @@
-//#########################################################################
-//# Function: A digital debounce circuit
-//# Usage: Set the BOUNCE and CLKPERIOD values during instantional to suite
-//# your switch and clkperiod.
-//#
-//########################################################################
-module oh_debouncer (/*AUTOARG*/
-   // Outputs
-   clean_out,
-   // Inputs
-   clk, nreset, noisy_in
-   );
+//#############################################################################
+//# Function: A digital debouncer circuit                                     #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-   // parameters (in milliseconds)
-   parameter BOUNCE     = 100;                     // bounce time of switch (s)
-   parameter CLKPERIOD  = 0.00001;                 // period (10ns=0.0001ms))
-   parameter CW         = $clog2(BOUNCE/CLKPERIOD);// counter width needed
+module oh_debouncer #( parameter BOUNCE     = 100,    // bounce time (s)
+		       parameter CLKPERIOD  = 0.00001 // period (10ns=0.0001ms)
+		       )
+   (
+    input  clk, // clock to synchronize to
+    input  nreset, // syncronous active high reset
+    input  noisy_in, // noisy input signal to filter
+    output clean_out // clean signal to logic
+    );
    
-   // signal interface
-   input  clk;         // clock to synchronize to
-   input  nreset;      // syncronous active high reset
-   input  noisy_in;    // noisy input signal to filter
-   output clean_out;   // clean signal to logic
-    
-   //temp variables
-   wire   noisy_synced;
+   //################################
+   //# wires/regs/ params
+   //################################     
+   localparam integer CW  = $clog2(BOUNCE/CLKPERIOD);// counter width needed
+     
+   //regs
    reg 	  noisy_reg;
    reg 	  clean_out;
-   wire   nreset_synced;
    
-   
-   // synchronize reset
+   // synchronize incoming signal
    oh_dsync dsync (.dout (noisy_synced),
 		   .clk	 (clk),
 		   .din	 (noisy_in));
    
-   // synchronize input to clk (always!)
+   // synchronize reset to clk
    oh_rsync rsync (.nrst_out (nreset_synced),
 		   .clk	     (clk),
 		   .nrst_in  (nreset));
@@ -45,7 +40,7 @@ module oh_debouncer (/*AUTOARG*/
 
    assign change_detected = noisy_reg ^ noisy_synced;
 
-   // synchronous counter
+   // synchronous counter "filter"
    oh_counter #(.DW(CW))  
    oh_counter (// Outputs
 	       .count	  (),
@@ -64,5 +59,6 @@ module oh_debouncer (/*AUTOARG*/
      if(carry)
        clean_out <= noisy_reg;   
 
-endmodule
+endmodule // oh_debouncer
+
      

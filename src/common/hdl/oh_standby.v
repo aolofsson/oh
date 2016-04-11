@@ -1,28 +1,26 @@
-module oh_standby (/*AUTOARG*/
-   // Outputs
-   clk_out,
-   // Inputs
-   clk, nreset, wakeup, idle
-   );
+//#############################################################################
+//# Purpose: Low power standby state machine                                  #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-   parameter PD  = 5; //cycles to stay awake after "wakeup"
-
-   //Basic Interface
-   input     clk;     //clock input
-   input     nreset;  //sync reset
-   input     wakeup;  //wake up now!
-   input     idle;    //core is in idle
-   output    clk_out; //clock output
+module oh_standby #( parameter PD  = 5) //cycles to stay awake after "wakeup" 
+   (
+    input  clkin, //clock input
+    input  nreset, //sync reset
+    input  wakeup, //wake up now!
+    input  idle, //core is in idle
+    output clkout //clock output
+    );
       
    //Wire declarations
    reg [PD-1:0]	wakeup_pipe;
    reg          idle_reg;
-   wire         state_change;
-   wire         clk_en;
    
+   // detect an idle state change (wake up on any)
    always @ (posedge clk )     
-     idle_reg <= idle;
-   
+     idle_reg <= idle;   
    assign state_change = (idle ^ idle_reg);
       
    always @ (posedge clk)    
@@ -36,13 +34,13 @@ module oh_standby (/*AUTOARG*/
 		        ~idle;                   //core not in idle
 
    //clock gater (technology specific)
-   oh_clockgate clockgate  (.eclk(clk_out),
+   oh_clockgate clockgate  (.eclk(clkout),
 			    .clk(clk),
 			    .en(clk_en),
 			    .nrst(nreset),
-     			    .se(1'b0)
-			    );
+     			    .se(1'b0));
     
-endmodule // standby
+endmodule // oh_standby
+
 
 	
