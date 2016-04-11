@@ -11,7 +11,7 @@ module spi_slave_io(/*AUTOARG*/
    miso, spi_clk, spi_write, spi_addr, spi_wdata, spi_rdata,
    access_out, packet_out,
    // Inputs
-   sclk, mosi, ss, spi_en, cpol, cpha, lsbfirst, clk, wait_in
+   sclk, mosi, ss, spi_en, cpol, cpha, lsbfirst, clk, nreset, wait_in
    );
 
    //#################################
@@ -44,6 +44,7 @@ module spi_slave_io(/*AUTOARG*/
    
    //core interface (synced to core clk)
    input 	       clk;             // core clock
+   input 	       nreset;          // async active low reset   
    output 	       access_out;      // read or write core command   
    output [PW-1:0]     packet_out;      // packet
    input 	       wait_in;         // temporary pushback
@@ -56,6 +57,7 @@ module spi_slave_io(/*AUTOARG*/
    reg [7:0] 	       bit_count; 
    reg [7:0] 	       command_reg;   
    reg 		       access_out;
+   reg 		       fetch_command;
    
    wire [7:0] 	       rx_data;
    wire [63:0] 	       tx_data;
@@ -97,7 +99,7 @@ module spi_slave_io(/*AUTOARG*/
      else if(byte_done)
        command_reg[7:0] <= {command_reg[7:6],
 			    command_reg[5:0] + 1'b1};
-              
+   
    //#################################
    //# SPI RX SHIFT REGISTER
    //#################################
@@ -163,32 +165,32 @@ module spi_slave_io(/*AUTOARG*/
 			  ~ss       &
 			  (command_reg[7:6]==`SPI_WR) & 
 			  (spi_state[1:0]==`SPI_DATA);
-  
-   assign spi_remote    = spi_en &
-			  ss     &                      // wait until ss edge
-			  command_reg[7:6]==`SPI_FETCH; // send remote request
-
+    
    assign spi_wdata[7:0] = rx_data[7:0];
- 
+
    //###################################
-   //# SYNCHRONIZATION SS TO CORE
+   //# REMOTE FETCH LOGIC
    //###################################
    
    //sync the ss to free running clk
    //look for rising edge
    oh_dsync dsync (.dout (ss_sync),
 		   .clk  (clk),
-		   .din  (spi_remote));
+		   .din  (ss));
 
    //create single cycle pulse
-   oh_rise2pulse r2p (.out  (access_pulse),
+   oh_rise2pulse r2p (.out  (ss_pulse),
 		      .clk  (clk),
 		      .in   (ss_sync));
 
+   assign spi_fetch = ss_pulse & (command_reg[7:6]==`SPI_FETCH);
+   
    // pipeleining and holding pulse if there is wait
-   always @ (posedge clk)
-     if(~wait_in)
-       access_out <= access_pulse;
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       access_out <= 1'b0;   
+     else if(~wait_in)
+       access_out <= spi_fetch;
 
 endmodule // spi_slave_io
 // Local Variables:

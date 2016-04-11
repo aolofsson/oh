@@ -170,9 +170,14 @@ module spi_master_regs (/*AUTOARG*/
 	 default : reg_rdata[31:0] <= 32'hDEADBEEF;	 
        endcase // case (dstaddr_in[5:0])
 
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       access_out          <= 1'b0;
+     else
+       access_out          <= reg_read;
+
    always @ (posedge clk)
      begin
-	access_out          <= reg_read;
 	dstaddr_out[AW-1:0] <= srcaddr_in[AW-1:0];
 	ctrlmode_out[4:0]   <= ctrlmode_in[4:0];
 	datamode_out[1:0]   <= datamode_in[1:0];

@@ -8,7 +8,7 @@
 `include "spi_regmap.vh"
 module spi_slave_regs (/*AUTOARG*/
    // Outputs
-   spi_rdata, spi_en, cpol, cpha, lsbfirst, irq_en, emode, spi_regs,
+   spi_rdata, spi_en, cpol, cpha, lsbfirst, irq_en, spi_regs,
    wait_out,
    // Inputs
    clk, nreset, hw_en, spi_clk, spi_wdata, spi_write, spi_addr,
@@ -40,7 +40,6 @@ module spi_slave_regs (/*AUTOARG*/
    output 	   cpha;          // clk phase shift (default is 0)
    output 	   lsbfirst;      // send lsbfirst
    output 	   irq_en;        // interrupt enable
-   output 	   emode;         // epiphany auto mode   
    output [511:0]  spi_regs;      // all regs concatenated for easy read
    
    // split transaction for core clock domain   
@@ -114,8 +113,8 @@ module spi_slave_regs (/*AUTOARG*/
    assign cpha     = spi_config[3];          // cpha
    assign lsbfirst = spi_config[4];          // lsb shifted in first
    assign valid    = spi_config[5];          // user regs enable
-   
-   //#####################################
+
+   //#####################################   
    //# STATUS [1]
    //#####################################
 

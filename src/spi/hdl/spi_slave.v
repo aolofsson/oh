@@ -49,7 +49,6 @@ module spi_slave(/*AUTOARG*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			cpha;			// From spi_slave_regs of spi_slave_regs.v
    wire			cpol;			// From spi_slave_regs of spi_slave_regs.v
-   wire			emode;			// From spi_slave_regs of spi_slave_regs.v
    wire			irq_en;			// From spi_slave_regs of spi_slave_regs.v
    wire			lsbfirst;		// From spi_slave_regs of spi_slave_regs.v
    wire [5:0]		spi_addr;		// From spi_slave_io of spi_slave_io.v
@@ -70,7 +69,6 @@ module spi_slave(/*AUTOARG*/
 		   .cpha		(cpha),
 		   .lsbfirst		(lsbfirst),
 		   .irq_en		(irq_en),
-		   .emode		(emode),
 		   .spi_regs		(spi_regs[511:0]),
 		   .wait_out		(wait_out),
 		   // Inputs
@@ -106,6 +104,7 @@ module spi_slave(/*AUTOARG*/
 		 .cpha			(cpha),
 		 .lsbfirst		(lsbfirst),
 		 .clk			(clk),
+		 .nreset		(nreset),
 		 .wait_in		(wait_in));
    
    
