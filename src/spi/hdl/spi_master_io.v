@@ -69,7 +69,7 @@ module spi_master_io(/*AUTOARG*/
    assign clkphase0[7:0]  = 'b0;
    assign clkphase0[15:8] = (clkdiv_reg[7:0]+1'b1)>>1;
    
-   oh_clockdiv #(.DW(8))
+   oh_clockdiv 
    oh_clockdiv (.clkdiv		(clkdiv_reg[7:0]),
 		.clken		(1'b1),	
 		.clkrise0	(period_match),
