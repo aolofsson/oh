@@ -1,19 +1,23 @@
-module oh_csa32 (/*AUTOARG*/
-   // Outputs
-   c, s,
-   // Inputs
-   in0, in1, in2
-   );
+//#############################################################################
+//# Function: Carry Save Adder (3:2)                                          #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in this repository)                       # 
+//#############################################################################
 
-   input in0;
-   input in1;
-   input in2;
-
-   output c;
-   output s;
-
-   assign s = in0 ^ in1 ^ in2;
-   assign c = (in0 & in1) | ( in1 & in2) | ( in2 & in0 );
+module oh_csa32 #( parameter DW    = 1 // data width
+		   )
+   ( input [DW-1:0]  in0, //input
+     input [DW-1:0]  in1,//input
+     input [DW-1:0]  in2,//input
+     output [DW-1:0] s, //sum 
+     output [DW-1:0] c   //carry
+     );
+     
+   assign s[DW-1:0] = in0[DW-1:0] ^ in1[DW-1:0] ^ in2[DW-1:0];
+   assign c[DW-1:0] = (in0[DW-1:0] & in1[DW-1:0]) | 
+		      (in1[DW-1:0] & in2[DW-1:0]) | 
+		      (in2[DW-1:0] & in0[DW-1:0] );
 
 endmodule // oh_csa32
 
