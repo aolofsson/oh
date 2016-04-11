@@ -1,53 +1,21 @@
-// # falling edge FF (output in_sh) follwowed by rising edge FF
-// # has the following schematic representation:
-// #
-// #   negedge FF ->  posedge FF
-// #       ||           ||
-// #       \/           \/
-// #    lat1-lat0 ->  lat0-lat1
-// #              ||
-// #              \/
-// #    lat1-lat0 ->   lat1
-// #       ||           ||
-// #       \/           \/
-// #  negedge FF  ->   lat1
-module oh_lat1 (/*AUTOARG*/
-   // Outputs
-   out_sl,
-   // Inputs
-   in_sh, clk
-   );
+//#############################################################################
+//# Function: Latch data when clk=1                                           #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
 
-   parameter DW=99;
+module oh_lat1 #(parameter DW = 1) // data width
+   ( input 	     clk, // clk, latch when clk=1
+     input [DW-1:0]  in,  // input data
+     output [DW-1:0] out  // output data (stable/latched when clk=0)
+     );
 
-   input  [DW-1:0] in_sh; 
-   input 	   clk;
-   output [DW-1:0] out_sl;
-
-   // # lat_clk is created in the following way:
-   // #  1. clk_en -> lat0 -> clk_en_sh
-   // #  2. lat_clk = clk_en_sh & clk 
-
-   reg  [DW-1:0]    out_real_sl;
-   wire [DW-1:0]    out_sl;
-
-   /* verilator lint_off COMBDLY */
-   // # Real lat1
-   always @ (clk or in_sh)
+   reg [DW-1:0]      out;
+   always @ (clk or in)
      if (clk)
-       out_real_sl[DW-1:0] <= in_sh[DW-1:0];
-   /* verilator lint_on COMBDLY */
+       out[DW-1:0] <= in[DW-1:0];
 
-`ifdef DV_FAKELAT
-   // # posedge FF
-   reg [DW-1:0]    out_dv_sl;
-   always @ (posedge clk)
-     out_dv_sl[DW-1:0] <= in_sh[DW-1:0];
-   assign out_sl[DW-1:0] = out_dv_sl[DW-1:0];
+endmodule // oh_lat1
 
-`else 
-   assign out_sl[DW-1:0] = out_real_sl[DW-1:0];
-`endif // !`ifdef CFG_FAKELAT
-
-endmodule // lat1
 
