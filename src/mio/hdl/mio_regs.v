@@ -3,7 +3,7 @@ module mio_regs (/*AUTOARG*/
    // Outputs
    wait_out, access_out, packet_out, tx_en, rx_en, ddr_mode, emode,
    amode, dmode, datasize, lsbfirst, framepol, ctrlmode, dstaddr,
-   clkdiv, clkphase0, clkphase1,
+   clkchange, clkdiv, clkphase0, clkphase1,
    // Inputs
    clk, nreset, access_in, packet_in, wait_in, tx_full, tx_prog_full,
    tx_empty, rx_full, rx_prog_full, rx_empty
@@ -25,7 +25,7 @@ module mio_regs (/*AUTOARG*/
    input           clk;
    input           nreset;
    
-   // packet interface
+   // registre access interface
    input 	   access_in;   // incoming access
    input [PW-1:0]  packet_in;   // incoming packet
    output 	   wait_out;    
@@ -48,7 +48,8 @@ module mio_regs (/*AUTOARG*/
    //address
    output [AW-1:0] dstaddr;      // destination address for RX dmode
    
-   // clock
+   // clock   
+   output 	   clkchange;    // indicates a clock change   
    output [7:0]    clkdiv;       // mio clk clock setting
    output [15:0]   clkphase0;    // [7:0]=rising,[15:8]=falling
    output [15:0]   clkphase1;    // [7:0]=rising,[15:8]=falling
@@ -108,7 +109,9 @@ module mio_regs (/*AUTOARG*/
    assign odelay_write   = reg_write & (dstaddr_in[5:2]==`MIO_ODELAY);
    assign addr0_write    = reg_write & (dstaddr_in[5:2]==`MIO_ADDR0);
    assign addr1_write    = reg_write & (dstaddr_in[5:2]==`MIO_ADDR1);
-   
+
+   assign clkchange = clkdiv_write | clkphase_write;
+
    //################################
    //# CONFIG
    //################################ 
@@ -191,8 +194,15 @@ module mio_regs (/*AUTOARG*/
        addr_reg[63:32] <= data_in[31:0];
    
    assign dstaddr[AW-1:0] = addr_reg[AW-1:0];
-   
-endmodule // io_cfg
+
+   //###############################
+   //# READBACK
+   //################################ 
+   assign access_out ='b0;
+   assign wait_out   ='b0;
+   assign packet_out ='b0;
+
+endmodule
 // Local Variables:
 // verilog-library-directories:("." "../../emesh/hdl" "../../../oh/common/hdl") 
 // End:

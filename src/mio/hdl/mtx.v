@@ -12,10 +12,10 @@ module mtx (/*AUTOARG*/
    //#####################################################################
 
    //parameters
-   parameter PW         = 104;            // data width (core)
-   parameter NMIO       = 8;              // IO data width
-   parameter FIFO_DEPTH = 32;             // fifo depth  
-   parameter TARGET     = "GENERIC";      // GENERIC,XILINX,ALTERA,GENERIC,ASIC
+   parameter PW         = 104;               // fifo width
+   parameter NMIO       = 8;                 // IO data width
+   parameter FIFO_DEPTH = 32;                // fifo depth  
+   parameter TARGET     = "GENERIC";         // GENERIC,XILINX,ALTERA,GENERIC,ASIC
    localparam CW        = $clog2(2*PW/NMIO); // transfer count width
 
    //reset, clk, cfg

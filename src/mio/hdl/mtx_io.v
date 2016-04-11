@@ -92,7 +92,6 @@ module mtx_io (/*AUTOARG*/
    oh_oddr#(.DW(NMIO))
    data_oddr (.out	(tx_packet_ddr[NMIO-1:0]),
               .clk	(io_clk),
-	      .ce	(1'b1),
 	      .din1	(ddr_data[NMIO-1:0]),
 	      .din2	(ddr_data[2*NMIO-1:NMIO])
 	      );

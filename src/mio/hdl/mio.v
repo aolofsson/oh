@@ -14,8 +14,9 @@ module mio (/*AUTOARG*/
    //parameters
    parameter  NMIO    = 8;        // IO width
    parameter  AW      = 32;       // address width
-   localparam PW      = 2*AW+40;  // emesh packet width
    parameter  MPW     = 128;      // mio packet width (>PW)  
+
+   localparam PW      = 2*AW+40;  // emesh packet width
    parameter  DEF_CFG = 0;        // Default config   
    parameter  DEF_CLK = 0;        // Default clock
    parameter  TARGET  = "GENERIC";// GENERIC,XILINX,ALTERA,GENERIC,ASIC
@@ -63,6 +64,7 @@ module mio (/*AUTOARG*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			amode;			// From mio_regs of mio_regs.v
+   wire			clkchange;		// From mio_regs of mio_regs.v
    wire [7:0]		clkdiv;			// From mio_regs of mio_regs.v
    wire [15:0]		clkphase0;		// From mio_regs of mio_regs.v
    wire [15:0]		clkphase1;		// From mio_regs of mio_regs.v
@@ -118,6 +120,7 @@ module mio (/*AUTOARG*/
 	     .framepol			(framepol),
 	     .ctrlmode			(ctrlmode[4:0]),
 	     .dstaddr			(dstaddr[AW-1:0]),
+	     .clkchange			(clkchange),
 	     .clkdiv			(clkdiv[7:0]),
 	     .clkphase0			(clkphase0[15:0]),
 	     .clkphase1			(clkphase1[15:0]),
@@ -147,6 +150,7 @@ module mio (/*AUTOARG*/
 			   .clkfall0		(),
 			   .clkrise1		(),
 			   .clkfall1		(),
+			   .clkstable		(),
 			   /*AUTOINST*/
 			   // Outputs
 			   .clkout0		(io_clk),	 // Templated
@@ -154,6 +158,7 @@ module mio (/*AUTOARG*/
 			   // Inputs
 			   .clk			(clk),
 			   .nreset		(nreset),
+			   .clkchange		(clkchange),
 			   .clken		(tx_en),	 // Templated
 			   .clkdiv		(clkdiv[7:0]),
 			   .clkphase0		(clkphase0[15:0]),

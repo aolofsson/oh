@@ -1,6 +1,6 @@
-//Registers addr[5:2]
 `ifndef MIO_REGMAP_VH_
  `define MIO_REGMAP_VH_
+//Registers addr[5:2]
  `define MIO_CONFIG   4'd0 // general config
  `define MIO_STATUS   4'd1 // status
  `define MIO_CLKDIV   4'd2 // clk divider config
@@ -11,5 +11,6 @@
  `define MIO_ADDR1    4'd7 // destination address for amode
 
 `endif //  `ifndef MIO_REGMAP_VH_
+
 
 
