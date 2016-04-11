@@ -11,17 +11,19 @@
 #define GPIO_ILAT     9
 #define GPIO_ILATCLR  10
 
-#definbe GPIO_TX   1
-#definbe GPIO_RX   0
-
+#define GPIO_TX   1
+#define GPIO_RX   0
 
 // define global struct...
 //parameters per struct
 //An oderered list of SPI interfaces
 //-each interface has: N pins, a global offset
+typedef struct {
+      
+} gpio_t;
 
 // Provide pointer to GPIO module
-int gpio_init(gpio_t *dev offset);  
+void gpio_init(gpio_t *dev);  
 
 // Set pin mode
 void gpio_dir(gpio_t *dev, int pin, int dir);  
