@@ -1,70 +1,57 @@
 //#############################################################################
 //# Function: General Purpose Software Programmable IO                        #
-//# (See README.md for complete documentation)                                #
+//#           (See README.md for complete documentation)                      #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see below)                                                 # 
+//# License:  MIT (see LICENSE file in this repository)                       # 
 //#############################################################################
+
 `include "gpio_regmap.vh"
-module gpio(/*AUTOARG*/
-   // Outputs
-   wait_out, access_out, packet_out, gpio_out, gpio_oen, gpio_ie,
-   gpio_irq, gpio_data,
-   // Inputs
-   nreset, clk, access_in, packet_in, wait_in, gpio_in
-   );
-  
-   //##########################################
-   //# INTERFACE
-   //##########################################
+module gpio #(
+	      parameter integer N = 24, // number of gpio pins
+	      parameter integer AW = 32 // architecture address width   
+	      ) 
+   (
+    input 	    nreset, // asynchronous active low reset
+    input 	    clk, // clock   
+    input 	    access_in, // register access
+    input [PW-1:0]  packet_in, // data/address
+    output 	    wait_out, // pushback from mesh
+    output 	    access_out, // register access
+    output [PW-1:0] packet_out, // data/address
+    input 	    wait_in, // pushback from mesh    
+    output [N-1:0]  gpio_out, // data to drive to IO pins
+    output [N-1:0]  gpio_dir, // gpio direction(0=input)
+    input [N-1:0]   gpio_in, // data from IO pins
+    output 	    gpio_irq // OR of GPIO_ILAT register
+    );
 
-   parameter   N      = 24;      // number of gpio pins
-   parameter   AW     = 32;      // address width
-   localparam  PW     = 2*AW+40; // packet width   
-      
-   //clk, reset
-   input           nreset;      // asynchronous active low reset
-   input 	   clk;         // clock
+   //################################
+   //# wires/regs/ params
+   //################################  
    
-   //register access interface
-   input 	   access_in;   // register access
-   input [PW-1:0]  packet_in;   // data/address
-   output 	   wait_out;    // pushback from mesh
+   //local parameters
+   localparam integer PW  = 2*AW+40; // packet width   
 
-   output 	   access_out;  // register access
-   output [PW-1:0] packet_out;  // data/address
-   input 	   wait_in;     // pushback from mesh
-   
-   //IO signals
-   output [N-1:0]  gpio_out;    // data to drive to IO pins
-   output [N-1:0]  gpio_oen;    // output enable (bar)
-   output [N-1:0]  gpio_ie;     // input enable
-   input [N-1:0]   gpio_in;     // data from IO pins
-   
-   //global interrupt   
-   output 	   gpio_irq;    // toggle detect edge interrupt
-   output [N-1:0]  gpio_data;   // individual interrupt outputs
-   
-   //##################################################################
-   //# BODY
-   //##################################################################
-   
    //registers
-   reg [63:0] 	   oen_reg;
-   reg [63:0] 	   out_reg;
-   reg [63:0] 	   ien_reg;
-   reg [63:0] 	   in_reg;
-   reg [63:0] 	   imask_reg;
-   reg [63:0] 	   read_data;
-
-   //nets
-   wire [N-1:0]    gpio_sync;
-   wire [N-1:0]    gpio_edge;  
-   wire [N-1:0]    edge_data;   
-   wire [63:0] 	   reg_wdata;
-   wire [63:0] 	   out_dmux;   
-   integer 	   i,j;
-
+   reg [N-1:0] 	   gpio_dir;
+   reg [N-1:0] 	   gpio_out;
+   reg [N-1:0] 	   gpio_imask;
+   reg [N-1:0] 	   gpio_itype;
+   reg [N-1:0] 	   gpio_ipol;
+   reg [N-1:0] 	   gpio_ilat;   
+   reg [N-1:0] 	   gpio_in_old;
+   reg [AW-1:0]	   read_data;  // read is always 32 bits
+      
+   //wires
+   wire [N-1:0]    ilat_clr;   
+   wire [N-1:0]    gpio_in_sync;
+   wire [N-1:0]    reg_wdata;
+   wire [N-1:0]    out_dmux;   
+   wire [N-1:0]    rising_edge;   
+   wire [N-1:0]    falling_edge;
+   wire [N-1:0]    irq_event;
+   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [4:0]		ctrlmode_in;		// From p2e of packet2emesh.v
@@ -74,20 +61,11 @@ module gpio(/*AUTOARG*/
    wire [AW-1:0]	srcaddr_in;		// From p2e of packet2emesh.v
    wire			write_in;		// From p2e of packet2emesh.v
    // End of automatics
-
-   //################################
-   //# SYNCHRONIZE INPUT DATA
-   //################################  
-
-   oh_dsync #(.DW(N))
-   dsync (.dout	(gpio_sync[N-1:0]),
-          .clk	(clk),
-          .din	(gpio_in[N-1:0]));
-
-   //################################
-   //# REGISTER ACCESS DECODE
-   //################################  
    
+   //################################
+   //# DECODE LOGIC
+   //################################  
+
    packet2emesh #(.AW(AW))
    p2e(
        /*AUTOINST*/
@@ -104,113 +82,129 @@ module gpio(/*AUTOARG*/
    assign reg_write        = access_in & write_in;
    assign reg_read         = access_in & ~write_in;
    assign reg_double       = datamode_in[1:0]==2'b11;
-   assign reg_wdata[63:0]  = {srcaddr_in[31:0],data_in[31:0]};
+   assign reg_wdata[N-1:0] = data_in[N-1:0];
    
-   assign oen_write     = reg_write & (dstaddr_in[6:3]==`GPIO_OEN);
+   assign dir_write     = reg_write & (dstaddr_in[6:3]==`GPIO_DIR);
    assign out_write     = reg_write & (dstaddr_in[6:3]==`GPIO_OUT);
-   assign ien_write     = reg_write & (dstaddr_in[6:3]==`GPIO_IEN);
-   assign in_write      = reg_write & (dstaddr_in[6:3]==`GPIO_IN);
-   assign outand_write  = reg_write & (dstaddr_in[6:3]==`GPIO_OUTAND);
-   assign outorr_write  = reg_write & (dstaddr_in[6:3]==`GPIO_OUTORR);
-   assign outxor_write  = reg_write & (dstaddr_in[6:3]==`GPIO_OUTXOR);
    assign imask_write   = reg_write & (dstaddr_in[6:3]==`GPIO_IMASK);
+   assign itype_write   = reg_write & (dstaddr_in[6:3]==`GPIO_ITYPE);
+   assign ipol_write    = reg_write & (dstaddr_in[6:3]==`GPIO_IPOL);
+   assign ilatclr_write = reg_write & (dstaddr_in[6:3]==`GPIO_ILATCLR);
+   assign outclr_write  = reg_write & (dstaddr_in[6:3]==`GPIO_OUTCLR);
+   assign outset_write  = reg_write & (dstaddr_in[6:3]==`GPIO_OUTSET);
+   assign outxor_write  = reg_write & (dstaddr_in[6:3]==`GPIO_OUTXOR);
 
    assign out_reg_write = out_write    |
-	                  outand_write |
-			  outorr_write |
+	                  outclr_write |
+			  outset_write |
 			  outxor_write;
       
    //################################
-   //# OUTPUT
+   //# GPIO_DIR 
    //################################ 
-   //oen (active low, tristate by default)
+
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       oen_reg[63:0] <= 'b0;   
-     else if(oen_write & reg_double)
-       oen_reg[63:0] <= reg_wdata[63:0];
-     else if(oen_write)
-       oen_reg[31:0] <= reg_wdata[31:0];
-   
-   assign gpio_oen[N-1:0] = oen_reg[N-1:0];
-   
-   //odata
-   oh_mux4 #(.DW(64))
-   oh_mux4 (.out (out_dmux[63:0]),
-	    // Inputs
-	    .in0 (reg_wdata[63:0]                ),.sel0 (out_write),
-	    .in1 (out_reg[63:0] & reg_wdata[63:0]),.sel1 (outand_write),
-	    .in2 (out_reg[63:0] | reg_wdata[63:0]),.sel2 (outorr_write),
-	    .in3 (out_reg[63:0] ^ reg_wdata[63:0]),.sel3 (outxor_write));
-   
+       gpio_dir[N-1:0] <= 'b0;   
+     else if(dir_write)
+       gpio_dir[N-1:0] <= reg_wdata[N-1:0];      
+
+   //################################
+   //# GPIO_IN
+   //################################ 
+
+   oh_dsync #(.DW(N))
+   dsync (.dout	(gpio_in_sync[N-1:0]),
+          .clk	(clk),
+          .din	(gpio_in[N-1:0]));
+
    always @ (posedge clk)
-     if(out_reg_write & reg_double)
-       out_reg[63:0] <= out_dmux[63:0];
+     gpio_in_old[N-1:0] <= gpio_in_sync[N-1:0];
+   
+   //################################
+   //# GPIO_OUT
+   //################################ 
+
+   oh_mux4 #(.DW(N))
+   oh_mux4 (.out (out_dmux[N-1:0]),
+	    // Inputs
+	    .in0 (reg_wdata[N-1:0]),                   .sel0 (out_write),
+	    .in1 (gpio_out[N-1:0] & ~reg_wdata[N-1:0]),.sel1 (outclr_write),
+	    .in2 (gpio_out[N-1:0] | reg_wdata[N-1:0]), .sel2 (outset_write),
+	    .in3 (gpio_out[N-1:0] ^ reg_wdata[N-1:0]), .sel3 (outxor_write));
+   
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       gpio_out[N-1:0] <= 'b0;   
      else if(out_reg_write)
-       out_reg[31:0] <= out_dmux[31:0];
- 
-   assign gpio_out[N-1:0] = out_reg[N-1:0];
-   
-   
+       gpio_out[N-1:0] <= out_dmux[N-1:0];
    
    //################################
-   //# INPUT ENABLE
-   //################################ 
-
-   //ien
-   always @ (posedge clk or negedge nreset)
-     if(!nreset)
-       ien_reg[63:0] <= {(64){1'b1}}; 
-     else if(ien_write & reg_double)
-       ien_reg[63:0] <= reg_wdata[63:0];
-     else if(ien_write)
-       ien_reg[31:0] <= reg_wdata[31:0];
-
-   assign gpio_ie[N-1:0] = ien_reg[N-1:0];
-
-   //anding here too, just in case IO lib doesn't have input enable
-   assign gpio_data[N-1:0] = gpio_ie[N-1:0] & gpio_sync[N-1:0];
-   
-   
-   //################################
-   //# EDGE DETECTOR
+   //# GPIO_IMASK
    //################################ 
 
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       imask_reg[63:0] <= 'b0;   
-     else if(imask_write & reg_double)
-       imask_reg[63:0] <= reg_wdata[63:0];
+       gpio_imask[N-1:0] <= {(N){1'b1}};   
      else if(imask_write)
-       imask_reg[31:0] <= reg_wdata[31:0];
+       gpio_imask[N-1:0] <= reg_wdata[N-1:0];
 
-   assign edge_data[N-1:0] = ~imask_reg[N-1:0] & in_reg[N-1:0];
+   //################################
+   //# GPIO_ITYPE
+   //################################ 
+   always @ (posedge clk)
+     if(itype_write)
+       gpio_itype[N-1:0] <= reg_wdata[N-1:0];
+
+   //################################
+   //# GPIO_IPOL
+   //################################ 
+   always @ (posedge clk)
+     if(ipol_write)
+       gpio_ipol[N-1:0] <= reg_wdata[N-1:0];
+
+   //################################
+   //# INTERRUPT LOGIC (DEFAULT EDGE)
+   //################################ 
    
-   //detect any edge on input data
-   oh_edgedetect #(.DW(N))
-   oh_edgedetect (.out	(gpio_edge[N-1:0]),
-		  .clk	(clk),
-		  .cfg	(2'b11), //toggle detect
-		  .in	(edge_data[N-1:0])
-		  );
+   assign rising_edge[N-1:0]  =  gpio_in_sync[N-1:0] & ~gpio_in_old[N-1:0];
 
-   assign gpio_irq = |gpio_edge[N-1:0];
-			    
+   assign falling_edge[N-1:0] = ~gpio_in_sync[N-1:0] & gpio_in_old[N-1:0];
+
+   assign irq_event[N-1:0] = (rising_edge[N-1:0]   & ~gpio_itype[N-1:0] & gpio_ipol[N-1:0]) |
+			     (falling_edge[N-1:0]  & ~gpio_itype[N-1:0] & ~gpio_ipol[N-1:0]) |
+			     (gpio_in_sync[N-1:0]  & gpio_itype[N-1:0]  & gpio_ipol[N-1:0]) |
+			     (~gpio_in_sync[N-1:0] & gpio_itype[N-1:0]  & ~gpio_ipol[N-1:0]);
+
+   //################################
+   //# ILAT
+   //################################ 
+
+   assign ilat_clr[N-1:0] = ilatclr_write ? reg_wdata[N-1:0] : 'b0;
+
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       gpio_ilat[N-1:0] <= 'b0;
+     else
+       gpio_ilat[N-1:0] <= (gpio_ilat[N-1:0] & ~ilat_clr[N-1:0]) |  //old values
+			   (irq_event[N-1:0] & ~gpio_imask[N-1:0]); //new interrupts
+
+   //################################
+   //# ONE CYCLE IRQ PULSE
+   //################################ 
+
+   assign gpio_irq = |gpio_ilat[N-1:0];
+   
    //################################
    //# READBACK
    //################################ 
-   
-   assign odd = (N>32) & dstaddr_in[2];
-         
+
    always @ (posedge clk)
      if(reg_read)
        case(dstaddr_in[6:3])		 
-	 `GPIO_OEN  :read_data[31:0]<= odd ? oen_reg[63:32]  : oen_reg[31:0];
-	 `GPIO_OUT  :read_data[31:0]<= odd ? out_reg[63:32]  : out_reg[31:0];
-	 `GPIO_IEN  :read_data[31:0]<= odd ? ien_reg[63:32]  : ien_reg[31:0]; 
-	 `GPIO_IN   :read_data[31:0]<= odd ? in_reg[63:32]   : in_reg[31:0];
- 	 `GPIO_IMASK:read_data[31:0]<= odd ? imask_reg[63:32]:imask_reg[31:0]; 
-	 default    :read_data[31:0]<='b0;
+	 `GPIO_IN  : read_data[AW-1:0] <= gpio_in_sync[N-1:0];
+	 `GPIO_ILAT: read_data[AW-1:0] <= gpio_ilat[N-1:0];
+	 default   : read_data[AW-1:0] <='b0;
        endcase // case (dstaddr_in[7:3])
    
    emesh_readback #(.AW(AW))
@@ -231,28 +225,3 @@ endmodule // gpio
 // Local Variables:
 // verilog-library-directories:("." "../../emesh/hdl" "../../common/hdl")
 // End:
-
-//////////////////////////////////////////////////////////////////////////////
-// The MIT License (MIT)                                                    //
-//                                                                          //
-// Copyright (c) 2015-2016, Adapteva, Inc.                                  //
-//                                                                          //
-// Permission is hereby granted, free of charge, to any person obtaining a  //
-// copy of this software and associated documentation files (the "Software")//
-// to deal in the Software without restriction, including without limitation// 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, //
-// and/or sell copies of the Software, and to permit persons to whom the    //
-// Software is furnished to do so, subject to the following conditions:     //
-//                                                                          //
-// The above copyright notice and this permission notice shall be included  // 
-// in all copies or substantial portions of the Software.                   //
-//                                                                          //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  //
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               //
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   //
-// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     //
-// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT//
-// OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR //
-// THE USE OR OTHER DEALINGS IN THE SOFTWARE.                               //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////

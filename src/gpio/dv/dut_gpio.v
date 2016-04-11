@@ -42,9 +42,8 @@ module dut(/*AUTOARG*/
    /*AUTOINPUT*/ 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [AW-1:0]	gpio_data;		// From gpio of gpio.v
+   wire [AW-1:0]	gpio_dir;		// From gpio of gpio.v
    wire			gpio_irq;		// From gpio of gpio.v
-   wire [AW-1:0]	gpio_oen;		// From gpio of gpio.v
    wire [AW-1:0]	gpio_out;		// From gpio of gpio.v
    // End of automatics
 
@@ -60,16 +59,13 @@ module dut(/*AUTOARG*/
    assign clkout          = clk1;
    assign clk             = clk1;
    
-
-
    /*gpio AUTO_TEMPLATE (
 	 .gpio_irq	 (gpio_irq),
          .gpio_\(.*\)    (gpio_\1[AW-1:0]),
     );
     */
    gpio #(.N(AW),
-	  .AW(AW)
-	  )
+	  .AW(AW))
    gpio (.gpio_in			(gpio_out[AW-1:0]),
 	 /*AUTOINST*/
 	 // Outputs
@@ -77,9 +73,8 @@ module dut(/*AUTOARG*/
 	 .access_out			(access_out),
 	 .packet_out			(packet_out[PW-1:0]),
 	 .gpio_out			(gpio_out[AW-1:0]),	 // Templated
-	 .gpio_oen			(gpio_oen[AW-1:0]),	 // Templated
+	 .gpio_dir			(gpio_dir[AW-1:0]),	 // Templated
 	 .gpio_irq			(gpio_irq),		 // Templated
-	 .gpio_data			(gpio_data[AW-1:0]),	 // Templated
 	 // Inputs
 	 .nreset			(nreset),
 	 .clk				(clk),
