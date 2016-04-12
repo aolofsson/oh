@@ -3,7 +3,7 @@ PIC : Programmable Interrupt Controller
 
 ## Introduction
 
-A programmable interrupt controller supporting up to 32 indepenent interrupts.
+A programmable interrupt controller supporting up to 32 nested interrupts. Each interrupt line is tied to an individual 32 bit entry in an interrupt vector table at address 0x0. 
 
 ## Examples
 ```c

@@ -157,20 +157,16 @@ module pic(/*AUTOARG*/
        ic_ipend_reg[IRQW-1:0] <= reg_wdata[IRQW-1:0];
      else
        ic_ipend_reg[IRQW-1:0] <= ic_ipend_in[IRQW-1:0]; 
-
    
    //###########################
    //# IMASK
    //########################### 
-   assign ic_imask_in[IRQW-1:0] = ic_write_imask ? reg_wdata[IRQW-1:0] : 
-				                   ic_imask_reg[IRQW-1:0];
    
    always @ (posedge clk or negedge nreset)
      if (!nreset)
        ic_imask_reg[IRQW-1:0] <= 'b0;   
      else if(ic_write_imask)
        ic_imask_reg[IRQW-1:0] <= reg_wdata[IRQW-1:0];
-
    
    //###########################
    //# IRET
@@ -206,16 +202,13 @@ module pic(/*AUTOARG*/
       
    //Masking interrupts
    assign ic_masked_ilat[IRQW-1:0]  = ic_ilat_reg[IRQW-1:0] & 
-				      ~ic_imask_reg[IRQW-1:0];
+				      ~{ic_imask_reg[IRQW-1:1],1'b0};
 
    //Interrupt sent to sequencer if:
    //1.) no bit set in ipend for anything at that bit level or below
    //2.) global interrupt enable set
    //3.) no valid interrupt set at any bit lower than this one
   
-
-   
-
    //ILAT PRIORITY
    //Keeps track of all higher priority ILATs that are not masked
    //This circuit is needed for the case when interrupts arrive simulataneously
