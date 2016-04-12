@@ -53,7 +53,7 @@ An alias for the ILAT register that allows bits within the ILAT register to be s
 
 ----
 
-## IMASK (0xF0424)
+## IMASK (0x9)
 
 This is a masking register for blocking interrupts on a per-interrupt basis. All interrupts are latched by the ILAT register but can be blocked from reaching the program sequencer by setting the appropriate bit in the IMASK register. At each bit position, a “1” means the interrupt is masked.
 
@@ -63,7 +63,7 @@ This is a masking register for blocking interrupts on a per-interrupt basis. All
 
 ----
 
-## IRET (0x9)
+## IRET (0x8)
 
 When an interrupt is serviced, the program counter of the upcoming sequential instruction is saved in the IRET register. The value in the IRET register is used by the RTI instruction to return to the original thread at a later time. For nested interrupt service routines, the IRET should be saved on the stack.
 
