@@ -202,10 +202,13 @@ module gpio #(
    always @ (posedge clk)
      if(reg_read)
        case(dstaddr_in[6:3])		 
-	 `GPIO_IN  : read_data[AW-1:0] <= gpio_in_sync[N-1:0];
-	 `GPIO_ILAT: read_data[AW-1:0] <= gpio_ilat[N-1:0];
-	 `GPIO_DIR:  read_data[AW-1:0] <= gpio_dir[N-1:0];
-	 default   : read_data[AW-1:0] <='b0;
+	 `GPIO_IN   : read_data[AW-1:0]  <= gpio_in_sync[N-1:0];
+	 `GPIO_ILAT : read_data[AW-1:0]  <= gpio_ilat[N-1:0];
+	 `GPIO_DIR  : read_data[AW-1:0]  <= gpio_dir[N-1:0];
+	 `GPIO_IMASK: read_data[AW-1:0]  <= gpio_imask[N-1:0];
+	 `GPIO_IPOL : read_data[AW-1:0]  <= gpio_ipol[N-1:0];
+	 `GPIO_ITYPE: read_data[AW-1:0]  <= gpio_itype[N-1:0];
+	 default    : read_data[AW-1:0]  <='b0;
        endcase // case (dstaddr_in[7:3])
    
    emesh_readback #(.AW(AW))
