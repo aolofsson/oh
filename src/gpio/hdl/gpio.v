@@ -204,6 +204,7 @@ module gpio #(
        case(dstaddr_in[6:3])		 
 	 `GPIO_IN  : read_data[AW-1:0] <= gpio_in_sync[N-1:0];
 	 `GPIO_ILAT: read_data[AW-1:0] <= gpio_ilat[N-1:0];
+	 `GPIO_DIR:  read_data[AW-1:0] <= gpio_dir[N-1:0];
 	 default   : read_data[AW-1:0] <='b0;
        endcase // case (dstaddr_in[7:3])
    
