@@ -85,6 +85,8 @@ module gpio #(
    assign reg_wdata[N-1:0] = data_in[N-1:0];
    
    assign dir_write     = reg_write & (dstaddr_in[6:3]==`GPIO_DIR);
+   assign dirin_write   = reg_write & (dstaddr_in[6:3]==`GPIO_DIRIN);
+   assign dirout_write  = reg_write & (dstaddr_in[6:3]==`GPIO_DIROUT);
    assign out_write     = reg_write & (dstaddr_in[6:3]==`GPIO_OUT);
    assign imask_write   = reg_write & (dstaddr_in[6:3]==`GPIO_IMASK);
    assign itype_write   = reg_write & (dstaddr_in[6:3]==`GPIO_ITYPE);
@@ -107,7 +109,11 @@ module gpio #(
      if(!nreset)
        gpio_dir[N-1:0] <= 'b0;   
      else if(dir_write)
-       gpio_dir[N-1:0] <= reg_wdata[N-1:0];      
+       gpio_dir[N-1:0] <= reg_wdata[N-1:0];
+     else if(dirin_write)
+       gpio_dir[N-1:0] <= gpio_dir[N-1:0] & ~reg_wdata[N-1:0];
+     else if(dirout_write)
+       gpio_dir[N-1:0] <= gpio_dir[N-1:0] | reg_wdata[N-1:0];
 
    //################################
    //# GPIO_IN
