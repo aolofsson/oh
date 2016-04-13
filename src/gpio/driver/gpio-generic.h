@@ -1,23 +1,23 @@
 #pragma once
-#ifndef _OH_GPIO_INTERNAL
+#ifndef _GPIO_INTERNAL
 # error "Don't include this file directly"
 #endif
 
-struct oh_gpio_generic_dev {
-	volatile struct oh_gpio_registers *regs;
+struct gpio_generic_dev {
+	volatile struct gpio_registers *regs;
 	uint64_t dircache;
 };
 
 __unused
-static int _oh_gpio_set_direction(struct oh_gpio_generic_dev *dev,
-				  unsigned gpio, unsigned direction)
+static int _gpio_set_direction(struct gpio_generic_dev *dev, unsigned gpio,
+			       unsigned direction)
 {
 	if (63 < gpio)
 		return -EINVAL;
 
-	if (direction == OH_GPIO_DIR_OUT)
+	if (direction == GPIO_DIR_OUT)
 		dev->dircache |= (1ULL << gpio);
-	else if (direction == OH_GPIO_DIR_IN)
+	else if (direction == GPIO_DIR_IN)
 		dev->dircache &= ~(1ULL << gpio);
 	else
 		return -EINVAL;
@@ -28,7 +28,7 @@ static int _oh_gpio_set_direction(struct oh_gpio_generic_dev *dev,
 }
 
 __unused
-static int _oh_gpio_read(struct oh_gpio_generic_dev *dev, unsigned gpio)
+static int _gpio_read(struct gpio_generic_dev *dev, unsigned gpio)
 {
 	if (63 < gpio)
 		return -EINVAL;
@@ -37,7 +37,7 @@ static int _oh_gpio_read(struct oh_gpio_generic_dev *dev, unsigned gpio)
 }
 
 __unused
-static int _oh_gpio_write(struct oh_gpio_generic_dev *dev, unsigned gpio,
+static int _gpio_write(struct gpio_generic_dev *dev, unsigned gpio,
 			  int value)
 {
 	if (63 < gpio)
@@ -55,7 +55,7 @@ static int _oh_gpio_write(struct oh_gpio_generic_dev *dev, unsigned gpio,
 }
 
 __unused
-static int _oh_gpio_toggle(struct oh_gpio_generic_dev *dev, unsigned gpio)
+static int _gpio_toggle(struct gpio_generic_dev *dev, unsigned gpio)
 {
 	if (63 < gpio)
 		return -EINVAL;

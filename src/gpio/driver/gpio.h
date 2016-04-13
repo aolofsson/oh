@@ -3,46 +3,47 @@
 #include <errno.h>
 #include <stddef.h>
 
-#define OH_GPIO_DIR_IN	(0 << 0)
-#define OH_GPIO_DIR_OUT	(1 << 0)
+/*** API */
 
-#define OH_GPIO_LOW	0
-#define OH_GPIO_HIGH	1
+#define GPIO_DIR_IN	(0 << 0)
+#define GPIO_DIR_OUT	(1 << 0)
+
+#define GPIO_LOW	0
+#define GPIO_HIGH	1
 
 /**
- * oh_gpio_init - GPIO init
+ * gpio_init - GPIO init
  *
  * @param dev		uninitialized device structure
  * @param arg		target argument (depends on target)
  *
  * @return		0 on success. Negative on error
  */
-//int oh_gpio_init(oh_gpio_dev_t *dev, void *arg);
+//int gpio_init(gpio_dev_t *dev, void *arg);
 
 /**
- * oh_gpio_set_direction - Set pin direction
+ * gpio_set_direction - Set pin direction
  *
  * @param dev		device structure
  * @param gpio		gpio pin identifier
- * @param direction	OH_GPIO_DIR_OUT or OH_GPIO_DIR_IN
+ * @param direction	GPIO_DIR_OUT or GPIO_DIR_IN
  *
  * @return		0 on success. Negative on error
  */
-//int oh_gpio_set_direction(oh_gpio_dev_t *dev, unsigned gpio,
-//			  unsigned direction);
+//int gpio_set_direction(gpio_dev_t *dev, unsigned gpio, unsigned direction);
 
 /**
- * oh_gpio_read - Read pin value
+ * gpio_read - Read pin value
  *
  * @param dev		device structure
  * @param gpio		gpio pin identifier
  *
  * @return		0 on low. 1 on high, negative on error.
  */
-//int oh_gpio_read(oh_gpio_dev_t *dev, unsigned gpio);
+//int gpio_read(gpio_dev_t *dev, unsigned gpio);
 
 /**
- * oh_gpio_write - Set pin value
+ * gpio_write - Set pin value
  *
  * @param dev		device structure
  * @param gpio		gpio pin identifier
@@ -50,17 +51,17 @@
  *
  * @return		0 on success, negative on error.
  */
-//int oh_gpio_write(oh_gpio_dev_t *dev, unsigned gpio, int value);
+//int gpio_write(gpio_dev_t *dev, unsigned gpio, int value);
 
 /**
- * oh_gpio_toggle - Toggle pin value
+ * gpio_toggle - Toggle pin value
  *
  * @param dev		device structure
  * @param gpio		gpio pin identifier
  *
  * @return		0 on success, negative on error.
  */
-//int oh_gpio_toggle(oh_gpio_dev_t *dev, unsigned gpio);
+//int gpio_toggle(gpio_dev_t *dev, unsigned gpio);
 
 #ifndef __unused
 # if defined(__GNUC__) || defined(__clang__)
@@ -86,7 +87,7 @@
 # endif
 #endif
 
-struct oh_gpio_registers {
+struct gpio_registers {
 	uint64_t dir;
 	uint64_t in;
 	uint64_t out;
@@ -100,25 +101,25 @@ struct oh_gpio_registers {
 	uint64_t ilatclr;
 } __packed __aligned(8);
 
-#define OH_GPIO_TARGET_SIMPLE	0
-#define OH_GPIO_TARGET_EPIPHANY	1
+#define GPIO_TARGET_SIMPLE	0
+#define GPIO_TARGET_EPIPHANY	1
 
 /* Autodetect target */
-#ifndef OH_GPIO_TARGET
+#ifndef GPIO_TARGET
 # ifdef __epiphany__
-#  define OH_GPIO_TARGET OH_GPIO_TARGET_EPIPHANY
+#  define GPIO_TARGET GPIO_TARGET_EPIPHANY
 # else
-#  define OH_GPIO_TARGET OH_GPIO_TARGET_SIMPLE
+#  define GPIO_TARGET GPIO_TARGET_SIMPLE
 # endif
 #endif
 
 
-#define _OH_GPIO_INTERNAL
-#if OH_GPIO_TARGET == OH_GPIO_TARGET_SIMPLE
-# include "oh-gpio-simple.h"
-#elif OH_GPIO_TARGET == OH_GPIO_TARGET_EPIPHANY
-# include "oh-gpio-epiphany.h"
+#define _GPIO_INTERNAL
+#if GPIO_TARGET == GPIO_TARGET_SIMPLE
+# include "gpio-simple.h"
+#elif GPIO_TARGET == GPIO_TARGET_EPIPHANY
+# include "gpio-epiphany.h"
 #else
-# error "Invalid OH_GPIO_TARGET"
+# error "Invalid GPIO_TARGET"
 #endif
-#undef _OH_GPIO_INTERNAL
+#undef _GPIO_INTERNAL
