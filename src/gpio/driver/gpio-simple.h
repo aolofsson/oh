@@ -27,3 +27,5 @@ static int gpio_init(gpio_dev_t *dev, void *arg)
 #define gpio_read _gpio_read
 #define gpio_write _gpio_write
 #define gpio_toggle _gpio_toggle
+#define gpio_reg_read _gpio_reg_read
+#define gpio_reg_write _gpio_reg_write

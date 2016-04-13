@@ -64,3 +64,18 @@ static int _gpio_toggle(struct gpio_generic_dev *dev, unsigned gpio)
 
 	return 0;
 }
+
+__unused
+static uint64_t _gpio_reg_read(struct gpio_generic_dev *dev, unsigned reg)
+{
+	uint64_t *regs = (uint64_t *) dev->regs;
+	return regs[reg];
+}
+
+__unused
+static void _gpio_reg_write(struct gpio_generic_dev *dev, unsigned reg,
+			    uint64_t value)
+{
+	uint64_t *regs = (uint64_t *) dev->regs;
+	regs[reg] = value;
+}
