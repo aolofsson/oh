@@ -304,7 +304,7 @@ module parallella_base(/*AUTOARG*/
 			.s_axi_wstrb	(s_axi_wstrb[3:0]),	 // Templated
 			.s_axi_wvalid	(s_axi_wvalid));		 // Templated
 
-   pgpio pgpio (/*AUTOINST*/
+   pgpio #(.NGPIO(NGPIO)) pgpio (/*AUTOINST*/
 		// Outputs
 		.ps_gpio_i		(ps_gpio_i[NPS-1:0]),
 		// Inouts

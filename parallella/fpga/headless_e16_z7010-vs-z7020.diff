@@ -1,0 +1,57 @@
+--- headless_e16_z7010/system_params.tcl	2016-03-11 12:19:17.200943709 +0100
++++ headless_e16_z7020/system_params.tcl	2015-11-09 19:23:07.699404317 +0100
+@@ -6,7 +6,7 @@
+ set projdir ./
+ 
+ #Device name
+-set partname "xc7z010clg400-1"
++set partname "xc7z020clg400-1"
+ 
+ #Paths to all IP blocks to use in Vivado "system.bd"
+ 
+@@ -19,4 +19,5 @@
+ set constraints_files [list \
+ 			   ../parallella_timing.xdc \
+ 			   ../parallella_io.xdc \
++			   ../parallella_7020_io.xdc \
+ 			  ]
+--- headless_e16_z7010/system_bd.tcl	2016-03-11 15:15:20.061868891 +0100
++++ headless_e16_z7020/system_bd.tcl	2016-03-11 15:59:44.849627304 +0100
+@@ -29,7 +29,7 @@
+ 
+ # If you do not already have a project created,
+ # you can create a project using the following command:
+-#    create_project project_1 myproj -part xc7z010clg400-1
++#    create_project project_1 myproj -part xc7z020clg400-1
+ 
+ # CHECKING IF PROJECT EXISTS
+ if { [get_projects -quiet] eq "" } {
+@@ -148,8 +148,8 @@
+   set cclk_n [ create_bd_port -dir O cclk_n ]
+   set cclk_p [ create_bd_port -dir O cclk_p ]
+   set chip_nreset [ create_bd_port -dir O chip_nreset ]
+-  set gpio_n [ create_bd_port -dir IO -from 11 -to 0 gpio_n ]
+-  set gpio_p [ create_bd_port -dir IO -from 11 -to 0 gpio_p ]
++  set gpio_n [ create_bd_port -dir IO -from 23 -to 0 gpio_n ]
++  set gpio_p [ create_bd_port -dir IO -from 23 -to 0 gpio_p ]
+   set hdmi_clk [ create_bd_port -dir O hdmi_clk ]
+   set hdmi_d [ create_bd_port -dir O -from 23 -to 8 hdmi_d ]
+   set hdmi_de [ create_bd_port -dir O hdmi_de ]
+@@ -186,7 +186,7 @@
+ 
+   # Create instance: parallella_base_0, and set properties
+   set parallella_base_0 [ create_bd_cell -type ip -vlnv www.parallella.org:user:parallella_base:1.0 parallella_base_0 ]
+-  set_property -dict [ list CONFIG.NGPIO {12}  ] $parallella_base_0
++  set_property -dict [ list CONFIG.NGPIO {24}  ] $parallella_base_0
+ 
+   # Create instance: proc_sys_reset_0, and set properties
+   set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
+--- headless_e16_z7010/build.sh	2016-03-11 12:16:03.342803755 +0100
++++ headless_e16_z7020/build.sh	2016-03-11 15:54:58.503321785 +0100
+@@ -2,5 +2,5 @@
+ rm system_wrapper.bit.bin bit2bin.bin
+ vivado -mode batch -source run.tcl
+ bootgen -image bit2bin.bif -split bin 
+-cp system_wrapper.bit.bin parallella_e16_headless_gpiose_7010.bit.bin
++cp system_wrapper.bit.bin parallella_e16_headless_gpiose_7020.bit.bin
+ #archive results based on time stamp
