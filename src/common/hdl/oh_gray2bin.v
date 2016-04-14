@@ -7,12 +7,17 @@
 
 module oh_gray2bin #(parameter DW = 32) // width of data inputs
    (
-    input [DW-1:0]  gray,//gray encoded input
-    output [DW-1:0] bin  //binary encoded output
+    input [DW-1:0]  in,  //gray encoded input
+    output [DW-1:0] out  //binary encoded output
     );
    
-   reg [DW-1:0]     bin;   
+   reg [DW-1:0]     bin;
+   wire [DW-1:0]    gray;
+   
    integer 	   i,j;
+
+   assign gray[DW-1:0] = in[DW-1:0];
+   assign out[DW-1:0]  = bin[DW-1:0];
 
    always @*
      begin
@@ -24,7 +29,7 @@ module oh_gray2bin #(parameter DW = 32) // width of data inputs
 	       bin[i] = bin[i] ^ gray [j];
 	  end
      end
-   
+
 endmodule // oh_gray2bin
 
 
