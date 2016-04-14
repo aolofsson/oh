@@ -29,7 +29,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 
 # If you do not already have a project created,
 # you can create a project using the following command:
-#    create_project project_1 myproj -part xc7z020clg400-1
+#    create_project project_1 myproj -part xc7z010clg400-1
 
 # CHECKING IF PROJECT EXISTS
 if { [get_projects -quiet] eq "" } {
@@ -148,8 +148,8 @@ proc create_root_design { parentCell } {
   set cclk_n [ create_bd_port -dir O cclk_n ]
   set cclk_p [ create_bd_port -dir O cclk_p ]
   set chip_nreset [ create_bd_port -dir O chip_nreset ]
-  set gpio_n [ create_bd_port -dir IO -from 23 -to 0 gpio_n ]
-  set gpio_p [ create_bd_port -dir IO -from 23 -to 0 gpio_p ]
+  set gpio_n [ create_bd_port -dir IO -from 11 -to 0 gpio_n ]
+  set gpio_p [ create_bd_port -dir IO -from 11 -to 0 gpio_p ]
   set hdmi_clk [ create_bd_port -dir O hdmi_clk ]
   set hdmi_d [ create_bd_port -dir O -from 23 -to 8 hdmi_d ]
   set hdmi_de [ create_bd_port -dir O hdmi_de ]
@@ -186,7 +186,7 @@ proc create_root_design { parentCell } {
 
   # Create instance: parallella_base_0, and set properties
   set parallella_base_0 [ create_bd_cell -type ip -vlnv www.parallella.org:user:parallella_base:1.0 parallella_base_0 ]
-  set_property -dict [ list CONFIG.NGPIO {24}  ] $parallella_base_0
+  set_property -dict [ list CONFIG.NGPIO {12}  ] $parallella_base_0
 
   # Create instance: proc_sys_reset_0, and set properties
   set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
