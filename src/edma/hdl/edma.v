@@ -35,7 +35,7 @@ module edma (/*AUTOARG*/
    input [PW-1:0]  packet_in;     // streaming input data 
    output 	   wait_out;      // pushback
 
-   output 	   access_out;    // output access
+   output 	   access_out;    // output access (master/slave)
    output [PW-1:0] packet_out;    // output packet (with address)
    input 	   wait_in;       // pushback
 

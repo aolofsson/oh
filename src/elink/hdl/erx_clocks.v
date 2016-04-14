@@ -202,6 +202,7 @@ module erx_clocks (/*AUTOARG*/
 	   //two clock synchronizer for lock signal
 	   oh_dsync dsync (.dout (pll_locked_sync),
 			   .clk	 (sys_clk),
+			   .nreset (1'b1),
 			   .din	 (pll_locked)
 			   );
 	   

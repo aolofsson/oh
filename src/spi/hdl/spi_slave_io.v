@@ -177,9 +177,10 @@ module spi_slave_io(/*AUTOARG*/
    //sync the ss to free running clk
    //look for rising edge
 
-   oh_dsync dsync (.dout (ss_sync),
-		   .clk  (clk),
-		   .din  (ss));
+   oh_dsync dsync (.dout  (ss_sync),
+		   .clk   (clk),
+		   .nreset(nreset),
+		   .din   (ss));
 
    //create single cycle pulse
    oh_rise2pulse r2p (.out  (ss_pulse),

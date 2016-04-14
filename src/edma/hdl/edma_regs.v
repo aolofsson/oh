@@ -206,6 +206,11 @@ module edma_regs (/*AUTOARG*/
    assign reg_access_out = fetch_access;
 
    assign reg_packet_out[PW-1:0] = fetch_packet[PW-1:0];
+
+   //################################
+   //# READBACK CIRCUIT
+   //################################ 
+   assign irq = 1'b0;
    
 endmodule // edma_regs
 

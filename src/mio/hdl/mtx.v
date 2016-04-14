@@ -15,7 +15,7 @@ module mtx (/*AUTOARG*/
    parameter PW         = 104;               // fifo width
    parameter NMIO       = 8;                 // IO data width
    parameter FIFO_DEPTH = 32;                // fifo depth  
-   parameter TARGET     = "GENERIC";         // GENERIC,XILINX,ALTERA,GENERIC,ASIC
+   parameter TARGET     = "GENERIC";         // GENERIC,XILINX,ALTERA,ASIC
    localparam CW        = $clog2(2*PW/NMIO); // transfer count width
 
    //reset, clk, cfg
@@ -28,9 +28,9 @@ module mtx (/*AUTOARG*/
    input 	     lsbfirst;    // send bits lsb first
    
    //status
-   output 	      tx_empty;    // tx fifo is empty
-   output 	      tx_full;	   // tx fifo is full (should never happen!) 
-   output 	      tx_prog_full;// tx is getting full (stop sending!)
+   output 	     tx_empty;    // tx fifo is empty
+   output 	     tx_full;	   // tx fifo is full (should never happen!) 
+   output 	     tx_prog_full;// tx is getting full (stop sending!)
    
    // data to transmit
    input 	      access_in;   // fifo data valid

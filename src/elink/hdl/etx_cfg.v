@@ -144,12 +144,10 @@ module etx_cfg (/*AUTOARG*/
 
    //Synchronize to make easy regular
    oh_dsync #(.DW(16))     
-   dsync (// Outputs
-	  .dout		(tx_status_sync[15:0]),
-	  // Inputs
+   dsync (.dout		(tx_status_sync[15:0]),
 	  .clk		(clk),
-	  .din		(tx_status[15:0])
-	  );
+	  .nreset       (1'b1),
+	  .din		(tx_status[15:0]));
 
    always @ (posedge clk)
      if (tx_status_write)

@@ -116,10 +116,11 @@ module gpio #(
    oh_dsync #(.DW(N))
    dsync (.dout	(gpio_in_sync[N-1:0]),
           .clk	(clk),
+	  .nreset (nreset), 
           .din	(gpio_in[N-1:0]));
 
    always @ (posedge clk)
-     gpio_in_old[N-1:0] <= gpio_in_sync[N-1:0];
+       gpio_in_old[N-1:0] <= gpio_in_sync[N-1:0];
    
    //################################
    //# GPIO_OUT

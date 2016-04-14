@@ -30,6 +30,7 @@ module oh_pulse2pulse (
    //metastability synchronizer
    oh_dsync #(1) sync(.dout	(toggle_sync),
 		      .din      (toggle),
+		      .nreset   (nrstout), 
 		      .clk      (clkout));
 
    //toogle to pulse
