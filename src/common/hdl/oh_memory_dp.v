@@ -38,7 +38,21 @@ module oh_memory_dp # (parameter DW    = 104,      //memory width
    localparam AW      = $clog2(DEPTH);  // address bus width  
 
 `ifdef CFG_ASIC
-   //NOT IMPLEMENTED
+   //NOT IMPLEMENTED...
+   oh_memory_ram #(.DW(DW),
+		   .DEPTH(DEPTH))	     
+   oh_memory_ram (//read port
+		  .rd_dout	(rd_dout[DW-1:0]),
+		  .rd_clk	(rd_clk),
+		  .rd_en	(rd_en),
+		  .rd_addr	(rd_addr[AW-1:0]),
+		  //write port
+		  .wr_en	(wr_en),
+		  .wr_clk	(wr_clk),
+		  .wr_addr	(wr_addr[AW-1:0]),
+		  .wr_wem	(wr_wem[DW-1:0]),
+		  .wr_din	(wr_din[DW-1:0]));
+
 `else
 
    oh_memory_ram #(.DW(DW),

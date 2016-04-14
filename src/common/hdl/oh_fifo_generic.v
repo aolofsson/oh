@@ -8,10 +8,10 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_fifo_generic #(parameter DW        = 104,      //FIFO width
-			 parameter DEPTH     = 32,       //FIFO depth (entries)
-			 parameter PROG_FULL = (DEPTH/2),//program full threshold   
-			 parameter AW = $clog2(DEPTH)    // binary read count width
+module oh_fifo_generic #(parameter DW        = 104,      // FIFO width
+			 parameter DEPTH     = 32,       // FIFO depth (entries)
+			 parameter PROG_FULL = (DEPTH/2),// full threshold   
+			 parameter AW = $clog2(DEPTH)    // read count width
 			 )
    (
     input 	    nreset, // asynch active low reset for wr_clk
@@ -140,7 +140,7 @@ module oh_fifo_generic #(parameter DW        = 104,      //FIFO width
    //#dual ported memory
    //###########################
    oh_memory_dp  #(.DW(DW),
-		   .AW(AW))
+		   .DEPTH(DEPTH))
    fifo_mem(// Outputs
 	    .rd_dout	(dout[DW-1:0]),
 	    // Inputs
