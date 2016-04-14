@@ -10,7 +10,7 @@ module oh_memory_sp  # (parameter DW    = 104,  //memory width
 			parameter PROJ  = "",   //project name
 			parameter MCW   = 8     //repair/config vector width
 		       ) 
-   (// memory interface 
+   (// memory interface (single port)
     input 	    clk, // clock
     input 	    en, // memory access   
     input 	    we, // write enable global signal   
@@ -18,7 +18,7 @@ module oh_memory_sp  # (parameter DW    = 104,  //memory width
     input [AW-1:0]  addr, // address
     input [DW-1:0]  din, // data input
     output [DW-1:0] dout, // data output
-    // Power/repair (ASIC)
+    // Power/repair (ASICs)
     input 	    vss, // common ground   
     input 	    vdd, // periphery power rail
     input 	    vddm, // sram array power rail
@@ -65,28 +65,24 @@ module oh_memory_sp  # (parameter DW    = 104,  //memory width
 	    .bist_din			(bist_din[DW-1:0]));
    
 `else
-
-   //Assume FPGA tool knows what it's doing (single clock...)
-   //Note: shutdown not modeled properly, should invalidate all entries
-   //Retention should depend on vdd as well
-
-   reg [DW-1:0]        ram    [DEPTH-1:0];  
-   reg [DW-1:0]        dout;
-   integer 	       i;
-   
-   //read port (one cycle latency)
-   always @ (posedge clk)
-     if(en)       
-       dout[DW-1:0] <= ram[addr[AW-1:0]];
-
-   //write port
-   always @ (posedge clk)
-     for(i=0;i<DW;i=i+1)	   
-       if(en & wem[i] & we)	       
- 	 ram[addr[AW-1:0]][i] <= din[i]; 
+   oh_memory_ram #(.DW(DW),
+		   .DEPTH(DEPTH))	     
+   oh_memory_ram (//read port
+		  .rd_dout (dout[DW-1:0]),
+		  .rd_clk  (clk),
+		  .rd_addr (addr[AW-1:0]),
+		  .rd_en   (en & ~we),
+		  //write port
+		  .wr_clk  (clk),
+		  .wr_en   (en & we),
+		  .wr_addr (addr[AW-1:0]),
+		  .wr_wem  (wem[DW-1:0]),
+		  .wr_din  (din[DW-1:0]));
+      
 `endif
   
 endmodule // oh_memory_sp
+
 
 
 
