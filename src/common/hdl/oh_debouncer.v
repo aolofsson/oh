@@ -18,7 +18,7 @@ module oh_debouncer #( parameter BOUNCE     = 100,    // bounce time (s)
    //################################
    //# wires/regs/ params
    //################################     
-   localparam integer CW  = $clog2(BOUNCE/CLKPERIOD);// counter width needed
+   parameter integer CW  = $clog2(BOUNCE/CLKPERIOD);// counter width needed
      
    //regs
    reg 	  noisy_reg;

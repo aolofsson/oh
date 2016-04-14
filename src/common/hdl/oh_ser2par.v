@@ -16,7 +16,7 @@ module oh_ser2par #(parameter PW = 64, // parallel packet width
     input 	    shift      // shift the shifter
     );
  
-   localparam CW   = $clog2(PW/SW);  // serialization factor (for counter)
+   parameter CW   = $clog2(PW/SW);  // serialization factor (for counter)
    
    reg [PW-1:0]    dout;
    reg [CW-1:0]    count;

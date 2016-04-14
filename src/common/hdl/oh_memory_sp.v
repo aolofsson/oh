@@ -33,7 +33,7 @@ module oh_memory_sp  # (parameter DW    = 104,  //memory width
     input [DW-1:0]  bist_din  // data input
     );
 
-   localparam AW      = $clog2(DEPTH);  // address bus width  
+   parameter AW      = $clog2(DEPTH);  // address bus width  
   
 `ifdef CFG_ASIC
 

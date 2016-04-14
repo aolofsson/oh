@@ -21,7 +21,7 @@ module oh_memory_ram  # (parameter DW    = 104,  //memory width
     input [DW-1:0]  wr_din // data input
     );
 
-   localparam AW      = $clog2(DEPTH);  // address bus width  
+   parameter AW      = $clog2(DEPTH);  // address bus width  
    
    reg [DW-1:0]        ram    [DEPTH-1:0];  
    reg [DW-1:0]        rd_dout;

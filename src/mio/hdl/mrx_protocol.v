@@ -12,7 +12,7 @@ module mrx_protocol (/*AUTOARG*/
    //parameters
    parameter  PW   = 104;               // packet width (core)
    parameter  NMIO = 8;                 // io packet width
-   localparam CW   = $clog2(2*PW/NMIO); // transfer count width
+   parameter  CW   = $clog2(2*PW/NMIO); // transfer count width
    
    //clock and reset
    input              rx_clk;        // rx clock
