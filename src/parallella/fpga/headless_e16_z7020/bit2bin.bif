@@ -1,0 +1,6 @@
+the_ROM_image:
+{
+	[bootloader]dummy.elf
+	./system.runs/impl_1/system_wrapper.bit
+}
+
