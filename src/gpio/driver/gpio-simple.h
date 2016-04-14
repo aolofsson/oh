@@ -18,7 +18,6 @@ static int gpio_init(gpio_dev_t *dev, void *arg)
 #endif
 
 	dev->regs = (struct gpio_registers *) arg;
-	dev->dircache = 0;
 
 	return 0;
 }
