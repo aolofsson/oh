@@ -16,7 +16,7 @@ module mtx (/*AUTOARG*/
    parameter NMIO       = 8;                 // IO data width
    parameter FIFO_DEPTH = 32;                // fifo depth  
    parameter TARGET     = "GENERIC";         // GENERIC,XILINX,ALTERA,ASIC
-   localparam CW        = $clog2(2*PW/NMIO); // transfer count width
+   parameter CW         = $clog2(2*PW/NMIO); // transfer count width
 
    //reset, clk, cfg
    input             clk;         // main core clock   

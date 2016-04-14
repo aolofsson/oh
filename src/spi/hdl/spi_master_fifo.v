@@ -14,8 +14,8 @@ module spi_master_fifo (/*AUTOARG*/
    parameter  AW    = 32;            // architecture address width
    parameter  SW    = 8;             // output packet width   
    localparam PW    = 2*AW+40;       // input packet width   
-   localparam FAW   = $clog2(DEPTH); // fifo address width   
-   localparam SRW   = $clog2(PW/SW); // serializer cycle count width
+   parameter  FAW   = $clog2(DEPTH); // fifo address width   
+   parameter  SRW   = $clog2(PW/SW); // serializer cycle count width
    
    //clk,reset, cfg
    input            clk;            // clk
