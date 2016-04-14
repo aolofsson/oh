@@ -5,7 +5,6 @@
 
 struct gpio_generic_dev {
 	volatile struct gpio_registers *regs;
-	uint64_t dircache;
 };
 
 __unused
@@ -16,13 +15,11 @@ static int _gpio_set_direction(struct gpio_generic_dev *dev, unsigned gpio,
 		return -EINVAL;
 
 	if (direction == GPIO_DIR_OUT)
-		dev->dircache |= (1ULL << gpio);
+		dev->regs->dir |= 1ULL << gpio;
 	else if (direction == GPIO_DIR_IN)
-		dev->dircache &= ~(1ULL << gpio);
+		dev->regs->dir &= ~(1ULL << gpio);
 	else
 		return -EINVAL;
-
-	dev->regs->dir = dev->dircache;
 
 	return 0;
 }
