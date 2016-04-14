@@ -59,7 +59,7 @@ module oh_fifo_sync #(parameter DW        = 104,      //FIFO width
    // GENERIC DUAL PORTED MEMORY
    oh_memory_dp 
      #(.DW(DW),
-       .AW(AW))
+       .DEPTH(DEPTH))
    mem (// read port
 	.rd_dout	(dout[DW-1:0]),
 	.rd_clk		(clk),
