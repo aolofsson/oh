@@ -14,7 +14,7 @@ module oh_fifo_generic #(parameter DW        = 104,      //FIFO width
 			 parameter AW = $clog2(DEPTH)    // binary read count width
 			 )
    (
-    input 	    nreset, // asynch active low reset
+    input 	    nreset, // asynch active low reset for wr_clk
     input 	    wr_clk, // write clock   
     input 	    wr_en, // write enable
     input [DW-1:0]  din, // write data
@@ -39,6 +39,7 @@ module oh_fifo_generic #(parameter DW        = 104,      //FIFO width
    wire [AW:0] 	 rd_addr_sync;
    wire [AW:0] 	 wr_addr_sync;
 
+   
    //###########################
    //# Full/empty indicators
    //###########################
@@ -60,53 +61,80 @@ module oh_fifo_generic #(parameter DW        = 104,      //FIFO width
 		      (wr_addr_ahead[AW]     != rd_addr_sync[AW]);
 
    //###########################
-   //#write side state machine
+   //# Reset synchronizers
    //###########################
 
-   always @ ( posedge wr_clk or negedge nreset) 
-     if(!nreset) 
+   oh_rsync wr_rsync (.nrst_out (wr_nreset), 
+		      .clk      (wr_clk), 
+		      .nrst_in	(nreset));
+
+   oh_rsync rd_rsync (.nrst_out (rd_nreset), 
+		      .clk      (rd_clk), 
+		      .nrst_in	(nreset));
+   
+   //###########################
+   //#write side address counter
+   //###########################
+
+   always @ ( posedge wr_clk or negedge wr_nreset) 
+     if(!wr_nreset) 
        wr_addr[AW:0]  <= 'b0;
      else if(wr_en) 
        wr_addr[AW:0]  <= wr_addr[AW:0]  + 'd1;
 
-   //address for prog_full indicator
-   always @ (posedge wr_clk or negedge nreset)
-     if(!nreset)
+   //address lookahead for prog_full indicator
+   always @ (posedge wr_clk or negedge wr_nreset)
+     if(!wr_nreset)
        wr_addr_ahead[AW:0] <= 'b0;   
      else if(~prog_full)
        wr_addr_ahead[AW:0] <= wr_addr[AW:0]  + PROG_FULL;
-   
+
+   //###########################
+   //# Synchronize to read clk
+   //###########################
+
+   // convert to gray code (only one bit can toggle)
    oh_bin2gray #(.DW(AW+1))
-   wr_b2g (.gray   (wr_addr_gray[AW:0]),
-	   .bin	   (wr_addr[AW:0]));
+   wr_b2g (.out    (wr_addr_gray[AW:0]),
+	   .in	   (wr_addr[AW:0]));
    
+   // synchronize to read clock
    oh_dsync  #(.DW(AW+1))
    wr_sync(.dout (wr_addr_gray_sync[AW:0]),
 	   .clk  (rd_clk),
+	   .nreset(rd_nreset),
 	   .din  (wr_addr_gray[AW:0]));
    
    //###########################
-   //#read side state machine
+   //#read side address counter
    //###########################
 
-   always @ ( posedge rd_clk or negedge nreset) 
-     if(!nreset) 
+   always @ ( posedge rd_clk or negedge rd_nreset) 
+     if(!rd_nreset) 
        rd_addr[AW:0] <= 'd0;   
      else if(rd_en) 
        rd_addr[AW:0] <= rd_addr[AW:0] + 'd1;
-   
-   oh_bin2gray #(.DW(AW+1))
-   rd_b2g (.gray  (rd_addr_gray[AW:0]),
-	   .bin	  (rd_addr[AW:0]));
-   
-   oh_dsync  #(.DW(AW+1))
-   rd_sync(.dout (rd_addr_gray_sync[AW:0]),
-	   .clk  (rd_clk),
-	   .din  (rd_addr_gray[AW:0]));
 
+   //###########################
+   //# Synchronize to write clk
+   //###########################
+   
+   //covert to gray (can't have multiple bits toggling)
+   oh_bin2gray #(.DW(AW+1))
+   rd_b2g (.out   (rd_addr_gray[AW:0]),
+	   .in	  (rd_addr[AW:0]));
+   
+   //synchronize to wr clock
+   oh_dsync  #(.DW(AW+1))
+   rd_sync(.dout   (rd_addr_gray_sync[AW:0]),
+	   .clk    (wr_clk),
+	   .nreset (wr_nreset),
+	   .din    (rd_addr_gray[AW:0]));
+
+   //convert back to binary (for ease of use, rd_count)
    oh_gray2bin #(.DW(AW+1))
-   rd_g2b (.bin  (rd_addr_sync[AW:0]),
-	   .gray (rd_addr_gray_sync[AW:0]));
+   rd_g2b (.out (rd_addr_sync[AW:0]),
+	   .in (rd_addr_gray_sync[AW:0]));
    
    //###########################
    //#dual ported memory
