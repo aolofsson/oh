@@ -107,8 +107,7 @@ module emmu (/*AUTOARG*/
    //###########################
 
    packet2emesh  #(.AW(32))
-   p2e (
-	// Outputs
+   p2e (// Outputs
 	.write_in	(),
 	.datamode_in	(),
 	.ctrlmode_in	(),
@@ -116,15 +115,14 @@ module emmu (/*AUTOARG*/
 	.srcaddr_in	(),
 	.data_in	(),
 	// Inputs
-	.packet_in	(emesh_packet_in[PW-1:0])
-	);
+	.packet_in	(emesh_packet_in[PW-1:0]));
    
    //###########################
    //# LOOKUP TABLE
    //###########################  
 
    oh_memory_dp #(.DW(MW),
-		  .AW(MAW)) 
+		  .DEPTH(4096))
    memory_dp (//read port
 	      .rd_dout       (emmu_lookup_data[MW-1:0]),
 	      .rd_en	     (emesh_access_in),
