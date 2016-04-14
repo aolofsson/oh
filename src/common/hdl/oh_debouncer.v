@@ -25,9 +25,10 @@ module oh_debouncer #( parameter BOUNCE     = 100,    // bounce time (s)
    reg 	  clean_out;
    
    // synchronize incoming signal
-   oh_dsync dsync (.dout (noisy_synced),
-		   .clk	 (clk),
-		   .din	 (noisy_in));
+   oh_dsync dsync (.dout   (noisy_synced),
+		   .clk	   (clk),
+		   .nreset (nreset),
+		   .din	   (noisy_in));
    
    // synchronize reset to clk
    oh_rsync rsync (.nrst_out (nreset_synced),
@@ -35,8 +36,11 @@ module oh_debouncer #( parameter BOUNCE     = 100,    // bounce time (s)
 		   .nrst_in  (nreset));
    
    // detecting change in state on input
-   always @ (posedge clk)     
-     noisy_reg <= noisy_synced;
+   always @ (posedge clk or negedge nreset)     
+     if(!nreset)
+       noisy_reg <= 1'b0;   
+     else
+       noisy_reg <= noisy_synced;
 
    assign change_detected = noisy_reg ^ noisy_synced;
 
@@ -55,8 +59,10 @@ module oh_debouncer #( parameter BOUNCE     = 100,    // bounce time (s)
 	       );
    
    // sample noisy signal safely
-   always @ (posedge clk)
-     if(carry)
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       clean_out <= 'b0;   
+     else if(carry)
        clean_out <= noisy_reg;   
 
 endmodule // oh_debouncer
