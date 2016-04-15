@@ -61,46 +61,34 @@ source $LOCALPATH/02_read_design.tcl
 source $LOCALPATH/03_read_constraints.tcl
 
 ################################
-# STEP4: SETUP CORNERS
+# STEP4: READ FLROOPLAN
 ################################
 
-source $LOCALPATH/04_setup_corners.tcl
+source $LOCALPATH/04_floorplan.tcl
 
 ################################
-# STEP5: READ FLROOPLAN
+# STEP5: COMPILE
 ################################
 
-source $LOCALPATH/05_floorplan.tcl
+source $LOCALPATH/05_compile.tcl
 
 ################################
-# STEP6: CHECK DESIGN
+# STEP6: DFT
 ################################
 
-source $LOCALPATH/06_check_design.tcl
+source $LOCALPATH/06_dft.tcl
 
 ################################
-# STEP7: COMPILE
+# STEP7: OPTIMIZE 
 ################################
 
-source $LOCALPATH/07_compile.tcl
+source $LOCALPATH/07_optimize.tcl
 
 ################################
-# STEP8: DFT
+# STEP8: WRITE NETLIST/REPORTS
 ################################
 
-source $LOCALPATH/08_dft.tcl
-
-################################
-# STEP9: OPTIMIZE 
-################################
-
-source $LOCALPATH/09_optimize.tcl
-
-################################
-# STEP10: WRITE NETLIST (AND OTHER FILES)
-################################
-
-source $LOCALPATH/10_write_netlist.tcl
+source $LOCALPATH/08_signoff.tcl
 
 #exit
 
