@@ -7,18 +7,16 @@ The synthesis flow scripts call EDA specific scipts as needed.
 
 # SYNTHESIS FLOW
 
-| FILE                   | NOTES                                       |
-|------------------------|---------------------------------------------| 
-| 01_setup_tool.tcl      | Setup synthesis tool                        | 
-| 02_read_design.tcl     | Read in design files                        | 
-| 03_read_constraints.tcl| Read in design constaints                   | 
-| 04_setup_corners.tcl   | Setup up operating conditions               | 
-| 05_floorplan.tcl       | Read floorplan information                  | 
-| 06_check_design.tcl    | Check design integrity                      | 
-| 07_compile.tcl         | Comile HDL to gates                         | 
-| 08_dft.tcl             | Insert test features (scan)                 | 
-| 09_optimize.tcl        | Seconday optimization step                  | 
-| 10_write_netlist.tcl   | Write out netlists and reports              | 
+| FILE             | NOTES                                       |
+|------------------|---------------------------------------------| 
+| 01_setup.tcl     | Setup synthesis tool                        | 
+| 02_hdl.tcl       | Read in design files                        | 
+| 03_constrain.tcl | Read in design constraints                  | 
+| 04_floorplan.tcl | Setup floorplan                             | 
+| 05_compile.tcl   | Comile HDL to gates                         | 
+| 06_dft.tcl       | Insert test features (scan)                 | 
+| 07_optimize.tcl  | Seconday optimization step                  | 
+| 08_signoff.tcl   | Write out netlists and reports              | 
                 
 ## Example Setup File ("example.tcl")
 

@@ -46,19 +46,19 @@ puts $OH_RCMODEL_MIN
 # STEP1: SETUP TOOL
 ################################
 
-source $LOCALPATH/01_setup_tool.tcl
+source $LOCALPATH/01_setup.tcl
 
 ################################
-# STEP2: READ DESIGN FILES
+# STEP2: READ HDL
 ################################
 
-source $LOCALPATH/02_read_design.tcl
+source $LOCALPATH/02_hdl.tcl
 
 ################################
 # STEP3: READ CONSTRAINTS 
 ################################
 
-source $LOCALPATH/03_read_constraints.tcl
+source $LOCALPATH/03_constrain.tcl
 
 ################################
 # STEP4: READ FLROOPLAN
