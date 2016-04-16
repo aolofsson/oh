@@ -7,18 +7,17 @@ The synthesis flow scripts call EDA specific scipts as needed.
 
 # SYNTHESIS FLOW
 
-| FILE                   | NOTES                                       |
-|------------------------|---------------------------------------------| 
-| 01_setup_tool.tcl      | Setup synthesis tool                        | 
-| 02_read_design.tcl     | Read in design files                        | 
-| 03_read_constraints.tcl| Read in design constaints                   | 
-| 04_setup_corners.tcl   | Setup up operating conditions               | 
-| 05_floorplan.tcl       | Read floorplan information                  | 
-| 06_check_design.tcl    | Check design integrity                      | 
-| 07_compile.tcl         | Comile HDL to gates                         | 
-| 08_dft.tcl             | Insert test features (scan)                 | 
-| 09_optimize.tcl        | Seconday optimization step                  | 
-| 10_write_netlist.tcl   | Write out netlists and reports              | 
+| FILE              | NOTES                                            |
+|-------------------|--------------------------------------------------| 
+| 01_setup.tcl      | Setup synthesis tool                             | 
+| 02_netlist.tcl    | Read in netlist                                  | 
+| 03_constrain.tcl  | Constrain design                                 | 
+| 04_floorplan.tcl  | Read floorplan information                       |
+| 05_place.tcl      | Place design                                     |
+| 06_clock.tcl      | Place and route clock nets                       |
+| 07_route.tcl      | Route all other nets                             |
+| 08_cleanup.tcl    | Cleanup (antenna, fill, etc)                     |
+| 09_signoff.tcl    | DRC/LVS signoff, reports, final GDS out          | 
                 
 ## Example Setup File ("example.tcl")
 
@@ -33,19 +32,7 @@ set OH_LIBS       "svtlib"
 
 set OH_MACROS     "sram64x1024"
 
-set OH_FILES      "../../../hdl/$OH_DESIGN.v             \
-                   -y $env(OH_HOME)/emesh/hdl            \
-                   -y $env(OH_HOME)/common/hdl           \
-                   -y $env(EPIPHANY_HOME)/chip/hdl       \
-                   -y $env(EPIPHANY_HOME)/ecore/hdl      \
-                   -y $env(EPIPHANY_HOME)/emesh/hdl      \
-                   -y $env(EPIPHANY_HOME)/edma/hdl       \
-                   -y $env(EPIPHANY_HOME)/compute/hdl    \
-                   -y $env(EPIPHANY_HOME)/memory/hdl     \
-                   -y $env(EPIPHANY_HOME)/fpumm/hdl      \
-                   +incdir+$env(EPIPHANY_HOME)/emesh/hdl \
-                   +incdir+$env(EPIPHANY_HOME)/ecore/hdl \
-                   +incdir+$env(EPIPHANY_HOME)/edma/hdl"
+set OH_FILES      "${OH_DESIGN}_syn.vg"
 
 set OH_CONSTRAINTS  "${OH_DESIGN}.sdc"
 
