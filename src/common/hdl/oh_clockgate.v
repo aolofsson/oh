@@ -5,7 +5,9 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_clockgate #(parameter DW = 1) // width of data
+module oh_clockgate #(parameter DW   = 1, // width of data
+		      parameter ASIC = 0  // use ASIC lib
+		      ) 
    ( 
      input 	     nrst, // active low sync reset (synced to input clk)   
      input 	     clk, // clock input 
@@ -14,6 +16,7 @@ module oh_clockgate #(parameter DW = 1) // width of data
      output [DW-1:0] eclk// enabled clock output
   );
 
+	     
    wire [DW-1:0]   en_sh;
    wire [DW-1:0]   en_sl;
 

@@ -5,10 +5,11 @@
 //# License:  MIT  (see LICENSE file in OH! repository)                       # 
 //#############################################################################
 
-module oh_memory_sp  # (parameter DW    = 104,  //memory width
-			parameter DEPTH = 32,   //memory depth
-			parameter PROJ  = "",   //project name
-			parameter MCW   = 8     //repair/config vector width
+module oh_memory_sp  # (parameter DW    = 104,  // memory width
+			parameter DEPTH = 32,   // memory depth
+			parameter PROJ  = "",   // project name
+			parameter ASIC  = 0,    // use ASIC lib
+			parameter MCW   = 8     // repair/config vector width
 		       ) 
    (// memory interface (single port)
     input 	    clk, // clock
@@ -35,51 +36,51 @@ module oh_memory_sp  # (parameter DW    = 104,  //memory width
 
    parameter AW      = $clog2(DEPTH);  // address bus width  
   
-`ifdef CFG_ASIC
-
-   //Actual IP hidden behind wrapper to protect the innocent
-
-   sram_sp #(.DW(DW),
-	     .DEPTH(DEPTH),
-	     .PROJ(PROJ),
-	     .MCW(MCW))	     
-   sram_sp (// Outputs
-	    .dout			(dout[DW-1:0]),
-	    // Inputs
-	    .clk			(clk),
-	    .en				(en),
-	    .we				(we),
-	    .wem			(wem[DW-1:0]),
-	    .addr			(addr[AW-1:0]),
-	    .din			(din[DW-1:0]),
-	    .vdd			(vdd),
-	    .vddm			(vddm),
-	    .vss                        (vss),
-	    .shutdown                   (shutdown),
-	    .memconfig			(memconfig[MCW-1:0]),
-	    .memrepair			(memrepair[MCW-1:0]),
-	    .bist_en			(bist_en),
-	    .bist_we			(bist_we),
-	    .bist_wem			(bist_wem[DW-1:0]),
-	    .bist_addr			(bist_addr[AW-1:0]),
-	    .bist_din			(bist_din[DW-1:0]));
-   
-`else
-   oh_memory_ram #(.DW(DW),
-		   .DEPTH(DEPTH))	     
-   oh_memory_ram (//read port
-		  .rd_dout (dout[DW-1:0]),
-		  .rd_clk  (clk),
-		  .rd_addr (addr[AW-1:0]),
-		  .rd_en   (en & ~we),
-		  //write port
-		  .wr_clk  (clk),
-		  .wr_en   (en & we),
-		  .wr_addr (addr[AW-1:0]),
-		  .wr_wem  (wem[DW-1:0]),
-		  .wr_din  (din[DW-1:0]));
-      
-`endif
+   generate
+      if(ASIC)
+	begin
+	   asic_sram_sp #(.DW(DW),
+			  .DEPTH(DEPTH),
+			  .PROJ(PROJ),
+			  .MCW(MCW))	     
+	   i_sram (// Outputs
+		   .dout       (dout[DW-1:0]),
+		   // Inputs
+		   .clk        (clk),
+		   .en         (en),
+		   .we         (we),
+		   .wem        (wem[DW-1:0]),
+		   .addr       (addr[AW-1:0]),
+		   .din        (din[DW-1:0]),
+		   .vdd        (vdd),
+		   .vddm       (vddm),
+		   .vss        (vss),
+		   .shutdown   (shutdown),
+		   .memconfig  (memconfig[MCW-1:0]),
+		   .memrepair  (memrepair[MCW-1:0]),
+		   .bist_en    (bist_en),
+		   .bist_we    (bist_we),
+		   .bist_wem   (bist_wem[DW-1:0]),
+		   .bist_addr  (bist_addr[AW-1:0]),
+		   .bist_din   (bist_din[DW-1:0]));
+	end
+      else
+	begin
+	   oh_memory_ram #(.DW(DW),
+			   .DEPTH(DEPTH))	     
+	   oh_memory_ram (//read port
+			  .rd_dout (dout[DW-1:0]),
+			  .rd_clk  (clk),
+			  .rd_addr (addr[AW-1:0]),
+			  .rd_en   (en & ~we),
+			  //write port
+			  .wr_clk  (clk),
+			  .wr_en   (en & we),
+			  .wr_addr (addr[AW-1:0]),
+			  .wr_wem  (wem[DW-1:0]),
+			  .wr_din  (din[DW-1:0]));
+	end
+   endgenerate
   
 endmodule // oh_memory_sp
 
