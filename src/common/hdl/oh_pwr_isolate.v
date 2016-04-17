@@ -6,7 +6,7 @@
 //#############################################################################
 
 module oh_pwr_isolate #(parameter DW   = 1, // width of data inputs
-			parameter ASIC = 0  // use ASIC lib
+			parameter ASIC = 1  // use ASIC lib
 			) 
    (
     input 	    vdd, // supply (set to 1 if valid)
@@ -23,14 +23,14 @@ module oh_pwr_isolate #(parameter DW   = 1, // width of data inputs
 `else
    generate
       if(ASIC)	
-	begin
+	begin : asic
 	   asic_iso i_iso [DW-1:0] (.vdd(vdd),
 				    .vss(vss),
 				    .in(in[DW-1:0]),
 				    .out(out[DW-1:0]));
 	end
       else
-	begin
+	begin : generic
 	   assign out[DW-1:0] = {(DW){niso}} & in[DW-1:0];
 	end
    endgenerate

@@ -5,26 +5,24 @@
 //# License:  MIT  (see LICENSE file in OH! repository)                       # 
 //#############################################################################
 
-module oh_memory_ram  # (parameter DW    = 104,  //memory width
-			 parameter DEPTH = 32    //memory depth
+module oh_memory_ram  # (parameter DW    = 104,           //memory width
+			 parameter DEPTH = 32,            //memory depth
+			 parameter AW    = $clog2(DEPTH)  // address width  
 			 ) 
    (// read-port
-    input 	    rd_clk,// rd clock
-    input 	    rd_en, // memory access
-    input [AW-1:0]  rd_addr, // address
-    output [DW-1:0] rd_dout, // data output   
+    input 		rd_clk,// rd clock
+    input 		rd_en, // memory access
+    input [AW-1:0] 	rd_addr, // address
+    output reg [DW-1:0] rd_dout, // data output   
     // write-port
-    input 	    wr_clk,// wr clock
-    input 	    wr_en, // memory access
-    input [AW-1:0]  wr_addr, // address
-    input [DW-1:0]  wr_wem, // write enable vector    
-    input [DW-1:0]  wr_din // data input
+    input 		wr_clk,// wr clock
+    input 		wr_en, // memory access
+    input [AW-1:0] 	wr_addr, // address
+    input [DW-1:0] 	wr_wem, // write enable vector    
+    input [DW-1:0] 	wr_din // data input
     );
-
-   parameter AW      = $clog2(DEPTH);  // address bus width  
    
    reg [DW-1:0]        ram    [DEPTH-1:0];  
-   reg [DW-1:0]        rd_dout;
    integer 	       i;
       
    //registered read port

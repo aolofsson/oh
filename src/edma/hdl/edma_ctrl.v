@@ -54,7 +54,10 @@ module edma_ctrl (/*AUTOARG*/
    wire [15:0] 	   fetch_addr;
    wire [AW-1:0]   srcaddr_out;
    wire [4:0] 	   reg_addr;
-   
+   wire 	   dma_error;
+   wire 	   incount_zero;
+   wire 	   outcount_zero;
+
    //###########################################
    //# STATE MACHINE                           
    //###########################################

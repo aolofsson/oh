@@ -79,12 +79,16 @@ module edma_regs (/*AUTOARG*/
    reg [31:0] 	   status_reg;
 
    // wires
-   wire [4:0] 	   ctrlmode_out;
-   wire [AW-1:0]   data_out;
-   wire [1:0] 	   datamode_out;
-   wire [AW-1:0]   dstaddr_out;	
-   wire [AW-1:0]   srcaddr_out;
-   wire 	   write_out;
+   wire 	   reg_write;
+   wire 	   config_write;
+   wire 	   stride_write;
+   wire 	   count_write;
+   wire 	   srcaddr0_write;
+   wire 	   srcaddr1_write;
+   wire 	   dstaddr0_write;
+   wire 	   dstaddr1_write;
+   wire 	   status_write;
+   wire 	   irqmode;
 
    /*AUTOINPUT*/
    /*AUTOWIRE*/

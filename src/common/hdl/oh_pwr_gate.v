@@ -18,7 +18,7 @@ module oh_pwr_gate #(parameter ASIC = 0  // use ASIC lib
 `else
    generate
       if(ASIC)	
-	begin
+	begin : asic
 	   asic_pwr_header i_header (.npower(npower),
 				     .vdd(vdd),
 				     .vddg(vddg));
