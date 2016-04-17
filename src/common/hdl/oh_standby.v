@@ -17,13 +17,16 @@ module oh_standby #( parameter PD  = 5) //cycles to stay awake after "wakeup"
    //Wire declarations
    reg [PD-1:0]	wakeup_pipe;
    reg          idle_reg;
+   wire 	state_change;
+   wire 	clk_en;
+   
    
    // detect an idle state change (wake up on any)
-   always @ (posedge clk )     
+   always @ (posedge clkin)     
      idle_reg <= idle;   
    assign state_change = (idle ^ idle_reg);
       
-   always @ (posedge clk)    
+   always @ (posedge clkin)    
      wakeup_pipe[PD-1:0] <= {wakeup_pipe[PD-2:0],(state_change | wakeup)};
 
    //block enable signal
@@ -35,7 +38,7 @@ module oh_standby #( parameter PD  = 5) //cycles to stay awake after "wakeup"
 
    //clock gater (technology specific)
    oh_clockgate clockgate  (.eclk(clkout),
-			    .clk(clk),
+			    .clk(clkin),
 			    .en(clk_en),
 			    .nrst(nreset),
      			    .se(1'b0));
