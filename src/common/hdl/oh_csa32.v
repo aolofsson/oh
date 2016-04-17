@@ -17,7 +17,7 @@ module oh_csa32 #(parameter DW   = 1, // data width
 
    generate
       if(ASIC)	
-	begin
+	begin : asic
 	   asic_csa32 i_csa32[DW-1:0] (.s(s[DW-1:0]),
 				       .c(c[DW-1:0]),
 				       .in2(in2[DW-1:0]),
@@ -25,7 +25,7 @@ module oh_csa32 #(parameter DW   = 1, // data width
 				       .in0(in0[DW-1:0]));
 	end	
       else
-	begin
+	begin : generic
 	   assign s[DW-1:0] = in0[DW-1:0] ^ in1[DW-1:0] ^ in2[DW-1:0];
 	   assign c[DW-1:0] = (in0[DW-1:0] & in1[DW-1:0]) | 
 			      (in1[DW-1:0] & in2[DW-1:0]) | 

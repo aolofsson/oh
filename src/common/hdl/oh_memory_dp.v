@@ -39,7 +39,7 @@ module oh_memory_dp # (parameter DW    = 104,      //memory width
    
    generate
       if(ASIC)
-	begin
+	begin : asic
 	   oh_memory_ram #(.DW(DW),
 			   .DEPTH(DEPTH))	     
 	   i_sram (//read port
@@ -55,7 +55,7 @@ module oh_memory_dp # (parameter DW    = 104,      //memory width
 		  .wr_din	(wr_din[DW-1:0]));
 	end // if (ASIC)
       else
-	begin
+	begin : generic
 	   oh_memory_ram #(.DW(DW),
 			   .DEPTH(DEPTH))	     
 	   oh_memory_ram (//read port

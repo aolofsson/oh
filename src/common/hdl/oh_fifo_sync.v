@@ -11,21 +11,22 @@ module oh_fifo_sync #(parameter DW        = 104,      //FIFO width
 		      parameter AW = $clog2(DEPTH)    //rd_count width
 		      ) 
 (
-   input 	   clk, // clock
-   input 	   nreset, // active high async reset 
-   input [DW-1:0]  din, // data to write
-   input 	   wr_en, // write fifo
-   input 	   rd_en, // read fifo
-   output [DW-1:0] dout, // output data (next cycle)
-   output 	   full, // fifo full
-   output 	   prog_full, // fifo is almost full
-   output 	   empty, // fifo is empty  
-   output [AW-1:0] rd_count     // valid entries in fifo
+   input 	       clk, // clock
+   input 	       nreset, // active high async reset 
+   input [DW-1:0]      din, // data to write
+   input 	       wr_en, // write fifo
+   input 	       rd_en, // read fifo
+   output [DW-1:0]     dout, // output data (next cycle)
+   output 	       full, // fifo full
+   output 	       prog_full, // fifo is almost full
+   output 	       empty, // fifo is empty  
+   output reg [AW-1:0] rd_count     // valid entries in fifo
  );
    
-   reg [AW-1:0]  wr_addr;
-   reg [AW-1:0]  rd_addr;
-   reg [AW-1:0]  rd_count;
+   reg [AW-1:0]        wr_addr;
+   reg [AW-1:0]        rd_addr;
+   wire 	       fifo_read;
+   wire 	       fifo_write;
    
    assign empty       = (rd_count[AW-1:0] == 0);   
    assign prog_full   = (rd_count[AW-1:0] >= PROG_FULL);   

@@ -5,11 +5,12 @@
 //# License:  MIT  (see LICENSE file in OH! repository)                       # 
 //#############################################################################
 
-module oh_memory_sp  # (parameter DW    = 104,  // memory width
-			parameter DEPTH = 32,   // memory depth
-			parameter PROJ  = "",   // project name
-			parameter ASIC  = 0,    // use ASIC lib
-			parameter MCW   = 8     // repair/config vector width
+module oh_memory_sp  # (parameter DW    = 104,          // memory width
+			parameter DEPTH = 32,           // memory depth
+			parameter PROJ  = "",           // project name
+			parameter ASIC  = 0,            // use ASIC lib
+			parameter MCW   = 8,            // repair/config width
+			parameter AW    = $clog2(DEPTH) // address bus width  
 		       ) 
    (// memory interface (single port)
     input 	    clk, // clock
@@ -34,11 +35,11 @@ module oh_memory_sp  # (parameter DW    = 104,  // memory width
     input [DW-1:0]  bist_din  // data input
     );
 
-   parameter AW      = $clog2(DEPTH);  // address bus width  
+   
   
    generate
       if(ASIC)
-	begin
+	begin : asic
 	   asic_sram_sp #(.DW(DW),
 			  .DEPTH(DEPTH),
 			  .PROJ(PROJ),
@@ -65,7 +66,7 @@ module oh_memory_sp  # (parameter DW    = 104,  // memory width
 		   .bist_din   (bist_din[DW-1:0]));
 	end
       else
-	begin
+	begin : generic
 	   oh_memory_ram #(.DW(DW),
 			   .DEPTH(DEPTH))	     
 	   oh_memory_ram (//read port
