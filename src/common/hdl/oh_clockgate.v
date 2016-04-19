@@ -5,34 +5,40 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_clockgate #(parameter DW   = 1, // width of data
-		      parameter ASIC = 0  // use ASIC lib
+module oh_clockgate # (parameter ASIC = 0,   // use ASIC lib
+		       parameter PROJ = "E5" // project name (used for IP selection)
 		      ) 
    ( 
-     input 	     nrst, // active low sync reset (synced to input clk)   
-     input 	     clk, // clock input 
-     input 	     se, // scan enable   
-     input [DW-1:0]  en, // enable (from positive edge FF)
-     output [DW-1:0] eclk// enabled clock output
-  );
+     input  clk, // clock input 
+     input  te, // test enable enable   
+     input  en, // enable (from positive edge FF)
+     output eclk // enabled clock output
+     );
 
-	     
-   wire [DW-1:0]   en_sh;
-   wire [DW-1:0]   en_sl;
-
-   //Turn on clock if in scan mode or if enabled
-   assign   en_sl[DW-1:0] = en[DW-1:0]   | 
-			    {(DW){se}}   |
-			    {(DW){~nrst}}; 
-
-   //making signal stable
-   oh_lat0 #(.DW(1)) lat0 (.out (en_sh[DW-1:0]),
-                           .in  (en_sl[DW-1:0]),
-                           .clk (clk)
-			  );
-
-   assign eclk[DW-1:0] =  {(DW){clk}} & en_sh[DW-1:0];
-   
+   generate
+      if(ASIC)	     
+	begin : asic
+	   asic_icg  #(.PROJ(PROJ))
+	   asic_icg (.en(en),
+		     .te(te),
+		     .clk(clk),
+		     .eclk(eclk));
+	end
+      else
+	begin : generic
+	   wire    en_sh;
+	   wire    en_sl;
+	   //Stable low/valid rising edge enable
+	   assign   en_sl = en | te;
+	   
+	   //Stable high enable signal
+	   oh_lat0 lat0 (.out (en_sh),
+			 .in  (en_sl),
+			 .clk (clk));
+	   
+	   assign eclk =  clk & en_sh;
+	end 
+   endgenerate
         
 endmodule // oh_clockgate
 
