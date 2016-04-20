@@ -188,13 +188,13 @@ module gpio #(
        gpio_ilat[N-1:0] <= 'b0;
      else
        gpio_ilat[N-1:0] <= (gpio_ilat[N-1:0] & ~ilat_clr[N-1:0]) |  //old values
-			   (irq_event[N-1:0] & ~gpio_imask[N-1:0]); //new interrupts
+			   irq_event[N-1:0]; //new interrupts
 
    //################################
    //# ONE CYCLE IRQ PULSE
    //################################ 
 
-   assign gpio_irq = |gpio_ilat[N-1:0];
+   assign gpio_irq = |(gpio_ilat[N-1:0] & ~gpio_imask[N-1:0]);
    
    //################################
    //# READBACK
