@@ -1,0 +1,27 @@
+OH GPIO controller bindings
+
+Required properties:
+- compatible: "oh,gpio"
+- gpio-controller : Marks the device node as a GPIO controller.
+- #gpio-cells : Should be two.
+  - first cell is the pin number
+  - second cell is used to specify optional parameters (unused)
+- interrupt-controller: Mark the device node as an interrupt controller.
+- #interrupt-cells : Should be 2.
+  The first cell is the GPIO number.
+  The second cell is used to specify flags:
+    bits[3:0] trigger type and level flags:
+      1 = rising edge triggered.
+      2 = falling edge triggered.
+      4 = active high level-sensitive.
+      8 = active low level-sensitive.
+
+Example:
+
+gpio0: gpio0 {
+    compatible = "oh,gpio";
+    gpio-controller;
+    #gpio-cells = <2>;
+    interrupt-controller;
+    #interrupt-cells = <2>;
+};
