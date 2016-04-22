@@ -119,8 +119,7 @@ static void oh_gpio_set_value(struct gpio_chip *chip, unsigned pin, int value)
 	unsigned long flags;
 	struct oh_gpio *gpio = to_oh_gpio(chip);
 
-	value = !!value;
-	mask = value << pin;
+	mask = BIT_ULL(pin);
 
 	spin_lock_irqsave(&gpio->lock, flags);
 	if (value)
