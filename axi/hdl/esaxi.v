@@ -509,7 +509,7 @@ module esaxi (/*autoarg*/
    	   
    //release bus after 64K clock cycles (seems reasonable?)   
    always @ (posedge s_axi_aclk)
-     if(timeout_state[1:0]==`TIMEOUT_IDLE)
+     if (!s_axi_aresetn || timeout_state[1:0]==`TIMEOUT_IDLE)
        timeout_counter[TW-1:0] <= {(TW){1'b1}};   
      else if (timeout_state[1:0]==`TIMEOUT_ARMED)  //decrement while counter > 0
        timeout_counter[TW-1:0] <= timeout_counter[TW-1:0] - 1'b1;
