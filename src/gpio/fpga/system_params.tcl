@@ -17,9 +17,13 @@ set hdl_files [list \
 		   $root/emailbox/hdl \
 		   $root/edma/hdl \
 	           $root/elink/hdl \
+	           $root/parallella/hdl \
 		  ]
 
 set ip_files   []
 
-set constraints_files []
+set constraints_files [list \
+	../../parallella/fpga/parallella_io.xdc \
+	../../parallella/fpga/parallella_7020_io.xdc \
+	]
 
