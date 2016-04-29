@@ -7,9 +7,9 @@
 
 module axi_gpio(/*AUTOARG*/
    // Outputs
-   s_rd_packet, s_rd_access, s_axi_wready, s_axi_rvalid, s_axi_rresp,
-   s_axi_rlast, s_axi_rid, s_axi_rdata, s_axi_bvalid, s_axi_bresp,
-   s_axi_bid, s_axi_awready, s_axi_arready, gpio_out, gpio_irq,
+   s_axi_wready, s_axi_rvalid, s_axi_rresp, s_axi_rlast, s_axi_rid,
+   s_axi_rdata, s_axi_bvalid, s_axi_bresp, s_axi_bid, s_axi_awready,
+   s_axi_arready, gpio_out, gpio_irq, gpio_dir,
    // Inputs
    s_axi_wvalid, s_axi_wstrb, s_axi_wlast, s_axi_wid, s_axi_wdata,
    s_axi_rready, s_axi_bready, s_axi_awvalid, s_axi_awsize,
@@ -32,6 +32,26 @@ module axi_gpio(/*AUTOARG*/
    //clk, reset
    input        sys_nreset;                  // active low async reset
    input        sys_clk;                     // system clock for AXI
+
+   //############################
+   // HOST GENERATERD
+   //############################
+   //Slave Write
+   wire			s_wr_access;
+   wire [PW-1:0]	s_wr_packet;
+   wire			s_wr_wait;
+
+   //Slave Read Request
+   wire			s_rd_access;
+   wire [PW-1:0]	s_rd_packet;
+   wire			s_rd_wait;
+
+   //Slave Read Response
+   wire			s_rr_access;
+   wire [PW-1:0]	s_rr_packet;
+   wire			s_rr_wait;
+
+   //##############################################################
 
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
@@ -68,6 +88,7 @@ module axi_gpio(/*AUTOARG*/
 
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
+   output [N-1:0]	gpio_dir;		// From gpio of gpio.v
    output		gpio_irq;		// From gpio of gpio.v
    output [N-1:0]	gpio_out;		// From gpio of gpio.v
    output		s_axi_arready;		// From esaxi of esaxi.v
@@ -81,8 +102,6 @@ module axi_gpio(/*AUTOARG*/
    output [1:0]		s_axi_rresp;		// From esaxi of esaxi.v
    output		s_axi_rvalid;		// From esaxi of esaxi.v
    output		s_axi_wready;		// From esaxi of esaxi.v
-   output		s_rd_access;		// From esaxi of esaxi.v
-   output [PW-1:0]	s_rd_packet;		// From esaxi of esaxi.v
    // End of automatics
 
    /*AUTOWIRE*/
@@ -95,7 +114,6 @@ module axi_gpio(/*AUTOARG*/
    wire			gpio_access_in;
    wire [PW-1:0]	gpio_packet_in;
    wire			gpio_wait_in;
-   wire [N-1:0]		gpio_dir; /* don't output */
 
    gpio #(.AW(AW),.N(N))
    gpio(
@@ -103,7 +121,6 @@ module axi_gpio(/*AUTOARG*/
 	.wait_out			(gpio_wait_out),
 	.access_out			(gpio_access_out),
 	.packet_out			(gpio_packet_out[PW-1:0]),
-	.gpio_dir			(gpio_dir[N-1:0]),
 	//Inputs
 	.nreset				(sys_nreset),
 	.clk				(sys_clk),
@@ -113,6 +130,7 @@ module axi_gpio(/*AUTOARG*/
 	/*AUTOINST*/
 	// Outputs
 	.gpio_out			(gpio_out[N-1:0]),
+	.gpio_dir			(gpio_dir[N-1:0]),
 	.gpio_irq			(gpio_irq),
 	// Inputs
 	.gpio_in			(gpio_in[N-1:0]));
@@ -120,25 +138,31 @@ module axi_gpio(/*AUTOARG*/
    //########################################################
    //AXI SLAVE
    //########################################################
-   /*esaxi AUTO_TEMPLATE (//Stimulus
-                         .rr_\(.*\)   (s_rr_\1[]),
-                         .rd_\(.*\)   (s_rd_\1[]),
-                         .wr_\(.*\)   (s_wr_\1[]),
-        );
-     */
+
+   emesh_mux #(.N(2),.AW(AW))
+   mux2(// Outputs
+	.wait_out   ({s_rd_wait, s_wr_wait}),
+	.access_out (gpio_access_in),
+	.packet_out (gpio_packet_in[PW-1:0]),
+	// Inputs
+	.access_in  ({s_rd_access, s_wr_access}),
+	.packet_in  ({s_rd_packet[PW-1:0], s_wr_packet[PW-1:0]}),
+	.wait_in    (s_rr_wait)
+	);
+
    esaxi #(.S_IDW(S_IDW))
    esaxi (.s_axi_aclk			(sys_clk),
-	  .wr_access			(gpio_access_in),
-	  .wr_packet			(gpio_packet_in[PW-1:0]),
-	  .rr_wait			(gpio_wait_in),
-	  .rd_wait			(1'b0),
+	  .wr_access			(s_wr_access),
+	  .wr_packet			(s_wr_packet[PW-1:0]),
+	  .rr_wait			(s_rr_wait),
+	  .rd_wait			(s_rd_wait),
 	  .rr_access			(gpio_access_out),
 	  .rr_packet			(gpio_packet_out[PW-1:0]),
-	  .wr_wait			(gpio_wait_out),
+	  .wr_wait			(s_wr_wait),
+	  .rd_access			(s_rd_access),
+	  .rd_packet			(s_rd_packet[PW-1:0]),
 	  /*AUTOINST*/
 	  // Outputs
-	  .rd_access			(s_rd_access),		 // Templated
-	  .rd_packet			(s_rd_packet[PW-1:0]),	 // Templated
 	  .s_axi_arready		(s_axi_arready),
 	  .s_axi_awready		(s_axi_awready),
 	  .s_axi_bid			(s_axi_bid[S_IDW-1:0]),
