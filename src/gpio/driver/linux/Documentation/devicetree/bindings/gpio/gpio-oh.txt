@@ -18,6 +18,7 @@ Required properties:
       2 = falling edge triggered.
       4 = active high level-sensitive.
       8 = active low level-sensitive.
+- ngpios: number of GPIOs this controller has
 
 Example:
 
@@ -30,4 +31,5 @@ gpio0: gpio0 {
 	#gpio-cells = <2>;
 	interrupt-controller;
 	#interrupt-cells = <2>;
+	ngpios = <24>;
 };
