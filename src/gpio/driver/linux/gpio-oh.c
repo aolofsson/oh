@@ -12,9 +12,6 @@
  * file called COPYING.
  */
 
-
-/* ???: Interrupts implementation likely broken. Needs testing!!! */
-
 #include <linux/bitops.h>
 #include <linux/gpio/driver.h>
 #include <linux/init.h>
@@ -27,7 +24,7 @@
 
 #define DRIVERNAME "oh-gpio"
 
-#define	OH_GPIO_NR_GPIOS 64
+#define	OH_GPIO_MAX_NR_GPIOS 64
 
 #define OH_GPIO_DIR     0x00 /* set direction of pin */
 #define OH_GPIO_IN      0x08 /* input data (read only) */
@@ -36,7 +33,7 @@
 #define OH_GPIO_OUTSET  0x20 /* alias, sets specific bits in GPIO_OUT */
 #define OH_GPIO_OUTXOR  0x28 /* alias, toggles specific bits in GPIO_OUT */
 #define OH_GPIO_IMASK   0x30 /* interrupt mask */
-#define OH_GPIO_ITYPE   0x38 /* interrupt type (level/edge) */
+#define OH_GPIO_ITYPE   0x38 /* interrupt type (edge=0/level=1) */
 #define OH_GPIO_IPOL    0x40 /* interrupt polarity (hi/rising / low/falling) */
 #define OH_GPIO_ILAT    0x48 /* latched interrupts (read only) */
 #define OH_GPIO_ILATCLR 0x50 /* clear an interrupt */
@@ -44,7 +41,6 @@
 struct oh_gpio {
 	void __iomem *base_addr;
 	struct gpio_chip chip;
-	int irq;
 	spinlock_t lock;
 };
 
@@ -76,15 +72,21 @@ static inline u64 oh_gpio_readq(void __iomem *addr)
 }
 #endif
 
-static inline void oh_gpio_reg_write(u64 value, void __iomem *base,
+static inline void oh_gpio_reg_write(u64 value, struct oh_gpio *gpio,
 				     unsigned long offset)
 {
-	oh_gpio_writeq(value, (u8 __iomem *) base + offset);
+	if (gpio->chip.ngpio > 32)
+		oh_gpio_writeq(value, (u8 __iomem *) gpio->base_addr + offset);
+	else
+		writel((u32) value, (u8 __iomem *) gpio->base_addr + offset);
 }
 
-static inline u64 oh_gpio_reg_read(void __iomem *base, unsigned long offset)
+static inline u64 oh_gpio_reg_read(struct oh_gpio *gpio, unsigned long offset)
 {
-	return oh_gpio_readq((u8 __iomem *) base + offset);
+	if (gpio->chip.ngpio > 32)
+		return oh_gpio_readq((u8 __iomem *) gpio->base_addr + offset);
+	else
+		return (u64) readl((u8 __iomem *) gpio->base_addr + offset);
 }
 
 /**
@@ -101,7 +103,7 @@ static int oh_gpio_get_value(struct gpio_chip *chip, unsigned pin)
 	struct oh_gpio *gpio = to_oh_gpio(chip);
 
 	spin_lock_irqsave(&gpio->lock, flags);
-	data = oh_gpio_reg_read(gpio->base_addr, OH_GPIO_IN);
+	data = oh_gpio_reg_read(gpio, OH_GPIO_IN);
 	spin_unlock_irqrestore(&gpio->lock, flags);
 
 	return (data >> pin) & 1;
@@ -119,14 +121,13 @@ static void oh_gpio_set_value(struct gpio_chip *chip, unsigned pin, int value)
 	unsigned long flags;
 	struct oh_gpio *gpio = to_oh_gpio(chip);
 
-	value = !!value;
-	mask = value << pin;
+	mask = BIT_ULL(pin);
 
 	spin_lock_irqsave(&gpio->lock, flags);
 	if (value)
-		oh_gpio_reg_write(mask, gpio->base_addr, OH_GPIO_OUTSET);
+		oh_gpio_reg_write(mask, gpio, OH_GPIO_OUTSET);
 	else
-		oh_gpio_reg_write(mask, gpio->base_addr, OH_GPIO_OUTCLR);
+		oh_gpio_reg_write(mask, gpio, OH_GPIO_OUTCLR);
 	spin_unlock_irqrestore(&gpio->lock, flags);
 }
 
@@ -144,7 +145,7 @@ static int oh_gpio_get_direction(struct gpio_chip *chip, unsigned pin)
 	struct oh_gpio *gpio = to_oh_gpio(chip);
 
 	spin_lock_irqsave(&gpio->lock, flags);
-	dir = oh_gpio_reg_read(gpio->base_addr, OH_GPIO_DIR);
+	dir = oh_gpio_reg_read(gpio, OH_GPIO_DIR);
 	spin_unlock_irqrestore(&gpio->lock, flags);
 
 	return !((dir >> pin) & 1);
@@ -166,9 +167,9 @@ static int oh_gpio_direction_in(struct gpio_chip *chip, unsigned pin)
 	mask = BIT_ULL(pin);
 
 	spin_lock_irqsave(&gpio->lock, flags);
-	dir = oh_gpio_reg_read(gpio->base_addr, OH_GPIO_DIR);
+	dir = oh_gpio_reg_read(gpio, OH_GPIO_DIR);
 	dir &= ~mask;
-	oh_gpio_reg_write(dir, gpio->base_addr, OH_GPIO_DIR);
+	oh_gpio_reg_write(dir, gpio, OH_GPIO_DIR);
 	spin_unlock_irqrestore(&gpio->lock, flags);
 
 	return 0;
@@ -195,9 +196,9 @@ static int oh_gpio_direction_out(struct gpio_chip *chip, unsigned pin,
 	mask = BIT_ULL(pin);
 
 	spin_lock_irqsave(&gpio->lock, flags);
-	dir = oh_gpio_reg_read(gpio->base_addr, OH_GPIO_DIR);
+	dir = oh_gpio_reg_read(gpio, OH_GPIO_DIR);
 	dir |= mask;
-	oh_gpio_reg_write(dir, gpio->base_addr, OH_GPIO_DIR);
+	oh_gpio_reg_write(dir, gpio, OH_GPIO_DIR);
 	spin_unlock_irqrestore(&gpio->lock, flags);
 
 	oh_gpio_set_value(chip, pin, value);
@@ -220,9 +221,9 @@ static void oh_gpio_irq_mask(struct irq_data *irq_data)
 	pin = irq_data->hwirq;
 
 	spin_lock_irqsave(&gpio->lock, flags);
-	imask = oh_gpio_reg_read(gpio->base_addr, OH_GPIO_IMASK);
+	imask = oh_gpio_reg_read(gpio, OH_GPIO_IMASK);
 	imask |= BIT_ULL(pin);
-	oh_gpio_reg_write(imask, gpio->base_addr, OH_GPIO_IMASK);
+	oh_gpio_reg_write(imask, gpio, OH_GPIO_IMASK);
 	spin_unlock_irqrestore(&gpio->lock, flags);
 }
 
@@ -241,9 +242,9 @@ static void oh_gpio_irq_unmask(struct irq_data *irq_data)
 	pin = irq_data->hwirq;
 
 	spin_lock_irqsave(&gpio->lock, flags);
-	imask = oh_gpio_reg_read(gpio->base_addr, OH_GPIO_IMASK);
+	imask = oh_gpio_reg_read(gpio, OH_GPIO_IMASK);
 	imask &= ~BIT_ULL(pin);
-	oh_gpio_reg_write(imask, gpio->base_addr, OH_GPIO_IMASK);
+	oh_gpio_reg_write(imask, gpio, OH_GPIO_IMASK);
 	spin_unlock_irqrestore(&gpio->lock, flags);
 }
 
@@ -261,18 +262,8 @@ static void oh_gpio_irq_ack(struct irq_data *irq_data)
 	pin = irq_data->hwirq;
 
 	spin_lock_irqsave(&gpio->lock, flags);
-	oh_gpio_reg_write(BIT_ULL(pin), gpio->base_addr, OH_GPIO_ILATCLR);
+	oh_gpio_reg_write(BIT_ULL(pin), gpio, OH_GPIO_ILATCLR);
 	spin_unlock_irqrestore(&gpio->lock, flags);
-}
-
-/**
- * oh_gpio_irq_enable - Enable interrupts for a gpio pin
- * @irq_data:	irq data containing irq number of gpio pin
- */
-static void oh_gpio_irq_enable(struct irq_data *irq_data)
-{
-	oh_gpio_irq_ack(irq_data);
-	oh_gpio_irq_unmask(irq_data);
 }
 
 /**
@@ -295,24 +286,24 @@ static int oh_gpio_irq_set_type(struct irq_data *irq_data, unsigned type)
 
 	spin_lock_irqsave(&gpio->lock, flags);
 
-	itype = oh_gpio_reg_read(gpio->base_addr, OH_GPIO_ITYPE);
-	ipol = oh_gpio_reg_read(gpio->base_addr, OH_GPIO_IPOL);
+	itype = oh_gpio_reg_read(gpio, OH_GPIO_ITYPE);
+	ipol = oh_gpio_reg_read(gpio, OH_GPIO_IPOL);
 
 	switch (type) {
 	case IRQ_TYPE_EDGE_RISING:
-		itype	|= mask;
+		itype	&= ~mask;
 		ipol	|= mask;
 		break;
 	case IRQ_TYPE_EDGE_FALLING:
-		itype	|= mask;
+		itype	&= ~mask;
 		ipol	&= ~mask;
 		break;
 	case IRQ_TYPE_LEVEL_HIGH:
-		itype	&= ~mask;
+		itype	|= mask;
 		ipol	|= mask;
 		break;
 	case IRQ_TYPE_LEVEL_LOW:
-		itype	&= ~mask;
+		itype	|= mask;
 		ipol	&= ~mask;
 		break;
 	default:
@@ -320,8 +311,8 @@ static int oh_gpio_irq_set_type(struct irq_data *irq_data, unsigned type)
 		return -EINVAL;
 	}
 
-	oh_gpio_reg_write(itype, gpio->base_addr, OH_GPIO_ITYPE);
-	oh_gpio_reg_write(ipol, gpio->base_addr, OH_GPIO_IPOL);
+	oh_gpio_reg_write(itype, gpio, OH_GPIO_ITYPE);
+	oh_gpio_reg_write(ipol, gpio, OH_GPIO_IPOL);
 
 	spin_unlock_irqrestore(&gpio->lock, flags);
 
@@ -334,7 +325,6 @@ static int oh_gpio_irq_set_type(struct irq_data *irq_data, unsigned type)
 
 static struct irq_chip oh_gpio_irqchip = {
 	.name		= DRIVERNAME,
-	.irq_enable	= oh_gpio_irq_enable,
 	.irq_ack	= oh_gpio_irq_ack,
 	.irq_mask	= oh_gpio_irq_mask,
 	.irq_unmask	= oh_gpio_irq_unmask,
@@ -346,46 +336,38 @@ static struct irq_chip oh_gpio_irqchip = {
  * @irq:	oh_gpio irq number
  * @devid:	pointer to oh_gpio struct
  *
- * Reads the interrupt latch register and interrupt mask register to get the
- * gpio pin number(s) that have pending interrupts. It then calls the generic
- * irq handlers for those pins irqs.
- *
- * Note: Assumes ilat is NOT MASKED by imask (but instead irq_out is),
- * which is not implemented in HDL now.
+ * Reads the interrupt latch register register to get the gpio pin number(s)
+ * that have pending interrupts. It then calls the generic irq handlers for
+ * those pins irqs.
  *
  * Return: IRQ_HANDLED if any interrupts were handled, IRQ_NONE otherwise.
  */
 static irqreturn_t oh_gpio_irq_handler(int irq, void *dev_id)
 {
-	u64 pending, ilat, imask;
-	unsigned long flags, pending_lo, pending_hi;
+	u64 ilat;
+	unsigned long flags, ilat_lo, ilat_hi;
 	int offset;
 	struct oh_gpio *gpio = dev_id;
 	struct irq_domain *irqdomain = gpio->chip.irqdomain;
 
 	spin_lock_irqsave(&gpio->lock, flags);
-	ilat = oh_gpio_reg_read(gpio->base_addr, OH_GPIO_ILAT);
-	imask = oh_gpio_reg_read(gpio->base_addr, OH_GPIO_IMASK);
+	ilat = oh_gpio_reg_read(gpio, OH_GPIO_ILAT);
 	spin_unlock_irqrestore(&gpio->lock, flags);
 
-	/* !!!: Assumes ilat is NOT MASKED by imask (but instead irq_out is),
-	 * which is not implemented in HDL now
-	 */
-
-	/* Only unmasked interrupts are pending */
-	pending = ilat & ~imask;
+	if (!ilat)
+		return IRQ_NONE;
 
 	/* No generic 64-bit for_each_set_bit. Need to split in high/low */
-	pending_lo = (unsigned long) ((pending >>  0) & 0xffffffff);
-	pending_hi = (unsigned long) ((pending >> 32) & 0xffffffff);
+	ilat_lo = (unsigned long) ((ilat >>  0) & 0xffffffff);
+	ilat_hi = (unsigned long) ((ilat >> 32) & 0xffffffff);
 
-	for_each_set_bit(offset, &pending_lo, 32)
+	for_each_set_bit(offset, &ilat_lo, 32)
 		generic_handle_irq(irq_find_mapping(irqdomain, offset));
 
-	for_each_set_bit(offset, &pending_hi, 32)
+	for_each_set_bit(offset, &ilat_hi, 32)
 		generic_handle_irq(irq_find_mapping(irqdomain, 32 + offset));
 
-	return pending ? IRQ_HANDLED : IRQ_NONE;
+	return IRQ_HANDLED;
 }
 
 static const struct of_device_id oh_gpio_of_match[] = {
@@ -404,10 +386,12 @@ MODULE_DEVICE_TABLE(of, oh_gpio_of_match);
  */
 static int oh_gpio_probe(struct platform_device *pdev)
 {
-	int ret;
+	int ret, irq;
+	u32 ngpios;
 	struct oh_gpio *gpio;
 	struct gpio_chip *chip;
 	struct resource *res;
+	struct device_node *np = pdev->dev.of_node;
 
 	gpio = devm_kzalloc(&pdev->dev, sizeof(*gpio), GFP_KERNEL);
 	if (!gpio)
@@ -415,18 +399,36 @@ static int oh_gpio_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, gpio);
 
+	ret = of_property_read_u32(np, "ngpios", &ngpios);
+	if (ret == -ENOENT) {
+		dev_info(&pdev->dev,
+			 "ngpios property missing, defaulting to %u\n",
+			 OH_GPIO_MAX_NR_GPIOS);
+		ngpios = OH_GPIO_MAX_NR_GPIOS;
+	} else if (ret) {
+		dev_err(&pdev->dev, "ngpios property is not valid\n");
+		return ret;
+	}
+
+	if (ngpios > OH_GPIO_MAX_NR_GPIOS) {
+		dev_err(&pdev->dev,
+			"ngpios property is %u, max allowed is %u\n",
+			(unsigned) ngpios, OH_GPIO_MAX_NR_GPIOS);
+		return -EINVAL;
+	}
+
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	gpio->base_addr = devm_ioremap_resource(&pdev->dev, res);
 	if (IS_ERR(gpio->base_addr))
 		return PTR_ERR(gpio->base_addr);
 
-	gpio->irq = platform_get_irq(pdev, 0);
-	if (gpio->irq < 0) {
+	irq = platform_get_irq(pdev, 0);
+	if (irq < 0) {
 		dev_err(&pdev->dev, "invalid IRQ\n");
-		return gpio->irq;
+		return irq;
 	}
 
-	ret = devm_request_irq(&pdev->dev, gpio->irq, oh_gpio_irq_handler, 0,
+	ret = devm_request_irq(&pdev->dev, irq, oh_gpio_irq_handler, 0,
 			       dev_name(&pdev->dev), gpio);
 	if (ret) {
 		dev_err(&pdev->dev, "could not request IRQ\n");
@@ -441,7 +443,7 @@ static int oh_gpio_probe(struct platform_device *pdev)
 	chip->owner = THIS_MODULE;
 	chip->dev = &pdev->dev;
 	chip->base = -1;
-	chip->ngpio = OH_GPIO_NR_GPIOS;
+	chip->ngpio = (u16) ngpios;
 	chip->get = oh_gpio_get_value;
 	chip->set = oh_gpio_set_value;
 	chip->get_direction = oh_gpio_get_direction;
@@ -449,8 +451,8 @@ static int oh_gpio_probe(struct platform_device *pdev)
 	chip->direction_output = oh_gpio_direction_out;
 
 	/* mask / clear all interrupts */
-	oh_gpio_reg_write(~0ULL, gpio->base_addr, OH_GPIO_IMASK);
-	oh_gpio_reg_write(~0ULL, gpio->base_addr, OH_GPIO_ILATCLR);
+	oh_gpio_reg_write(~0ULL, gpio, OH_GPIO_IMASK);
+	oh_gpio_reg_write(~0ULL, gpio, OH_GPIO_ILATCLR);
 
 	/* register gpio chip */
 	ret = gpiochip_add(chip);
