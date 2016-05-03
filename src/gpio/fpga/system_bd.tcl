@@ -145,6 +145,8 @@ proc create_root_design { parentCell } {
   # Create interface ports
 
   # Create ports
+  set gpio_n [ create_bd_port -dir IO -from 23 -to 0 gpio_n ]
+  set gpio_p [ create_bd_port -dir IO -from 23 -to 0 gpio_p ]
 
   # Create instance: parallella_gpio_0, and set properties
   set parallella_gpio_0 [ create_bd_cell -type ip -vlnv www.parallella.org:user:parallella_gpio:1.0 parallella_gpio_0 ]
@@ -189,6 +191,8 @@ CONFIG.PCW_USE_S_AXI_HP1 {1}  ] $processing_system7_0
   connect_bd_intf_net -intf_net processing_system7_0_axi_periph_M00_AXI [get_bd_intf_pins parallella_gpio_0/s_axi] [get_bd_intf_pins processing_system7_0_axi_periph/M00_AXI]
 
   # Create port connections
+  connect_bd_net -net parallella_gpio_0_gpio_n [get_bd_ports gpio_n] [get_bd_pins parallella_gpio_0/gpio_n]
+  connect_bd_net -net parallella_gpio_0_gpio_p [get_bd_ports gpio_p] [get_bd_pins parallella_gpio_0/gpio_p]
   connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins proc_sys_reset_0/interconnect_aresetn] [get_bd_pins processing_system7_0_axi_periph/ARESETN]
   connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins parallella_gpio_0/s_axi_aresetn] [get_bd_pins parallella_gpio_0/sys_nreset] [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins processing_system7_0_axi_periph/M00_ARESETN] [get_bd_pins processing_system7_0_axi_periph/S00_ARESETN]
   connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins parallella_gpio_0/sys_clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins processing_system7_0/M_AXI_GP1_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP1_ACLK] [get_bd_pins processing_system7_0_axi_periph/ACLK] [get_bd_pins processing_system7_0_axi_periph/M00_ACLK] [get_bd_pins processing_system7_0_axi_periph/S00_ACLK]

@@ -16,4 +16,7 @@ set ip_repos [list "."]
 set hdl_files []
 
 #All constraints files
-set constraints_files []
+set constraints_files [list \
+	../../parallella/fpga/parallella_io.xdc \
+	../../parallella/fpga/parallella_7020_io.xdc \
+	]
