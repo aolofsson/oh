@@ -44,7 +44,6 @@ module parallella_gpio(/*AUTOARG*/
    wire  [NGPIO-1:0]	gpio_dir;		// oh gpio direction
    wire  [NGPIO-1:0]	pgpio_in;		// parallella gpio in
    wire  [NGPIO-1:0]	pgpio_out;		// parallella gpio out
-   wire  [NGPIO-1:0]	pgpio_tristate; 	// parallella gpio bidirectional
 
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
@@ -98,17 +97,11 @@ module parallella_gpio(/*AUTOARG*/
 
    /*AUTOREG*/
 
-   oh_tristate #(.N(NGPIO))
-   tristate (
-	     .oe			(gpio_dir[NGPIO-1:0]),
-	     .in			(gpio_in[NGPIO-1:0]),
-	     .io			(pgpio_tristate[NGPIO-1:0]),
-	     .out			(gpio_out[NGPIO-1:0]));
 
    pgpio #(.NGPIO(NGPIO),.NPS(NGPIO))
-   pgpio (.ps_gpio_i			(pgpio_in[NGPIO-1:0]),
-	  .ps_gpio_o			(pgpio_out[NGPIO-1:0]),
-	  .ps_gpio_t			(pgpio_tristate[NGPIO-1:0]),
+   pgpio (.ps_gpio_i			(gpio_in[NGPIO-1:0]),
+	  .ps_gpio_o			(gpio_out[NGPIO-1:0]),
+	  .ps_gpio_t			(~gpio_dir[NGPIO-1:0]),
 	  /*AUTOINST*/
 	  // Inouts
 	  .gpio_p			(gpio_p[NGPIO-1:0]),
