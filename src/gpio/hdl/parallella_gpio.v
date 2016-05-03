@@ -19,7 +19,7 @@ module parallella_gpio(/*AUTOARG*/
    s_axi_awcache, s_axi_awburst, s_axi_awaddr, s_axi_arvalid,
    s_axi_arsize, s_axi_arqos, s_axi_arprot, s_axi_arlock, s_axi_arlen,
    s_axi_arid, s_axi_aresetn, s_axi_arcache, s_axi_arburst,
-   s_axi_araddr, sys_nreset, sys_clk
+   s_axi_araddr, constant_zero, constant_one, sys_nreset, sys_clk
    );
 
    //########################################################
@@ -31,6 +31,10 @@ module parallella_gpio(/*AUTOARG*/
    parameter ID		= 12'h820;		// addr[31:20] id
    parameter S_IDW	= 12;			// ID width for S_AXI
    parameter NGPIO	= 24;			// number of gpio pins
+
+   // constants
+   input		constant_zero;		// Always 0
+   input		constant_one;		// Always 1
 
    //clk, reset
    input		sys_nreset;		// active low async reset
@@ -44,7 +48,6 @@ module parallella_gpio(/*AUTOARG*/
    wire  [NGPIO-1:0]	gpio_dir;		// oh gpio direction
    wire  [NGPIO-1:0]	pgpio_in;		// parallella gpio in
    wire  [NGPIO-1:0]	pgpio_out;		// parallella gpio out
-   wire  [NGPIO-1:0]	pgpio_tristate; 	// parallella gpio bidirectional
 
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
@@ -98,17 +101,13 @@ module parallella_gpio(/*AUTOARG*/
 
    /*AUTOREG*/
 
-   oh_tristate #(.N(NGPIO))
-   tristate (
-	     .oe			(gpio_dir[NGPIO-1:0]),
-	     .in			(gpio_in[NGPIO-1:0]),
-	     .io			(pgpio_tristate[NGPIO-1:0]),
-	     .out			(gpio_out[NGPIO-1:0]));
+   assign constant_zero = 1'b0;
+   assign constant_one = 1'b1;
 
    pgpio #(.NGPIO(NGPIO),.NPS(NGPIO))
-   pgpio (.ps_gpio_i			(pgpio_in[NGPIO-1:0]),
-	  .ps_gpio_o			(pgpio_out[NGPIO-1:0]),
-	  .ps_gpio_t			(pgpio_tristate[NGPIO-1:0]),
+   pgpio (.ps_gpio_i			(gpio_in[NGPIO-1:0]),
+	  .ps_gpio_o			(gpio_out[NGPIO-1:0]),
+	  .ps_gpio_t			(~gpio_dir[NGPIO-1:0]),
 	  /*AUTOINST*/
 	  // Inouts
 	  .gpio_p			(gpio_p[NGPIO-1:0]),
