@@ -223,7 +223,7 @@ module gpio #(
 		   .clk			(clk),
 		   .access_in		(access_in),
 		   .packet_in		(packet_in[PW-1:0]),
-		   .read_data		(read_data[63:0]),
+		   .read_data		(read_data[AW-1:0]),
 		   .wait_in		(wait_in));
    
 endmodule // gpio
