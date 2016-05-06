@@ -123,10 +123,12 @@ TBD
 * Use common names: nreset, clk, din, dout, en, rd, wr, addr, etc
 * Make names descriptive, avoid non-common abbreviations 
 * Make names as short as possible, but not shorter
+* Use short named generate blocks "g0, g1, etc"
+* Inside generate blocks use short "i<name>" for instance
 * Use _ in constants over 4 bits (eg: 8'h1100_1100)
 * One module per file
 * Use ".vh" suffix for header files,
-* yse ".v" for verilog source files
+* Use ".v" for verilog source files
 * Use `include files for constants
 * Use `ifndef _CONSTANTS_V to include file only once
 * No timescales in design files (only in testbench)
