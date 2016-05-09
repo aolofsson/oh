@@ -39,34 +39,34 @@ module oh_memory_sp  # (parameter DW    = 104,          // memory width
   
    generate
       if(ASIC)
-	begin : asic
+	begin : g0
 	   asic_sram_sp #(.DW(DW),
 			  .DEPTH(DEPTH),
 			  .PROJ(PROJ),
 			  .MCW(MCW))	     
-	   i_sram (// Outputs
-		   .dout       (dout[DW-1:0]),
-		   // Inputs
-		   .clk        (clk),
-		   .en         (en),
-		   .we         (we),
-		   .wem        (wem[DW-1:0]),
-		   .addr       (addr[AW-1:0]),
-		   .din        (din[DW-1:0]),
-		   .vdd        (vdd),
-		   .vddm       (vddm),
-		   .vss        (vss),
-		   .shutdown   (shutdown),
-		   .memconfig  (memconfig[MCW-1:0]),
-		   .memrepair  (memrepair[MCW-1:0]),
-		   .bist_en    (bist_en),
-		   .bist_we    (bist_we),
-		   .bist_wem   (bist_wem[DW-1:0]),
-		   .bist_addr  (bist_addr[AW-1:0]),
-		   .bist_din   (bist_din[DW-1:0]));
+	   asic_sram_sp (// Outputs
+			 .dout       (dout[DW-1:0]),
+			 // Inputs
+			 .clk        (clk),
+			 .en         (en),
+			 .we         (we),
+			 .wem        (wem[DW-1:0]),
+			 .addr       (addr[AW-1:0]),
+			 .din        (din[DW-1:0]),
+			 .vdd        (vdd),
+			 .vddm       (vddm),
+			 .vss        (vss),
+			 .shutdown   (shutdown),
+			 .memconfig  (memconfig[MCW-1:0]),
+			 .memrepair  (memrepair[MCW-1:0]),
+			 .bist_en    (bist_en),
+			 .bist_we    (bist_we),
+			 .bist_wem   (bist_wem[DW-1:0]),
+			 .bist_addr  (bist_addr[AW-1:0]),
+			 .bist_din   (bist_din[DW-1:0]));
 	end
       else
-	begin : generic
+	begin : g0
 	   oh_memory_ram #(.DW(DW),
 			   .DEPTH(DEPTH))	     
 	   oh_memory_ram (//read port
