@@ -1,46 +1,40 @@
+//#############################################################################
+//# Purpose: SPI Master Transmit Fifo                                         #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
+
 `include "spi_regmap.vh"
-module spi_master_fifo (/*AUTOARG*/
-   // Outputs
-   fifo_prog_full, wait_out, fifo_empty, fifo_dout,
-   // Inputs
-   clk, nreset, spi_en, access_in, packet_in, fifo_read
-   );
-   //#####################################################################
-   //# INTERFACE
-   //#####################################################################
-
-   //parameters
-   parameter  DEPTH = 16;            // fifo entries
-   parameter  AW    = 32;            // architecture address width
-   parameter  SW    = 8;             // output packet width   
-   localparam PW    = 2*AW+40;       // input packet width   
-   parameter  FAW   = $clog2(DEPTH); // fifo address width   
-   parameter  SRW   = $clog2(PW/SW); // serializer cycle count width
+module spi_master_fifo #( parameter  DEPTH = 16,            // fifo entries
+			  parameter  AW    = 32,            // address width
+			  parameter  PW    = 104,           // input packet width   
+			  parameter  SW    = 8,             // io packet width   
+			  parameter  FAW   = $clog2(DEPTH), // fifo address width   
+			  parameter  SRW   = $clog2(PW/SW)  // serialization factor
+			  )
+   (
+    //clk,reset, cfg
+    input 	    clk, // clk
+    input 	    nreset, // async active low reset
+    input 	    spi_en, // spi enable   
+    output 	    fifo_prog_full, // fifo full indicator for status
+    // Incoming interface 
+    input 	    access_in, // access by core
+    input [PW-1:0]  packet_in, // packet from core
+    output 	    wait_out, // pushback to core
+    // IO interface
+    input 	    fifo_read, // pull a byte to IO
+    output 	    fifo_empty, // fifo is empty
+    output [SW-1:0] fifo_dout // byte for IO
+    );
    
-   //clk,reset, cfg
-   input            clk;            // clk
-   input 	    nreset;         // async active low reset
-   input 	    spi_en;         // spi enable   
-   output 	    fifo_prog_full; // fifo full indicator for status
-   
-   // Incoming interface 
-   input            access_in;      // access by core
-   input [PW-1:0]   packet_in;      // packet from core
-   output 	    wait_out;       // pushback to core
-   
-   // IO interface
-   input 	    fifo_read;      // pull a byte to IO
-   output 	    fifo_empty;     // fifo is empty
-   output [SW-1:0]  fifo_dout;      // byte for IO
-
-   //##################################
-   //# BODY
-   //##################################
-
+   //###############
+   //# LOCAL WIRES
+   //###############
    wire [7:0] 	    datasize;
    wire [PW-1:0]    tx_data;
    wire [SW-1:0]    fifo_din;
-   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [4:0]		ctrlmode_in;		// From p2e of packet2emesh.v
@@ -55,7 +49,8 @@ module spi_master_fifo (/*AUTOARG*/
    //# DECODE
    //###################################
 
-   packet2emesh #(.AW(AW))
+   packet2emesh #(.AW(AW),
+		  .PW(PW))
    p2e (/*AUTOINST*/
 	// Outputs
 	.write_in			(write_in),

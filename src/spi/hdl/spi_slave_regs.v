@@ -1,65 +1,53 @@
 //#############################################################################
-//# Purpose: SPI slave port register file                                     #
+//# Purpose: SPI slave register file                                          #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see below)                                                 # 
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
 `include "spi_regmap.vh"
-module spi_slave_regs (/*AUTOARG*/
-   // Outputs
-   spi_rdata, spi_en, cpol, cpha, lsbfirst, irq_en, spi_regs,
-   wait_out,
-   // Inputs
-   clk, nreset, hw_en, spi_clk, spi_wdata, spi_write, spi_addr,
-   access_out, access_in, packet_in
-   );
-
-   //parameters
-   parameter  UREGS  = 13;        // number of user regs (max 48)
-   parameter  CHIPID = 0;         // reset chipid value   
-   parameter  AW     = 32;        // address width
-   localparam PW     = (2*AW+40); // packet width
-   localparam SREGS  = UREGS+32;  // total regs
-           
+module spi_slave_regs #( parameter UREGS = 13,      // # of user regs (max 48)
+			 parameter SREGS = UREGS+32,// total regs
+			 parameter AW    = 32,      // address width
+			 parameter PW    = 104      // packet width
+			 )
+   (
    // clk, rest, chipid
-   input 	   clk;           // core clock
-   input 	   nreset;        // asych active low 
-   input 	   hw_en;         // block enable pin
-   
+   input 	  clk, // core clock
+   input 	  nreset, // asych active low 
+   input 	  hw_en, // block enable pin
    // sclk io domain
-   input 	   spi_clk;       // slave clock
-   input [7:0] 	   spi_wdata;     // slave write data in (for write)
-   input 	   spi_write;     // slave write
-   input [5:0] 	   spi_addr;      // slave write addr (64 regs)
-   output [7:0]    spi_rdata;     // slave read data 
-    
+   input 	  spi_clk, // slave clock
+   input [7:0] 	  spi_wdata, // slave write data in (for write)
+   input 	  spi_write, // slave write
+   input [5:0] 	  spi_addr, // slave write addr (64 regs)
+   output [7:0]   spi_rdata, // slave read data 
    // cfg bits
-   output 	   spi_en;        // enable spi
-   output 	   cpol;          // clk polarity (default is 0)
-   output 	   cpha;          // clk phase shift (default is 0)
-   output 	   lsbfirst;      // send lsbfirst
-   output 	   irq_en;        // interrupt enable
-   output [511:0]  spi_regs;      // all regs concatenated for easy read
-   
+   output 	  spi_en, // enable spi
+   output 	  cpol, // clk polarity (default is 0)
+   output 	  cpha, // clk phase shift (default is 0)
+   output 	  lsbfirst, // send lsbfirst
+   output 	  irq_en, // interrupt enable
+   output [511:0] spi_regs, // all regs concatenated for easy read
    // split transaction for core clock domain   
-   input 	   access_out;    // signal used to clear status
-   input 	   access_in; 
-   input [PW-1:0]  packet_in;     // writeback data
-   output 	   wait_out;      // 0
-   
-   //regs
+   input 	  access_out, // signal used to clear status
+   input 	  access_in, 
+   input [PW-1:0] packet_in, // writeback data
+   output 	  wait_out 
+    );
+
+  //###############
+  //# LOCAL WIRES
+  //###############
    reg [7:0] 	   spi_config;
    reg [7:0] 	   spi_status;
    reg [7:0] 	   spi_cmd;
    reg [7:0] 	   spi_psize;
-   
    reg [63:0] 	   core_regs;
    reg [7:0] 	   user_regs[UREGS-1:0];
    reg [511:0]     spi_regs;
    wire [63:0] 	   core_data;   
    integer 	   i;
-
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [4:0]		ctrlmode_in;		// From pe2 of packet2emesh.v
@@ -166,32 +154,6 @@ module spi_slave_regs (/*AUTOARG*/
    assign spi_rdata[7:0] = spi_regs[8*spi_addr[5:0]+:8];
    
 endmodule // spi_slave_regs
-
 // Local Variables:
 // verilog-library-directories:("." "../../common/hdl" "../../emesh/hdl")
 // End:
-
-//////////////////////////////////////////////////////////////////////////////
-// The MIT License (MIT)                                                    //
-//                                                                          //
-// Copyright (c) 2015-2016, Adapteva, Inc.                                  //
-//                                                                          //
-// Permission is hereby granted, free of charge, to any person obtaining a  //
-// copy of this software and associated documentation files (the "Software")//
-// to deal in the Software without restriction, including without limitation// 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, //
-// and/or sell copies of the Software, and to permit persons to whom the    //
-// Software is furnished to do so, subject to the following conditions:     //
-//                                                                          //
-// The above copyright notice and this permission notice shall be included  // 
-// in all copies or substantial portions of the Software.                   //
-//                                                                          //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  //
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               //
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   //
-// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     //
-// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT//
-// OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR //
-// THE USE OR OTHER DEALINGS IN THE SOFTWARE.                               //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////

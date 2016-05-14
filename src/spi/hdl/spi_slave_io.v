@@ -1,67 +1,49 @@
 //#############################################################################
-//# Purpose: SPI slave IO and statemachine                                    #
+//# Purpose: SPI slave IO state-machine                                       #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see below)                                                 # 
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
 `include "spi_regmap.vh"
-module spi_slave_io(/*AUTOARG*/
-   // Outputs
-   miso, spi_clk, spi_write, spi_addr, spi_wdata, spi_rdata,
-   access_out, packet_out,
-   // Inputs
-   sclk, mosi, ss, spi_en, cpol, cpha, lsbfirst, clk, nreset, wait_in
-   );
+module spi_slave_io #( parameter PW = 104  // packet width
+		       )
+   (
+    //IO interface
+    input 	    sclk, // slave clock
+    input 	    mosi, // slave input
+    input 	    ss, // slave select
+    output 	    miso, // slave output
+    //Control
+    input 	    spi_en, // spi enable
+    input 	    cpol, // cpol
+    input 	    cpha, // cpha
+    input 	    lsbfirst, // lsbfirst
+    //register file interface
+    output 	    spi_clk, // spi clock for regfile
+    output 	    spi_write, // regfile write
+    output [5:0]    spi_addr, // regfile addres
+    output [7:0]    spi_wdata, // data for regfile
+    output [7:0]    spi_rdata, // data for regfile
+    //core interface (synced to core clk)
+    input 	    clk, // core clock
+    input 	    nreset, // async active low reset   
+    output 	    access_out, // read or write core command   
+    output [PW-1:0] packet_out, // packet
+    input 	    wait_in // temporary pushback
+    );
 
-   //#################################
-   //# INTERFACE
-   //#################################
-
-   //parameters
-   parameter  SREGS  = 16;        // total regs  (16/32/64) 
-   parameter  AW    = 32;         // address width
-   localparam PW    = (2*AW+40);  // packet width
+   //###############
+   //# LOCAL WIRES
+   //###############
+   reg [1:0] 	    spi_state;   
+   reg [7:0] 	    bit_count; 
+   reg [7:0] 	    command_reg;   
+   reg 		    access_out;
+   reg 		    fetch_command;
+   wire [7:0] 	    rx_data;
+   wire [63:0] 	    tx_data;
    
-   //IO interface
-   input 	       sclk;           // slave clock
-   input 	       mosi;           // slave input
-   input 	       ss;             // slave select
-   output 	       miso;           // slave output
-
-   //Control
-   input 	       spi_en;         // spi enable
-   input 	       cpol;           // cpol
-   input 	       cpha;           // cpha
-   input 	       lsbfirst;       // lsbfirst
-   
-   //register file interface
-   output 	       spi_clk;         // spi clock for regfile
-   output 	       spi_write;       // regfile write
-   output [5:0]        spi_addr;        // regfile addres
-   output [7:0]        spi_wdata;       // data for regfile
-   output [7:0]        spi_rdata;       // data for regfile
-   
-   //core interface (synced to core clk)
-   input 	       clk;             // core clock
-   input 	       nreset;          // async active low reset   
-   output 	       access_out;      // read or write core command   
-   output [PW-1:0]     packet_out;      // packet
-   input 	       wait_in;         // temporary pushback
-   
-   //#################################
-   //# BODY
-   //#################################
-
-   reg [1:0] 	       spi_state;   
-   reg [7:0] 	       bit_count; 
-   reg [7:0] 	       command_reg;   
-   reg 		       access_out;
-   reg 		       fetch_command;
-   
-   wire [7:0] 	       rx_data;
-   wire [63:0] 	       tx_data;
-
    //#################################
    //# STATE MACHINE
    //#################################
