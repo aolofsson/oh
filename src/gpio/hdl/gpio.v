@@ -7,9 +7,9 @@
 //#############################################################################
 
 `include "gpio_regmap.vh"
-module gpio #(
-	      parameter integer N = 24, // number of gpio pins
-	      parameter integer AW = 32 // architecture address width   
+module gpio #( parameter integer N = 24,  // number of gpio pins
+	       parameter integer AW = 32, // architecture address width
+	       parameter integer PW = 104 // packet width
 	      ) 
    (
     input 	    nreset, // asynchronous active low reset
@@ -29,9 +29,6 @@ module gpio #(
    //################################
    //# wires/regs/ params
    //################################  
-   
-   //local parameters
-   localparam integer PW  = 2*AW+40; // packet width   
 
    //registers
    reg [N-1:0] 	   gpio_dir;
@@ -66,7 +63,8 @@ module gpio #(
    //# DECODE LOGIC
    //################################  
 
-   packet2emesh #(.AW(AW))
+   packet2emesh #(.AW(AW),
+		  .PW(PW))
    p2e(
        /*AUTOINST*/
        // Outputs
@@ -212,7 +210,8 @@ module gpio #(
 	 default    : read_data[AW-1:0]  <='b0;
        endcase // case (dstaddr_in[7:3])
    
-   emesh_readback #(.AW(AW))
+   emesh_readback #(.AW(AW),
+		    .PW(PW))
    emesh_readback (/*AUTOINST*/
 		   // Outputs
 		   .wait_out		(wait_out),
@@ -223,7 +222,7 @@ module gpio #(
 		   .clk			(clk),
 		   .access_in		(access_in),
 		   .packet_in		(packet_in[PW-1:0]),
-		   .read_data		(read_data[AW-1:0]),
+		   .read_data		(read_data[63:0]),
 		   .wait_in		(wait_in));
    
 endmodule // gpio
