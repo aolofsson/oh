@@ -12,7 +12,7 @@ module mio_regs (/*AUTOARG*/
    // parameters
    parameter   N         = 8;                      // number of I/O pins  
    parameter   AW        = 32;                     // address width
-   localparam  PW        = 2*AW+40;                // packet width
+   parameter   PW        = 2*AW+40;                // packet width
    parameter   DEF_CFG   = 0;                      // reset MIO_CONFI value
    parameter   DEF_CLK   = 0;                      // reset MIO_CLKDIV value
    localparam  DEF_RISE0 = 0;                      // 0 degrees
@@ -88,7 +88,8 @@ module mio_regs (/*AUTOARG*/
    //# DECODE
    //#####################################
    
-   packet2emesh #(.AW(AW))
+   packet2emesh #(.AW(AW),
+		  .PW(PW))
    p2e (/*AUTOINST*/
 	// Outputs
 	.write_in			(write_in),

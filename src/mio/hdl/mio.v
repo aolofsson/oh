@@ -15,8 +15,7 @@ module mio (/*AUTOARG*/
    parameter  NMIO    = 8;        // IO width
    parameter  AW      = 32;       // address width
    parameter  MPW     = 128;      // mio packet width (>PW)  
-
-   localparam PW      = 2*AW+40;  // emesh packet width
+   parameter  PW      = 2*AW+40;  // emesh packet width
    parameter  DEF_CFG = 0;        // Default config   
    parameter  DEF_CLK = 0;        // Default clock
    parameter  TARGET  = "GENERIC";// GENERIC,XILINX,ALTERA,GENERIC,ASIC
@@ -102,6 +101,7 @@ module mio (/*AUTOARG*/
     */
 
    mio_regs  #(.AW(AW),
+	       .PW(PW),
 	       .DEF_CFG(DEF_CFG),
 	       .DEF_CLK(DEF_CLK))	       
    mio_regs (.dmode			(),
@@ -220,6 +220,7 @@ module mio (/*AUTOARG*/
     );
     */
    mio_if  #(.AW(AW),
+	     .PW(PW),
 	     .MPW(MPW))
    mio_if (
 	   /*AUTOINST*/
