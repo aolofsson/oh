@@ -13,8 +13,8 @@ module edma_dp (/*AUTOARG*/
    packet_in, wait_in
    );
 
-   parameter AW   = 8;            // divider counter width
-   localparam PW  = 2*AW+40;      // emesh packet width
+   parameter  AW   = 8;            // divider counter width
+   parameter  PW  = 2*AW+40;      // emesh packet width
    
    // clk, reset, config
    input           clk;           // main clock
@@ -99,7 +99,8 @@ module edma_dp (/*AUTOARG*/
    //################################ 
    
    // parsing input packet
-   packet2emesh #(.AW(AW))
+   packet2emesh #(.AW(AW),
+		  .PW(PW))
    p2e (/*AUTOINST*/
 	// Outputs
 	.write_in			(write_in),
@@ -121,7 +122,8 @@ module edma_dp (/*AUTOARG*/
    assign srcaddr_out[AW-1:0] = master_active ? {(AW){1'b0}}  : srcaddr_in[31:0];
    
    // constructing output packet
-   emesh2packet #(.AW(AW))
+   emesh2packet #(.AW(AW),
+		  .PW(PW))
    e2p (.packet_out			(packet[PW-1:0]),
      /*AUTOINST*/
 	// Inputs

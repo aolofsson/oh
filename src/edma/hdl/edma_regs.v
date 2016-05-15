@@ -19,7 +19,7 @@ module edma_regs (/*AUTOARG*/
 
    // parameters 
    parameter  AW      = 8;         // address width
-   localparam PW      = 2*AW+40;   // emesh packet width
+   parameter  PW      = 2*AW+40;   // emesh packet width
    parameter  DEF_CFG = 0;         // default config after reset   
    
    // clk, reset
@@ -105,7 +105,8 @@ module edma_regs (/*AUTOARG*/
    //# DECODE
    //################################
    
-   packet2emesh #(.AW(AW))
+   packet2emesh #(.AW(AW),
+		  .PW(PW))
    p2e (.packet_in			(reg_packet_in[PW-1:0]),
 	/*AUTOINST*/
 	// Outputs

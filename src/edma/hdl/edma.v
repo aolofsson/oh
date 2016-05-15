@@ -4,57 +4,38 @@
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see below)                                                 # 
 //#############################################################################
-module edma (/*AUTOARG*/
-   // Outputs
-   irq, wait_out, access_out, packet_out, reg_wait_out,
-   reg_access_out, reg_packet_out,
-   // Inputs
-   vdd, vss, clk, nreset, access_in, packet_in, wait_in,
-   reg_access_in, reg_packet_in, reg_wait_in
-   );
-
-   //#####################################################################
-   //# INTERFACE
-   //#####################################################################
-
-   //parameters
-   parameter  AW  = 32;           // address width
-   localparam PW  = 2*AW+40;      // emesh packet width
-
-   // power
-   input           vdd;           // supply
-   input           vss;           // common ground
-
-   // reset, clk, config
-   input           clk;           // main core clock   
-   input 	   nreset;        // async active low reset
-   output 	   irq;           // interrupt output
+module edma #( parameter AW  = 32,  // address width
+	       parameter PW  = 104 // packet width
+	       ) 
+   (
+    // power
+    input 	    vdd, // supply
+    input 	    vss, // common ground
+    // reset, clk, config
+    input 	    clk, // main core clock   
+    input 	    nreset, // async active low reset
+    output 	    irq, // interrupt output
+    // datapath interface
+    input 	    access_in, // streaming input access
+    input [PW-1:0]  packet_in, // streaming input data 
+    output 	    wait_out, // pushback
+    output 	    access_out, // output access (master/slave)
+    output [PW-1:0] packet_out, // output packet (with address)
+    input 	    wait_in, // pushback
+    // config/fetch interface
+    input 	    reg_access_in, // config register access
+    input [PW-1:0]  reg_packet_in, // config register packet
+    output 	    reg_wait_out, // pushback by register read
+    output 	    reg_access_out,// config readback
+    output [PW-1:0] reg_packet_out,// config reacback packet
+    input 	    reg_wait_in    // pushback for readback
+    );
    
-   // datapath interface
-   input 	   access_in;     // streaming input access
-   input [PW-1:0]  packet_in;     // streaming input data 
-   output 	   wait_out;      // pushback
-
-   output 	   access_out;    // output access (master/slave)
-   output [PW-1:0] packet_out;    // output packet (with address)
-   input 	   wait_in;       // pushback
-
-   // config/fetch interface
-   input 	   reg_access_in; // config register access
-   input [PW-1:0]  reg_packet_in; // config register packet
-   output          reg_wait_out;  // pushback by register read
-
-   output 	   reg_access_out;// config readback
-   output [PW-1:0] reg_packet_out;// config reacback packet
-   input 	   reg_wait_in;   // pushback for readback
-   
-   //#####################################################################
-   //# BODY
-   //#####################################################################
-
+   //###############
+   //# LOCAL WIRES
+   //###############
    /*AUTOOUTPUT*/
-   /*AUTOINPUT*/
-   
+   /*AUTOINPUT*/   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			chainmode;		// From edma_regs of edma_regs.v
@@ -84,7 +65,8 @@ module edma (/*AUTOARG*/
    //# DATAPATH
    //##########################
 
-   edma_dp #(.AW(AW))
+   edma_dp #(.AW(AW),
+	     .PW(PW))
    edma_dp(/*AUTOINST*/
 	   // Outputs
 	   .count			(count[31:0]),
@@ -112,7 +94,8 @@ module edma (/*AUTOARG*/
    //# CONFIG REGISTERS
    //##########################
 
-   edma_regs #(.AW(AW))
+   edma_regs #(.AW(AW),
+	       .PW(PW))
    edma_regs (/*AUTOINST*/
 	      // Outputs
 	      .reg_wait_out		(reg_wait_out),
@@ -149,7 +132,8 @@ module edma (/*AUTOARG*/
    //# STATE MACHINE
    //##########################
 
-   edma_ctrl #(.AW(AW))
+   edma_ctrl #(.AW(AW),
+	       .PW(PW))
    edma_ctrl (/*AUTOINST*/
 	      // Outputs
 	      .fetch_access		(fetch_access),

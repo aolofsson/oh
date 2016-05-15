@@ -16,7 +16,7 @@ module edma_ctrl (/*AUTOARG*/
    );
 
    parameter  AW  = 32;            // address width
-   localparam PW  = 2*AW+40;      // fetch packet width
+   parameter  PW  = 2*AW+40;      // fetch packet width
    parameter  ID  = 4'b0000;      // group id for DMA regs [10:8]
    
    // clk, reset, config
@@ -170,7 +170,8 @@ module edma_ctrl (/*AUTOARG*/
 				 2'b0};            //1-0
    
    // constructing fetch packet
-   emesh2packet #(.AW(AW))
+   emesh2packet #(.AW(AW),
+		  .PW(PW))
    e2p (//outputs
 	.packet_out	(fetch_packet[PW-1:0]),
 	//inputs        
