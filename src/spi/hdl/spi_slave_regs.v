@@ -71,7 +71,8 @@ module spi_slave_regs #( parameter UREGS = 13,      // # of user regs (max 48)
    //#####################################
    assign wait_out = 1'b0;
    
-   packet2emesh #(.AW(AW))  
+   packet2emesh #(.AW(AW),
+		  .PW(PW))  
    pe2 (/*AUTOINST*/
 	// Outputs
 	.write_in			(write_in),
