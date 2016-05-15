@@ -1,8 +1,8 @@
 //#############################################################################
-//# Function: Sinle Port Memory                                               #
+//# Function: Single Port Memory                                              #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT  (see LICENSE file in OH! repository)                       # 
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
 module oh_memory_sp  # (parameter DW    = 104,          // memory width
