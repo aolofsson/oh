@@ -2,15 +2,11 @@
  ########################################################################
  EPIPHANY eMesh Arbiter
  ########################################################################
- 
+
  This block takes three FIFO inputs (write, read request, read response)
- and the DMA channel, arbitrates between the active channels, and forwards 
- the result to the transmit output pins.
- 
- Arbitration Priority:
- 1) read responses (highest)
- 2) host writes
- 3) read requests from host (lowest)
+ and the DMA channel, arbitrates between the active channels (using round
+ robin), and forwards the result to the transmit output pins.
+
  */
 
 module etx_arbiter (/*AUTOARG*/
@@ -74,22 +70,25 @@ module etx_arbiter (/*AUTOARG*/
    //########################################################################
    //# Arbiter
    //########################################################################
-   //TODO: change to round robin!!! (live lock hazard)
-   
-   oh_arbiter #(.N(3)) arbiter (.grants({txrd_grant,
-					 txwr_grant, //highest priority
-					 txrr_grant	
-					 }),
-				.requests({txrd_access,
-					   txwr_access,
-					   txrr_access	
-					   })
-				);
+
+   // ???: Add fifo_not_empty/valid signals instead off tx??_access?
+   // oh_fifo_cdc deasserts access_out when wait_in is high.
+   oh_arbiter_rr3 arbiter (.clk(clk),
+			   .nreset(nreset),
+			   .grants({txrd_grant,
+				    txwr_grant,
+				    txrr_grant
+				    }),
+			   .requests({txrd_access,
+				      txwr_access,
+				      txrr_access
+				      })
+			  );
    oh_mux3 #(.DW(PW))
    mux3(.out	(etx_mux[PW-1:0]),
-	.in0	(txwr_packet[PW-1:0]),.sel0 (txwr_grant),
-	.in1	(txrd_packet[PW-1:0]),.sel1 (txrd_grant),
-	.in2	(txrr_packet[PW-1:0]),.sel2 (txrr_grant)
+	.in0	(txwr_packet[PW-1:0]),.sel0 (txwr_valid),
+	.in1	(txrd_packet[PW-1:0]),.sel1 (txrd_valid),
+	.in2	(txrr_packet[PW-1:0]),.sel2 (txrr_valid)
 	);
 
    //######################################################################
@@ -97,32 +96,21 @@ module etx_arbiter (/*AUTOARG*/
    //######################################################################
    assign etx_all_wait = (etx_wait     & ~cfg_match) |
 			 (etx_cfg_wait &  cfg_match);
-      
-   //Read response
-   assign txrr_wait = etx_all_wait;
 
-   //Write waits on pin wr wait or cfg_wait
-   assign txwr_wait = etx_all_wait |
-		      txrr_access;
+   assign txrr_wait = etx_all_wait |       1'b0 | txwr_valid | txrd_valid;
+   assign txwr_wait = etx_all_wait | txrr_valid |       1'b0 | txrd_valid;
+   assign txrd_wait = etx_all_wait | txrr_valid | txwr_valid |       1'b0;
 
-   //Host read request (self throttling, one read at a time)
-   assign txrd_wait = etx_all_wait |
-		      txrr_access  |
-		      txwr_access;
-   
    //#####################################################################
    //# Pipeline stage (arbiter+mux takes time..)
    //#####################################################################
-   assign access_in = txwr_grant |
-		      txrd_grant |
-		      txrr_grant;
 
-/*   assign access_in = (txwr_grant & ~txwr_wait) |
-		      (txrd_grant & ~txrd_wait) |
-		      (txrr_grant & ~txrr_wait);
+   assign txwr_valid = txwr_grant & txwr_access;
+   assign txrd_valid = txrd_grant & txrd_access;
+   assign txrr_valid = txrr_grant & txrr_access;
 
-  */ 
-   
+   assign access_in = txwr_valid | txrd_valid | txrr_valid;
+
    packet2emesh #(.AW(AW))
    p2e (.write_in	(),
 	.datamode_in	(),
@@ -147,7 +135,7 @@ module etx_arbiter (/*AUTOARG*/
      if (!nreset)
        cfg_access  <= 1'b0;	   
      else if (~etx_cfg_wait)
-       cfg_access  <= (txwr_grant | txrd_grant) & cfg_match;
+       cfg_access  <= (txwr_valid | txrd_valid) & cfg_match;
 
    //packet
    always @ (posedge clk)
