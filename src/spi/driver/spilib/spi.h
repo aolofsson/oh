@@ -90,7 +90,8 @@
 #define SPI_STATUS	0x01
 #define SPI_CLKDIV	0x02
 #define SPI_TX		0x08 /* master only */
-#define SPI_RX		0x10
+#define SPI_RX0		0x10
+#define SPI_RX1		0x14
 #define SPI_USER0	0x20 /* slave only, first user register */
 
 #define SPI_CONFIG_DISABLE		(1 << 0)
@@ -104,10 +105,10 @@
 #define SPI_STATUS_STATE		(3 << 1) /* master only */
 #define SPI_STATUS_TX_FIFO_HALF_FULL	(1 << 3) /* master only */
 
-#define SPI_STATE_IDLE(status)		((status) & SPI_STATUS_STATE == 0)
-#define SPI_STATE_SETUP(status)		((status) & SPI_STATUS_STATE == 1)
-#define SPI_STATE_DATA(status)		((status) & SPI_STATUS_STATE == 2)
-#define SPI_STATE_HOLD(status)		((status) & SPI_STATUS_STATE == 3)
+#define SPI_STATE_IDLE(status)		(((status) & SPI_STATUS_STATE) >> 1 == 0)
+#define SPI_STATE_SETUP(status)		(((status) & SPI_STATUS_STATE) >> 1 == 1)
+#define SPI_STATE_DATA(status)		(((status) & SPI_STATUS_STATE) >> 1 == 2)
+#define SPI_STATE_HOLD(status)		(((status) & SPI_STATUS_STATE) >> 1 == 3)
 /**
  * spi_reg_write - Set SPI device register
  *

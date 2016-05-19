@@ -14,8 +14,8 @@ struct oh_spi_mosi_pkt {
 } __attribute__((packed));
 
 struct oh_spi_miso_pkt {
-	unsigned:8;
 	uint8_t	data;
+	unsigned fook:8;
 } __attribute__((packed));
 
 
@@ -31,7 +31,7 @@ uint8_t slave_access(spi_dev_t *dev, unsigned mode, unsigned addr, uint8_t data)
 		.mode = mode,
 		.data = data,
 	};
-	spi_transfer(dev, (uint8_t *) &mosi, &miso, sizeof(mosi));
+	spi_transfer(dev, &mosi, &miso, sizeof(mosi));
 
 	return miso.data;
 }
@@ -58,20 +58,58 @@ int main()
 		return 1;
 	}
 
-	for (i = 0; i < 13; i++)
-		slave_write(&master, SPI_USER0 + i, i);
+	printf("status: %#x\n", spi_reg_read(&master, SPI_STATUS));
 
-	for (i = 0; i < 13; i++)
-		slave_regs[i] = slave_read(&master, SPI_USER0 + i);
+	printf("clkdiv: %#x\n", spi_reg_read(&master, SPI_CLKDIV));
 
-	printf("slave user regs: ");
-	for (i = 0; i < 13; i++)
-		printf("0x%2x ", (int) slave_regs[i]);
-	printf("\n");
+	printf("config: %#x\n", spi_reg_read(&master, SPI_CONFIG));
 
-	for (i = 0; i < 13; i++)
-		if (slave_regs[i] != i)
-			fail = true;
+	printf("spi_reg_read(0x31): %#x\n", spi_reg_read(&master, 31));
+	spi_set_clkdiv(&master, 0x5);
+
+	int j;
+	//for (j = 0; j < 100000; j++) {
+	for (j = 0; j < 1; j++) {
+
+		for (i = 0; i < 13; i++)
+			slave_write(&master, SPI_USER0 + i, i * 2);
+
+		for (i = 0; i < 13; i++)
+			slave_regs[i] = slave_read(&master, SPI_USER0 + i);
+
+#if 1
+		printf("slave user regs: ");
+		for (i = 0; i < 13; i++)
+			printf("0x%02x ", (int) slave_regs[i]);
+		printf("\n");
+#endif
+
+		for (i = 0; i < 13; i++)
+			if (slave_regs[i] != i * 2)
+				fail = true;
+
+		for (i = 0; i < 13; i++)
+			slave_write(&master, SPI_USER0 + i, i);
+
+		for (i = 0; i < 13; i++)
+			slave_regs[i] = slave_read(&master, SPI_USER0 + i);
+#if 1
+		printf("slave user regs: ");
+		for (i = 0; i < 13; i++)
+			printf("0x%02x ", (int) slave_regs[i]);
+		printf("\n");
+#endif
+
+		for (i = 0; i < 13; i++)
+			if (slave_regs[i] != i)
+				fail = true;
+
+		if (fail)
+			break;
+
+//		if (!(j % 10000))
+//			printf("j=%d\n", j);
+	}
 
 	spi_fini(&master);
 
