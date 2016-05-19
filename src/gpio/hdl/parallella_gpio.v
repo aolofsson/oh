@@ -28,7 +28,7 @@ module parallella_gpio(/*AUTOARG*/
    parameter AW		= 32;			// address width
    parameter DW		= 32;
    parameter PW		= 2*AW+40;		// packet width
-   parameter ID		= 12'h820;		// addr[31:20] id
+   parameter ID		= 12'h7ff;		// addr[31:20] id
    parameter S_IDW	= 12;			// ID width for S_AXI
    parameter NGPIO	= 24;			// number of gpio pins
 
