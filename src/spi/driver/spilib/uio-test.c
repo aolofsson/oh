@@ -8,10 +8,8 @@
 
 /* OH SPI slave specifics */
 struct oh_spi_mosi_pkt {
-	struct {
-		unsigned addr:6;
-		unsigned mode:2;
-	} __attribute__((packed));
+	unsigned addr:6;
+	unsigned mode:2;
 	uint8_t	data;
 } __attribute__((packed));
 
@@ -33,8 +31,7 @@ uint8_t slave_access(spi_dev_t *dev, unsigned mode, unsigned addr, uint8_t data)
 		.mode = mode,
 		.data = data,
 	};
-	spi_write(dev, (uint8_t *) &mosi, sizeof(mosi));
-	spi_read(dev, (uint8_t *) &miso, sizeof(miso));
+	spi_transfer(dev, (uint8_t *) &mosi, &miso, sizeof(mosi));
 
 	return miso.data;
 }

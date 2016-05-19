@@ -53,25 +53,36 @@
 #define spi_get_status(dev) spi_reg_read((dev), SPI_STATUS)
 
 /**
- * spi_read - Read bytes
+ * spi_set_clkdiv - Set master clock divider
  *
  * @param dev		device structure
- * @param dest		destination buffer
- * @param count		number of bytes
+ * @param config	spi configuration
  *
  */
-//void spi_read(spi_dev_t *dev, uint8_t *dest, unsigned count);
+//void spi_set_clkdiv(spi_dev_t *dev, uint8_t clkdiv);
+#define spi_set_clkdiv(dev, clkdiv) spi_reg_write((dev), SPI_CLKDIV, (clkdiv))
 
 /**
- * spi_write - Write bytes
+ * spi_get_clkdiv - Get master clock divider
  *
  * @param dev		device structure
- * @param src		source buffer
+ *
+ * @return		clock divider register
+ *
+ */
+//uint8_t spi_get_clkdiv(spi_dev_t *dev);
+#define spi_get_clkdiv(dev) spi_reg_read((dev), SPI_CLKDIV)
+
+/**
+ * spi_transter - Perform one SPI transfer
+ *
+ * @param dev		device structure
+ * @param tx		transmit data buffer
+ * @param rx		receive data buffer
  * @param count		number of bytes
  *
  */
-//void spi_write(spi_dev_t *dev, const uint8_t *src, unsigned count);
-
+//void spi_transfer(spi_dev_t *dev, uint8_t *tx, uint8_t *rx, unsigned count);
 
 /*** Raw register access API */
 
@@ -90,9 +101,13 @@
 #define SPI_CONFIG_USER_REGS		(1 << 5)/* slave only */
 
 #define SPI_STATUS_SPLIT		(1 << 0)
-#define SPI_STATUS_TRANSFER_ACTIVE	(1 << 1) /* master only */
-#define SPI_STATUS_TX_FIFO_HALF_FULL	(1 << 2) /* master only */
+#define SPI_STATUS_STATE		(3 << 1) /* master only */
+#define SPI_STATUS_TX_FIFO_HALF_FULL	(1 << 3) /* master only */
 
+#define SPI_STATE_IDLE(status)		((status) & SPI_STATUS_STATE == 0)
+#define SPI_STATE_SETUP(status)		((status) & SPI_STATUS_STATE == 1)
+#define SPI_STATE_DATA(status)		((status) & SPI_STATUS_STATE == 2)
+#define SPI_STATE_HOLD(status)		((status) & SPI_STATUS_STATE == 3)
 /**
  * spi_reg_write - Set SPI device register
  *

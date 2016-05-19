@@ -10,6 +10,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <unistd.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -47,5 +48,4 @@ static void spi_fini(spi_dev_t *dev)
 #define spi_to_generic(dev) (&(dev)->generic)
 #define spi_reg_write(dev, reg, val) _spi_reg_write(spi_to_generic((dev)), (reg), (val))
 #define spi_reg_read(dev, reg) _spi_reg_read(spi_to_generic((dev)), (reg))
-#define spi_write(dev, src, count) _spi_write(spi_to_generic((dev)), (src), (count))
-#define spi_read(dev, dest, count) _spi_read(spi_to_generic((dev)), (dest), (count))
+#define spi_transfer(dev, tx, rx, count) _spi_transfer(spi_to_generic((dev)), (tx), (rx), (count))
