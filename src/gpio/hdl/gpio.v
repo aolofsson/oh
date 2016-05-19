@@ -38,7 +38,7 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
    reg [N-1:0] 	   gpio_ipol;
    reg [N-1:0] 	   gpio_ilat;   
    reg [N-1:0] 	   gpio_in_old;
-   reg [AW-1:0]	   read_data;  // read is always 32 bits
+   reg [N-1:0]	   read_data;
       
    //wires
    wire [N-1:0]    ilat_clr;   
@@ -200,16 +200,16 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
 
    always @ (posedge clk)
      if(reg_read)
-       case(dstaddr_in[6:3])		 
-	 `GPIO_IN   : read_data[AW-1:0]  <= gpio_in_sync[N-1:0];
-	 `GPIO_ILAT : read_data[AW-1:0]  <= gpio_ilat[N-1:0];
-	 `GPIO_DIR  : read_data[AW-1:0]  <= gpio_dir[N-1:0];
-	 `GPIO_IMASK: read_data[AW-1:0]  <= gpio_imask[N-1:0];
-	 `GPIO_IPOL : read_data[AW-1:0]  <= gpio_ipol[N-1:0];
-	 `GPIO_ITYPE: read_data[AW-1:0]  <= gpio_itype[N-1:0];
-	 default    : read_data[AW-1:0]  <='b0;
+       case(dstaddr_in[6:3])
+	 `GPIO_IN   : read_data[N-1:0]  <= gpio_in_sync[N-1:0];
+	 `GPIO_ILAT : read_data[N-1:0]  <= gpio_ilat[N-1:0];
+	 `GPIO_DIR  : read_data[N-1:0]  <= gpio_dir[N-1:0];
+	 `GPIO_IMASK: read_data[N-1:0]  <= gpio_imask[N-1:0];
+	 `GPIO_IPOL : read_data[N-1:0]  <= gpio_ipol[N-1:0];
+	 `GPIO_ITYPE: read_data[N-1:0]  <= gpio_itype[N-1:0];
+	 default    : read_data[N-1:0]  <='b0;
        endcase // case (dstaddr_in[7:3])
-   
+
    emesh_readback #(.AW(AW),
 		    .PW(PW))
    emesh_readback (/*AUTOINST*/
@@ -222,7 +222,7 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
 		   .clk			(clk),
 		   .access_in		(access_in),
 		   .packet_in		(packet_in[PW-1:0]),
-		   .read_data		(read_data[63:0]),
+		   .read_data		({{(64-N){1'b0}}, read_data[N-1:0]}),
 		   .wait_in		(wait_in));
    
 endmodule // gpio
