@@ -181,7 +181,7 @@ CONFIG.PCW_UIPARAM_DDR_T_RCD {9} CONFIG.PCW_UIPARAM_DDR_T_RP {9} \
 CONFIG.PCW_UIPARAM_DDR_USE_INTERNAL_VREF {1} CONFIG.PCW_USB0_PERIPHERAL_ENABLE {1} \
 CONFIG.PCW_USB0_RESET_ENABLE {0} CONFIG.PCW_USB1_PERIPHERAL_ENABLE {1} \
 CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_USE_M_AXI_GP1 {1} \
-CONFIG.PCW_USE_S_AXI_HP1 {1}  ] $processing_system7_0
+CONFIG.PCW_USE_S_AXI_HP0 {1}  ] $processing_system7_0
 
   # Create instance: processing_system7_0_axi_periph, and set properties
   set processing_system7_0_axi_periph [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 processing_system7_0_axi_periph ]
@@ -192,7 +192,7 @@ CONFIG.PCW_USE_S_AXI_HP1 {1}  ] $processing_system7_0
   set_property -dict [ list CONFIG.NUM_PORTS {16}  ] $sys_concat_intc
 
   # Create interface connections
-  connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP1 [get_bd_intf_pins processing_system7_0/M_AXI_GP1] [get_bd_intf_pins processing_system7_0_axi_periph/S00_AXI]
+  connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP0 [get_bd_intf_pins processing_system7_0/M_AXI_GP0] [get_bd_intf_pins processing_system7_0_axi_periph/S00_AXI]
   connect_bd_intf_net -intf_net processing_system7_0_axi_periph_M00_AXI [get_bd_intf_pins parallella_gpio_0/s_axi] [get_bd_intf_pins processing_system7_0_axi_periph/M00_AXI]
 
   # Create port connections
@@ -202,12 +202,12 @@ CONFIG.PCW_USE_S_AXI_HP1 {1}  ] $processing_system7_0
   connect_bd_net -net parallella_gpio_0_gpio_p [get_bd_ports gpio_p] [get_bd_pins parallella_gpio_0/gpio_p]
   connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins proc_sys_reset_0/interconnect_aresetn] [get_bd_pins processing_system7_0_axi_periph/ARESETN]
   connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins parallella_gpio_0/s_axi_aresetn] [get_bd_pins parallella_gpio_0/sys_nreset] [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins processing_system7_0_axi_periph/M00_ARESETN] [get_bd_pins processing_system7_0_axi_periph/S00_ARESETN]
-  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins parallella_gpio_0/sys_clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins processing_system7_0/M_AXI_GP1_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP1_ACLK] [get_bd_pins processing_system7_0_axi_periph/ACLK] [get_bd_pins processing_system7_0_axi_periph/M00_ACLK] [get_bd_pins processing_system7_0_axi_periph/S00_ACLK]
+  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins parallella_gpio_0/sys_clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins processing_system7_0/M_AXI_GP1_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins processing_system7_0_axi_periph/ACLK] [get_bd_pins processing_system7_0_axi_periph/M00_ACLK] [get_bd_pins processing_system7_0_axi_periph/S00_ACLK]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins proc_sys_reset_0/ext_reset_in] [get_bd_pins processing_system7_0/FCLK_RESET0_N]
   connect_bd_net -net sys_concat_intc_dout [get_bd_pins processing_system7_0/IRQ_F2P] [get_bd_pins sys_concat_intc/dout]
 
   # Create address segments
-  create_bd_addr_seg -range 0x40000000 -offset 0x80000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs parallella_gpio_0/s_axi/axi_lite] SEG_parallella_gpio_0_axi_lite
+  create_bd_addr_seg -range 0x40000000 -offset 0x40000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs parallella_gpio_0/s_axi/axi_lite] SEG_parallella_gpio_0_axi_lite
   
 
   # Restore current instance
