@@ -125,7 +125,7 @@ module parallella_spi(/*AUTOARG*/
    assign spi_m_sclk		= gpio_out[3];
 
    /* NOTE: 0 = in, 1 = out */
-   assign gpio_dir[NGPIO-1:0] = {{(NGPIO-8){1'b0}}, 8'b01001011};
+   assign gpio_dir[NGPIO-1:0] = {{(NGPIO-11){1'b0}}, 8'b01001011, 3'b000};
 
    assign constant_zero = 1'b0;
    assign constant_one = 1'b1;
