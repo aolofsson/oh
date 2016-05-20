@@ -4,22 +4,29 @@
 #endif
 
 #include <stdint.h>
+#include <string.h>
 
 struct spi_generic_dev {
-	volatile uint32_t *regs;
+	volatile uint8_t *regs;
 };
 
 ___unused
 static void _spi_reg_write(struct spi_generic_dev *dev, unsigned reg,
-			   uint8_t val)
+			   uint32_t val)
 {
-	dev->regs[reg] = val;
+	if (reg & 3)
+		dev->regs[reg] = (uint8_t) val;
+	else
+		*(uint32_t *) &dev->regs[reg] = val;
 }
 
 ___unused
 static uint32_t _spi_reg_read(struct spi_generic_dev *dev, unsigned reg)
 {
-	return dev->regs[reg];
+	if (reg & 3)
+		return (uint32_t) dev->regs[reg];
+	else
+		return *(uint32_t *) &dev->regs[reg];
 }
 
 ___unused
@@ -90,8 +97,8 @@ static void _spi_transfer(struct spi_generic_dev *dev, const void *tx,
 		while (!SPI_STATE_IDLE(_spi_reg_read(dev, SPI_STATUS)))
 			;
 
-		rx0.u32 = dev->regs[SPI_RX0];
-		rx1.u32 = dev->regs[SPI_RX1];
+		rx0.u32 = *(uint32_t *) &dev->regs[SPI_RX0];
+		rx1.u32 = *(uint32_t *) &dev->regs[SPI_RX1];
 
 		//printf("rx0: %08x\n", rx0.u32);
 
