@@ -64,12 +64,11 @@ int main()
 
 	printf("config: %#x\n", spi_reg_read(&master, SPI_CONFIG));
 
-	printf("spi_reg_read(0x31): %#x\n", spi_reg_read(&master, 31));
+	printf("spi_reg_read(28): %#x\n", spi_reg_read(&master, 28));
 	spi_set_clkdiv(&master, 0x5);
 
 	int j;
-	//for (j = 0; j < 100000; j++) {
-	for (j = 0; j < 1; j++) {
+	for (j = 0; j < 10000; j++) {
 
 		for (i = 0; i < 13; i++)
 			slave_write(&master, SPI_USER0 + i, i * 2);
@@ -77,12 +76,12 @@ int main()
 		for (i = 0; i < 13; i++)
 			slave_regs[i] = slave_read(&master, SPI_USER0 + i);
 
-#if 1
-		printf("slave user regs: ");
-		for (i = 0; i < 13; i++)
-			printf("0x%02x ", (int) slave_regs[i]);
-		printf("\n");
-#endif
+		if (j == 0) {
+			printf("slave user regs: ");
+			for (i = 0; i < 13; i++)
+				printf("0x%02x ", (int) slave_regs[i]);
+			printf("\n");
+		}
 
 		for (i = 0; i < 13; i++)
 			if (slave_regs[i] != i * 2)
@@ -93,12 +92,13 @@ int main()
 
 		for (i = 0; i < 13; i++)
 			slave_regs[i] = slave_read(&master, SPI_USER0 + i);
-#if 1
-		printf("slave user regs: ");
-		for (i = 0; i < 13; i++)
-			printf("0x%02x ", (int) slave_regs[i]);
-		printf("\n");
-#endif
+
+		if (j == 0) {
+			printf("slave user regs: ");
+			for (i = 0; i < 13; i++)
+				printf("0x%02x ", (int) slave_regs[i]);
+			printf("\n");
+		}
 
 		for (i = 0; i < 13; i++)
 			if (slave_regs[i] != i)
@@ -107,11 +107,14 @@ int main()
 		if (fail)
 			break;
 
-//		if (!(j % 10000))
-//			printf("j=%d\n", j);
 	}
 
 	spi_fini(&master);
+
+	if (fail)
+		printf("FAIL\n");
+	else
+		printf("PASS\n");
 
 	return fail ? 1 : 0;
 }
