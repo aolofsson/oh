@@ -21,7 +21,7 @@ struct spi_uio_dev {
 
 typedef struct spi_uio_dev spi_dev_t;
 
-___unused
+__spi_unused
 static int spi_init(spi_dev_t *dev, void *arg)
 {
 	char *path = arg;
@@ -38,7 +38,7 @@ static int spi_init(spi_dev_t *dev, void *arg)
 	return 0;
 }
 
-___unused
+__spi_unused
 static void spi_fini(spi_dev_t *dev)
 {
 	munmap((void *) dev->generic.regs, 0x1000);

@@ -7,7 +7,7 @@
 
 typedef struct spi_generic_dev spi_dev_t;
 
-__unused
+__spi_unused
 static int spi_init(spi_dev_t *dev, void *arg)
 {
 	if (!arg)

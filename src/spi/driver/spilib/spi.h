@@ -129,27 +129,27 @@
  */
 //uint8_t spi_reg_write(spi_dev_t *dev, unsigned reg);
 
-#ifndef ___unused
+#ifndef __spi_unused
 # if defined(__GNUC__) || defined(__clang__)
-#  define ___unused __attribute__((unused))
+#  define __spi_unused __attribute__((unused))
 # else
-#  define ___unused
+#  define __spi_unused
 # endif
 #endif
 
-#ifndef __packed
+#ifndef __spi_packed
 # if defined(__GNUC__) || defined(__clang__)
-#  define __packed __attribute__((packed))
+#  define __spi_packed __attribute__((packed))
 # else
-#  define __packed
+#  define __spi_packed
 # endif
 #endif
 
-#ifndef __aligned
+#ifndef __spi_aligned
 # if defined(__GNUC__) || defined(__clang__)
-#  define __aligned(X) __attribute__((aligned(X)))
+#  define __spi_aligned(X) __attribute__((aligned(X)))
 # else
-#  define __aligned(X)
+#  define __spi_aligned(X)
 # endif
 #endif
 

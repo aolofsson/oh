@@ -10,7 +10,7 @@ struct spi_generic_dev {
 	volatile uint8_t *regs;
 };
 
-___unused
+__spi_unused
 static void _spi_reg_write(struct spi_generic_dev *dev, unsigned reg,
 			   uint32_t val)
 {
@@ -20,7 +20,7 @@ static void _spi_reg_write(struct spi_generic_dev *dev, unsigned reg,
 		*(uint32_t *) &dev->regs[reg] = val;
 }
 
-___unused
+__spi_unused
 static uint32_t _spi_reg_read(struct spi_generic_dev *dev, unsigned reg)
 {
 	if (reg & 3)
@@ -29,7 +29,7 @@ static uint32_t _spi_reg_read(struct spi_generic_dev *dev, unsigned reg)
 		return *(uint32_t *) &dev->regs[reg];
 }
 
-___unused
+__spi_unused
 static void _spi_transfer(struct spi_generic_dev *dev, const void *tx,
 			  void *rx, unsigned count)
 {
@@ -53,7 +53,7 @@ static void _spi_transfer(struct spi_generic_dev *dev, const void *tx,
 			uint32_t u32;
 			uint16_t u16[2];
 			uint8_t u8[4];
-		} ___packed;
+		} __spi_packed;
 		union buf rx0 = { 0 }, rx1 = { 0 }, tx0 = { 0 }, tx1 = { 0 };
 		union buf *dst = (union buf *) &dev->regs[SPI_TX];
 
