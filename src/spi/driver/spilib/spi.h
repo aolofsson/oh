@@ -98,17 +98,13 @@
 #define SPI_CONFIG_IRQ_ENABLE		(1 << 1)
 #define SPI_CONFIG_CPOL			(1 << 2)
 #define SPI_CONFIG_CPHA			(1 << 3)
-#define SPI_CONFIG_LSB			(1 << 4)
+#define SPI_CONFIG_LSB_FIRST		(1 << 4)
 #define SPI_CONFIG_USER_REGS		(1 << 5)/* slave only */
 
 #define SPI_STATUS_SPLIT		(1 << 0)
-#define SPI_STATUS_STATE		(3 << 1) /* master only */
-#define SPI_STATUS_TX_FIFO_HALF_FULL	(1 << 3) /* master only */
+#define SPI_STATUS_ACTIVE		(1 << 1) /* master only */
+#define SPI_STATUS_TX_FIFO_HALF_FULL	(1 << 2) /* master only */
 
-#define SPI_STATE_IDLE(status)		(((status) & SPI_STATUS_STATE) >> 1 == 0)
-#define SPI_STATE_SETUP(status)		(((status) & SPI_STATUS_STATE) >> 1 == 1)
-#define SPI_STATE_DATA(status)		(((status) & SPI_STATUS_STATE) >> 1 == 2)
-#define SPI_STATE_HOLD(status)		(((status) & SPI_STATUS_STATE) >> 1 == 3)
 /**
  * spi_reg_write - Set SPI device register
  *
