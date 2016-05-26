@@ -16,6 +16,7 @@ module spi_slave_regs #( parameter UREGS = 13,      // # of user regs (max 48)
    input 	  clk, // core clock
    input 	  nreset, // asych active low 
    input 	  hw_en, // block enable pin
+   // IO
    // sclk io domain
    input 	  spi_clk, // slave clock
    input [7:0] 	  spi_wdata, // slave write data in (for write)
@@ -90,7 +91,7 @@ module spi_slave_regs #( parameter UREGS = 13,      // # of user regs (max 48)
    //# CONFIG [0]
    //#####################################
   
-   always @ (negedge spi_clk or negedge nreset)
+   always @ (posedge spi_clk or negedge nreset)
      if(!nreset)
        spi_config[7:0] <= 'b0;
      else if(spi_config_write)
@@ -126,9 +127,14 @@ module spi_slave_regs #( parameter UREGS = 13,      // # of user regs (max 48)
    //# USER SPACE REGISTERS
    //#####################################
 
-   always @ (negedge spi_clk)
-     if(spi_user_write)
-       user_regs[spi_addr[4:0]] <= spi_wdata[7:0]; 
+//   always @ (posedge spi_clk or negedge nreset)
+//     if(!nreset)
+//       for(i=0;i<32;i=i+1)
+//	 user_regs[i] <= 7'b0;
+
+   always @ (posedge spi_clk)
+     if (spi_user_write)
+       user_regs[spi_addr[4:0]] <= spi_wdata[7:0];
 
    //#####################################
    //# REGISTER VECTOR (FOR FLEXIBILITY)
