@@ -170,11 +170,12 @@ module spi_master_regs # (parameter  CLKDIV = 1,    // default clkdiv
      end
    
    //create a pulse on register reads
-   oh_edge2pulse 
+   oh_edge2pulse
      e2pulse (.out (wait_pulse),
    	      .clk (clk),
-	      .in  (reg_read));
-   
+	      .in  (reg_read),
+	      .nreset (nreset));
+
    //TODO: fix!
    assign wait_out = fifo_wait;
    
