@@ -8,7 +8,8 @@
 module spi_master # ( parameter  DEPTH = 32, // fifo depth   
 		      parameter  REGS  = 16, // total # of regs   
 		      parameter  AW    = 32, // addresss width
-		      parameter  PW    = 104 // packet width
+		      parameter  PW    = 104, // packet width
+		      parameter  TARGET = "GENERIC" // XILINX,ALTERA,GENERIC,ASIC
 		      )
    (
     //clk,reset, cfg
@@ -93,7 +94,8 @@ module spi_master # ( parameter  DEPTH = 32, // fifo depth
    
    spi_master_fifo #(.AW(AW),
 		     .PW(PW),
-		     .DEPTH(DEPTH))
+		     .DEPTH(DEPTH),
+		     .TARGET(TARGET))
    spi_master_fifo(
 		   /*AUTOINST*/
 		   // Outputs

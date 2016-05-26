@@ -11,7 +11,8 @@ module spi_master_fifo #( parameter  DEPTH = 16,            // fifo entries
 			  parameter  PW    = 104,           // input packet width   
 			  parameter  SW    = 8,             // io packet width   
 			  parameter  FAW   = $clog2(DEPTH), // fifo address width   
-			  parameter  SRW   = $clog2(PW/SW)  // serialization factor
+			  parameter  SRW   = $clog2(PW/SW), // serialization factor
+			  parameter  TARGET = "GENERIC"     // XILINX,ALTERA,GENERIC,ASIC
 			  )
    (
     //clk,reset, cfg
@@ -69,7 +70,8 @@ module spi_master_fifo #( parameter  DEPTH = 16,            // fifo entries
 		      access_in  &
 		      ~fifo_wait &
 		      (dstaddr_in[5:0]==`SPI_TX);
-     
+    
+   wire fifo_wait;
    assign wait_out = fifo_wait; // & tx_write;
 
    //epiphany mode works in msb or lsb mode
@@ -79,7 +81,7 @@ module spi_master_fifo #( parameter  DEPTH = 16,            // fifo entries
    assign tx_data[PW-1:0] = {{(40){1'b0}},
 			     srcaddr_in[AW-1:0], 
 			     data_in[AW-1:0]};
-   
+  
    //##################################
    //# FIFO PACKET WRITE
    //##################################
@@ -106,20 +108,54 @@ module spi_master_fifo #( parameter  DEPTH = 16,            // fifo entries
    //# FIFO
    //###################################
 
-   oh_fifo_sync #(.DEPTH(DEPTH),
-                  .DW(SW))   
-   fifo(// Outputs
-	.dout		(fifo_dout[7:0]),
-	.full		(fifo_full),
-	.prog_full	(fifo_prog_full),
-	.empty		(fifo_empty),
-	.rd_count	(),
-	// Inputs
-	.clk		(clk),
-	.nreset		(nreset),
-	.din		(fifo_din[7:0]),
-	.wr_en		(fifo_wr),
-	.rd_en		(fifo_read));
+   // HACK: oh_fifo_sync is broken for XILINX target.
+   generate
+   if(TARGET=="XILINX") begin : gen_xilinx_fifo
+     // HACK: Hardcoded DW/DEPTH to please XILINX target
+     wire [103:0] fifo_dout_full;
+     assign fifo_dout[SW-1:0] = fifo_dout_full[SW-1:0];
+
+     wire [103:0] packet_in_full;
+     assign packet_in_full[103:0] = {{(104-SW){1'b0}},fifo_din[SW-1:0]};
+
+     //   oh_fifo_cdc  #(.DW(SW),
+     //		  .DEPTH(DEPTH),
+     //		  .TARGET(TARGET))
+     oh_fifo_cdc  #(.DW(104),
+		    .DEPTH(32),
+		    .TARGET(TARGET))
+     fifo  (// Outputs
+	    .wait_out			(),
+	    .access_out			(),
+	    .packet_out			(fifo_dout_full[103:0]),
+	    .prog_full			(fifo_prog_full),
+	    .full				(fifo_full),
+	    .empty			(fifo_empty),
+	    // Inputs
+	    .nreset			(nreset),
+	    .clk_in			(clk),
+	    .packet_in			(packet_in_full[103:0]),
+	    .clk_out			(clk),
+	    .access_in			(fifo_wr),
+	    .wait_in			(~fifo_read));
+   end // TARGET == "XILINX"
+   else begin : gen_generic_fifo
+     oh_fifo_sync #(.DEPTH(DEPTH),
+		    .DW(SW))
+     fifo(// Outputs
+	  .dout		(fifo_dout[7:0]),
+	  .full		(fifo_full),
+	  .prog_full	(fifo_prog_full),
+	  .empty		(fifo_empty),
+	  .rd_count	(),
+	  // Inputs
+	  .clk		(clk),
+	  .nreset		(nreset),
+	  .din		(fifo_din[7:0]),
+	  .wr_en		(fifo_wr),
+	  .rd_en		(fifo_read));
+   end  // TARGET != "XILINX"
+   endgenerate
 
 endmodule // spi_master_fifo
 

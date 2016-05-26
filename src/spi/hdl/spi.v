@@ -7,7 +7,8 @@
 
 module spi #( parameter AW     = 32,  // address width
 	      parameter PW     = 104, // packet size
-	      parameter UREGS  = 13   // number of user slave regs
+	      parameter UREGS  = 13,  // number of user slave regs
+	      parameter TARGET = "GENERIC" // XILINX,ALTERA,GENERIC,ASIC
 	      )
    (//clk, reset, irq
     input 	    nreset, // asynch active low reset   
@@ -63,7 +64,8 @@ module spi #( parameter AW     = 32,  // address width
     */
    
    spi_master #(.AW(AW),
-		.PW(PW))
+		.PW(PW),
+		.TARGET(TARGET))
    spi_master (/*AUTOINST*/
 	       // Outputs
 	       .sclk			(m_sclk),		 // Templated

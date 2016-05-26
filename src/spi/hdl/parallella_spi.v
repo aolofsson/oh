@@ -32,6 +32,7 @@ module parallella_spi(/*AUTOARG*/
    parameter ID		= 12'h7fe;		// addr[31:20] id
    parameter S_IDW	= 12;			// ID width for S_AXI
    parameter NGPIO	= 24;			// number of gpio pins
+   parameter TARGET     = "XILINX";		// XILINX,ALTERA,GENERIC,ASIC
 
    // constants
    input		constant_zero;		// Always 0
@@ -139,7 +140,7 @@ module parallella_spi(/*AUTOARG*/
 	  .gpio_n			(gpio_n[NGPIO-1:0]));
 
 
-   axi_spi #(.S_IDW(S_IDW),.AW(AW),.ID(ID))
+   axi_spi #(.S_IDW(S_IDW),.AW(AW),.ID(ID),.TARGET(TARGET))
    axi_spi (// Outputs
 	    .spi_irq			(spi_irq),
 	    .spi_m_mosi			(spi_m_mosi),
