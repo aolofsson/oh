@@ -67,7 +67,11 @@ module oh_fifo_async # (parameter DW        = 104,      //FIFO width
 		      .din			(din[DW-1:0]),
 		      .rd_en			(rd_en));
 	   end // if ((DW==104) & (DEPTH==32))
-      end // block: xilinx   
+	 else
+	   _INVALID_PARAMETERS_ invalid_parameters();
+       end // block: xilinx
+       else
+	 _INVALID_TARGET_ invalid_target();
    endgenerate
       
 endmodule // oh_fifo_async
