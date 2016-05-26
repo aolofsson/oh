@@ -100,8 +100,10 @@ module spi_master_io
    //data done whne
    assign data_done = fifo_empty & ~spi_wait & phase_match;
 
+   // In CPOL=0 CPHA=0 (MODE=0) MOSI is output on negative egde.
    //shift on every clock cycle while in datamode
-   assign shift     = phase_match & (spi_state[1:0]==`SPI_DATA);//period_match
+   wire tx_shift;
+   assign tx_shift     = phase_match & (spi_state[1:0]==`SPI_DATA);
    
    //load is the result of the fifo_read
    always @ (posedge clk)
@@ -133,7 +135,7 @@ module spi_master_io
 	    .clk	(clk),
 	    .nreset	(nreset),         // async active low reset
 	    .din	(fifo_dout[7:0]), // 8 bit data from fifo
-	    .shift	(shift),          // shift on neg edge
+	    .shift	(tx_shift),       // shift data
 	    .datasize	(8'd7),           // 8 bits at a time (0..7-->8)
 	    .load	(load_byte),      // load data from fifo
 	    .lsbfirst	(lsbfirst),       // serializer direction
@@ -151,6 +153,9 @@ module spi_master_io
 	    .clk (clk),
 	    .in	 (ss));
 
+   // In CPOL=0 CPHA=0 (MODE=0) MISO is sampled on positive egde.
+   wire rx_shift;
+   assign rx_shift = (spi_state[1:0] == `SPI_DATA) & period_match & ~ss;
    oh_ser2par #(.PW(64),
 		.SW(1))
    ser2par (//output
@@ -159,7 +164,7 @@ module spi_master_io
 	    .din	(miso),           // serial data in
 	    .clk	(clk),            // shift clk
 	    .lsbfirst	(lsbfirst),       // shift direction
-	    .shift	(shift));         // shift data
+	    .shift	(rx_shift));      // shift data
          
 endmodule // spi_master_io
 // Local Variables:
