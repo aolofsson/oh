@@ -58,11 +58,11 @@ module spi_slave_io #( parameter PW = 104  // packet width
        spi_state[1:0] <=  `SPI_IDLE;
      else
        case (spi_state[1:0])
-	 `SPI_IDLE :  spi_state[1:0] <= `SPI_CMD;
+	 default   :  spi_state[1:0] <= `SPI_CMD;
 	 `SPI_CMD  :  spi_state[1:0] <= next_byte ? `SPI_DATA : `SPI_CMD;
 	 `SPI_DATA :  spi_state[1:0] <= `SPI_DATA;
        endcase // case (spi_state[1:0])
-   
+
    //bit counter
    always @ (posedge sclk or posedge ss)
      if(ss)
