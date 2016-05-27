@@ -42,9 +42,9 @@ void slave_access(spi_dev_t *dev, unsigned mode, unsigned addr, uint8_t *txbuf,
 		memcpy(rxbuf, &miso.data[0], count);
 }
 
-void slave_write_n(spi_dev_t *dev, unsigned addr, uint8_t *data, unsigned count)
+void slave_write_n(spi_dev_t *dev, unsigned addr, uint8_t *tx, unsigned count)
 {
-	slave_access(dev, SLAVE_WRITE, addr, data, NULL, count);
+	slave_access(dev, SLAVE_WRITE, addr, tx, NULL, count);
 }
 
 void slave_write(spi_dev_t *dev, unsigned addr, uint8_t data)
@@ -59,10 +59,10 @@ uint8_t slave_read(spi_dev_t *dev, unsigned addr)
 	return value;
 }
 
-void slave_read_n(spi_dev_t *dev, unsigned addr, uint8_t *readback,
+void slave_read_n(spi_dev_t *dev, unsigned addr, uint8_t *rx,
 		     unsigned count)
 {
-	slave_access(dev, SLAVE_READ, addr, NULL, readback, count);
+	slave_access(dev, SLAVE_READ, addr, NULL, rx, count);
 }
 
 
@@ -78,9 +78,9 @@ int main()
 		return 1;
 	}
 
-	spi_set_clkdiv(&master, 0xfe);
+	spi_set_clkdiv(&master, 5);
 
-	slave_write(&master, SPI_CONFIG, 0);
+//	slave_write(&master, SPI_CONFIG, 0);
 	spi_reg_write(&master, SPI_CONFIG, 0);
 
 	printf("status: %#x\n", spi_reg_read(&master, SPI_STATUS));
@@ -92,11 +92,11 @@ int main()
 	printf("spi_reg_read(28): %#x\n", spi_reg_read(&master, 28));
 
 	printf("Testing write / read to slave regs loop\n");
-#if 1
-	for (i = 0; i < 1000; i++) {
+
+	for (i = 0; i < 10000; i++) {
 
 		for (j = 0; j < 13; j++)
-			slave_write(&master, SPI_USER0 + j, j * 2);
+			slave_write(&master, SPI_USER0 + j, 0xff - j * 2);
 
 		for (j = 0; j < 13; j++) {
 			//printf("i: 0x%x\n", i);
@@ -111,13 +111,13 @@ int main()
 		}
 
 		for (j = 0; j < 13; j++)
-			if (slave_regs[j] != j * 2) {
+			if (slave_regs[j] != 0xff - j * 2) {
 				printf("fail\n");
 				fail = true;
 			}
 
 		for (j = 0; j < 13; j++)
-			slave_write(&master, SPI_USER0 + j, j);
+			slave_write(&master, SPI_USER0 + j, 0xff - j);
 
 		for (j = 0; j < 13; j++)
 			slave_regs[j] = slave_read(&master, SPI_USER0 + j);
@@ -130,7 +130,7 @@ int main()
 		}
 
 		for (j = 0; j < 13; j++)
-			if (slave_regs[j] != j) {
+			if (slave_regs[j] != 0xff - j) {
 				printf("fail\n");
 				fail = true;
 			}
@@ -139,29 +139,27 @@ int main()
 			break;
 
 	}
-#endif
 
 	printf(fail ? "FAIL\n" : "OK\n");
 
-	uint8_t written[7] = { 0xff, 0xee, 0xdd, 0xcc, 0xbb, 0xaa, 0x99};
-	uint8_t readback[7] = { 0x0 };
+	uint8_t pat0[7] = { 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32};
+	uint8_t pat1[7] = { 0xfe ^ 0xff, 0xdc ^ 0xff, 0xba ^ 0xff, 0x98 ^ 0xff,
+			    0x76 ^ 0xff, 0x54 ^ 0xff, 0x32 ^ 0xff };
+	uint8_t in0[7] = { 0x0 };
+	uint8_t in1[7] = { 0x0 };
 
-#if 0
 	printf("Testing high bits set and slave addr autoincrement\n");
-	slave_write_n(&master, SPI_USER0, written, 7);
-	slave_read_n(&master, SPI_USER0, readback, 7);
-#else
-	printf("Testing high bits set\n");
-	for (i = 0; i < 7; i++) {
-		slave_write(&master, SPI_USER0 + i, written[i]);
-		readback[i] = slave_read(&master, SPI_USER0 + i);
-	}
-#endif
+	slave_write_n(&master, SPI_USER0, pat0, 7);
+	slave_read_n(&master, SPI_USER0, in0, 7);
+	slave_write_n(&master, SPI_USER0, pat1, 7);
+	slave_read_n(&master, SPI_USER0, in1, 7);
 
 	for (i = 0; i < 7; i++) {
-		printf("written[%d] = 0x%02x readback[%d] = 0x%02x\n",
-		       i, (int) written[i], i, readback[i]);
-		if (readback[i] != written[i])
+		printf("pat0[%d] = 0x%02x in0[%d] = 0x%02x\n",
+		       i, (int) pat0[i], i, in0[i]);
+		printf("pat1[%d] = 0x%02x in1[%d] = 0x%02x\n",
+		       i, (int) pat1[i], i, in1[i]);
+		if (in0[i] != pat0[i] || in1[i] != pat1[i])
 			fail = true;
 	}
 
