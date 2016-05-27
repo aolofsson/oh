@@ -130,7 +130,7 @@ module parallella_spi(/*AUTOARG*/
    assign constant_zero = 1'b0;
    assign constant_one = 1'b1;
 
-   pgpio #(.NGPIO(NGPIO),.NPS(NGPIO))
+   pgpio #(.NGPIO(NGPIO),.NPS(NGPIO),.SLEW("FAST"))
    pgpio (.ps_gpio_i			(gpio_in[NGPIO-1:0]),
 	  .ps_gpio_o			(gpio_out[NGPIO-1:0]),
 	  .ps_gpio_t			(~gpio_dir[NGPIO-1:0]),
