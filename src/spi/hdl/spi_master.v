@@ -51,7 +51,7 @@ module spi_master # ( parameter  DEPTH = 32, // fifo depth
    wire			rx_access;		// From spi_master_io of spi_master_io.v
    wire [63:0]		rx_data;		// From spi_master_io of spi_master_io.v
    wire			spi_en;			// From spi_master_regs of spi_master_regs.v
-   wire [1:0]		spi_state;		// From spi_master_io of spi_master_io.v
+   wire [2:0]		spi_state;		// From spi_master_io of spi_master_io.v
    // End of automatics
 
    //#####################################################
@@ -76,7 +76,7 @@ module spi_master # ( parameter  DEPTH = 32, // fifo depth
 		    .hw_en		(hw_en),
 		    .rx_data		(rx_data[63:0]),
 		    .rx_access		(rx_access),
-		    .spi_state		(spi_state[1:0]),
+		    .spi_state		(spi_state[2:0]),
 		    .fifo_prog_full	(fifo_prog_full),
 		    .fifo_wait		(fifo_wait),
 		    .access_in		(access_in),
@@ -118,7 +118,7 @@ module spi_master # ( parameter  DEPTH = 32, // fifo depth
    spi_master_io
    spi_master_io (/*AUTOINST*/
 		  // Outputs
-		  .spi_state		(spi_state[1:0]),
+		  .spi_state		(spi_state[2:0]),
 		  .fifo_read		(fifo_read),
 		  .rx_data		(rx_data[63:0]),
 		  .rx_access		(rx_access),

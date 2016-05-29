@@ -24,7 +24,7 @@ module spi_master_regs # (parameter  CLKDIV = 1,    // default clkdiv
     output 	    lsbfirst, // send lsbfirst
     output 	    spi_en, // enable transmitter   
     output [7:0]    clkdiv_reg, // baud rate setting
-    input [1:0]     spi_state, // transmit state
+    input [2:0]     spi_state, // transmit state
     input 	    fifo_prog_full, // fifo reached half/full
     input 	    fifo_wait, // tx transfer wait
     //packet to transmit
@@ -120,7 +120,7 @@ module spi_master_regs # (parameter  CLKDIV = 1,    // default clkdiv
      else
        status_reg[7:0] <= {5'b0,                        //7:3
 			   fifo_prog_full,              //2
-			   |spi_state[1:0],             //1
+			   |spi_state[2:0],             //1
 			   (rx_access | status_reg[0])};//0
    			       
    //####################################
