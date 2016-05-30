@@ -16,10 +16,14 @@ DUT=$1
 ##############################
 $OH_HOME/scripts/link.sh
 
+WARNING_FLAGS="-Wimplicit -Wselect-range -Wsensitivity-entire-vector -Wsensitivity-entire-array"
+
 ##############################
 #Build
 ###############################
-iverilog -g2005\
+iverilog  \
+ ${WARNING_FLAGS} \
+ -g2005\
  -DTARGET_SIM=1\
  $DUT\
  $OH_HOME/symlinks/dv/dv_top.v\
@@ -27,4 +31,4 @@ iverilog -g2005\
  -y $OH_HOME/symlinks/hdl\
  -y $OH_HOME/symlinks/dv\
  -I $OH_HOME/symlinks/hdl\
- -o dut.bin\
+ -o dut.bin
