@@ -77,9 +77,9 @@ module mio_regs (/*AUTOARG*/
    // End of automatics
 
    //regs
-   reg [18:0] 		config_reg;   
-   reg [7:0] 		status_reg;
-   wire [7:0] 		status_in;   
+   reg [20:0] 		config_reg;
+   reg [15:0] 		status_reg;
+   wire [7:0] 		status_in;
    reg [31:0] 		clkdiv_reg;
    reg [63:0] 		addr_reg;
    reg [31:0] 		clkphase_reg;
@@ -154,7 +154,7 @@ module mio_regs (/*AUTOARG*/
      else if(status_write)
        status_reg[7:0] <= data_in[7:0];
      else
-       status_reg[7:0] <= {(status_reg[15:8] | status_in[7:0]), // sticky bits
+       status_reg[15:0] <= {(status_reg[15:8] | status_in[7:0]), // sticky bits
 			   status_in[7:0]};                     // immediate bits
 
    //###############################
