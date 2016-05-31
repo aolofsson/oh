@@ -176,16 +176,9 @@ TBD
 * Show how to synthesize/build..
 * Show how to use..
 
-## Design Checklist
+## Tapeout Checklist
 
-* Is the block datasheet complete and accurate?
-* Is there a user guide?
-* Is there a script/make file for building/testing the design?
-* Is there a self testing testbench?
-* Is there an auotomated synthesis script?
-* Is the driver written?
-* Is there a demo example?
-* Is the the block Silicon and FPGA validated?
+* [HERE](docs/tapeout_checklist.md)
 
 ## Recommended Reading
 
