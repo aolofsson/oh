@@ -19,7 +19,9 @@
 
 | Design                                     | Answer                         |
 |--------------------------------------------|--------------------------------|
-| In Verilog 2005 used?                      |                                |
+| Are all features implemented?              |                                |
+| Are all issues closed?                     |                                |
+| Has design been through peer review?       |                                |
 | Has a linter been run?                     |                                |
 | Is there zero use of 'casex'?              |                                |
 | Were Latches used? (If so list)            |                                |
@@ -35,12 +37,11 @@
 | Was instantiation by name used?            |                                |
 | Does each file contain one module          |                                |
 | Is HDL reuse maximized?                    |                                |
-| Has design been through peer review?       |                                |
 | Are all signals connected?                 |                                |
 | Any floating inputs in design?             |                                |
 | All power-gated signals isolated?          |                                |
 | All voltage domain crossings levelshifted? |                                |
-
+| Is Verilog 2005 used?                      |                                |
 
 | Verification                               | Answer                         |
 |--------------------------------------------|--------------------------------|
@@ -50,6 +51,7 @@
 | >24hrs of random vectors?                  |                                |
 | Randomized clock frequencies?              |                                |
 | Were all open issues closed?               |                                |
+| Were all features tested?                  |                                |
 | Simulator support for all features?        |                                |
 | Was design emulated in an FPGA?            |                                |
 | Was design validated with application SW?  |                                |
@@ -77,6 +79,8 @@
 | Clock                                      | Answer                         |
 |--------------------------------------------|--------------------------------|
 | Percentage regs clock gated?               |                                |
+| Integrated clock gating cells used?        |                                |
+| Setup/hold verified on clock gating cells? |                                |
 | Clock tree insertion delay?                |                                |
 | Clock tree local skew?                     |                                |
 | Clock tree global skew?                    |                                |
@@ -85,7 +89,6 @@
 | List of all clock domain crossings?        |                                |
 | Use of oh_fifo_cdc on all CDCs?            |                                |
 | Were custom CDCs used? (if so list)        |                                |
-
 
 | Reset                                      | Answer                         |
 |--------------------------------------------|--------------------------------|
@@ -151,6 +154,8 @@
 | Is the chip logo included                  |                                |
 | Have gds layer map been manually reviewed? |                                |
 | Has tapeout GDS been manually reviewed?    |                                |
+| XOR check between foundry/design GDSIIs    |                                |
+
 
 | DFM                                        | Answer                         |
 |--------------------------------------------|--------------------------------|
@@ -159,6 +164,7 @@
 | What is the percentage of double vias?     |                                |
 | Is yield optimizing wire spreading used?   |                                |
 | Does design include fault tolerance?       |                                |
+| Does design meet metal density rules?      |                                |
 
 | Test                                       | Answer                         |
 |--------------------------------------------|--------------------------------|
@@ -187,7 +193,11 @@
 | Are all latchup requirements met?          |                                |
 | Design's lowest operating voltage?         |                                |
 | What is the longest signal on the chip?    |                                |
-| Is design sensitive to duty cycle shift?   |                                |
+| What is the max duty-cycle distortion?     |                                |
+| Does design meet EMI constraints?          |                                |
+| ERC runset checks run on GDSII?            |                                |
+
+
 
 
 
