@@ -1,0 +1,54 @@
+/*
+ * Copyright (c) 2016 Parallella Foundation
+ *
+ * This software is licensed under the terms of the GNU General Public
+ * License version 2, as published by the Free Software Foundation, and
+ * may be copied, distributed, and modified under those terms.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+/dts-v1/;
+#include "zynq-parallella1.dtsi"
+
+/ {
+	model = "Adapteva Parallella Board with OH MIO bitstream";
+};
+
+&amba {
+	mio: mio@7fd00000 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+		compatible = "oh,mio";
+		reg = <0x7fc00000 0x100000>, /* TX wormhole    */
+		      <0x7fd00000 0x100000>, /* MIO registers  */
+		      <0x3e000000 0x100000>; /* TX destination */
+	};
+};
+
+&usb_phy0 {
+	status = "okay";
+};
+
+&usb_phy1 {
+	status = "okay";
+};
+
+&usb0 {
+	status = "okay";
+};
+
+&usb1 {
+	status = "okay";
+};
+
+&elink0 {
+	status = "disabled";
+};
+
+&i2c0 {
+	status = "disabled";
+};
