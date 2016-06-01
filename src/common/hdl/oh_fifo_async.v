@@ -67,6 +67,24 @@ module oh_fifo_async # (parameter DW        = 104,      //FIFO width
 		      .din			(din[DW-1:0]),
 		      .rd_en			(rd_en));
 	   end // if ((DW==104) & (DEPTH==32))
+	 else if((DW==128) & (DEPTH==32))
+	   begin
+	      fifo_async_128x32
+		fifo (
+		      // Outputs
+		      .full			(full),
+		      .prog_full		(prog_full),
+		      .dout			(dout[DW-1:0]),
+		      .empty			(empty),
+		      .rd_data_count		(rd_count[AW-1:0]),
+		      // Inputs
+		      .rst			(~nreset),
+		      .wr_clk			(wr_clk),
+		      .rd_clk			(rd_clk),
+		      .wr_en			(wr_en),
+		      .din			(din[DW-1:0]),
+		      .rd_en			(rd_en));
+	   end // if ((DW==128) & (DEPTH==32))
 	 else
 	   _INVALID_PARAMETERS_ invalid_parameters();
        end // block: xilinx
