@@ -235,11 +235,13 @@ module axi_mio(/*AUTOARG*/
 					| (m_wr_match & m_wr_wait)
 					| (m_rd_match & m_rd_wait);
 
+  assign mio_reg_wait_in		= ~mio_reg_s_rr_grant | s_rr_wait;
+
   // Arbitrate between reg and mio for axi slave read response
   oh_arbiter #(.N(2))
   s_rr_arb (.grants			({mio_reg_s_rr_grant,
 					  mio_s_rr_grant}),
-	    .requests			({mio_reg_s_rr_access,
+	    .requests			({mio_reg_access_out,
 					  mio_s_rr_access}));
 
    wire [PW-1:0]	s_rr_packet;
@@ -250,12 +252,18 @@ module axi_mio(/*AUTOARG*/
 	     .in1			(mio_reg_packet_out[PW-1:0]),
 	     .in0			(mio_packet_out[PW-1:0]));
 
+   assign s_wr_wait = (s_wr_mio_access & s_wr_mio_wait)
+		    | (s_wr_mio_reg_access & s_wr_mio_reg_wait);
+
+   assign s_rd_wait = (s_rd_mio_access & s_rd_mio_wait)
+		    | (s_rd_mio_reg_access & s_rd_mio_reg_wait);
+
    wire [PW-1:0]	mio_packet_in;
    // MIO TX path
    emesh_mux #(.N(3),.AW(AW))
    mio_tx_mux(// Outputs
-	      .wait_out			({s_wr_wait,
-					  s_rd_wait,
+	      .wait_out			({s_wr_mio_wait,
+					  s_rd_mio_wait,
 					  m_rr_wait}),
 	      .access_out		(mio_access_in),
 	      .packet_out		(mio_packet_in[PW-1:0]),
@@ -272,8 +280,8 @@ module axi_mio(/*AUTOARG*/
    wire [PW-1:0]	mio_reg_packet_in;
    emesh_mux #(.N(2),.AW(AW))
    mio_reg_mux(// Outputs
-	       .wait_out		({s_wr_wait,
-					  s_rd_wait}),
+	       .wait_out		({s_wr_mio_reg_wait,
+					  s_rd_mio_reg_wait}),
 	       .access_out		(mio_reg_access_in),
 	       .packet_out		(mio_reg_packet_in[PW-1:0]),
 	       // Inputs
