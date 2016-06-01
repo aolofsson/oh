@@ -18,7 +18,7 @@ set hdl_files [list \
 		  ]
 
 set ip_files   [list \
-		    $root/xilibs/ip/fifo_async_104x32.xci \
+		    $root/xilibs/ip/fifo_async_104x32/fifo_async_104x32.xci \
 		   ]
 
 set constraints_files []
