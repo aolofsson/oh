@@ -270,24 +270,28 @@ module axi_mio(/*AUTOARG*/
    assign m_wr_match			= ~s_rr_match &  mio_rx_write;
    assign m_rd_match			= ~s_rr_match & ~mio_rx_write;
 
+   // Slave read back requests
+   assign mio_s_rr_request		= (mio_access_out & s_rr_match);
+   assign mio_reg_s_rr_request		= (mio_reg_access_out & s_rr_match);
+
    // Access
-   assign s_rr_access			= (mio_access_out & s_rr_match);
+   assign s_rr_access			= (mio_access_out & mio_s_rr_grant) |
+					  (mio_reg_access_out & mio_reg_s_rr_grant);
    assign m_wr_access			= (mio_access_out & m_wr_match);
    assign m_rd_access			= (mio_access_out & m_rd_match);
 
-   // MIO RX Wait
-   assign mio_wait_in			= (s_rr_match & (s_rr_wait | ~mio_s_rr_grant))
-					| (m_wr_match & m_wr_wait)
-					| (m_rd_match & m_rd_wait);
-
+   // MIO Wait in
+   assign mio_wait_in			= (s_rr_match & (s_rr_wait | ~mio_s_rr_grant)) |
+					  (m_wr_match & m_wr_wait) |
+					  (m_rd_match & m_rd_wait);
   assign mio_reg_wait_in		= ~mio_reg_s_rr_grant | s_rr_wait;
 
   // Arbitrate between reg and mio for axi slave read response
   oh_arbiter #(.N(2))
   s_rr_arb (.grants			({mio_reg_s_rr_grant,
 					  mio_s_rr_grant}),
-	    .requests			({mio_reg_access_out,
-					  mio_s_rr_access}));
+	    .requests			({mio_reg_s_rr_request,
+					  mio_s_rr_request}));
 
    wire [PW-1:0]	s_rr_packet;
    oh_mux2 #(.DW(PW))
