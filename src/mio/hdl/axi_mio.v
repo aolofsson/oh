@@ -347,7 +347,7 @@ module axi_mio(/*AUTOARG*/
        .nreset (nreset),
        .\([rt]x_.*\)			(mio_io_\1[]),
        .\(.*\)				(mio_\1[])); */
-   mio #(.AW(AW), .DEF_CLK(100))
+   mio #(.AW(AW), .DEF_CLK(100), .TARGET(TARGET), .NMIO(NMIO))
    mio (/*AUTOINST*/
 	// Outputs
 	.tx_clk				(mio_io_tx_clk),	 // Templated
