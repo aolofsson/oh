@@ -36,6 +36,7 @@ module axi_mio(/*AUTOARG*/
    parameter AW          = 32;			   // address width
    parameter PW          = 2*AW+40;		   // packet width
    parameter ID          = 12'h810;		   // addr[31:20] id
+   parameter REMAPID     = 12'h3E0;		   // AXI slave addr[31:20] out
    parameter S_IDW       = 12;			   // ID width for S_AXI
    parameter M_IDW       = 6;			   // ID width for S_AXI
    parameter TARGET      = "GENERIC";		   // XILINX,ALTERA,GENERIC,ASIC
@@ -187,27 +188,71 @@ module axi_mio(/*AUTOARG*/
    wire s_wr_mio_reg_access		= s_wr_access &  s_wr_mio_reg_match;
    wire s_wr_mio_access			= s_wr_access & ~s_wr_mio_reg_match;
 
-   wire [AW-1:0]	s_wr_dstaddr;
    wire			s_wr_write;
+   wire [AW-1:0]	s_wr_dstaddr;
+   wire [1:0]		s_wr_datamode;
+   wire [4:0]		s_wr_ctrlmode;
+   wire [AW-1:0]	s_wr_srcaddr;
+   wire [AW-1:0]	s_wr_data;
+
    packet2emesh #(.AW(AW), .PW(PW))
    s_wr_p2e (// Inputs
 	     .packet_in			(s_wr_packet[PW-1:0]),
 	     // Output
 	     .write_in			(s_wr_write),
-	     .dstaddr_in		(s_wr_dstaddr[AW-1:0]));
+	     .dstaddr_in		(s_wr_dstaddr[AW-1:0]),
+	     .datamode_in		(s_wr_datamode[1:0]),
+	     .ctrlmode_in		(s_wr_ctrlmode[4:0]),
+	     .srcaddr_in		(s_wr_srcaddr[AW-1:0]),
+	     .data_in			(s_wr_data[AW-1:0]));
+
+   /* s_wr_remap */
+   wire [PW-1:0]	s_wr_remapped_packet;
+   emesh2packet #(.AW(AW), .PW(PW))
+   s_wr_remap_e2p (// Outputs
+		   .packet_out		(s_wr_remapped_packet[PW-1:0]),
+		   // Inputs
+		   .write_out		(s_wr_write),
+		   .datamode_out	(s_wr_datamode[1:0]),
+		   .ctrlmode_out	(s_wr_ctrlmode[4:0]),
+		   .dstaddr_out		({REMAPID, s_wr_dstaddr[19:0]}),
+		   .data_out		(s_wr_data[AW-1:0]),
+		   .srcaddr_out		(s_wr_srcaddr[AW-1:0]));
 
    wire s_rd_mio_reg_match		= s_rd_dstaddr[31:20] == ID;
    wire s_rd_mio_reg_access		= s_rd_access &  s_rd_mio_reg_match;
    wire s_rd_mio_access			= s_rd_access & ~s_rd_mio_reg_match;
 
-   wire [AW-1:0]	s_rd_dstaddr;
    wire			s_rd_write;
+   wire [AW-1:0]	s_rd_dstaddr;
+   wire [1:0]		s_rd_datamode;
+   wire [4:0]		s_rd_ctrlmode;
+   wire [AW-1:0]	s_rd_srcaddr;
+   wire [AW-1:0]	s_rd_data;
+
    packet2emesh #(.AW(AW), .PW(PW))
    s_rd_p2e (// Inputs
 	     .packet_in			(s_rd_packet[PW-1:0]),
 	     // Output
 	     .write_in			(s_rd_write),
-	     .dstaddr_in		(s_rd_dstaddr[AW-1:0]));
+	     .dstaddr_in		(s_rd_dstaddr[AW-1:0]),
+	     .datamode_in		(s_rd_datamode[1:0]),
+	     .ctrlmode_in		(s_rd_ctrlmode[4:0]),
+	     .srcaddr_in		(s_rd_srcaddr[AW-1:0]),
+	     .data_in			(s_rd_data[AW-1:0]));
+
+   /* s_rd_remap */
+   wire [PW-1:0]	s_rd_remapped_packet;
+   emesh2packet #(.AW(AW), .PW(PW))
+   s_rd_remap_e2p (// Outputs
+		   .packet_out		(s_rd_remapped_packet[PW-1:0]),
+		   // Inputs
+		   .write_out		(s_rd_write),
+		   .datamode_out	(s_rd_datamode[1:0]),
+		   .ctrlmode_out	(s_rd_ctrlmode[4:0]),
+		   .dstaddr_out		({REMAPID, s_rd_dstaddr[19:0]}),
+		   .data_out		(s_rd_data[AW-1:0]),
+		   .srcaddr_out		(s_rd_srcaddr[AW-1:0]));
 
 
    wire [AW-1:0]	mio_rx_dstaddr;
@@ -271,8 +316,8 @@ module axi_mio(/*AUTOARG*/
 	      .access_in		({s_wr_mio_access,
 					  s_rd_mio_access,
 					  m_rr_access}),
-	      .packet_in		({s_wr_packet[PW-1:0],
-					  s_rd_packet[PW-1:0],
+	      .packet_in		({s_wr_remapped_packet[PW-1:0],
+					  s_rd_remapped_packet[PW-1:0],
 					  m_rr_packet[PW-1:0]}),
 	      .wait_in			(mio_wait_out));
 

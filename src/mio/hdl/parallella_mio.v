@@ -37,6 +37,7 @@ module parallella_mio(/*AUTOARG*/
    parameter DW		= 32;
    parameter PW		= 2*AW+40;		// packet width
    parameter ID		= 12'h7fd;		// addr[31:20] id
+   parameter REMAPID	= 12'h3e0;		// addr[31:20] id
    parameter S_IDW	= 12;			// ID width for S_AXI
    parameter M_IDW	= 6;			// ID width for M_AXI
    parameter NGPIO	= 24;			// number of gpio pins
@@ -204,6 +205,7 @@ module parallella_mio(/*AUTOARG*/
 	     .M_IDW(M_IDW),
 	     .AW(AW),
 	     .ID(ID),
+	     .REMAPID(REMAPID),
 	     .TARGET(TARGET),
 	     .NMIO(NMIO))
    axi_mio (/*AUTOINST*/
