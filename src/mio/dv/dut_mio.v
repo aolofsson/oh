@@ -41,15 +41,18 @@ module dut(/*AUTOARG*/
    //########################################
 
    //wires
-   wire 	     reg_access_in;   
+   wire 	     reg_access_in;
    wire [PW-1:0]     reg_packet_in;
    wire 	     reg_wait_in;
    wire 	     mio_access_in;
-   
+   wire [PW-1:0]     mio_packet_out;
+   wire 	     mio_wait_in;
+
    /*AUTOINPUT*/
-   // End of automatics
+
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire			mio_access_out;		// From mio of mio.v
    wire			reg_access_out;		// From mio of mio.v
    wire [PW-1:0]	reg_packet_out;		// From mio of mio.v
    wire			reg_wait_out;		// From mio of mio.v
@@ -73,6 +76,19 @@ module dut(/*AUTOARG*/
    assign reg_packet_in    = packet_in;
    assign reg_wait_in      = wait_in;
 
+
+   emesh_mux #(.N(2),.AW(AW))
+   mux2(// Outputs
+	.wait_out   ({reg_wait_in, mio_wait_in}),
+	.access_out (access_out),
+	.packet_out (packet_out[PW-1:0]),
+	// Inputs
+	.access_in  ({reg_access_out, mio_access_out}),
+	.packet_in  ({reg_packet_out[PW-1:0], mio_packet_out[PW-1:0]}),
+	.wait_in    (wait_in)
+	);
+
+
    //########################################
    //# DUT: MIO IN LOOPBACK
    //########################################
@@ -86,6 +102,10 @@ module dut(/*AUTOARG*/
             .tx_packet	    (tx_packet[NMIO-1:0]),
 	    .tx_wait        (rx_wait),
             .access_in	    (mio_access_in),
+            .access_out	    (mio_access_out),
+	    .packet_out	    (mio_packet_out[]),
+	    .wait_in	    (mio_wait_in),
+
          
     );
     */
@@ -100,8 +120,8 @@ module dut(/*AUTOARG*/
 	.tx_packet			(tx_packet[NMIO-1:0]),	 // Templated
 	.rx_wait			(rx_wait),
 	.wait_out			(wait_out),
-	.access_out			(access_out),
-	.packet_out			(packet_out[PW-1:0]),
+	.access_out			(mio_access_out),	 // Templated
+	.packet_out			(mio_packet_out[PW-1:0]), // Templated
 	.reg_wait_out			(reg_wait_out),
 	.reg_access_out			(reg_access_out),
 	.reg_packet_out			(reg_packet_out[PW-1:0]),
@@ -114,7 +134,7 @@ module dut(/*AUTOARG*/
 	.rx_packet			(tx_packet[NMIO-1:0]),	 // Templated
 	.access_in			(mio_access_in),	 // Templated
 	.packet_in			(packet_in[PW-1:0]),
-	.wait_in			(wait_in),
+	.wait_in			(mio_wait_in),		 // Templated
 	.reg_access_in			(reg_access_in),
 	.reg_packet_in			(reg_packet_in[PW-1:0]),
 	.reg_wait_in			(reg_wait_in));
