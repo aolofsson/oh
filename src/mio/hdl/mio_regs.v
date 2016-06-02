@@ -199,9 +199,32 @@ module mio_regs (/*AUTOARG*/
    //###############################
    //# READBACK
    //################################ 
-   assign access_out ='b0;
-   assign wait_out   ='b0;
-   assign packet_out ='b0;
+
+   wire reg_read = ~write_in & access_in;
+   reg [63:0] read_data;
+
+   always @(posedge clk)
+     if(reg_read)
+       case(dstaddr_in[5:2])
+	 `MIO_STATUS   : read_data[63:0]  <= {{(48){1'b0}},
+					       status_reg[15:0]};
+	 default       : read_data[63:0] <= 'b0;
+       endcase
+
+   emesh_readback #(.AW(AW),
+		    .PW(PW))
+   emesh_readback (/*AUTOINST*/
+		   // Outputs
+		   .wait_out		(wait_out),
+		   .access_out		(access_out),
+		   .packet_out		(packet_out[PW-1:0]),
+		   // Inputs
+		   .nreset		(nreset),
+		   .clk			(clk),
+		   .access_in		(access_in),
+		   .packet_in		(packet_in[PW-1:0]),
+		   .read_data		(read_data[63:0]),
+		   .wait_in		(wait_in));
 
 endmodule
 // Local Variables:
