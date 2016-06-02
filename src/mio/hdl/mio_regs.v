@@ -120,10 +120,10 @@ module mio_regs (/*AUTOARG*/
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        begin
-	  config_reg[18:0] <= DEF_CFG;
+	  config_reg[20:0] <= DEF_CFG;
        end
      else if(config_write)
-       config_reg[18:0] <= data_in[18:0];
+       config_reg[20:0] <= data_in[20:0];
 
    assign tx_en         = ~config_reg[0];         // tx disable
    assign rx_en         = ~config_reg[1];         // rx disable
@@ -134,6 +134,7 @@ module mio_regs (/*AUTOARG*/
    assign ddr_mode      = config_reg[12];         // dual data rate mode   
    assign lsbfirst      = config_reg[13];         // lsb-first transmit
    assign framepol      = config_reg[14];         // frame polarity
+		       // config_reg[15] is reserved ???
    assign ctrlmode[4:0] = config_reg[20:16];      // ctrlmode
   
    //###############################
