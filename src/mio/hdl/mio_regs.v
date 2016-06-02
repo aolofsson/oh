@@ -150,9 +150,9 @@ module mio_regs (/*AUTOARG*/
    
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       status_reg[7:0] <= 'b0;   
+       status_reg[15:0] <= 'b0;
      else if(status_write)
-       status_reg[7:0] <= data_in[7:0];
+       status_reg[15:0] <= data_in[15:0];
      else
        status_reg[15:0] <= {(status_reg[15:8] | status_in[7:0]), // sticky bits
 			   status_in[7:0]};                     // immediate bits
