@@ -35,7 +35,7 @@ module axi_mio(/*AUTOARG*/
    //########################################################
    parameter AW          = 32;			   // address width
    parameter PW          = 2*AW+40;		   // packet width
-   parameter ID          = 12'h810;		   // addr[31:20] id
+   parameter ID          = 12'h7FD;		   // addr[31:20] id
    parameter REMAPID     = 12'h3E0;		   // AXI slave addr[31:20] out
    parameter S_IDW       = 12;			   // ID width for S_AXI
    parameter M_IDW       = 6;			   // ID width for S_AXI
@@ -50,17 +50,49 @@ module axi_mio(/*AUTOARG*/
    input        sys_clk;			   // system clock for AXI
 
    // AXI slave
-   wire			s_rd_access;
-   wire [PW-1:0]	s_rd_packet;
-   wire			s_rr_wait;
-   wire			s_wr_access;
    wire [PW-1:0]	s_wr_packet;
+   wire			s_wr_access;
+   wire 		s_wr_wait;
 
-   // AXI master
-   wire			m_rd_wait;
-   wire			m_rr_access;
-   wire [PW-1:0]	m_rr_packet;
-   wire			m_wr_wait;
+   wire [PW-1:0]	s_rd_packet;
+   wire			s_rd_access;
+   wire 		s_rd_wait;
+
+   wire [PW-1:0]	s_rr_packet;
+   wire			s_rr_access;
+   wire 		s_rr_wait;
+
+   // AXI master TODO CONNECT
+   wire [PW-1:0]	m_wr_packet;
+   wire			m_wr_access;
+   wire 		m_wr_wait;
+
+   wire [PW-1:0]	m_rd_packet = 'b0;
+   wire			m_rd_access = 'b0;
+   wire 		m_rd_wait   = 'b0;
+
+   wire [PW-1:0]	m_rr_packet = 'b0;
+   wire			m_rr_access = 'b0;
+   wire 		m_rr_wait = 'b0;
+
+
+   // MIO
+   wire [PW-1:0]	mio_packet_in;
+   wire 		mio_access_in;
+   wire 		mio_wait_out;
+
+   wire  [PW-1:0]	mio_packet_out;
+   wire 		mio_access_out;
+   wire 		mio_wait_in;
+
+   // MIO regs
+   wire [PW-1:0]	reg_packet_in;
+   wire 		reg_access_in;
+   wire 		reg_wait_out;
+
+   wire [PW-1:0]	reg_packet_out;
+   wire 		reg_access_out;
+   wire			reg_wait_in;
 
    //##############################################################
    //AUTOS
@@ -110,7 +142,7 @@ module axi_mio(/*AUTOARG*/
    input		s_axi_wvalid;		// To esaxi of esaxi.v
    // End of automatics
 
-   /*AUTOINPUT("^mio_io_[rt]x_")*/
+   /*AUTOINPUT("^mio_io_")*/
    // Beginning of automatic inputs (from unused autoinst inputs)
    input		mio_io_rx_access;	// To mio of mio.v
    input		mio_io_rx_clk;		// To mio of mio.v
@@ -160,7 +192,7 @@ module axi_mio(/*AUTOARG*/
    output		s_axi_wready;		// From esaxi of esaxi.v
    // End of automatics
 
-   /*AUTOOUTPUT("^mio_io_[rt]x_")*/
+   /*AUTOOUTPUT("^mio_io_")*/
    // Beginning of automatic outputs (from unused autoinst outputs)
    output		mio_io_rx_wait;		// From mio of mio.v
    output		mio_io_tx_access;	// From mio of mio.v
@@ -169,24 +201,12 @@ module axi_mio(/*AUTOARG*/
    // End of automatics
 
    /*AUTOWIRE*/
-   // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			mio_access_out;		// From mio of mio.v
-   wire [PW-1:0]	mio_packet_out;		// From mio of mio.v
-   wire			mio_reg_access_out;	// From mio of mio.v
-   wire [PW-1:0]	mio_reg_packet_out;	// From mio of mio.v
-   wire			mio_reg_wait_out;	// From mio of mio.v
-   wire			mio_wait_out;		// From mio of mio.v
-   // End of automatics
 
    //########################################################
    //Switchboard logic
    //########################################################
 
-   /* AXI SLAVE wr/rd MIO TX / MIO REG match*/
-
-   wire s_wr_mio_reg_match		= s_wr_dstaddr[31:20] == ID;
-   wire s_wr_mio_reg_access		= s_wr_access &  s_wr_mio_reg_match;
-   wire s_wr_mio_access			= s_wr_access & ~s_wr_mio_reg_match;
+   /* Packet decode */
 
    wire			s_wr_write;
    wire [AW-1:0]	s_wr_dstaddr;
@@ -194,7 +214,6 @@ module axi_mio(/*AUTOARG*/
    wire [4:0]		s_wr_ctrlmode;
    wire [AW-1:0]	s_wr_srcaddr;
    wire [AW-1:0]	s_wr_data;
-
    packet2emesh #(.AW(AW), .PW(PW))
    s_wr_p2e (// Inputs
 	     .packet_in			(s_wr_packet[PW-1:0]),
@@ -206,7 +225,25 @@ module axi_mio(/*AUTOARG*/
 	     .srcaddr_in		(s_wr_srcaddr[AW-1:0]),
 	     .data_in			(s_wr_data[AW-1:0]));
 
-   /* s_wr_remap */
+   wire			s_rd_write;
+   wire [AW-1:0]	s_rd_dstaddr;
+   wire [1:0]		s_rd_datamode;
+   wire [4:0]		s_rd_ctrlmode;
+   wire [AW-1:0]	s_rd_srcaddr;
+   wire [AW-1:0]	s_rd_data;
+   packet2emesh #(.AW(AW), .PW(PW))
+   s_rd_p2e (// Inputs
+	     .packet_in			(s_rd_packet[PW-1:0]),
+	     // Output
+	     .write_in			(s_rd_write),
+	     .dstaddr_in		(s_rd_dstaddr[AW-1:0]),
+	     .datamode_in		(s_rd_datamode[1:0]),
+	     .ctrlmode_in		(s_rd_ctrlmode[4:0]),
+	     .srcaddr_in		(s_rd_srcaddr[AW-1:0]),
+	     .data_in			(s_rd_data[AW-1:0]));
+
+
+   /* Address remap */
    wire [PW-1:0]	s_wr_remapped_packet;
    emesh2packet #(.AW(AW), .PW(PW))
    s_wr_remap_e2p (// Outputs
@@ -219,29 +256,6 @@ module axi_mio(/*AUTOARG*/
 		   .data_out		(s_wr_data[AW-1:0]),
 		   .srcaddr_out		(s_wr_srcaddr[AW-1:0]));
 
-   wire s_rd_mio_reg_match		= s_rd_dstaddr[31:20] == ID;
-   wire s_rd_mio_reg_access		= s_rd_access &  s_rd_mio_reg_match;
-   wire s_rd_mio_access			= s_rd_access & ~s_rd_mio_reg_match;
-
-   wire			s_rd_write;
-   wire [AW-1:0]	s_rd_dstaddr;
-   wire [1:0]		s_rd_datamode;
-   wire [4:0]		s_rd_ctrlmode;
-   wire [AW-1:0]	s_rd_srcaddr;
-   wire [AW-1:0]	s_rd_data;
-
-   packet2emesh #(.AW(AW), .PW(PW))
-   s_rd_p2e (// Inputs
-	     .packet_in			(s_rd_packet[PW-1:0]),
-	     // Output
-	     .write_in			(s_rd_write),
-	     .dstaddr_in		(s_rd_dstaddr[AW-1:0]),
-	     .datamode_in		(s_rd_datamode[1:0]),
-	     .ctrlmode_in		(s_rd_ctrlmode[4:0]),
-	     .srcaddr_in		(s_rd_srcaddr[AW-1:0]),
-	     .data_in			(s_rd_data[AW-1:0]));
-
-   /* s_rd_remap */
    wire [PW-1:0]	s_rd_remapped_packet;
    emesh2packet #(.AW(AW), .PW(PW))
    s_rd_remap_e2p (// Outputs
@@ -255,91 +269,57 @@ module axi_mio(/*AUTOARG*/
 		   .srcaddr_out		(s_rd_srcaddr[AW-1:0]));
 
 
-   wire [AW-1:0]	mio_rx_dstaddr;
-   wire			mio_rx_write;
-   packet2emesh #(.AW(AW), .PW(PW))
-   mio_rx_p2e (// Inputs
-	       .packet_in		(mio_packet_out[PW-1:0]),
-	       // Output
-	       .write_in		(mio_rx_write),
-	       .dstaddr_in		(mio_rx_dstaddr[AW-1:0]));
+   /* Destination matching */
+   wire s_wr_reg_match = (s_wr_dstaddr[31:20] == ID) &
+			 (s_wr_dstaddr[19:16] == EGROUP_CFG);
+   wire s_rd_reg_match = (s_rd_dstaddr[31:20] == ID) &
+			 (s_rd_dstaddr[19:16] == EGROUP_CFG);
 
-   // Match
-   assign s_rr_match			= (mio_rx_dstaddr[31:20] == ID) &
-					  (mio_rx_dstaddr[19:16] == EGROUP_RR);
-   assign m_wr_match			= ~s_rr_match &  mio_rx_write;
-   assign m_rd_match			= ~s_rr_match & ~mio_rx_write;
 
-   // Slave read back requests
-   assign mio_s_rr_request		= (mio_access_out & s_rr_match);
-   assign mio_reg_s_rr_request		= (mio_reg_access_out & s_rr_match);
+   wire s_rd_reg_in_wait;
+   wire s_wr_reg_in_wait;
 
-   // Access
-   assign s_rr_access			= (mio_access_out & mio_s_rr_grant) |
-					  (mio_reg_access_out & mio_reg_s_rr_grant);
-   assign m_wr_access			= (mio_access_out & m_wr_match);
-   assign m_rd_access			= (mio_access_out & m_rd_match);
-
-   // MIO Wait in
-   assign mio_wait_in			= (s_rr_match & (s_rr_wait | ~mio_s_rr_grant)) |
-					  (m_wr_match & m_wr_wait) |
-					  (m_rd_match & m_rd_wait);
-  assign mio_reg_wait_in		= ~mio_reg_s_rr_grant | s_rr_wait;
-
-  // Arbitrate between reg and mio for axi slave read response
-  oh_arbiter #(.N(2))
-  s_rr_arb (.grants			({mio_reg_s_rr_grant,
-					  mio_s_rr_grant}),
-	    .requests			({mio_reg_s_rr_request,
-					  mio_s_rr_request}));
-
-   wire [PW-1:0]	s_rr_packet;
-   oh_mux2 #(.DW(PW))
-   s_rr_mux (.out			(s_rr_packet[PW-1:0]),
-	     .sel1			(mio_reg_s_rr_grant),
-	     .sel0			(mio_s_rr_grant),
-	     .in1			(mio_reg_packet_out[PW-1:0]),
-	     .in0			(mio_packet_out[PW-1:0]));
-
-   assign s_wr_wait = (s_wr_mio_access & s_wr_mio_wait)
-		    | (s_wr_mio_reg_access & s_wr_mio_reg_wait);
-
-   assign s_rd_wait = (s_rd_mio_access & s_rd_mio_wait)
-		    | (s_rd_mio_reg_access & s_rd_mio_reg_wait);
-
-   wire [PW-1:0]	mio_packet_in;
-   // MIO TX path
-   emesh_mux #(.N(3),.AW(AW))
-   mio_tx_mux(// Outputs
-	      .wait_out			({s_wr_mio_wait,
-					  s_rd_mio_wait,
-					  m_rr_wait}),
-	      .access_out		(mio_access_in),
-	      .packet_out		(mio_packet_in[PW-1:0]),
-	      // Inputs
-	      .access_in		({s_wr_mio_access,
-					  s_rd_mio_access,
-					  m_rr_access}),
-	      .packet_in		({s_wr_remapped_packet[PW-1:0],
-					  s_rd_remapped_packet[PW-1:0],
-					  m_rr_packet[PW-1:0]}),
-	      .wait_in			(mio_wait_out));
-
-   // REG s_wr/s_rd access
-   wire [PW-1:0]	mio_reg_packet_in;
+   /* MUX stage */
    emesh_mux #(.N(2),.AW(AW))
-   mio_reg_mux(// Outputs
-	       .wait_out		({s_wr_mio_reg_wait,
-					  s_rd_mio_reg_wait}),
-	       .access_out		(mio_reg_access_in),
-	       .packet_out		(mio_reg_packet_in[PW-1:0]),
+   reg_in_mux (// Outputs
+	       .packet_out (reg_packet_in[PW-1:0]),
+	       .access_out (reg_access_in),
+	       .wait_out   ({s_rd_reg_in_wait, s_wr_reg_in_wait}),
 	       // Inputs
-	       .access_in		({s_wr_mio_reg_access,
-					  s_rd_mio_reg_access}),
-	       .packet_in		({s_wr_packet[PW-1:0],
-					  s_rd_packet[PW-1:0]}),
-	       .wait_in			(mio_reg_wait_out));
+	       .access_in  ({s_rd_reg_match & s_rd_access,
+			     s_wr_reg_match & s_wr_access}),
+	       .packet_in  ({s_rd_packet[PW-1:0], s_wr_packet[PW-1:0]}),
+	       .wait_in    (reg_wait_out));
 
+   wire s_rd_mio_in_wait;
+   wire s_wr_mio_in_wait;
+
+   emesh_mux #(.N(2),.AW(AW))
+   mio_in_mux(// Outputs
+	      .packet_out (mio_packet_in[PW-1:0]),
+	      .access_out (mio_access_in),
+	      .wait_out   ({s_rd_mio_in_wait, s_wr_mio_in_wait}),
+	      // Inputs
+	      .access_in  ({~s_rd_reg_match & s_rd_access,
+			    ~s_wr_reg_match & s_wr_access}),
+	      .packet_in  ({s_rd_remapped_packet[PW-1:0],
+			    s_wr_remapped_packet[PW-1:0]}),
+	      .wait_in    (mio_wait_out));
+
+
+   assign m_wr_packet[PW-1:0] = mio_packet_out[PW-1:0];
+   assign m_wr_access = mio_access_out;
+   assign mio_wait_in = m_wr_wait;
+
+   /* Wait signals */
+   assign s_wr_wait = s_wr_reg_in_wait | s_wr_mio_in_wait;
+   assign s_rd_wait = s_rd_reg_in_wait | s_rd_mio_in_wait;
+
+
+   /* Read response hack */
+   assign s_rr_access		= reg_access_out;
+   assign s_rr_packet[PW-1:0]	= reg_packet_out[PW-1:0];
+   assign reg_wait_in		= s_rr_wait;
 
    //########################################################
    //MIO
@@ -348,10 +328,11 @@ module axi_mio(/*AUTOARG*/
    /*
    mio AUTO_TEMPLATE
       (.clk (sys_clk),
-       .nreset (nreset),
+       .nreset (sys_nreset),
        .\([rt]x_.*\)			(mio_io_\1[]),
+       .reg_\(.*\)			(reg_\1[]),
        .\(.*\)				(mio_\1[])); */
-   mio #(.AW(AW), .DEF_CLK(100), .TARGET(TARGET), .NMIO(NMIO))
+   mio #(.AW(AW), .DEF_CFG(20'h1070), .DEF_CLK(50), .TARGET(TARGET), .NMIO(NMIO))
    mio (/*AUTOINST*/
 	// Outputs
 	.tx_clk				(mio_io_tx_clk),	 // Templated
@@ -361,12 +342,12 @@ module axi_mio(/*AUTOARG*/
 	.wait_out			(mio_wait_out),		 // Templated
 	.access_out			(mio_access_out),	 // Templated
 	.packet_out			(mio_packet_out[PW-1:0]), // Templated
-	.reg_wait_out			(mio_reg_wait_out),	 // Templated
-	.reg_access_out			(mio_reg_access_out),	 // Templated
-	.reg_packet_out			(mio_reg_packet_out[PW-1:0]), // Templated
+	.reg_wait_out			(reg_wait_out),		 // Templated
+	.reg_access_out			(reg_access_out),	 // Templated
+	.reg_packet_out			(reg_packet_out[PW-1:0]), // Templated
 	// Inputs
 	.clk				(sys_clk),		 // Templated
-	.nreset				(nreset),		 // Templated
+	.nreset				(sys_nreset),		 // Templated
 	.tx_wait			(mio_io_tx_wait),	 // Templated
 	.rx_clk				(mio_io_rx_clk),	 // Templated
 	.rx_access			(mio_io_rx_access),	 // Templated
@@ -374,9 +355,9 @@ module axi_mio(/*AUTOARG*/
 	.access_in			(mio_access_in),	 // Templated
 	.packet_in			(mio_packet_in[PW-1:0]), // Templated
 	.wait_in			(mio_wait_in),		 // Templated
-	.reg_access_in			(mio_reg_access_in),	 // Templated
-	.reg_packet_in			(mio_reg_packet_in[PW-1:0]), // Templated
-	.reg_wait_in			(mio_reg_wait_in));	 // Templated
+	.reg_access_in			(reg_access_in),	 // Templated
+	.reg_packet_in			(reg_packet_in[PW-1:0]), // Templated
+	.reg_wait_in			(reg_wait_in));		 // Templated
 
    //########################################################
    //AXI SLAVE
@@ -444,15 +425,14 @@ module axi_mio(/*AUTOARG*/
 	  .s_axi_wstrb			(s_axi_wstrb[3:0]),
 	  .s_axi_wvalid			(s_axi_wvalid));
 
+
    //########################################################
-   //AXI SLAVE
+   //AXI MASTER
    //########################################################
 
    /*
    emaxi AUTO_TEMPLATE
-	 (.wr_packet			(mio_packet_out[PW-1:0]),
-	  .rd_packet			(mio_packet_out[PW-1:0]),
-	  .rr_\(.*\)			(m_rr_\1[]),
+	 (.rr_\(.*\)			(m_rr_\1[]),
 	  .rd_\(.*\)			(m_rd_\1[]),
 	  .wr_\(.*\)			(m_wr_\1[]),
 	  .m_axi_aclk			(sys_clk)); */
@@ -492,9 +472,9 @@ module axi_mio(/*AUTOARG*/
 	  .m_axi_rready			(m_axi_rready),
 	  // Inputs
 	  .wr_access			(m_wr_access),		 // Templated
-	  .wr_packet			(mio_packet_out[PW-1:0]), // Templated
+	  .wr_packet			(m_wr_packet[PW-1:0]),	 // Templated
 	  .rd_access			(m_rd_access),		 // Templated
-	  .rd_packet			(mio_packet_out[PW-1:0]), // Templated
+	  .rd_packet			(m_rd_packet[PW-1:0]),	 // Templated
 	  .rr_wait			(m_rr_wait),		 // Templated
 	  .m_axi_aclk			(sys_clk),		 // Templated
 	  .m_axi_aresetn		(m_axi_aresetn),
