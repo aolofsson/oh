@@ -1,3 +1,5 @@
+CFLAGS ?= -g
+
 all: hello-mio
 
 clean:
