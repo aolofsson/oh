@@ -60,20 +60,14 @@ module parallella_mio(/*AUTOARG*/
    wire  [NGPIO-1:0]	gpio_dir;		// gpio pin direction
 
    // mio io signals
-   wire			mio_io_tx_wait;
-   wire			mio_io_tx_access;
-   wire			mio_io_tx_clk;
-   wire [NMIO-1:0]	mio_io_tx_packet;
-   wire			mio_io_rx_access;
-   wire			mio_io_rx_clk;
-   wire [NMIO-1:0]	mio_io_rx_packet;
-   wire			mio_io_rx_wait;
-
-   // HACK, use gpio later
-   assign mio_io_tx_wait = mio_io_rx_wait;
-   assign mio_io_rx_clk = mio_io_tx_clk;
-   assign mio_io_rx_access = mio_io_tx_access;
-   assign mio_io_rx_packet[NMIO-1:0] = mio_io_tx_packet[NMIO-1:0];
+   wire			mio_tx_wait;
+   wire			mio_tx_access;
+   wire			mio_tx_clk;
+   wire [NMIO-1:0]	mio_tx_packet;
+   wire			mio_rx_access;
+   wire			mio_rx_clk;
+   wire [NMIO-1:0]	mio_rx_packet;
+   wire			mio_rx_wait;
 
    //##############################################################
    //AUTOS
@@ -173,14 +167,14 @@ module parallella_mio(/*AUTOARG*/
    //GPIO
    //##############################################################
 
-   assign mio_s_ss		= gpio_in[10];
-   assign mio_s_miso		= gpio_out[9];
-   assign mio_s_mosi		= gpio_in[8];
-   assign mio_rx_clk		= gpio_in[7]; /* Must map to a MRCC/SRCC pin */
-   assign mio_m_ss		= gpio_out[6];
-   assign mio_m_miso		= gpio_in[5];
-   assign mio_m_mosi		= gpio_out[4];
-   assign mio_m_sclk		= gpio_out[3];
+   // assign mio_s_ss		= gpio_in[10];
+   // assign mio_s_miso		= gpio_out[9];
+   // assign mio_s_mosi		= gpio_in[8];
+   // assign mio_rx_clk		= gpio_in[7]; /* Must map to a MRCC/SRCC pin */
+   // assign mio_m_ss		= gpio_out[6];
+   // assign mio_m_miso		= gpio_in[5];
+   // assign mio_m_mosi		= gpio_out[4];
+   // assign mio_m_sclk		= gpio_out[3];
 
    /* NOTE: 0 = in, 1 = out */
    assign gpio_dir[NGPIO-1:0] = {{(NGPIO-11){1'b0}}, 8'b01001011, 3'b000};
@@ -208,7 +202,13 @@ module parallella_mio(/*AUTOARG*/
 	     .REMAPID(REMAPID),
 	     .TARGET(TARGET),
 	     .NMIO(NMIO))
-   axi_mio (/*AUTOINST*/
+   axi_mio (
+	    /* HACK: connect to GPIO pins later */
+	    .mio_rx_access		(mio_tx_access),
+	    .mio_rx_clk			(mio_tx_clk),
+	    .mio_rx_packet		(mio_tx_packet[NMIO-1:0]),
+	    .mio_tx_wait		(mio_rx_wait),
+	    /*AUTOINST*/
 	    // Outputs
 	    .m_axi_araddr		(m_axi_araddr[31:0]),
 	    .m_axi_arburst		(m_axi_arburst[1:0]),
@@ -248,10 +248,6 @@ module parallella_mio(/*AUTOARG*/
 	    .s_axi_rresp		(s_axi_rresp[1:0]),
 	    .s_axi_rvalid		(s_axi_rvalid),
 	    .s_axi_wready		(s_axi_wready),
-	    .mio_io_rx_wait		(mio_io_rx_wait),
-	    .mio_io_tx_access		(mio_io_tx_access),
-	    .mio_io_tx_clk		(mio_io_tx_clk),
-	    .mio_io_tx_packet		(mio_io_tx_packet[NMIO-1:0]),
 	    // Inputs
 	    .sys_nreset			(sys_nreset),
 	    .sys_clk			(sys_clk),
@@ -294,11 +290,7 @@ module parallella_mio(/*AUTOARG*/
 	    .s_axi_wid			(s_axi_wid[S_IDW-1:0]),
 	    .s_axi_wlast		(s_axi_wlast),
 	    .s_axi_wstrb		(s_axi_wstrb[3:0]),
-	    .s_axi_wvalid		(s_axi_wvalid),
-	    .mio_io_rx_access		(mio_io_rx_access),
-	    .mio_io_rx_clk		(mio_io_rx_clk),
-	    .mio_io_rx_packet		(mio_io_rx_packet[NMIO-1:0]),
-	    .mio_io_tx_wait		(mio_io_tx_wait));
+	    .s_axi_wvalid		(s_axi_wvalid));
 
 endmodule // parallella_mio
 // Local Variables:
