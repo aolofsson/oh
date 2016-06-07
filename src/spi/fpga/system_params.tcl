@@ -20,7 +20,9 @@ set hdl_files [list \
 	           $root/parallella/hdl \
 		  ]
 
-set ip_files   []
+set ip_files   [list \
+		    $root/xilibs/ip/fifo_async_104x32.xci \
+		   ]
 
 set constraints_files [list \
 	../../parallella/fpga/parallella_io.xdc \

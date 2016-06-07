@@ -18,14 +18,16 @@ module oh_ser2par #(parameter PW = 64, // parallel packet width
  
    parameter CW   = $clog2(PW/SW);  // serialization factor (for counter)
    
-   reg [PW-1:0]    dout;
+   reg [PW-1:0]    dout_reg;
    reg [CW-1:0]    count;
    wire [PW-1:0]   shiftdata;
 
+   assign dout = dout_reg;
+
    always @ (posedge clk)
      if(shift & lsbfirst)
-       dout[PW-1:0] <= {din[SW-1:0],dout[PW-1:SW]};
+       dout_reg[PW-1:0] <= {din[SW-1:0],dout_reg[PW-1:SW]};
      else if(shift)
-       dout[PW-1:0] <= {dout[PW-SW-1:0],din[SW-1:0]};
+       dout_reg[PW-1:0] <= {dout_reg[PW-SW-1:0],din[SW-1:0]};
    
 endmodule // oh_ser2par

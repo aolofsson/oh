@@ -29,6 +29,7 @@ module axi_spi(/*AUTOARG*/
    parameter PW          = 2*AW+40;          // packet width
    parameter ID          = 12'h810;          // addr[31:20] id
    parameter S_IDW       = 12;               // ID width for S_AXI
+   parameter TARGET      = "GENERIC";        // XILINX,ALTERA,GENERIC,ASIC
 
    //clk, reset
    input        sys_nreset;                  // active low async reset
@@ -122,7 +123,7 @@ module axi_spi(/*AUTOARG*/
    wire			spi_wait_in;
 
    /* spi AUTO_TEMPLATE (.\([sm]_.*\) (spi_\1[]),); */
-   spi #(.AW(AW))
+   spi #(.AW(AW),.TARGET(TARGET))
    spi (
 	//Outputs
 	.hw_en				(1'b1),

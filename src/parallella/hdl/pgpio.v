@@ -11,10 +11,12 @@ module pgpio(/*AUTOARG*/
    ps_gpio_o, ps_gpio_t
    );
   
-   parameter  NGPIO   = 24;  // 12 or 24
-   parameter  NPS     = 64;  // signals for PS
-   parameter  DIFF    = 0;   // 0= single ended
-                             // 1= differential 
+   parameter  NGPIO   = 24;     // 12 or 24
+   parameter  NPS     = 64;     // signals for PS
+   parameter  DIFF    = 0;      // 0= single ended
+                                // 1= differential 
+   parameter  SLEW    = "SLOW"; // "SLOW" or "FAST", only applicable to
+				// single ended.
    
    inout [NGPIO-1:0]      gpio_p;
    inout [NGPIO-1:0]      gpio_n;
@@ -74,7 +76,7 @@ module pgpio(/*AUTOARG*/
              .DRIVE(8), // Specify the output drive strength
              .IBUF_LOW_PWR("TRUE"), // Low Power - "TRUE", High Performance = "FALSE"
              .IOSTANDARD("LVCMOS25"), // Specify the I/O standard
-             .SLEW("SLOW") // Specify the output slew rate
+             .SLEW(SLEW) // Specify the output slew rate
              )
          i_iocmos_n [NGPIO-1:0]
            (
@@ -89,7 +91,7 @@ module pgpio(/*AUTOARG*/
              .DRIVE(8), // Specify the output drive strength
              .IBUF_LOW_PWR("TRUE"), // Low Power - "TRUE", High Performance = "FALSE"
              .IOSTANDARD("LVCMOS25"), // Specify the I/O standard
-             .SLEW("SLOW") // Specify the output slew rate
+             .SLEW(SLEW) // Specify the output slew rate
              )
          i_iocmos_p [NGPIO-1:0]
            (
