@@ -41,16 +41,6 @@ module mrx_io (/*AUTOARG*/
    reg 		       byte0_sel;
    
    //########################################
-   //# CLOCK, RESET
-   //########################################
-
-   //synchronize reset to rx_clk
-   oh_rsync oh_rsync(.nrst_out	(io_nreset),
-		     .clk	(rx_clk),
-		     .nrst_in	(nreset)
-		     );
-      
-   //########################################
    //# SELECT FRAME POLARITY
    //########################################
 
@@ -60,7 +50,7 @@ module mrx_io (/*AUTOARG*/
    //# ACCESS (SDR)
    //########################################
 
-   always @ (posedge rx_clk or negedge io_nreset)
+   always @ (posedge rx_clk or negedge nreset)
      if(!nreset)
        io_access <= 1'b0;
      else

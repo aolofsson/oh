@@ -77,9 +77,9 @@ module mio_regs (/*AUTOARG*/
    // End of automatics
 
    //regs
-   reg [18:0] 		config_reg;   
-   reg [7:0] 		status_reg;
-   wire [7:0] 		status_in;   
+   reg [20:0] 		config_reg;
+   reg [15:0] 		status_reg;
+   wire [7:0] 		status_in;
    reg [31:0] 		clkdiv_reg;
    reg [63:0] 		addr_reg;
    reg [31:0] 		clkphase_reg;
@@ -120,10 +120,10 @@ module mio_regs (/*AUTOARG*/
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        begin
-	  config_reg[18:0] <= DEF_CFG;
+	  config_reg[20:0] <= DEF_CFG;
        end
      else if(config_write)
-       config_reg[18:0] <= data_in[18:0];
+       config_reg[20:0] <= data_in[20:0];
 
    assign tx_en         = ~config_reg[0];         // tx disable
    assign rx_en         = ~config_reg[1];         // rx disable
@@ -134,6 +134,7 @@ module mio_regs (/*AUTOARG*/
    assign ddr_mode      = config_reg[12];         // dual data rate mode   
    assign lsbfirst      = config_reg[13];         // lsb-first transmit
    assign framepol      = config_reg[14];         // frame polarity
+		       // config_reg[15] is reserved ???
    assign ctrlmode[4:0] = config_reg[20:16];      // ctrlmode
   
    //###############################
@@ -150,11 +151,11 @@ module mio_regs (/*AUTOARG*/
    
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       status_reg[7:0] <= 'b0;   
+       status_reg[15:0] <= 'b0;
      else if(status_write)
-       status_reg[7:0] <= data_in[7:0];
+       status_reg[15:0] <= data_in[15:0];
      else
-       status_reg[7:0] <= {(status_reg[15:8] | status_in[7:0]), // sticky bits
+       status_reg[15:0] <= {(status_reg[15:8] | status_in[7:0]), // sticky bits
 			   status_in[7:0]};                     // immediate bits
 
    //###############################
@@ -199,9 +200,32 @@ module mio_regs (/*AUTOARG*/
    //###############################
    //# READBACK
    //################################ 
-   assign access_out ='b0;
-   assign wait_out   ='b0;
-   assign packet_out ='b0;
+
+   wire reg_read = ~write_in & access_in;
+   reg [63:0] read_data;
+
+   always @(posedge clk)
+     if(reg_read)
+       case(dstaddr_in[5:2])
+	 `MIO_STATUS   : read_data[63:0]  <= {{(48){1'b0}},
+					       status_reg[15:0]};
+	 default       : read_data[63:0] <= 'b0;
+       endcase
+
+   emesh_readback #(.AW(AW),
+		    .PW(PW))
+   emesh_readback (/*AUTOINST*/
+		   // Outputs
+		   .wait_out		(wait_out),
+		   .access_out		(access_out),
+		   .packet_out		(packet_out[PW-1:0]),
+		   // Inputs
+		   .nreset		(nreset),
+		   .clk			(clk),
+		   .access_in		(access_in),
+		   .packet_in		(packet_in[PW-1:0]),
+		   .read_data		(read_data[63:0]),
+		   .wait_in		(wait_in));
 
 endmodule
 // Local Variables:

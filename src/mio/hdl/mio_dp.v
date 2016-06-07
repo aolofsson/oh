@@ -61,7 +61,8 @@ module mio_dp (/*AUTOARG*/
    /*AUTOWIRE*/
       
    mtx #(.NMIO(NMIO),
-	 .PW(PW))
+	 .PW(PW),
+	 .TARGET(TARGET))
    mtx (/*AUTOINST*/
 	// Outputs
 	.tx_empty			(tx_empty),
@@ -83,7 +84,8 @@ module mio_dp (/*AUTOARG*/
 	.tx_wait			(tx_wait));
    
    mrx #(.NMIO(NMIO),
-	 .PW(PW))
+	 .PW(PW),
+	 .TARGET(TARGET))
    mrx (/*AUTOINST*/
 	// Outputs
 	.rx_empty			(rx_empty),
