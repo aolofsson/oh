@@ -140,6 +140,7 @@ TBD
 * Avoid redundant resets
 * Avoid heavily nested if, else statements
 * Don't use defparams, place #(.DW(DW)) in module instantation
+* With parameters, NEVER us this instantiation: "mux3 #(32) U2 (...)"
 * Always use connection by name (not by order) in module instantiatoin
 * Parametrize as much as possible but not more
 * Place a useful comment every 5-20 lines
@@ -151,6 +152,7 @@ TBD
 * Don't use proprietary EDA tool pragmas (use parameters)
 * Only use synthesizable constructs
 * Use $signed() for arithmetic operations on signed types
+. 
 * Allowed keywords: assign, always, input, output, wire, reg, module, endmodule, if/else, case, casez, ~,|,&,^,==, >>, <<, >, <,?,posedge, negedge, generate, for(...), begin, end, $signed,
 
 
