@@ -5,8 +5,9 @@
 //# License:  MIT (see LICENSE in OH! repositpory)                            # 
 //#############################################################################
 
-module oh_par2ser #(parameter  PW   = 64, // parallel packet width
-		    parameter  SW   = 1   // serial packet width
+module oh_par2ser #(parameter PW = 64, // parallel packet width
+		    parameter SW = 1,  // serial packet width
+		    parameter CW = $clog2(PW/SW)  // serialization factor
 		    )
    (
     input 	    clk, // sampling clock   
@@ -23,12 +24,12 @@ module oh_par2ser #(parameter  PW   = 64, // parallel packet width
     output 	    wait_out // wait output (wait in | serial wait)
     );
  
-   // parameters  
-   parameter CW   = $clog2(PW/SW);  // serialization factor (for counter)      
-
+   // local wires
    reg [PW-1:0]    shiftreg;
    reg [CW-1:0]    count;
-
+   wire 	   start_transfer;
+   wire 	   busy;
+   
    // start serialization   
    assign start_transfer = load &  ~wait_in & ~busy;
 
