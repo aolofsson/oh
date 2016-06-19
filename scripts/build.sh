@@ -21,6 +21,7 @@ $OH_HOME/scripts/link.sh
 ###############################
 iverilog -g2005\
  -DTARGET_SIM=1\
+ -DCFG_ASIC=0\
  $DUT\
  $OH_HOME/symlinks/dv/dv_top.v\
  -y .\
