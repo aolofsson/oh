@@ -6,13 +6,11 @@
 //#############################################################################
 
 `include "spi_regmap.vh"
-module spi_master_fifo #( parameter  DEPTH = 16,            // fifo entries
-			  parameter  AW    = 32,            // address width
-			  parameter  PW    = 104,           // input packet width   
-			  parameter  SW    = 8,             // io packet width   
-			  parameter  FAW   = $clog2(DEPTH), // fifo address width   
-			  parameter  SRW   = $clog2(PW/SW)  // serialization factor
-			  )
+module spi_master_fifo #(parameter  DEPTH = 16,  // fifo entries
+			 parameter  AW    = 32,  // address width
+			 parameter  PW    = 104, // input packet width   
+			 parameter  SW    = 8    // io packet width   
+			 )
    (
     //clk,reset, cfg
     input 	    clk, // clk
@@ -28,13 +26,22 @@ module spi_master_fifo #( parameter  DEPTH = 16,            // fifo entries
     output 	    fifo_empty, // fifo is empty
     output [SW-1:0] fifo_dout // byte for IO
     );
-   
+
+   localparam  FAW   = $clog2(DEPTH); // fifo address width   
+   localparam  SRW   = $clog2(PW/SW);  // serialization factor
+
    //###############
    //# LOCAL WIRES
    //###############
    wire [7:0] 	    datasize;
    wire [PW-1:0]    tx_data;
    wire [SW-1:0]    fifo_din;
+   wire 	    tx_write;
+   wire 	    fifo_wait;
+   wire 	    fifo_wr;
+   wire 	    fifo_full;
+   
+   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [4:0]		ctrlmode_in;		// From p2e of packet2emesh.v
@@ -107,7 +114,7 @@ module spi_master_fifo #( parameter  DEPTH = 16,            // fifo entries
    //###################################
 
    oh_fifo_sync #(.DEPTH(DEPTH),
-                  .DW(SW))   
+                  .DW(SW))
    fifo(// Outputs
 	.dout		(fifo_dout[7:0]),
 	.full		(fifo_full),

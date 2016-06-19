@@ -5,9 +5,9 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module spi #( parameter AW     = 32,  // address width
-	      parameter PW     = 104, // packet size
-	      parameter UREGS  = 13   // number of user slave regs
+module spi #( parameter AW     = 32,    // address width
+	      parameter PW     = 104,   // packet size
+	      parameter UREGS  = 13     // number of user slave regs
 	      )
    (//clk, reset, irq
     input 	    nreset, // asynch active low reset   

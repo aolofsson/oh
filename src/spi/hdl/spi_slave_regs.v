@@ -13,27 +13,27 @@ module spi_slave_regs #( parameter UREGS = 13,      // # of user regs (max 48)
 			 )
    (
    // clk, rest, chipid
-   input 	  clk, // core clock
-   input 	  nreset, // asych active low 
-   input 	  hw_en, // block enable pin
+   input 	     clk, // core clock
+   input 	     nreset, // asych active low 
+   input 	     hw_en, // block enable pin
    // sclk io domain
-   input 	  spi_clk, // slave clock
-   input [7:0] 	  spi_wdata, // slave write data in (for write)
-   input 	  spi_write, // slave write
-   input [5:0] 	  spi_addr, // slave write addr (64 regs)
-   output [7:0]   spi_rdata, // slave read data 
+   input 	     spi_clk, // slave clock
+   input [7:0] 	     spi_wdata, // slave write data in (for write)
+   input 	     spi_write, // slave write
+   input [5:0] 	     spi_addr, // slave write addr (64 regs)
+   output [7:0]      spi_rdata, // slave read data 
    // cfg bits
-   output 	  spi_en, // enable spi
-   output 	  cpol, // clk polarity (default is 0)
-   output 	  cpha, // clk phase shift (default is 0)
-   output 	  lsbfirst, // send lsbfirst
-   output 	  irq_en, // interrupt enable
-   output [511:0] spi_regs, // all regs concatenated for easy read
+   output 	     spi_en, // enable spi
+   output 	     cpol, // clk polarity (default is 0)
+   output 	     cpha, // clk phase shift (default is 0)
+   output 	     lsbfirst, // send lsbfirst
+   output 	     irq_en, // interrupt enable
+   output reg [511:0] spi_regs, // all regs concatenated for easy read
    // split transaction for core clock domain   
-   input 	  access_out, // signal used to clear status
-   input 	  access_in, 
-   input [PW-1:0] packet_in, // writeback data
-   output 	  wait_out 
+   input 	     access_out, // signal used to clear status
+   input 	     access_in, 
+   input [PW-1:0]    packet_in, // writeback data
+   output 	     wait_out 
     );
 
   //###############
@@ -45,8 +45,13 @@ module spi_slave_regs #( parameter UREGS = 13,      // # of user regs (max 48)
    reg [7:0] 	   spi_psize;
    reg [63:0] 	   core_regs;
    reg [7:0] 	   user_regs[UREGS-1:0];
-   reg [511:0]     spi_regs;
-   wire [63:0] 	   core_data;   
+   wire [63:0] 	   core_data;
+   wire 	   config_write;
+   wire 	   user_write;
+   wire 	   status_write;
+   wire 	   valid;
+   
+   
    integer 	   i;
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
@@ -62,9 +67,9 @@ module spi_slave_regs #( parameter UREGS = 13,      // # of user regs (max 48)
    //# SPI DECODE
    //#####################################
    
-   assign spi_config_write  = spi_write & (spi_addr[5:0]==`SPI_CONFIG);
-   assign spi_status_write  = spi_write & (spi_addr[5:0]==`SPI_STATUS);
-   assign spi_user_write    = spi_write & (spi_addr[5]);
+   assign config_write  = spi_write & (spi_addr[5:0]==`SPI_CONFIG);
+   assign status_write  = spi_write & (spi_addr[5:0]==`SPI_STATUS);
+   assign user_write    = spi_write & (spi_addr[5]);
 
    //#####################################
    //# CORE DECODE
@@ -93,7 +98,7 @@ module spi_slave_regs #( parameter UREGS = 13,      // # of user regs (max 48)
    always @ (negedge spi_clk or negedge nreset)
      if(!nreset)
        spi_config[7:0] <= 'b0;
-     else if(spi_config_write)
+     else if(config_write)
        spi_config[7:0] <= spi_wdata[7:0];
 
    assign spi_en   = hw_en & ~spi_config[0]; // disable spi (for security)
@@ -127,7 +132,7 @@ module spi_slave_regs #( parameter UREGS = 13,      // # of user regs (max 48)
    //#####################################
 
    always @ (negedge spi_clk)
-     if(spi_user_write)
+     if(user_write)
        user_regs[spi_addr[4:0]] <= spi_wdata[7:0]; 
 
    //#####################################

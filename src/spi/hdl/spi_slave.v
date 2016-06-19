@@ -7,7 +7,7 @@
 
 module spi_slave #( parameter UREGS = 13,  // number of spi slave regs   
 		    parameter AW    = 32,  // addresss width
-		    parameter PW    = 104  // packet width
+		    parameter PW    = 104 // packet width
 		    )
    (
     //clk,reset, cfg

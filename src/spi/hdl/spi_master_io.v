@@ -7,35 +7,42 @@
 module spi_master_io
   (
    //clk, reset, cfg
-   input 	 clk, // core clock
-   input 	 nreset, // async active low reset
-   input 	 cpol, // cpol
-   input 	 cpha, // cpha
-   input 	 lsbfirst, // send lsbfirst   
-   input [7:0] 	 clkdiv_reg, // baudrate	 
-   output [1:0]  spi_state, // current spi tx state
+   input 	    clk, // core clock
+   input 	    nreset, // async active low reset
+   input 	    cpol, // cpol
+   input 	    cpha, // cpha
+   input 	    lsbfirst, // send lsbfirst   
+   input [7:0] 	    clkdiv_reg, // baudrate	 
+   output reg [1:0] spi_state, // current spi tx state
    // data to transmit
-   input [7:0] 	 fifo_dout, // data payload
-   input 	 fifo_empty, // 
-   output 	 fifo_read, // read new byte
+   input [7:0] 	    fifo_dout, // data payload
+   input 	    fifo_empty, // 
+   output 	    fifo_read, // read new byte
    // receive data (for sregs)
-   output [63:0] rx_data, // rx data
-   output 	 rx_access, // transfer done
+   output [63:0]    rx_data, // rx data
+   output 	    rx_access, // transfer done
    // IO interface
-   output 	 sclk, // spi clock
-   output 	 mosi, // slave input
-   output 	 ss, // slave select
-   input 	 miso       // slave output
+   output 	    sclk, // spi clock
+   output 	    mosi, // slave input
+   output 	    ss, // slave select
+   input 	    miso       // slave output
    );
 
    //###############
    //# LOCAL WIRES
    //###############
-   reg [1:0] 	   spi_state;
    reg 		   fifo_empty_reg;
    reg 		   load_byte;   
    wire [7:0] 	   data_out;
    wire [15:0] 	   clkphase0;
+   wire 	   period_match;
+   wire 	   phase_match;
+   wire 	   clkout;
+   wire 	   clkchange;
+   wire 	   data_done;
+   wire 	   spi_wait;
+   wire 	   shift;
+   
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)

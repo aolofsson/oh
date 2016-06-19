@@ -9,7 +9,7 @@ module spi_master # ( parameter  DEPTH = 32, // fifo depth
 		      parameter  REGS  = 16, // total # of regs   
 		      parameter  AW    = 32, // addresss width
 		      parameter  PW    = 104 // packet width
-		      )
+ 		      )
    (
     //clk,reset, cfg
     input 	    clk, // core clock
