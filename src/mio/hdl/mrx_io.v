@@ -39,6 +39,9 @@ module mrx_io (/*AUTOARG*/
    wire [2*NMIO-1:0]   ddr_data;
    reg [2*NMIO-1:0]    sdr_data;
    reg 		       byte0_sel;
+   wire 	       io_nreset;
+   wire 	       rx_frame;
+   
    
    //########################################
    //# CLOCK, RESET
@@ -61,7 +64,7 @@ module mrx_io (/*AUTOARG*/
    //########################################
 
    always @ (posedge rx_clk or negedge io_nreset)
-     if(!nreset)
+     if(!io_nreset)
        io_access <= 1'b0;
      else
        io_access <= rx_frame;
@@ -75,8 +78,8 @@ module mrx_io (/*AUTOARG*/
 	     .q2			(ddr_data[2*NMIO-1:NMIO]),
 	     .clk			(rx_clk),
 	     .ce			(rx_frame),
-	     .din			(rx_packet[NMIO-1:0])
-	     );
+	     .din			(rx_packet[NMIO-1:0]));
+
    //########################################
    //# DATA (SDR) 
    //########################################

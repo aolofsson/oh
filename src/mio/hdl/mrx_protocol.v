@@ -38,6 +38,9 @@ module mrx_protocol (/*AUTOARG*/
    reg [2:0] 	   mrx_state;
    reg [CW-1:0]    mrx_count;   
    reg 		   fifo_access;
+   wire 	   shift;
+   wire 	   transfer_done;
+   
    
    //##########################
    //# STATE MACHINE

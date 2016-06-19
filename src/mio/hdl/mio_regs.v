@@ -1,71 +1,80 @@
-`include "mio_regmap.vh"
-module mio_regs (/*AUTOARG*/
-   // Outputs
-   wait_out, access_out, packet_out, tx_en, rx_en, ddr_mode, emode,
-   amode, dmode, datasize, lsbfirst, framepol, ctrlmode, dstaddr,
-   clkchange, clkdiv, clkphase0, clkphase1,
-   // Inputs
-   clk, nreset, access_in, packet_in, wait_in, tx_full, tx_prog_full,
-   tx_empty, rx_full, rx_prog_full, rx_empty
-   );
+//#############################################################################
+//# Function: MIO Configuration Registers                                     #
+//#           (See README.md for complete documentation)                      #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in this repository)                       # 
+//#############################################################################
 
-   // parameters
-   parameter   N         = 8;                      // number of I/O pins  
-   parameter   AW        = 32;                     // address width
-   parameter   PW        = 2*AW+40;                // packet width
-   parameter   DEF_CFG   = 0;                      // reset MIO_CONFI value
-   parameter   DEF_CLK   = 0;                      // reset MIO_CLKDIV value
+`include "mio_regmap.vh"
+module mio_regs #(parameter   N         = 8,     // number of I/O pins  
+		  parameter   AW        = 32,    // address width
+		  parameter   PW        = 104,   // packet width
+		  parameter   DEF_CFG   = 0,     // reset MIO_CONFIG value
+		  parameter   DEF_CLK   = 0      // reset MIO_CLKDIV value
+		  )
+   (
+    // clk,reset
+    input 	    clk,
+    input 	    nreset,
+    // register access interface
+    input 	    access_in, // incoming access
+    input [PW-1:0]  packet_in, // incoming packet
+    output 	    wait_out, 
+    output 	    access_out, // outgoing read packet
+    output [PW-1:0] packet_out, // outgoing read packet
+    input 	    wait_in,
+    // config outputs
+    output 	    tx_en, // enable tx
+    output 	    rx_en, // enable rx
+    output 	    ddr_mode, // ddr mode for mio
+    output 	    emode, // epiphany packet mode
+    output 	    amode, // mio packet mode
+    output 	    dmode, // mio packet mode
+    output [7:0]    datasize, // mio datasize   
+    output 	    lsbfirst, // lsb shift first
+    output 	    framepol, // framepolarity (0=actrive high)   
+    output [4:0]    ctrlmode, // emode ctrlmode
+    output [AW-1:0] dstaddr, // destination address for RX dmode
+    output 	    clkchange, // indicates a clock change   
+    output [7:0]    clkdiv, // mio clk clock setting
+    output [15:0]   clkphase0, // [7:0]=rising,[15:8]=falling
+    output [15:0]   clkphase1, // [7:0]=rising,[15:8]=falling
+    // status inputs
+    input 	    tx_full, //tx fifo is full (should not happen!)  
+    input 	    tx_prog_full, //tx fifo is nearing full
+    input 	    tx_empty, //tx fifo is empty
+    input 	    rx_full, //rx fifo is full (should not happen!)  
+    input 	    rx_prog_full, //rx fifo is nearing full
+    input 	    rx_empty     //rx fifo is empty
+    );
+   
    localparam  DEF_RISE0 = 0;                      // 0 degrees
    localparam  DEF_FALL0 = ((DEF_CLK+8'd1)>>8'd1); // 180 degrees
    localparam  DEF_RISE1 = ((DEF_CLK+8'd1)>>8'd2); // 90 degrees
    localparam  DEF_FALL1 = ((DEF_CLK+8'd1)>>8'd2)+
 			   ((DEF_CLK+8'd1)>>8'd1); // 270 degrees
 
-   // clk,reset
-   input           clk;
-   input           nreset;
-   
-   // registre access interface
-   input 	   access_in;   // incoming access
-   input [PW-1:0]  packet_in;   // incoming packet
-   output 	   wait_out;    
-   output 	   access_out;  // outgoing read packet
-   output [PW-1:0] packet_out;  // outgoing read packet
-   input 	   wait_in;
-   
-   // config
-   output 	   tx_en;        // enable tx
-   output 	   rx_en;        // enable rx
-   output 	   ddr_mode;     // ddr mode for mio
-   output 	   emode;        // epiphany packet mode
-   output 	   amode;        // mio packet mode
-   output 	   dmode;        // mio packet mode
-   output [7:0]    datasize;     // mio datasize   
-   output 	   lsbfirst;     // lsb shift first
-   output 	   framepol;     // framepolarity (0=actrive high)   
-   output [4:0]    ctrlmode;     // emode ctrlmode
-   
-   //address
-   output [AW-1:0] dstaddr;      // destination address for RX dmode
-   
-   // clock   
-   output 	   clkchange;    // indicates a clock change   
-   output [7:0]    clkdiv;       // mio clk clock setting
-   output [15:0]   clkphase0;    // [7:0]=rising,[15:8]=falling
-   output [15:0]   clkphase1;    // [7:0]=rising,[15:8]=falling
-   
-   // status
-   input 	   tx_full;      //tx fifo is full (should not happen!)  
-   input 	   tx_prog_full; //tx fifo is nearing full
-   input 	   tx_empty;     //tx fifo is empty
-   input 	   rx_full;      //rx fifo is full (should not happen!)  
-   input 	   rx_prog_full; //rx fifo is nearing full
-   input 	   rx_empty;     //rx fifo is empty
-   
-   //######################################################################
-   //# BODY
-   //######################################################################
+   //##############
+   //# LOCAL WIRES
+   //##############
 
+   reg [20:0] 	    config_reg;   
+   reg [15:0] 	    status_reg;
+   reg [31:0] 	    clkdiv_reg;
+   reg [63:0] 	    addr_reg;
+   reg [31:0] 	    clkphase_reg;
+   wire [7:0] 	    status_in;
+   wire 	    reg_write;
+   wire 	    config_write;
+   wire 	    status_write;
+   wire 	    clkdiv_write;
+   wire 	    clkphase_write;
+   wire 	    idelay_write;
+   wire 	    odelay_write;
+   wire 	    addr0_write;
+   wire 	    addr1_write;
+   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [4:0]		ctrlmode_in;		// From p2e of packet2emesh.v
@@ -76,14 +85,6 @@ module mio_regs (/*AUTOARG*/
    wire			write_in;		// From p2e of packet2emesh.v
    // End of automatics
 
-   //regs
-   reg [18:0] 		config_reg;   
-   reg [7:0] 		status_reg;
-   wire [7:0] 		status_in;   
-   reg [31:0] 		clkdiv_reg;
-   reg [63:0] 		addr_reg;
-   reg [31:0] 		clkphase_reg;
-   
    //#####################################
    //# DECODE
    //#####################################
@@ -120,10 +121,10 @@ module mio_regs (/*AUTOARG*/
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        begin
-	  config_reg[18:0] <= DEF_CFG;
+	  config_reg[20:0] <= DEF_CFG;
        end
      else if(config_write)
-       config_reg[18:0] <= data_in[18:0];
+       config_reg[20:0] <= data_in[20:0];
 
    assign tx_en         = ~config_reg[0];         // tx disable
    assign rx_en         = ~config_reg[1];         // rx disable
@@ -150,11 +151,11 @@ module mio_regs (/*AUTOARG*/
    
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       status_reg[7:0] <= 'b0;   
+       status_reg[15:0] <= 'b0;   
      else if(status_write)
-       status_reg[7:0] <= data_in[7:0];
+       status_reg[15:0] <= data_in[7:0];
      else
-       status_reg[7:0] <= {(status_reg[15:8] | status_in[7:0]), // sticky bits
+       status_reg[15:0] <= {(status_reg[15:8] | status_in[7:0]), // sticky bits
 			   status_in[7:0]};                     // immediate bits
 
    //###############################
