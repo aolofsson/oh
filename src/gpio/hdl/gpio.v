@@ -12,18 +12,18 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
 	       parameter integer PW = 104 // packet width
 	      ) 
    (
-    input 	    nreset, // asynchronous active low reset
-    input 	    clk, // clock   
-    input 	    access_in, // register access
-    input [PW-1:0]  packet_in, // data/address
-    output 	    wait_out, // pushback from mesh
-    output 	    access_out, // register access
-    output [PW-1:0] packet_out, // data/address
-    input 	    wait_in, // pushback from mesh    
-    output [N-1:0]  gpio_out, // data to drive to IO pins
-    output [N-1:0]  gpio_dir, // gpio direction(0=input)
-    input [N-1:0]   gpio_in, // data from IO pins
-    output 	    gpio_irq // OR of GPIO_ILAT register
+    input 	       nreset, // asynchronous active low reset
+    input 	       clk, // clock   
+    input 	       access_in, // register access
+    input [PW-1:0]     packet_in, // data/address
+    output 	       wait_out, // pushback from mesh
+    output 	       access_out, // register access
+    output [PW-1:0]    packet_out, // data/address
+    input 	       wait_in, // pushback from mesh    
+    output reg [N-1:0] gpio_out, // data to drive to IO pins
+    output reg [N-1:0] gpio_dir, // gpio direction(0=input)
+    input [N-1:0]      gpio_in, // data from IO pins
+    output 	       gpio_irq // OR of GPIO_ILAT register
     );
 
    //################################
@@ -31,8 +31,6 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
    //################################  
 
    //registers
-   reg [N-1:0] 	   gpio_dir;
-   reg [N-1:0] 	   gpio_out;
    reg [N-1:0] 	   gpio_imask;
    reg [N-1:0] 	   gpio_itype;
    reg [N-1:0] 	   gpio_ipol;
@@ -48,7 +46,20 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
    wire [N-1:0]    rising_edge;   
    wire [N-1:0]    falling_edge;
    wire [N-1:0]    irq_event;
-   
+   wire 	   reg_write;
+   wire 	   reg_read;
+   wire 	   reg_double;
+   wire 	   dir_write;
+   wire 	   imask_write;
+   wire 	   itype_write;
+   wire 	   ipol_write;
+   wire 	   ilatclr_write;
+   wire 	   out_write;
+   wire 	   outset_write;
+   wire 	   outclr_write;
+   wire 	   outxor_write;
+   wire 	   outreg_write;
+		   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [4:0]		ctrlmode_in;		// From p2e of packet2emesh.v
@@ -83,7 +94,7 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
    assign reg_wdata[N-1:0] = data_in[N-1:0];
    
    assign dir_write     = reg_write & (dstaddr_in[6:3]==`GPIO_DIR);
-   assign out_write     = reg_write & (dstaddr_in[6:3]==`GPIO_OUT);
+   assign outreg_write  = reg_write & (dstaddr_in[6:3]==`GPIO_OUT);
    assign imask_write   = reg_write & (dstaddr_in[6:3]==`GPIO_IMASK);
    assign itype_write   = reg_write & (dstaddr_in[6:3]==`GPIO_ITYPE);
    assign ipol_write    = reg_write & (dstaddr_in[6:3]==`GPIO_IPOL);
@@ -92,10 +103,10 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
    assign outset_write  = reg_write & (dstaddr_in[6:3]==`GPIO_OUTSET);
    assign outxor_write  = reg_write & (dstaddr_in[6:3]==`GPIO_OUTXOR);
 
-   assign out_reg_write = out_write    |
-	                  outclr_write |
-			  outset_write |
-			  outxor_write;
+   assign out_write = outreg_write |
+	              outclr_write |
+		      outset_write |
+		      outxor_write;
       
    //################################
    //# GPIO_DIR 
@@ -111,11 +122,10 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
    //# GPIO_IN
    //################################ 
 
-   oh_dsync #(.DW(N))
-   dsync (.dout	(gpio_in_sync[N-1:0]),
-          .clk	(clk),
-	  .nreset (nreset), 
-          .din	(gpio_in[N-1:0]));
+   oh_dsync oh_dsync[N-1:0] (.dout   (gpio_in_sync[N-1:0]),
+			     .clk    (clk),
+			     .nreset (nreset), 
+			     .din    (gpio_in[N-1:0]));
 
    always @ (posedge clk)
        gpio_in_old[N-1:0] <= gpio_in_sync[N-1:0];
@@ -127,7 +137,7 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
    oh_mux4 #(.DW(N))
    oh_mux4 (.out (out_dmux[N-1:0]),
 	    // Inputs
-	    .in0 (reg_wdata[N-1:0]),                   .sel0 (out_write),
+	    .in0 (reg_wdata[N-1:0]),                   .sel0 (outreg_write),
 	    .in1 (gpio_out[N-1:0] & ~reg_wdata[N-1:0]),.sel1 (outclr_write),
 	    .in2 (gpio_out[N-1:0] | reg_wdata[N-1:0]), .sel2 (outset_write),
 	    .in3 (gpio_out[N-1:0] ^ reg_wdata[N-1:0]), .sel3 (outxor_write));
@@ -135,7 +145,7 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        gpio_out[N-1:0] <= 'b0;   
-     else if(out_reg_write)
+     else if(out_write)
        gpio_out[N-1:0] <= out_dmux[N-1:0];
    
    //################################
@@ -222,7 +232,7 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
 		   .clk			(clk),
 		   .access_in		(access_in),
 		   .packet_in		(packet_in[PW-1:0]),
-		   .read_data		({{(64-N){1'b0}}, read_data[N-1:0]}),
+		   .read_data		(read_data[63:0]),
 		   .wait_in		(wait_in));
    
 endmodule // gpio
