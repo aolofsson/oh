@@ -28,6 +28,8 @@ module oh_fifo_generic #(parameter DW        = 104,      // FIFO width
     output [AW-1:0] wr_count // NOT IMPLEMENTED
     );
    
+   localparam ASIC = `CFG_ASIC;
+
    //regs 
    reg [AW:0]    wr_addr;       // extra bit for wraparound comparison
    reg [AW:0] 	 wr_addr_ahead; // extra bit for wraparound comparison   
@@ -38,7 +40,8 @@ module oh_fifo_generic #(parameter DW        = 104,      // FIFO width
    wire [AW:0] 	 wr_addr_gray_sync;
    wire [AW:0] 	 rd_addr_sync;
    wire [AW:0] 	 wr_addr_sync;
-
+   wire 	 wr_nreset;
+   wire 	 rd_nreset;
    
    //###########################
    //# Full/empty indicators
@@ -64,13 +67,15 @@ module oh_fifo_generic #(parameter DW        = 104,      // FIFO width
    //# Reset synchronizers
    //###########################
 
-   oh_rsync wr_rsync (.nrst_out (wr_nreset), 
-		      .clk      (wr_clk), 
-		      .nrst_in	(nreset));
+   oh_rsync #(.ASIC(ASIC))
+   wr_rsync (.nrst_out (wr_nreset), 
+	     .clk      (wr_clk), 
+	     .nrst_in	(nreset));
 
-   oh_rsync rd_rsync (.nrst_out (rd_nreset), 
-		      .clk      (rd_clk), 
-		      .nrst_in	(nreset));
+   oh_rsync #(.ASIC(ASIC))
+   rd_rsync (.nrst_out (rd_nreset), 
+	     .clk      (rd_clk), 
+	     .nrst_in	(nreset));
    
    //###########################
    //#write side address counter
@@ -99,11 +104,10 @@ module oh_fifo_generic #(parameter DW        = 104,      // FIFO width
 	   .in	   (wr_addr[AW:0]));
    
    // synchronize to read clock
-   oh_dsync  #(.DW(AW+1))
-   wr_sync(.dout (wr_addr_gray_sync[AW:0]),
-	   .clk  (rd_clk),
-	   .nreset(rd_nreset),
-	   .din  (wr_addr_gray[AW:0]));
+   oh_dsync wr_sync[AW:0] (.dout (wr_addr_gray_sync[AW:0]),
+			   .clk  (rd_clk),
+			   .nreset(rd_nreset),
+			   .din  (wr_addr_gray[AW:0]));
    
    //###########################
    //#read side address counter
@@ -125,12 +129,11 @@ module oh_fifo_generic #(parameter DW        = 104,      // FIFO width
 	   .in	  (rd_addr[AW:0]));
    
    //synchronize to wr clock
-   oh_dsync  #(.DW(AW+1))
-   rd_sync(.dout   (rd_addr_gray_sync[AW:0]),
-	   .clk    (wr_clk),
-	   .nreset (wr_nreset),
-	   .din    (rd_addr_gray[AW:0]));
-
+   oh_dsync  rd_sync[AW:0] (.dout   (rd_addr_gray_sync[AW:0]),
+			    .clk    (wr_clk),
+			    .nreset (wr_nreset),
+			    .din    (rd_addr_gray[AW:0]));
+   
    //convert back to binary (for ease of use, rd_count)
    oh_gray2bin #(.DW(AW+1))
    rd_g2b (.out (rd_addr_sync[AW:0]),

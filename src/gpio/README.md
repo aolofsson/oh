@@ -19,7 +19,7 @@ GPIO: General Purpose Software Programmable IO
 | GPIO_OUTSET   |  0x4    | WR    | n/a   | Output = output "or" value      |
 | GPIO_OUTXOR   |  0x5    | WR    | n/a   | Output = output ^ value         |
 | GPIO_IMASK    |  0x6    | WR    | H     | Interrupt mask (1=mask)         |
-| GPIO_ITYPE    |  0x7    | WR    | n/a   | IRQ type (1=edge,0=level)        |
+| GPIO_ITYPE    |  0x7    | WR    | n/a   | IRQ type (0=edge,1=level)        |
 | GPIO_IPOL     |  0x8    | WR    | H     | IRQ polarity (1=rising edge/high)|
 | GPIO_ILAT     |  0x9    | RD    | L     | IRQ Status (1=latched irq)       |
 | GPIO_ILATCLR  |  0xA    | WR    | n/a   | Clears ILAT(1=clear)             |

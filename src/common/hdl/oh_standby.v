@@ -5,41 +5,52 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_standby #( parameter PD  = 5) //cycles to stay awake after "wakeup" 
+module oh_standby #( parameter PD   = 5,  // cycles to stay awake after "wakeup" 
+		     parameter ASIC = 1,  // use ASIC lib
+		     parameter N    = 5,  // number of wake up signals
+		     parameter PROJ = "") // project name 
    (
-    input  clkin, //clock input
-    input  nreset, //sync reset
-    input  wakeup, //wake up now!
-    input  idle, //core is in idle
-    output clkout //clock output
+    input 	  clkin, //clock input
+    input 	  nreset,//async active low reset
+    input [N-1:0] wakeup, //wake up event vector
+    input 	  idle, //core is in idle
+    output 	  clkout //clock output
     );
       
    //Wire declarations
    reg [PD-1:0]	wakeup_pipe;
    reg          idle_reg;
-   
-   // detect an idle state change (wake up on any)
-   always @ (posedge clk )     
-     idle_reg <= idle;   
-   assign state_change = (idle ^ idle_reg);
-      
-   always @ (posedge clk)    
-     wakeup_pipe[PD-1:0] <= {wakeup_pipe[PD-2:0],(state_change | wakeup)};
+   wire 	state_change;
+   wire 	clk_en;   
+   wire [N-1:0] wakeup_pulse;
+   wire 	wakeup_now;
 
-   //block enable signal
-   assign  clk_en    =  ~nreset                | //always on during reset
-                        wakeup                 | //immediate wakeup
-			state_change           | //incoming transition
+   // Wake up on any external event change
+   oh_edge2pulse #(.DW(N))
+   oh_edge2pulse (.out	  (wakeup_pulse[N-1:0]),
+		  .clk	  (clkin),
+		  .nreset (nreset),
+		  .in	  (wakeup[N-1:0]));
+   
+   assign wakeup_now = |(wakeup_pulse[N-1:0]);
+      
+   // Stay away for PD cycles
+   always @ (posedge clkin)    
+     wakeup_pipe[PD-1:0] <= {wakeup_pipe[PD-2:0], wakeup_now};
+
+   // Clock enable
+   assign  clk_en    =  wakeup_now             | //immediate wakeup
                         (|wakeup_pipe[PD-1:0]) | //anything in pipe
 		        ~idle;                   //core not in idle
 
-   //clock gater (technology specific)
-   oh_clockgate clockgate  (.eclk(clkout),
-			    .clk(clk),
-			    .en(clk_en),
-			    .nrst(nreset),
-     			    .se(1'b0));
-    
+   // Clock gating cell
+   oh_clockgate #(.PROJ(PROJ),
+		  .ASIC(ASIC))
+   oh_clockgate  (.eclk(clkout),
+		  .clk(clkin),
+		  .en(clk_en),
+     		  .te(1'b0));
+   
 endmodule // oh_standby
 
 

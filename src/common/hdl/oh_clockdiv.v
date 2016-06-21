@@ -32,7 +32,9 @@ module oh_clockdiv
    reg 	     clkout1_reg;
    reg 	     clkout1_shift;
    reg [2:0] period;
- 	
+   wire      
+period_match;
+   
    //###########################################
    //# CHANGE DETECT (count 8 periods)
    //###########################################

@@ -123,10 +123,12 @@ TBD
 * Use common names: nreset, clk, din, dout, en, rd, wr, addr, etc
 * Make names descriptive, avoid non-common abbreviations 
 * Make names as short as possible, but not shorter
+* Use short named generate blocks "g0, g1, etc"
+* Inside generate blocks use short "i<name>" for instance
 * Use _ in constants over 4 bits (eg: 8'h1100_1100)
 * One module per file
 * Use ".vh" suffix for header files,
-* yse ".v" for verilog source files
+* Use ".v" for verilog source files
 * Use `include files for constants
 * Use `ifndef _CONSTANTS_V to include file only once
 * No timescales in design files (only in testbench)
@@ -138,6 +140,7 @@ TBD
 * Avoid redundant resets
 * Avoid heavily nested if, else statements
 * Don't use defparams, place #(.DW(DW)) in module instantation
+* With parameters, NEVER us this instantiation: "mux3 #(32) U2 (...)"
 * Always use connection by name (not by order) in module instantiatoin
 * Parametrize as much as possible but not more
 * Place a useful comment every 5-20 lines
@@ -149,6 +152,7 @@ TBD
 * Don't use proprietary EDA tool pragmas (use parameters)
 * Only use synthesizable constructs
 * Use $signed() for arithmetic operations on signed types
+. 
 * Allowed keywords: assign, always, input, output, wire, reg, module, endmodule, if/else, case, casez, ~,|,&,^,==, >>, <<, >, <,?,posedge, negedge, generate, for(...), begin, end, $signed,
 
 
@@ -174,16 +178,9 @@ TBD
 * Show how to synthesize/build..
 * Show how to use..
 
-## Design Checklist
+## Tapeout Checklist
 
-* Is the block datasheet complete and accurate?
-* Is there a user guide?
-* Is there a script/make file for building/testing the design?
-* Is there a self testing testbench?
-* Is there an auotomated synthesis script?
-* Is the driver written?
-* Is there a demo example?
-* Is the the block Silicon and FPGA validated?
+* [HERE](docs/tapeout_checklist.md)
 
 ## Recommended Reading
 

@@ -8,17 +8,23 @@
 | Specification                              | Answer                         |
 |--------------------------------------------|--------------------------------|
 | Is there a written specification?          |                                |
+| Is the datasheet complete and accurate?    |                                |
+| Is there a user guide?                     |                                |
 | What is the chip max power target?         |                                |
 | What is the chip standby power target?     |                                |
 | What is the chip yield target?             |                                |
 | What is the chip cost target?              |                                |
 | What is the max die size?                  |                                |
+| What is the maximum die size?              |                                |
 | How many signal IOs?                       |                                |
 | What is the highest frequency IO?          |                                |
 
 | Design                                     | Answer                         |
 |--------------------------------------------|--------------------------------|
 | In Verilog 2005 used?                      |                                |
+| Are all features implemented?              |                                |
+| Are all issues closed?                     |                                |
+| Has design been through peer review?       |                                |
 | Has a linter been run?                     |                                |
 | Is there zero use of 'casex'?              |                                |
 | Were Latches used? (If so list)            |                                |
@@ -39,7 +45,7 @@
 | Any floating inputs in design?             |                                |
 | All power-gated signals isolated?          |                                |
 | All voltage domain crossings levelshifted? |                                |
-
+| Is Verilog 2005 used?                      |                                |
 
 | Verification                               | Answer                         |
 |--------------------------------------------|--------------------------------|
@@ -49,11 +55,16 @@
 | >24hrs of random vectors?                  |                                |
 | Randomized clock frequencies?              |                                |
 | Were all open issues closed?               |                                |
+
+| Were all features tested?                  |                                |
 | Simulator support for all features?        |                                |
 | Was design emulated in an FPGA?            |                                |
 | Was design validated with application SW?  |                                |
 | Was formal equivalence run between HDL/GL? |                                |
-                                
+| Is the firmware written?                   |                                |
+| Is there a demo?                           |                                |
+
+
 | Timing                                     | Answer                         |
 |--------------------------------------------|--------------------------------|
 | All paths constrained?                     |                                |
@@ -74,6 +85,8 @@
 | Clock                                      | Answer                         |
 |--------------------------------------------|--------------------------------|
 | Percentage regs clock gated?               |                                |
+| Integrated clock gating cells used?        |                                |
+| Setup/hold verified on clock gating cells? |                                |
 | Clock tree insertion delay?                |                                |
 | Clock tree local skew?                     |                                |
 | Clock tree global skew?                    |                                |
@@ -82,7 +95,6 @@
 | List of all clock domain crossings?        |                                |
 | Use of oh_fifo_cdc on all CDCs?            |                                |
 | Were custom CDCs used? (if so list)        |                                |
-
 
 | Reset                                      | Answer                         |
 |--------------------------------------------|--------------------------------|
@@ -133,6 +145,12 @@
 
 | Layout                                     | Answer                         |
 |--------------------------------------------|--------------------------------|
+| Synthesis/PNR                              | Answer                         |
+|--------------------------------------------|--------------------------------|
+| Is the flow completely automated?          |                                |
+| Was the correct/latest version of HDL used?|                                |
+| Are all EDA warnings/errors acceptable?    |                                |
+| The number of warnings has bee minimized?  |                                |
 | Was the correct/latest gate level used?    |                                |
 | Are all EDA warnings/errors understood?    |                                |
 | Are ECO/spare cells used?                  |                                |
@@ -150,6 +168,7 @@
 | Is the chip logo included                  |                                |
 | Have gds layer map been manually reviewed? |                                |
 | Has tapeout GDS been manually reviewed?    |                                |
+| XOR check between foundry/design GDSIIs    |                                |
 
 | DFM                                        | Answer                         |
 |--------------------------------------------|--------------------------------|
@@ -158,6 +177,7 @@
 | What is the percentage of double vias?     |                                |
 | Is yield optimizing wire spreading used?   |                                |
 | Does design include fault tolerance?       |                                |
+| Does design meet metal density rules?      |                                |
 
 | Test                                       | Answer                         |
 |--------------------------------------------|--------------------------------|
@@ -187,6 +207,10 @@
 | Design's lowest operating voltage?         |                                |
 | What is the longest signal on the chip?    |                                |
 | Is design sensitive to duty cycle shift?   |                                |
+| What is the max duty-cycle distortion?     |                                |
+| Does design meet EMI constraints?          |                                |
+| ERC runset checks run on GDSII?            |                                |
+
 
 
 

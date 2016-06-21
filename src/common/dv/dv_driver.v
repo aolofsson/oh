@@ -1,50 +1,42 @@
 /* verilator lint_off STMTDLY */
-module dv_driver (/*AUTOARG*/
-   // Outputs
-   stim_access, stim_packet, stim_wait, stim_done,
-   // Inputs
-   clkin, clkout, nreset, start, coreid, dut_access, dut_packet,
-   dut_wait
-   );
+module dv_driver #( parameter  N     = 1,      // "N" packets wide
+		    parameter  AW    = 32,     // address width
+		    parameter  PW    = 104,    // packet width (derived)
+		    parameter  IDW   = 12,     // id width
+		    parameter  NAME  = "none", // north, south etc
+		    parameter  STIMS = 1,      // number of stimulus
+		    parameter  MAW   = 16      // 64KB memory address width
+		    )
+   (
+    //control signals
+    input 	      clkin,
+    input 	      clkout,
+    input 	      nreset,
+    input 	      start, //starts test
+    input [IDW-1:0]   coreid, //everything has a coreid! 
+    //inputs for monitoring
+    input [N-1:0]     dut_access,
+    input [N*PW-1:0]  dut_packet,
+    input [N-1:0]     dut_wait,
+    //stimulus to drive
+    output [N-1:0]    stim_access, 
+    output [N*PW-1:0] stim_packet,
+    output [N-1:0]    stim_wait,
+    output 	      stim_done
+    );
 
-   //Parameters
-   parameter  N     = 1;       // "N" packets wide
-   parameter  AW    = 32;      // address width
-   parameter  IDW   = 12;      // id width
-   parameter  NAME  = "none";  // north, south etc
-   parameter  STIMS = 1;       // number of stimulus
-   parameter  MAW   = 16;      // 64KB memory address width
-   localparam PW    = 2*AW+40; // packet width (derived)
-
-   //Control signals
-   input		clkin;
-   input		clkout;
-   input		nreset;
-   input		start;       //starts test
-   input [IDW-1:0] 	coreid;      //everything has a coreid! 
-   
-   //Inputs for monitoring
-   input [N-1:0] 	dut_access;
-   input [N*PW-1:0]	dut_packet;
-   input [N-1:0] 	dut_wait;
-
-   //Stimulus to drive
-   output [N-1:0] 	stim_access;  
-   output [N*PW-1:0] 	stim_packet;
-   output [N-1:0] 	stim_wait;
-   output 		stim_done;
-
- 
+  //#############
+  //LOCAL WIRES
+  //#############
+   reg [IDW-1:0] 	offset;
    wire [N*32-1:0] 	stim_count;
    wire [N-1:0] 	stim_vec_done;  
    wire [N*IDW-1:0] 	coreid_array;
-   reg [IDW-1:0] 	offset;
-
    wire [N*PW-1:0] 	mem_packet_out;	
    wire [N-1:0] 	mem_access_out;
-   wire [N-1:0] 	mem_wait_out;
-   
+   wire [N-1:0] 	mem_wait_out;   
    /*AUTOWIRE*/   
+
    //###########################################
    //STIMULUS
    //###########################################
@@ -126,6 +118,7 @@ module dv_driver (/*AUTOARG*/
       for(j=0;j<N;j=j+1) begin : mem	 
 	 ememory #(.NAME(NAME),
 		   .IDW(IDW),
+		   .PW(PW),
 		   .AW(AW)
 		   )
 	 ememory(// Outputs

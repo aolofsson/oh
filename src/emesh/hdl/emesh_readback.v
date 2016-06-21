@@ -4,8 +4,8 @@ module emesh_readback (/*AUTOARG*/
    // Inputs
    nreset, clk, access_in, packet_in, read_data, wait_in
    );
-   parameter   AW  = 32;      // address width
-   localparam  PW  = 2*AW+40; // packet width   
+   parameter  AW  = 32;    // address width
+   parameter  PW  = 104;   // packet width   
    
    //clk, reset
    input           nreset;      // asynchronous active low reset
@@ -45,7 +45,8 @@ module emesh_readback (/*AUTOARG*/
    //# Parse packet
    //#######################################  
 
-   packet2emesh #(.AW(AW))
+   packet2emesh #(.AW(AW),
+		  .PW(PW))
    p2e (/*AUTOINST*/
 	// Outputs
 	.write_in			(write_in),
@@ -87,7 +88,8 @@ module emesh_readback (/*AUTOARG*/
    //# Convert to Packet
    //#######################################  
      
-   emesh2packet #(.AW(AW))
+   emesh2packet #(.AW(AW),
+		  .PW(PW))
    e2p (.write_out   (1'b1),
 	/*AUTOINST*/
 	// Outputs

@@ -35,6 +35,8 @@ A list of some basic equations and constants I have found useful in my life as a
 | Line capacitance / mm (max density) |           (highly variable!)          |
 | Line resistance  / mm (fat layer)   |           (copper, highly variable!)  |
 
+
+
 ## Interconnects
 
 | Rule                                | Value                                 |

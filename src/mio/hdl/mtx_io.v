@@ -35,21 +35,26 @@ module mtx_io (/*AUTOARG*/
    //# BODYINTER
    //#####################################################################
 
-   //regs
+   localparam ASIC = `CFG_ASIC;
+   
+   //Regs
    reg 		      tx_access;
    wire [NMIO-1:0]    tx_packet_ddr;
    reg [NMIO-1:0]     tx_packet_sdr;
    reg 		      byte0_sel;
    wire [2*NMIO-1:0]  ddr_data;
+   wire 	      io_nreset;
+   
    
    //########################################
    //# RESET
    //########################################
    
    //synchronize reset to io_clk
-   oh_rsync oh_rsync(.nrst_out	(io_nreset),
-		     .clk	(io_clk),
-		     .nrst_in	(nreset));
+   oh_rsync #(.ASIC(ASIC))
+   oh_rsync(.nrst_out	(io_nreset),
+	    .clk	(io_clk),
+	    .nrst_in	(nreset));
    
    //########################################
    //# ACCESS (SDR)

@@ -8,18 +8,16 @@
 module oh_iddr #(parameter DW      = 1 // width of data inputs
 		 )
    (
-    input 	    clk, // clock
-    input 	    ce, // clock enable, set to high to clock in data
-    input [DW-1:0]  din, // data input sampled on both edges of clock
-    output [DW-1:0] q1, // iddr rising edge sampled data
-    output [DW-1:0] q2   // iddr falling edge sampled data
+    input 		clk, // clock
+    input 		ce, // clock enable, set to high to clock in data
+    input [DW-1:0] 	din, // data input sampled on both edges of clock
+    output reg [DW-1:0] q1, // iddr rising edge sampled data
+    output reg [DW-1:0] q2   // iddr falling edge sampled data
     );
    
    //regs("sl"=stable low, "sh"=stable high)
    reg [DW-1:0]     q1_sl;
    reg [DW-1:0]     q2_sh;
-   reg [DW-1:0]     q1;
-   reg [DW-1:0]     q2;
    
    // rising edge sample
    always @ (posedge clk)

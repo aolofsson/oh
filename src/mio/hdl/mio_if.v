@@ -15,7 +15,7 @@ module mio_if (/*AUTOARG*/
 
    //parameters
    parameter  AW  = 32;            // address width
-   parameter  PW  = 2*AW +40;      // emesh packet width
+   parameter  PW  = 104;           // emesh packet width
    parameter  MPW = 128;           // mio packet width  (> PW) 
    
    // reset, clk, config
@@ -87,7 +87,8 @@ module mio_if (/*AUTOARG*/
    //#################################################
 
    // parse packet
-   packet2emesh #(.AW(AW))
+   packet2emesh #(.AW(AW),
+		  .PW(PW))
    pe2 (.packet_in		(rx_packet_in[PW-1:0]),
 	/*AUTOINST*/
 	// Outputs
@@ -133,7 +134,8 @@ module mio_if (/*AUTOARG*/
                                         srcaddr_in[AW-1:0];
 
    //Construct outgoing packet
-   emesh2packet #(.AW(AW))
+   emesh2packet #(.AW(AW),
+		  .PW(PW))
    e2p (/*AUTOINST*/
 	// Outputs
 	.packet_out			(packet_out[PW-1:0]),

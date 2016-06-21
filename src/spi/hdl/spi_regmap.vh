@@ -1,3 +1,10 @@
+//#############################################################################
+//# Purpose: SPI Register Map                                                 #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
+
 //8 bit registers [5:0]
 `ifndef SPI_REGMAP_VH_
  `define SPI_REGMAP_VH_

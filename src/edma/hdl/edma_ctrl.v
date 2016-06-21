@@ -16,7 +16,7 @@ module edma_ctrl (/*AUTOARG*/
    );
 
    parameter  AW  = 32;            // address width
-   localparam PW  = 2*AW+40;      // fetch packet width
+   parameter  PW  = 2*AW+40;      // fetch packet width
    parameter  ID  = 4'b0000;      // group id for DMA regs [10:8]
    
    // clk, reset, config
@@ -54,7 +54,10 @@ module edma_ctrl (/*AUTOARG*/
    wire [15:0] 	   fetch_addr;
    wire [AW-1:0]   srcaddr_out;
    wire [4:0] 	   reg_addr;
-   
+   wire 	   dma_error;
+   wire 	   incount_zero;
+   wire 	   outcount_zero;
+
    //###########################################
    //# STATE MACHINE                           
    //###########################################
@@ -167,7 +170,8 @@ module edma_ctrl (/*AUTOARG*/
 				 2'b0};            //1-0
    
    // constructing fetch packet
-   emesh2packet #(.AW(AW))
+   emesh2packet #(.AW(AW),
+		  .PW(PW))
    e2p (//outputs
 	.packet_out	(fetch_packet[PW-1:0]),
 	//inputs        

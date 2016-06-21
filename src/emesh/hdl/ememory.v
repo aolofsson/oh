@@ -1,77 +1,75 @@
 
-module ememory(/*AUTOARG*/
-   // Outputs
-   wait_out, access_out, packet_out,
-   // Inputs
-   clk, nreset, coreid, access_in, packet_in, wait_in
-   );
-
-   parameter AW    = 32;   
-   parameter IDW   = 12;  
-   parameter DEPTH = 65536;   
-   parameter MAW   = $clog2(DEPTH);
-   parameter NAME  = "emem";
-   parameter WAIT  = 0;     //turns on random wait circuit
-   parameter MON   = 0;     //turns on monitor
-
-   //derived parameters
-   localparam DW      = AW;     //always the same
-   localparam PW      = 2*AW+40;//packet width   
-
-   //Basic Interface
-   input            clk;
-   input 	    nreset;  
-   input [IDW-1:0]  coreid;
+module ememory # (parameter AW    = 32,     // address width
+		  parameter PW    = 104,    // packet width
+		  parameter IDW   = 12,     // ID width
+		  parameter DEPTH = 65536,  // memory depth
+		  parameter NAME  = "emem", // instance name
+		  parameter WAIT  = 0,      // enable random wait
+		  parameter MON   = 0       // enable monitor monitor
+		  )
    
-   //incoming read/write
-   input 	    access_in;
-   input [PW-1:0]   packet_in;      
-   output 	    wait_out;   //pushback
-     
-   //back to mesh (readback data)
-   output 	    access_out;
-   output [PW-1:0]  packet_out;        
-   input 	    wait_in;   //pushback
+   (// clk,reset
+    input 	    clk,
+    input 	    nreset, 
+    input [IDW-1:0] coreid,
+    // incoming read/write
+    input 	    access_in,
+    input [PW-1:0]  packet_in, 
+    output 	    wait_out, //pushback
+    // back to mesh (readback data)
+    output reg 	    access_out,
+    output [PW-1:0] packet_out, 
+    input 	    wait_in   //pushback
+    );
+   
+   //derived parameters
+   localparam DW  = AW;     //always the same
+   parameter  MAW = $clog2(DEPTH);
 
+   //###############
+   //# LOCAL WIRES
+   //##############
+   
    wire [MAW-1:0]   addr;
    wire [63:0]      din;
    wire [63:0] 	    dout;
    wire 	    en; 
    wire 	    mem_rd;
    reg [7:0] 	    wen;
-
-   //State
-   reg 		    access_out;   
    reg 		    write_out;   
    reg [1:0] 	    datamode_out;
    reg [4:0] 	    ctrlmode_out;   
    reg [AW-1:0]     dstaddr_out;   
-
    wire [AW-1:0]    srcaddr_out;
    wire [AW-1:0]    data_out;   
    reg  [2:0]       align_addr;
-
-   wire 	    write_in;   
-   wire [1:0] 	    datamode_in;
-   wire [4:0] 	    ctrlmode_in;   
-   wire [AW-1:0]    dstaddr_in;
-   wire [DW-1:0]    data_in;   
-   wire [AW-1:0]    srcaddr_in;   
    wire [DW-1:0]    din_aligned;
    wire [63:0]      dout_aligned;
    wire 	    wait_random; //TODO: make random  
    wire 	    wait_all;
+   /*AUTOWIRE*/
+   // Beginning of automatic wires (for undeclared instantiated-module outputs)
+   wire [4:0]		ctrlmode_in;		// From p2e of packet2emesh.v
+   wire [AW-1:0]	data_in;		// From p2e of packet2emesh.v
+   wire [1:0]		datamode_in;		// From p2e of packet2emesh.v
+   wire [AW-1:0]	dstaddr_in;		// From p2e of packet2emesh.v
+   wire [AW-1:0]	srcaddr_in;		// From p2e of packet2emesh.v
+   wire			write_in;		// From p2e of packet2emesh.v
+   // End of automatics
    
-   packet2emesh #(.AW(AW))
-   p2e (
-	.write_in	(write_in),
-	.datamode_in	(datamode_in[1:0] ),
-	.ctrlmode_in	(ctrlmode_in[4:0]),
-	.dstaddr_in	(dstaddr_in[AW-1:0]),
-	.data_in	(data_in[DW-1:0]),
-	.srcaddr_in	(srcaddr_in[AW-1:0]),
-	.packet_in	(packet_in[PW-1:0])
-	);
+   packet2emesh #(.AW(AW),
+		  .PW(PW))
+   p2e (/*AUTOINST*/
+	// Outputs
+	.write_in			(write_in),
+	.datamode_in			(datamode_in[1:0]),
+	.ctrlmode_in			(ctrlmode_in[4:0]),
+	.dstaddr_in			(dstaddr_in[AW-1:0]),
+	.srcaddr_in			(srcaddr_in[AW-1:0]),
+	.data_in			(data_in[AW-1:0]),
+	// Inputs
+	.packet_in			(packet_in[PW-1:0]));
+   
       
    //Access-in
    assign en     =  access_in & ~wait_all & ~wait_all;
@@ -178,7 +176,8 @@ module ememory(/*AUTOARG*/
    assign data_out[31:0]      = dout_aligned[31:0];
    
    //Concatenate
-   emesh2packet #(.AW(AW)) 
+   emesh2packet #(.AW(AW),
+		  .PW(PW)) 
    e2p (
 	/*AUTOINST*/
 	// Outputs

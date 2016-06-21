@@ -1,50 +1,40 @@
 //#############################################################################
-//# Purpose: SPI slave module                                                 #
+//# Purpose: SPI slave                                                        #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see below)                                                 # 
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module spi_slave(/*AUTOARG*/
-   // Outputs
-   spi_regs, spi_irq, miso, access_out, packet_out, wait_out,
-   // Inputs
-   clk, nreset, hw_en, sclk, mosi, ss, wait_in, access_in, packet_in
-   );
-
-   //parameters
-   parameter  UREGS = 13;                // total spi slave regs   
-   parameter  AW    = 32;                // addresss width
-   localparam PW    = (2*AW+40);         // packet width
- 
-   //clk,reset, cfg
-   input 		clk;             // core clock
-   input 	        nreset;          // async active low reset
-   input 		hw_en;           // block enbale pin   
-   output [511:0] 	spi_regs;        // all registers for control
-   output 		spi_irq;         // interrupt
+module spi_slave #( parameter UREGS = 13,  // number of spi slave regs   
+		    parameter AW    = 32,  // addresss width
+		    parameter PW    = 104 // packet width
+		    )
+   (
+    //clk,reset, cfg
+    input 	    clk, // core clock
+    input 	    nreset, // async active low reset
+    input 	    hw_en, // block enbale pin   
+    output [511:0]  spi_regs, // all registers for control
+    output 	    spi_irq, // interrupt
+    //IO interface
+    input 	    sclk, // spi clock
+    input 	    mosi, // slave input
+    input 	    ss, // slave select
+    output 	    miso, // slave output
+    // read request to core
+    output 	    access_out, // valid transaction
+    output [PW-1:0] packet_out, // data to core (from spi port)
+    input 	    wait_in, // pushback from core (not implemented)
+    // return from core
+    input 	    access_in, // read response from core
+    input [PW-1:0]  packet_in, // read response packet from core
+    output 	    wait_out        // pushback (not used)
+    );
    
-   //IO interface
-   input 		sclk;            // spi clock
-   input 		mosi;            // slave input
-   input 		ss;              // slave select
-   output 		miso;            // slave output
-   
- 
-   // read request to core
-   output 		access_out;      // valid transaction
-   output [PW-1:0] 	packet_out;      // data to core (from spi port)
-   input 		wait_in;         // pushback from core (not implemented)
-
-   // return from core
-   input 		access_in;       // read response from core
-   input [PW-1:0] 	packet_in;       // read response packet from core
-   output 		wait_out;        // pushback (not used)
-      
+   //###############
+   //# LOCAL WIRES
+   //###############
    /*AUTOINPUT*/
-  
-   // End of automatics
-   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			cpha;			// From spi_slave_regs of spi_slave_regs.v
@@ -60,6 +50,7 @@ module spi_slave(/*AUTOARG*/
    // End of automatics
    
    spi_slave_regs #(.AW(AW),
+		    .PW(PW),
 		    .UREGS(UREGS))
    spi_slave_regs (/*AUTOINST*/
 		   // Outputs
@@ -84,7 +75,7 @@ module spi_slave(/*AUTOARG*/
 		   .packet_in		(packet_in[PW-1:0]));
    
 
-   spi_slave_io #(.AW(AW))
+   spi_slave_io #(.PW(PW))
    spi_slave_io (/*AUTOINST*/
 		 // Outputs
 		 .miso			(miso),
@@ -109,28 +100,3 @@ module spi_slave(/*AUTOARG*/
    
    
 endmodule // spi_slave
-
-//////////////////////////////////////////////////////////////////////////////
-// The MIT License (MIT)                                                    //
-//                                                                          //
-// Copyright (c) 2015-2016, Adapteva, Inc.                                  //
-//                                                                          //
-// Permission is hereby granted, free of charge, to any person obtaining a  //
-// copy of this software and associated documentation files (the "Software")//
-// to deal in the Software without restriction, including without limitation// 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, //
-// and/or sell copies of the Software, and to permit persons to whom the    //
-// Software is furnished to do so, subject to the following conditions:     //
-//                                                                          //
-// The above copyright notice and this permission notice shall be included  // 
-// in all copies or substantial portions of the Software.                   //
-//                                                                          //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  //
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               //
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   //
-// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     //
-// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT//
-// OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR //
-// THE USE OR OTHER DEALINGS IN THE SOFTWARE.                               //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////

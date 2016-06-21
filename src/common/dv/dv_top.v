@@ -53,6 +53,8 @@ module dv_top();
 		    .clk1		(clk1),
 		    .clk2		(clk2),
 		    .start		(start),
+		    .vdd		(vdd),
+		    .vss		(vss),
 		    // Inputs
 		    .dut_active		(dut_active),
 		    .stim_done		(stim_done));

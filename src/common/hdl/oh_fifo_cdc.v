@@ -7,16 +7,16 @@
 
 module oh_fifo_cdc # (parameter DW        = 104,      //FIFO width
 		      parameter DEPTH     = 32,       //FIFO depth (entries)
-		      parameter TARGET    = "GENERIC" //XILINX,ALTERA,GENERIC,ASIC
+		      parameter TARGET    = "GENERIC" //XILINX,ALTERA,GENERIC
 		      )
    (
-   input 	   nreset,  // shared domain async active low reset
-   input 	   clk_in,  // write clock
+   input 	   nreset, // shared domain async active low reset
+   input 	   clk_in, // write clock
    input 	   access_in, // write access
    input [DW-1:0]  packet_in, // write packet
    output 	   wait_out, // write pushback
    input 	   clk_out, //read clock
-   output 	   access_out, //read access
+   output reg 	   access_out, //read access
    output [DW-1:0] packet_out, //read packet
    input 	   wait_in, // read pushback
    output 	   prog_full, // fifo is half full
@@ -24,9 +24,9 @@ module oh_fifo_cdc # (parameter DW        = 104,      //FIFO width
    output 	   empty // fifo is empty
     );
    
-   // local variables
-   reg 		   access_out;
-      
+   wire 	   wr_en;
+   wire 	   rd_en;
+   
    // FIFO control logic
    assign wr_en    = access_in;
    assign rd_en    = ~empty & ~wait_in;

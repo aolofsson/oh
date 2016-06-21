@@ -2,59 +2,43 @@
 //# Purpose: SPI top (configurable as master or slave)                        #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see below)                                                 # 
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module spi (/*AUTOARG*/
-   // Outputs
-   spi_irq, access_out, packet_out, wait_out, m_sclk, m_mosi, m_ss,
-   s_miso,
-   // Inputs
-   nreset, clk, hw_en, access_in, packet_in, wait_in, m_miso, s_sclk,
-   s_mosi, s_ss
-   );
+module spi #( parameter AW     = 32,    // address width
+	      parameter PW     = 104,   // packet size
+	      parameter UREGS  = 13     // number of user slave regs
+	      )
+   (//clk, reset, irq
+    input 	    nreset, // asynch active low reset   
+    input 	    clk, // core clock
+    input 	    hw_en, // block enable pin
+    output 	    spi_irq, // interrupt output
+    //packet from core
+    input 	    access_in, // access from core
+    input [PW-1:0]  packet_in, // packet from core
+    input 	    wait_in, // pushback from io   
+    //packet to core
+    output 	    access_out, // access to core
+    output [PW-1:0] packet_out, // packet to core
+    output 	    wait_out, // pushback from core
+    //master io interface
+    output 	    m_sclk, // master clock
+    output 	    m_mosi, // master output
+    output 	    m_ss, // slave select
+    input 	    m_miso, // master input
+    //slave io interface
+    input 	    s_sclk, // slave clock
+    input 	    s_mosi, // slave input
+    input 	    s_ss, // slave select
+    output 	    s_miso    // slave output
+    );
 
-   //##################################################################
-   //# INTERFACE
-   //##################################################################
-
-   parameter AW     = 32;      // data width of fifo
-   parameter PW     = 2*AW+40; // packet size
-   parameter UREGS  = 13;      // number of user slave regs
-   
-   //clk, reset, irq
-   input           nreset;     // asynch active low reset   
-   input 	   clk;        // core clock
-   input 	   hw_en;      // block enable pin
-   
-   //interrupt output
-   output 	   spi_irq;    // interrupt output
-   
-   //packet from core
-   input 	   access_in;  // access from core
-   input [PW-1:0]  packet_in;  // packet from core
-   input 	   wait_in;    // pushback from io   
-
-   //packet to core
-   output 	   access_out; // access to core
-   output [PW-1:0] packet_out; // packet to core
-   output 	   wait_out;   // pushback from core
-
-   //master io interface
-   output          m_sclk;    // master clock
-   output 	   m_mosi;    // master output
-   output 	   m_ss;      // slave select
-   input 	   m_miso;    // master input
-   
-   //slave io interface
-   input 	   s_sclk;    // slave clock
-   input 	   s_mosi;    // slave input
-   input 	   s_ss;      // slave select
-   output 	   s_miso;    // slave output
+   //###############
+   //# LOCAL WIRES
+   //###############
 
    /*AUTOINPUT*/  
-   // End of automatics
-   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			m_access_out;		// From spi_master of spi_master.v
@@ -78,7 +62,8 @@ module spi (/*AUTOARG*/
     );
     */
    
-   spi_master #(.AW(AW))
+   spi_master #(.AW(AW),
+		.PW(PW))
    spi_master (/*AUTOINST*/
 	       // Outputs
 	       .sclk			(m_sclk),		 // Templated
@@ -110,6 +95,7 @@ module spi (/*AUTOARG*/
     */
    
    spi_slave #(.AW(AW),
+	       .PW(PW),
 	       .UREGS(UREGS))
    spi_slave (/*AUTOINST*/
 	      // Outputs
@@ -137,7 +123,8 @@ module spi (/*AUTOARG*/
    assign wait_out = s_wait_out | m_wait_out;
    
    emesh_mux #(.N(2),
-	       .AW(AW))
+	       .AW(AW),
+	       .PW(PW))
    emesh_mux (// Outputs
 	      .wait_out	   (),
 	      .access_out  (access_out),
@@ -153,27 +140,3 @@ endmodule // spi
 // verilog-library-directories:("." "../hdl" "../../emesh/hdl")
 // End:
 
-//////////////////////////////////////////////////////////////////////////////
-// The MIT License (MIT)                                                    //
-//                                                                          //
-// Copyright (c) 2015-2016, Adapteva, Inc.                                  //
-//                                                                          //
-// Permission is hereby granted, free of charge, to any person obtaining a  //
-// copy of this software and associated documentation files (the "Software")//
-// to deal in the Software without restriction, including without limitation// 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, //
-// and/or sell copies of the Software, and to permit persons to whom the    //
-// Software is furnished to do so, subject to the following conditions:     //
-//                                                                          //
-// The above copyright notice and this permission notice shall be included  // 
-// in all copies or substantial portions of the Software.                   //
-//                                                                          //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  //
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               //
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   //
-// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     //
-// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT//
-// OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR //
-// THE USE OR OTHER DEALINGS IN THE SOFTWARE.                               //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////

@@ -164,15 +164,12 @@ module etrace (/*AUTOARG*/
    //# SYNC CFG SIGNALS TO SAMPLE CLK
    //#################################
 
-   dsync #(.DW(1))
-
-   dsync(// Outputs
-	 .dout			(trace_enable),
-	 // Inputs
-	 .clk			(trace_clk),
-	 .din			(mi_trace_enable)
-	 );
-   
+   dsync dsync(// Outputs
+	       .dout	(trace_enable),
+	       // Inputs
+	       .clk	(trace_clk),
+	       .din	(mi_trace_enable));
+      
    //###########################
    //# TIME KEEPER
    //###########################

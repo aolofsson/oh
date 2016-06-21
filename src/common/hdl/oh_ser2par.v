@@ -6,19 +6,17 @@
 //#############################################################################
 
 module oh_ser2par #(parameter PW = 64, // parallel packet width
-		    parameter SW = 1   // serial packet width
+		    parameter SW = 1,   // serial packet width
+		    parameter CW = $clog2(PW/SW)  // serialization factor (for counter)
 		    )
    (
-    input 	    clk, // sampling clock   
-    input [SW-1:0]  din, // serial data
-    output [PW-1:0] dout, // parallel data  
-    input 	    lsbfirst, // lsb first order
-    input 	    shift      // shift the shifter
+    input 		clk, // sampling clock   
+    input [SW-1:0] 	din, // serial data
+    output reg [PW-1:0] dout, // parallel data  
+    input 		lsbfirst, // lsb first order
+    input 		shift      // shift the shifter
     );
- 
-   parameter CW   = $clog2(PW/SW);  // serialization factor (for counter)
    
-   reg [PW-1:0]    dout;
    reg [CW-1:0]    count;
    wire [PW-1:0]   shiftdata;
 
