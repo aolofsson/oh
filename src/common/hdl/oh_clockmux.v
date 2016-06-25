@@ -5,8 +5,7 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_clockmux #(parameter PROJ = "E5", // project name
-		     parameter ASIC = 0,    // use ASIC lib
+module oh_clockmux #(parameter ASIC = `CFG_ASIC, // use ASIC lib
 		     parameter N    = 1)    // number of clock inputs
    (
     input [N-1:0] en,   // one hot enable, valid rising edge wrt to its clock
@@ -17,8 +16,7 @@ module oh_clockmux #(parameter PROJ = "E5", // project name
    wire [N-1:0]   eclk;
    
    //One clock gate per clock
-   oh_clockgate #(.PROJ(PROJ),
-		  .ASIC(ASIC)) 
+   oh_clockgate #(.ASIC(ASIC)) 
    i_clockgate [N-1:0] (.eclk	(eclk[N-1:0]),			
 			.clk	(clkin[N-1:0]),
 			.te	(1'b0), //do something about this>
