@@ -9,8 +9,6 @@ module oh_pwr_isolo #(parameter DW   = 1,        // width of data inputs
 		      parameter ASIC = `CFG_ASIC // use ASIC lib
 		      ) 
    (
-    input 	    vdd, // supply (set to 1 if valid)
-    input 	    vss, // ground (set to 0 if valid)
     input 	    iso,// active low isolation signal
     input [DW-1:0]  in, // input signal
     output [DW-1:0] out  // out = ~iso & in
