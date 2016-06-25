@@ -1,5 +1,5 @@
 //#############################################################################
-//# Function: One hot 4:1 mux for clocks                                      #
+//# Function: One hot safe clock mux                                          #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
@@ -8,23 +8,29 @@
 module oh_clockmux #(parameter ASIC = `CFG_ASIC, // use ASIC lib
 		     parameter N    = 1)    // number of clock inputs
    (
-    input [N-1:0] en,   // one hot enable, valid rising edge wrt to its clock
-    input [N-1:0] clkin,// free running input clocks
+    input 	  clk, // local clock to sync enable to
+    input [N-1:0] en, // one hot enable vector
+    input [N-1:0] clkin,// one hot clock inputs (only one is active!) 
     output 	  clkout 
     );
 
-   wire [N-1:0]   eclk;
-   
-   //One clock gate per clock
-   oh_clockgate #(.ASIC(ASIC)) 
-   i_clockgate [N-1:0] (.eclk	(eclk[N-1:0]),			
-			.clk	(clkin[N-1:0]),
-			.te	(1'b0), //do something about this>
-			.en	(en[N-1:0]));
-
-   //Or gated clocks together
-   assign clkout = |(eclk[N-1:0]);
-   
+   generate
+      if(ASIC)
+	begin : asic
+	   asic_clockmux #(.N(N)) imux (.clk(clk),
+					.clkin(clkin[N-1:0]),
+					.en(en[N-1:0]),
+					.clkout(clkout));
+	end
+      else
+	begin : generic
+	   reg [N-1:0] en_sh;		  
+	   always @ (clk or en)
+	     if (!clk)
+	       en_sh[N-1:0] <= en[N-1:0];
+	   assign clkout = |(clkin[N-1:0] & en_sh[N-1:0]);
+	end
+   endgenerate   
 endmodule // oh_clockmux
 
 
