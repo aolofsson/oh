@@ -17,20 +17,10 @@ module oh_clockmux #(parameter ASIC = `CFG_ASIC, // use ASIC lib
    generate
       if(ASIC)
 	begin : asic
-	   if(N==4)
-	     begin : g0
-		asic_clockmux4 imux (.clk(clk),
-				     .clkin(clkin[N-1:0]),
-				     .en(en[N-1:0]),
-				     .clkout(clkout));
-	     end
-	   else if(N==2)
-	     begin : g0
-		asic_clockmux2 imux (.clk(clk),
-				     .clkin(clkin[N-1:0]),
-				     .en(en[N-1:0]),
-				     .clkout(clkout));
-	     end
+	   asic_clockmux #(.N(N)) imux (.clk(clk),
+					.clkin(clkin[N-1:0]),
+					.en(en[N-1:0]),
+					.clkout(clkout));
 	end
       else
 	begin : generic
