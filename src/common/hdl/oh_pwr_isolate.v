@@ -5,8 +5,8 @@
 //# License:  MIT  (see LICENSE file in OH! repository)                       # 
 //#############################################################################
 
-module oh_pwr_isolate #(parameter DW   = 1, // width of data inputs
-			parameter ASIC = 0  // use ASIC lib
+module oh_pwr_isolate #(parameter DW   = 1,        // width of data inputs
+			parameter ASIC = `CFG_ASIC // use ASIC lib
 			) 
    (
     input 	    vdd, // supply (set to 1 if valid)

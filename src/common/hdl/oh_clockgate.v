@@ -5,9 +5,7 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_clockgate # (parameter ASIC = 0,   // use ASIC lib
-		       parameter PROJ = "E5" // project name (used for IP selection)
-		      ) 
+module oh_clockgate # (parameter ASIC = `CFG_ASIC)
    ( 
      input  clk, // clock input 
      input  te, // test enable enable   
@@ -18,11 +16,10 @@ module oh_clockgate # (parameter ASIC = 0,   // use ASIC lib
    generate
       if(ASIC)	     
 	begin : asic
-	   asic_icg  #(.PROJ(PROJ))
-	   asic_icg (.en(en),
-		     .te(te),
-		     .clk(clk),
-		     .eclk(eclk));
+	   asic_icg asic_icg (.en(en),
+			      .te(te),
+			      .clk(clk),
+			      .eclk(eclk));
 	end
       else
 	begin : generic
@@ -30,7 +27,6 @@ module oh_clockgate # (parameter ASIC = 0,   // use ASIC lib
 	   wire    en_sl;
 	   //Stable low/valid rising edge enable
 	   assign   en_sl = en | te;
-	   
 	   //Stable high enable signal
 	   oh_lat0 lat0 (.out (en_sh),
 			 .in  (en_sl),
