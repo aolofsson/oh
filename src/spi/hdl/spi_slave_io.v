@@ -173,9 +173,10 @@ module spi_slave_io #( parameter PW = 104  // packet width
 		   .din   (ss));
 
    //create single cycle pulse
-   oh_rise2pulse r2p (.out  (ss_pulse),
-		      .clk  (clk),
-		      .in   (ss_sync));
+   oh_rise2pulse r2p (.nreset (nreset),
+		      .out    (ss_pulse),
+		      .clk    (clk),
+		      .in     (ss_sync));
 
    assign spi_fetch = ss_pulse & (command_reg[7:6]==`SPI_FETCH);
    

@@ -153,10 +153,11 @@ module spi_master_io
 
    //generate access pulse at rise of ss
    oh_rise2pulse 
-     pulse (.out (rx_access),
+     pulse (.nreset(nreset),
+	    .out (rx_access),
 	    .clk (clk),
 	    .in	 (ss));
-   
+
    oh_ser2par #(.PW(64),
 		.SW(1))
    ser2par (//output
