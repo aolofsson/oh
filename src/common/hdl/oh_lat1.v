@@ -5,8 +5,8 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_lat1 #(parameter DW    = 1, //data width
-		 parameter ASIC  = 0  // use ASIC lib
+module oh_lat1 #(parameter DW    = 1,         //data width
+		 parameter ASIC  = `CFG_ASIC  // use ASIC lib
 		 )
    ( input 	     clk, // clk, latch when clk=1
      input [DW-1:0]  in,  // input data
