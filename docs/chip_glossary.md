@@ -41,7 +41,7 @@ Chip Design Glossary
 * [Flash](https://en.wikipedia.org/wiki/Flash_memory): Non-volatile semiconductor memory
 * [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform): Fast Fourier transform
 * [FPU](https://en.wikipedia.org/wiki/Floating_point): Floating point unit
-* [GPIO](https://en.wikipedia.org/wiki/General-purpose_input/output): IO controllable at run time
+* [GPIO](https://en.wikipedia.org/wiki/General-purpose_input/output): General purpose input output, controllable at run time
 * [Gray code](https://en.wikipedia.org/wiki/Gray_code): Binary system where successive values differ by one bit
 * [HBM](https://en.wikipedia.org/wiki/High_Bandwidth_Memory): High bandwidth memory
 * [I2C](https://en.wikipedia.org/wiki/I%C2%B2C): Multi-master 2 wire bus
