@@ -24,8 +24,6 @@ module oh_memory_dp # (parameter DW    = 104,      //memory width
     output [DW-1:0] rd_dout,//read output data
     // Power/repair (ASICs)
     input 	    vss, // common ground   
-    input 	    vdd, // periphery power rail
-    input 	    vddm, // sram array power rail
     input 	    shutdown, // shutdown signal from always on domain   
     input [MCW-1:0] memconfig, // generic memory config      
     input [MCW-1:0] memrepair, // repair vector
