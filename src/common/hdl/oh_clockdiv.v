@@ -91,10 +91,10 @@ module oh_clockdiv
    assign clk0_sel[0] = ~(clkdiv[7:0]==8'd0);
 
    oh_clockmux #(.N(2))
-   iclkmux0 (.clkout(clkout0),
-	      .clk(clk),
-              .en(clk0_sel[1:0]),
-              .clkin({clk, clkout0_reg}));
+   oh_clockmux0 (.clkout(clkout0),
+		 .clk(clk),
+		 .en(clk0_sel[1:0]),
+		 .clkin({clk, clkout0_reg}));
 
    //###########################################
    //# CLKOUT1
@@ -119,10 +119,10 @@ module oh_clockdiv
    assign clk1_sel[0] = |clkdiv[7:1];        // all others
    
    oh_clockmux #(.N(4))
-   iclkmux1 (.clkout(clkout1),
-	     .clk(clk),
-             .en( clk1_sel[3:0]),
-             .clkin({1'b0, clk, clkout1_shift, clkout1_reg}));
+   oh_clockmux1 (.clkout(clkout1),
+		 .clk(clk),
+		 .en( clk1_sel[3:0]),
+		 .clkin({1'b0, clk, clkout1_shift, clkout1_reg}));
    
 endmodule // oh_clockdiv
 

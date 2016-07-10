@@ -16,14 +16,14 @@ module oh_clockmux #(parameter ASIC = `CFG_ASIC, // use ASIC lib
 
    generate
       if(ASIC)
-	begin : asic
-	   asic_clockmux #(.N(N)) imux (.clk(clk),
-					.clkin(clkin[N-1:0]),
-					.en(en[N-1:0]),
-					.clkout(clkout));
+	begin : g0
+	   asic_clockmux #(.N(N)) asic_clockmux (.clk(clk),
+						 .clkin(clkin[N-1:0]),
+						 .en(en[N-1:0]),
+						 .clkout(clkout));
 	end
       else
-	begin : generic
+	begin : g0
 	   reg [N-1:0] en_sh;		  
 	   always @ (clk or en)
 	     if (!clk)
