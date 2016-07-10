@@ -45,12 +45,6 @@ module spi_master_io
    
    
    /*AUTOWIRE*/
-   // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			clkfall1;		// From oh_clockdiv of oh_clockdiv.v
-   wire			clkout1;		// From oh_clockdiv of oh_clockdiv.v
-   wire			clkrise1;		// From oh_clockdiv of oh_clockdiv.v
-   wire			clkstable;		// From oh_clockdiv of oh_clockdiv.v
-   // End of automatics
    
    //#################################
    //# CLOCK GENERATOR
@@ -65,16 +59,17 @@ module spi_master_io
 		.clkfall0	(phase_match),	
 		.clkphase1	(16'b0),
 		.clkout0	(clkout),
+		//clocks not used ("single clock")
+		.clkout1	(),
+		.clkrise1	(),
+		.clkfall1	(),
+		.clkstable	(),
+		//ignore for now, assume no writes while spi active
+		.clkchange	(1'b0),
 		/*AUTOINST*/
-		// Outputs
-		.clkout1		(clkout1),
-		.clkrise1		(clkrise1),
-		.clkfall1		(clkfall1),
-		.clkstable		(clkstable),
 		// Inputs
 		.clk			(clk),
 		.nreset			(nreset),
-		.clkchange		(clkchange),
 		.clkphase0		(clkphase0[15:0]));
     
    //#################################
@@ -154,6 +149,7 @@ module spi_master_io
    //generate access pulse at rise of ss
    oh_rise2pulse 
      pulse (.out (rx_access),
+	    .nreset (nreset),
 	    .clk (clk),
 	    .in	 (ss));
    

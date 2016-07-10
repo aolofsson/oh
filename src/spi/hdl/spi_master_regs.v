@@ -178,6 +178,7 @@ module spi_master_regs # (parameter  CLKDIV = 1,    // default clkdiv
    //create a single cycle pulse on register read
    oh_edge2pulse 
      e2pulse (.out (wait_pulse),
+	      .nreset (nreset),
    	      .clk (clk),
 	      .in  (reg_read));
    

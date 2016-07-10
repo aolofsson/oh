@@ -24,7 +24,7 @@ module spi_slave_io #( parameter PW = 104  // packet width
     output 	    spi_write, // regfile write
     output [5:0]    spi_addr, // regfile addres
     output [7:0]    spi_wdata, // data for regfile
-    output [7:0]    spi_rdata, // data for regfile
+    input [7:0]     spi_rdata, // data for regfile
     //core interface (synced to core clk)
     input 	    clk, // core clock
     input 	    nreset, // async active low reset   
