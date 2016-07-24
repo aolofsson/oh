@@ -15,8 +15,11 @@ module oh_pulse2pulse (
 		       output dout    //output pulse (one clock cycle)
 		       );
    
+   // local wires
    reg toggle_reg;
-   reg pulse_reg;   
+   reg pulse_reg;
+   wire toggle;
+   
    
    //pulse to toggle
    assign toggle = din ? ~toggle_reg : toggle_reg;
