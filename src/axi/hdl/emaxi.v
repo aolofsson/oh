@@ -421,6 +421,7 @@ module emaxi(/*autoarg*/
    wire sync_nreset;   
    oh_dsync dsync(.dout	(sync_nreset),
 	       .clk	(m_axi_aclk),
+	       .nreset       (1'b1),
 	       .din	(m_axi_aresetn)
 	       );
    
