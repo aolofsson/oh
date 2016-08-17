@@ -5,14 +5,15 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_reg1 #(parameter DW = 1,            // data width
-		 parameter ASIC  = `CFG_ASIC  // use ASIC lib
+module oh_reg1 #(parameter DW = 1            // data width
 		 ) 
    ( input           nreset, //async active low reset
      input 	     clk, // clk, latch when clk=0
      input [DW-1:0]  in, // input data
      output [DW-1:0] out  // output data (stable/latched when clk=1)
      );
+
+   localparam ASIC = `CFG_ASIC;
    
    generate
       if(ASIC)

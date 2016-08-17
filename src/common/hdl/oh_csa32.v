@@ -5,8 +5,7 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_csa32 #(parameter DW   = 1, // data width
-		  parameter ASIC = 0  // use asic library
+module oh_csa32 #(parameter DW   = 1 // data width
 		  )
    ( input [DW-1:0]  in0, //input
      input [DW-1:0]  in1,//input
@@ -14,6 +13,8 @@ module oh_csa32 #(parameter DW   = 1, // data width
      output [DW-1:0] s, //sum 
      output [DW-1:0] c   //carry
      );
+
+   localparam ASIC = `CFG_ASIC;  // use asic library
 
    generate
       if(ASIC)	

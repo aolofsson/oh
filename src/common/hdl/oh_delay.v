@@ -6,13 +6,14 @@
 //#############################################################################
 
 module oh_delay  #(parameter DW   = 1, // width of data
-		   parameter ASIC = 0, // use asic library
 		   parameter DELAY= 0  // delay
 		   )   
    (
     input [DW-1:0]  in, // input 
     output [DW-1:0] out // output
     );
+
+   localparam ASIC = `CFG_ASIC;  // use asic library
    
    generate
       if(ASIC)

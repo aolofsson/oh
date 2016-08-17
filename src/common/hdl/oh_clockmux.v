@@ -5,8 +5,7 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_clockmux #(parameter ASIC = `CFG_ASIC, // use ASIC lib
-		     parameter N    = 1)    // number of clock inputs
+module oh_clockmux #(parameter N    = 1)    // number of clock inputs
    (
     input 	  clk, // local clock to sync enable to
     input [N-1:0] en, // one hot enable vector
@@ -14,7 +13,9 @@ module oh_clockmux #(parameter ASIC = `CFG_ASIC, // use ASIC lib
     output 	  clkout 
     );
 
-   generate
+    localparam ASIC = `CFG_ASIC;
+
+    generate
       if(ASIC)
 	begin : g0
 	   asic_clockmux #(.N(N)) asic_clockmux (.clk(clk),

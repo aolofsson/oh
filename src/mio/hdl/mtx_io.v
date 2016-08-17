@@ -34,8 +34,6 @@ module mtx_io (/*AUTOARG*/
    //#####################################################################
    //# BODYINTER
    //#####################################################################
-
-   localparam ASIC = `CFG_ASIC;
    
    //Regs
    reg 		      tx_access;
@@ -51,8 +49,7 @@ module mtx_io (/*AUTOARG*/
    //########################################
    
    //synchronize reset to io_clk
-   oh_rsync #(.ASIC(ASIC))
-   oh_rsync(.nrst_out	(io_nreset),
+   oh_rsync oh_rsync(.nrst_out	(io_nreset),
 	    .clk	(io_clk),
 	    .nrst_in	(nreset));
    
