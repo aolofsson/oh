@@ -12,6 +12,14 @@ remove_files -fileset sources_1 $projdir/${design}.srcs/sources_1/bd/system/hdl/
 add_files -fileset sources_1 -norecurse $projdir/${design}.srcs/sources_1/bd/system/hdl/system_wrapper.v
 
 ###########################################################
+# PREPARE FOR SYNTHESIS
+###########################################################
+if {[info exists oh_synthesis_options]} {
+    puts "INFO: Synthesis with following options: $oh_synthesis_options"
+    set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} -value $oh_synthesis_options -objects [get_runs synth_1]
+}
+
+###########################################################
 # SYNTHESIS
 ###########################################################
 launch_runs synth_1

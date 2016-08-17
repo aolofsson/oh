@@ -21,3 +21,8 @@ set constraints_files [list \
 			   ../parallella_io.xdc \
 			   ../parallella_7020_io.xdc \
 			  ]
+
+###########################################################
+# PREPARE FOR SYNTHESIS
+###########################################################
+set oh_synthesis_options "-verilog_define CFG_ASIC=0"
