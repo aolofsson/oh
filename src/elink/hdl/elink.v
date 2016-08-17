@@ -17,6 +17,7 @@ module elink (/*AUTOARG*/
    parameter PW          = 104;      //packet width   
    parameter ID          = 12'h810;  //epiphany ID for elink (ie addr[31:20])
    parameter ETYPE       = 1;
+   parameter TARGET      = "XILINX";
    
    /****************************/
    /*MAIN CLOCK AND RESET      */
@@ -146,10 +147,8 @@ module elink (/*AUTOARG*/
                        );
    */
    
-   defparam erx.ID          = ID;
-   defparam erx.ETYPE       = ETYPE;
-   
-   erx erx(.rx_active			(elink_active),
+   erx #(.ID(ID), .ETYPE(ETYPE), .TARGET(TARGET))
+   erx(.rx_active			(elink_active),
 	   /*AUTOINST*/
 	   // Outputs
 	   .rxo_wr_wait_p		(rxo_wr_wait_p),
@@ -195,10 +194,8 @@ module elink (/*AUTOARG*/
                        );
    */
 
-   defparam etx.ID          = ID;
-   defparam etx.ETYPE       = ETYPE;
-
-   etx etx(
+   etx #(.ID(ID), .ETYPE(ETYPE), .TARGET(TARGET))
+   etx(
 	   /*AUTOINST*/
 	   // Outputs
 	   .tx_active			(tx_active),
@@ -237,10 +234,8 @@ module elink (/*AUTOARG*/
    /***********************************************************/
    /*TX-->RX REGISTER INTERFACE CONNECTION                    */
    /***********************************************************/
-   defparam ecfg_cdc.DW=104;
-   defparam ecfg_cdc.DEPTH=32;
-   
-   oh_fifo_cdc ecfg_cdc (.nreset   	(erx_nreset),
+   oh_fifo_cdc #(.DW(104), .DEPTH(32), .TARGET(TARGET))
+   ecfg_cdc (.nreset   	(erx_nreset),
 		      // Outputs
 		      .wait_out		(etx_cfg_wait),	
 		      .access_out	(erx_cfg_access),	

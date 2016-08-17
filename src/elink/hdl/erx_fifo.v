@@ -12,6 +12,7 @@ module erx_fifo (/*AUTOARG*/
    parameter DW      = 32;
    parameter PW      = 104;
    parameter RFAW    = 6;
+   parameter TARGET  = "GENERIC";
 
    //reset & clocks
    input 	   sys_clk;
@@ -76,7 +77,7 @@ module erx_fifo (/*AUTOARG*/
 
       
    //Read request fifo (from Epiphany)
-   oh_fifo_cdc #(.DW(104), .DEPTH(32)) 
+   oh_fifo_cdc #(.DW(104), .DEPTH(32), .TARGET(TARGET))
    rxrd_fifo   (
 		/*AUTOINST*/
 		// Outputs
@@ -94,7 +95,7 @@ module erx_fifo (/*AUTOARG*/
  
 
    //Write fifo (from Epiphany)
-   oh_fifo_cdc #(.DW(104), .DEPTH(32)) 
+   oh_fifo_cdc #(.DW(104), .DEPTH(32), .TARGET(TARGET))
    rxwr_fifo(
 	     /*AUTOINST*/
 	     // Outputs
@@ -111,7 +112,7 @@ module erx_fifo (/*AUTOARG*/
    
  
    //Read response fifo (for host)
-   oh_fifo_cdc #(.DW(104), .DEPTH(32))  
+   oh_fifo_cdc #(.DW(104), .DEPTH(32), .TARGET(TARGET))
    rxrr_fifo(
 	     /*AUTOINST*/
 	     // Outputs
