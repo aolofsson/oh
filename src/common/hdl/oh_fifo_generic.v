@@ -27,8 +27,6 @@ module oh_fifo_generic #(parameter DW        = 104,      // FIFO width
     output [AW-1:0] rd_count, // NOT IMPLEMENTED 
     output [AW-1:0] wr_count // NOT IMPLEMENTED
     );
-   
-   localparam ASIC = `CFG_ASIC;
 
    //regs 
    reg [AW:0]    wr_addr;       // extra bit for wraparound comparison
@@ -67,13 +65,11 @@ module oh_fifo_generic #(parameter DW        = 104,      // FIFO width
    //# Reset synchronizers
    //###########################
 
-   oh_rsync #(.ASIC(ASIC))
-   wr_rsync (.nrst_out (wr_nreset), 
+   oh_rsync wr_rsync (.nrst_out (wr_nreset),
 	     .clk      (wr_clk), 
 	     .nrst_in	(nreset));
 
-   oh_rsync #(.ASIC(ASIC))
-   rd_rsync (.nrst_out (rd_nreset), 
+   oh_rsync rd_rsync (.nrst_out (rd_nreset),
 	     .clk      (rd_clk), 
 	     .nrst_in	(nreset));
    

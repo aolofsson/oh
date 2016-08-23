@@ -5,12 +5,13 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_clockor #(parameter ASIC = `CFG_ASIC, // use ASIC lib
-		    parameter N    = 1)    // number of clock inputs
+module oh_clockor #(parameter N    = 1)    // number of clock inputs
    (
     input [N-1:0] clkin,// one hot clock inputs (only one is active!) 
     output 	  clkout 
     );
+
+   localparam ASIC = `CFG_ASIC;
 
    generate
       if(ASIC)

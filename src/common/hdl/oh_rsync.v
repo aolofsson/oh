@@ -5,14 +5,16 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_rsync #(parameter PS = 2,          // number of sync stages
-		  parameter ASIC = `CFG_ASIC // use asic library
+module oh_rsync #(parameter PS = 2          // number of sync stages
 		  )
    (
     input  clk,
     input  nrst_in,
     output nrst_out
     );
+
+   localparam ASIC = `CFG_ASIC;  // use ASIC lib
+
    generate
       if(ASIC)	
 	begin : g0

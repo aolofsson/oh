@@ -5,14 +5,15 @@
 //# License:  MIT  (see LICENSE file in OH! repository)                       # 
 //#############################################################################
 
-module oh_pwr_isohi #(parameter DW   = 1,        // width of data inputs
-		      parameter ASIC = `CFG_ASIC // use ASIC lib
+module oh_pwr_isohi #(parameter DW   = 1        // width of data inputs
 		      ) 
    (
     input 	    iso,// active low isolation signal
     input [DW-1:0]  in, // input signal
     output [DW-1:0] out // out = iso | in
     );
+
+   localparam ASIC = `CFG_ASIC;  // use ASIC lib
 
    generate
       if(ASIC)	

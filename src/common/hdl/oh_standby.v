@@ -6,7 +6,6 @@
 //#############################################################################
 
 module oh_standby #( parameter PD   = 5,  // cycles to stay awake after "wakeup" 
-		     parameter ASIC = `CFG_ASIC, // use ASIC lib
 		     parameter N    = 5) // project name 
    (
     input 	  clkin, //clock input
@@ -15,7 +14,7 @@ module oh_standby #( parameter PD   = 5,  // cycles to stay awake after "wakeup"
     input 	  idle, //core is in idle
     output 	  clkout //clock output
     );
-      
+
    //Wire declarations
    reg [PD-1:0]	wakeup_pipe;
    reg          idle_reg;
@@ -43,8 +42,7 @@ module oh_standby #( parameter PD   = 5,  // cycles to stay awake after "wakeup"
 		        ~idle;                   //core not in idle
 
    // Clock gating cell
-   oh_clockgate #(.ASIC(ASIC))
-   oh_clockgate  (.eclk(clkout),
+   oh_clockgate oh_clockgate  (.eclk(clkout),
 		  .clk(clkin),
 		  .en(clk_en),
      		  .te(1'b0));

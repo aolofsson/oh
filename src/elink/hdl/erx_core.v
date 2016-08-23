@@ -13,6 +13,7 @@ module erx_core (/*AUTOARG*/
    parameter PW      = 104;
    parameter RFAW    = 6;
    parameter ID      = 12'h999;
+   parameter TARGET  = "GENERIC";
 
    //clock and reset
    input		nreset;  //synced to clk
@@ -175,7 +176,7 @@ module erx_core (/*AUTOARG*/
     );
         */
 
-   emailbox #(.ID(ID))
+   emailbox #(.ID(ID), .TARGET(TARGET))
    erx_mailbox(
 	       /*AUTOINST*/
 	       // Outputs

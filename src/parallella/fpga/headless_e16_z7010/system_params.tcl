@@ -20,3 +20,8 @@ set constraints_files [list \
 			   ../parallella_timing.xdc \
 			   ../parallella_io.xdc \
 			  ]
+
+###########################################################
+# PREPARE FOR SYNTHESIS
+###########################################################
+set oh_synthesis_options "-verilog_define CFG_ASIC=0"

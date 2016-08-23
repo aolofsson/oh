@@ -28,6 +28,7 @@ module emailbox (/*AUTOARG*/
    parameter RFAW   = 6;            // address bus width
    parameter DEPTH  = 32;           // fifo depth
    parameter TYPE   = "SYNC";       // SYNC or ASYNC fifo
+   parameter TARGET = "GENERIC";
 
    //derived parameters
    parameter CW     = $clog2(DEPTH);// fifo count width
@@ -151,9 +152,7 @@ module emailbox (/*AUTOARG*/
 generate
    if(TYPE=="ASYNC")
      begin
-	oh_fifo_async #(.DW(MW),
-			.DEPTH(DEPTH)
-			)
+	oh_fifo_async #(.DW(MW), .DEPTH(DEPTH), .TARGET(TARGET))
 	fifo(// Outputs
 	     .dout      (mailbox_data[MW-1:0]),
 	     .empty     (mailbox_empty),

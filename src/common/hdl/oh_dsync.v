@@ -6,8 +6,7 @@
 //#############################################################################
 
 module oh_dsync  #(parameter PS    = 2,        // number of sync stages
-		   parameter DELAY = 0,        // random delay
-		   parameter ASIC  = `CFG_ASIC // use asic library
+		   parameter DELAY = 0        // random delay
 		   )
    (
     input  clk, // clock
@@ -16,6 +15,8 @@ module oh_dsync  #(parameter PS    = 2,        // number of sync stages
     output dout    // synchronized data
     );
    
+   localparam ASIC = `CFG_ASIC;  // use asic library
+
    generate
       if(ASIC)	
 	begin : g0

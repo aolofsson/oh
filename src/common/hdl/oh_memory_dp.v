@@ -8,7 +8,6 @@
 module oh_memory_dp # (parameter DW    = 104,      //memory width
 		       parameter DEPTH = 32,       //memory depth
 		       parameter PROJ  = "",       //project name
-		       parameter ASIC  = 0,         // use ASIC lib
 		       parameter MCW   = 8,         //repair/config vector width
 		       parameter AW    = $clog2(DEPTH) // address bus width
 		       ) 
@@ -33,6 +32,8 @@ module oh_memory_dp # (parameter DW    = 104,      //memory width
     input [AW-1:0]  bist_addr, // address
     input [DW-1:0]  bist_din  // data input
     );
+
+   localparam ASIC = `CFG_ASIC;  // use asic library
    
    generate
       if(ASIC)
