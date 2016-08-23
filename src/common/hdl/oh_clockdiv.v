@@ -32,8 +32,9 @@ module oh_clockdiv
    reg 	     clkout1_reg;
    reg 	     clkout1_shift;
    reg [2:0] period;
-   wire      
-period_match;
+   wire      period_match;
+   wire [3:0] clk1_sel;
+   wire [1:0] clk0_sel;
    
    //###########################################
    //# CHANGE DETECT (count 8 periods)
@@ -84,15 +85,21 @@ period_match;
        clkout0_reg <= 1'b1;
      else if(clkfall0)
        clkout0_reg <= 1'b0;
+  
+   // clock mux
+   assign clk0_sel[1] =  (clkdiv[7:0]==8'd0);   // not implemented
+   assign clk0_sel[0] = ~(clkdiv[7:0]==8'd0);
 
-   //bypass divider on "divide by 1"
-   //TODO: Fix clock glitch!
-   assign clkout0 = (clkdiv[7:0]==8'd0) ? clk :        // bypass
-		                          clkout0_reg; // all others
+   oh_clockmux #(.N(2))
+   oh_clockmux0 (.clkout(clkout0),
+		 .clk(clk),
+		 .en(clk0_sel[1:0]),
+		 .clkin({clk, clkout0_reg}));
 
    //###########################################
    //# CLKOUT1
    //###########################################
+
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        clkout1_reg <= 1'b0;      
@@ -104,12 +111,19 @@ period_match;
    // creating divide by 2 shifted clock with negedge
    always @ (negedge clk)
      clkout1_shift <= clkout1_reg;
-      
-   //TODO: Fix clock glitch!
-   assign clkout1 = (clkdiv[7:0]==8'd0) ? clk           : //bypass
-		    (clkdiv[7:0]==8'd1) ? clkout1_shift : //div2
-		                          clkout1_reg;    //all others
-      
+   
+   // clock mux
+   assign clk1_sel[3] =  1'b0;               // not implemented
+   assign clk1_sel[2] = (clkdiv[7:0]==8'd0); // div1 (bypass)
+   assign clk1_sel[1] = (clkdiv[7:0]==8'd1); // div2 clock 
+   assign clk1_sel[0] = |clkdiv[7:1];        // all others
+   
+   oh_clockmux #(.N(4))
+   oh_clockmux1 (.clkout(clkout1),
+		 .clk(clk),
+		 .en( clk1_sel[3:0]),
+		 .clkin({1'b0, clk, clkout1_shift, clkout1_reg}));
+   
 endmodule // oh_clockdiv
 
 
