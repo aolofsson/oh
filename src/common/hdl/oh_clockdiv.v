@@ -34,8 +34,10 @@ module oh_clockdiv
    reg [2:0] period;
    wire      period_match;
    wire [3:0] clk1_sel;
+   wire [3:0] clk1_sel_sh;
    wire [1:0] clk0_sel;
-   
+   wire [1:0] clk0_sel_sh;
+
    //###########################################
    //# CHANGE DETECT (count 8 periods)
    //###########################################
@@ -90,9 +92,15 @@ module oh_clockdiv
    assign clk0_sel[1] =  (clkdiv[7:0]==8'd0);   // not implemented
    assign clk0_sel[0] = ~(clkdiv[7:0]==8'd0);
 
+     
+   // clock select needs to be stable high
+   oh_lat0 #(.DW(2)) 
+   latch_clk0 (.out (clk0_sel_sh[1:0]),
+	       .clk (clk),
+	       .in  (clk0_sel[1:0]));
+   
    oh_clockmux #(.N(2))
    oh_clockmux0 (.clkout(clkout0),
-		 .clk(clk),
 		 .en(clk0_sel[1:0]),
 		 .clkin({clk, clkout0_reg}));
 
@@ -118,10 +126,15 @@ module oh_clockdiv
    assign clk1_sel[1] = (clkdiv[7:0]==8'd1); // div2 clock 
    assign clk1_sel[0] = |clkdiv[7:1];        // all others
    
+   // clock select needs to be stable high
+   oh_lat0 #(.DW(4)) 
+   latch_clk1 (.out (clk1_sel_sh[3:0]),
+	       .clk (clk),
+	       .in  (clk1_sel[3:0]));
+
    oh_clockmux #(.N(4))
    oh_clockmux1 (.clkout(clkout1),
-		 .clk(clk),
-		 .en( clk1_sel[3:0]),
+		 .en(clk1_sel[3:0]),
 		 .clkin({1'b0, clk, clkout1_shift, clkout1_reg}));
    
 endmodule // oh_clockdiv
