@@ -1,7 +1,7 @@
 #!/bin/bash
-if [ -e "test_0.emf" ]
+if [ -L "test_0.emf" ]
 then
-    rm test_0.emf
+    unlink test_0.emf
 fi
-cp $1 test_0.emf
+ln -s $1 test_0.emf
 ./dut.bin
