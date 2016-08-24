@@ -34,6 +34,11 @@ module spi #( parameter AW     = 32,    // address width
     output 	    s_miso    // slave output
     );
 
+//1. set manual_CS mode
+//2. assert ss (0000)
+//4. write to tx fifo
+//6. deassert ss (1111)
+   
    //###############
    //# LOCAL WIRES
    //###############

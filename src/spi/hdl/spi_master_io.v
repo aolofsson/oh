@@ -12,8 +12,10 @@ module spi_master_io
    input 	    cpol, // cpol
    input 	    cpha, // cpha
    input 	    lsbfirst, // send lsbfirst   
-   input [7:0] 	    clkdiv_reg, // baudrate	 
-   output reg [1:0] spi_state, // current spi tx state
+   input 	    manual_mode,// sets automatic ss mode
+   input 	    send_data, // controls ss in manual ss mode
+   input [7:0] 	    clkdiv_reg, // baudrate	    
+   output reg [2:0] spi_state, // current spi tx state
    // data to transmit
    input [7:0] 	    fifo_dout, // data payload
    input 	    fifo_empty, // 
@@ -32,7 +34,9 @@ module spi_master_io
    //# LOCAL WIRES
    //###############
    reg 		   fifo_empty_reg;
-   reg 		   load_byte;   
+   reg 		   load_byte;
+   wire 	   rx_access;
+   reg 		   ss_reg;   
    wire [7:0] 	   data_out;
    wire [15:0] 	   clkphase0;
    wire 	   period_match;
@@ -42,7 +46,7 @@ module spi_master_io
    wire 	   data_done;
    wire 	   spi_wait;
    wire 	   shift;
-   
+   wire 	   spi_active;
    
    /*AUTOWIRE*/
    
@@ -76,24 +80,27 @@ module spi_master_io
    //# STATE MACHINE
    //#################################
 
-`define SPI_IDLE    2'b00  // set ss to 1
-`define SPI_SETUP   2'b01  // setup time
-`define SPI_DATA    2'b10  // send data
-`define SPI_HOLD    2'b11  // hold time
+`define SPI_IDLE    3'b000  // set ss to 1
+`define SPI_SETUP   3'b001  // setup time
+`define SPI_DATA    3'b010  // send data
+`define SPI_HOLD    3'b011  // hold time
+`define SPI_MARGIN  3'b100  // pause
 
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       spi_state[1:0] <=  `SPI_IDLE;
+       spi_state[2:0] <=  `SPI_IDLE;
    else
-     case (spi_state[1:0])
+     case (spi_state[2:0])
        `SPI_IDLE : 
-	 spi_state[1:0] <= fifo_read    ? `SPI_SETUP : `SPI_IDLE;
+	 spi_state[2:0] <= fifo_read   ? `SPI_SETUP :  `SPI_IDLE;
        `SPI_SETUP :
-	 spi_state[1:0] <= phase_match ? `SPI_DATA : `SPI_SETUP;       
+	 spi_state[2:0] <= phase_match ? `SPI_DATA   : `SPI_SETUP;       
        `SPI_DATA : 
-	 spi_state[1:0] <= data_done   ? `SPI_HOLD : `SPI_DATA;
+	 spi_state[2:0] <= data_done   ? `SPI_HOLD   : `SPI_DATA;
        `SPI_HOLD : 
-	 spi_state[1:0] <= phase_match ? `SPI_IDLE : `SPI_HOLD;
+	 spi_state[2:0] <= phase_match ? `SPI_MARGIN : `SPI_HOLD;
+       `SPI_MARGIN : 
+	 spi_state[2:0] <= phase_match ? `SPI_IDLE   : `SPI_MARGIN;
      endcase // case (spi_state[1:0])
    
    //read fifo on phase match (due to one cycle pipeline latency
@@ -101,10 +108,7 @@ module spi_master_io
 
    //data done whne
    assign data_done = fifo_empty & ~spi_wait & phase_match;
-
-   //shift on every clock cycle while in datamode
-   assign shift     = phase_match & (spi_state[1:0]==`SPI_DATA);//period_match
-   
+    
    //load is the result of the fifo_read
    always @ (posedge clk)
      load_byte <= fifo_read;
@@ -112,19 +116,24 @@ module spi_master_io
    //#################################
    //# CHIP SELECT
    //#################################
-   
-   assign ss = (spi_state[1:0]==`SPI_IDLE);
+
+   assign spi_active = ~(spi_state[2:0]==`SPI_IDLE | spi_state[2:0]==`SPI_MARGIN);      
+
+   assign ss    = ~((spi_active & ~manual_mode) | (send_data & manual_mode));
 
    //#################################
    //# DRIVE OUTPUT CLOCK
    //#################################
    
-   assign sclk = clkout & (spi_state[1:0]==`SPI_DATA);
+   assign sclk = clkout & (spi_state[2:0]==`SPI_DATA);
 
    //#################################
    //# TX SHIFT REGISTER
    //#################################
-      
+
+   //shift on falling edge
+   assign tx_shift     = phase_match & (spi_state[2:0]==`SPI_DATA);
+   
    oh_par2ser  #(.PW(8),
 		 .SW(1))
    par2ser (// Outputs
@@ -135,7 +144,7 @@ module spi_master_io
 	    .clk	(clk),
 	    .nreset	(nreset),         // async active low reset
 	    .din	(fifo_dout[7:0]), // 8 bit data from fifo
-	    .shift	(shift),          // shift on neg edge
+	    .shift	(tx_shift),          // shift on neg edge
 	    .datasize	(8'd7),           // 8 bits at a time (0..7-->8)
 	    .load	(load_byte),      // load data from fifo
 	    .lsbfirst	(lsbfirst),       // serializer direction
@@ -146,13 +155,9 @@ module spi_master_io
    //# RX SHIFT REGISTER
    //#################################
 
-   //generate access pulse at rise of ss
-   oh_rise2pulse 
-     pulse (.out (rx_access),
-	    .nreset (nreset),
-	    .clk (clk),
-	    .in	 (ss));
-   
+   //shift in rising edge
+   assign rx_shift = (spi_state[2:0] == `SPI_DATA) & period_match;
+
    oh_ser2par #(.PW(64),
 		.SW(1))
    ser2par (//output
@@ -161,7 +166,17 @@ module spi_master_io
 	    .din	(miso),           // serial data in
 	    .clk	(clk),            // shift clk
 	    .lsbfirst	(lsbfirst),       // shift direction
-	    .shift	(shift));         // shift data
+	    .shift	(rx_shift));         // shift data
+
+   //generate access pulse at rise of ss
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       ss_reg <= 1'b1;
+     else
+       ss_reg <= ss;
+   
+   assign rx_access = ss & ~ss_reg;
+   
          
 endmodule // spi_master_io
 // Local Variables:

@@ -6,6 +6,7 @@
 //#############################################################################
 
 `include "spi_regmap.vh"
+
 module spi_master_regs # (parameter  CLKDIV = 1,    // default clkdiv     
 			  parameter  AW     = 32,   // addresss width
 			  parameter  PW     = 104   // packet width
@@ -14,7 +15,7 @@ module spi_master_regs # (parameter  CLKDIV = 1,    // default clkdiv
     //clk,reset, cfg
     input 	     clk, // core clock
     input 	     nreset, // async active low reset
-    input 	     hw_en, // block enable pin
+    input 	     hw_en, // block enable
     //io interface
     input [63:0]     rx_data, // rx data
     input 	     rx_access, // rx access pulse
@@ -23,8 +24,10 @@ module spi_master_regs # (parameter  CLKDIV = 1,    // default clkdiv
     output 	     cpha, // clk phase shift (default is 0)
     output 	     lsbfirst, // send lsbfirst
     output 	     spi_en, // enable transmitter   
+    output 	     manual_mode,// sets manual ss control
+    output 	     send_data, // controls ss in manual ss mode    
     output reg [7:0] clkdiv_reg, // baud rate setting
-    input [1:0]      spi_state, // transmit state
+    input [2:0]      spi_state, // transmit state
     input 	     fifo_prog_full, // fifo reached half/full
     input 	     fifo_wait, // tx transfer wait
     //packet to transmit
@@ -113,7 +116,9 @@ module spi_master_regs # (parameter  CLKDIV = 1,    // default clkdiv
    assign cpol         = config_reg[2];          // cpol
    assign cpha         = config_reg[3];          // cpha
    assign lsbfirst     = config_reg[4];          // send lsb first
-  
+   assign manual_mode  = config_reg[5];          // manual control of ss bit
+   assign send_data    = config_reg[6];          // ss bit
+   
    //####################################
    //# STATUS
    //####################################
@@ -124,10 +129,10 @@ module spi_master_regs # (parameter  CLKDIV = 1,    // default clkdiv
      else if(status_write)
        status_reg[7:0] <= reg_wdata[7:0];
      else
-       status_reg[7:0] <= {5'b0,                        //7:3
-			   fifo_prog_full,              //2
-			   |spi_state[1:0],             //1
-			   (rx_access | status_reg[0])};//0
+       status_reg[7:0] <= {5'b0,                 //7:4
+			   fifo_prog_full,       //3
+			   1'b0,                 //reserved
+			   (rx_access | (~tx_write & status_reg[0]))};//0
    			       
    //####################################
    //# CLKDIV 

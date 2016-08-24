@@ -108,6 +108,14 @@ module spi_slave_regs #( parameter UREGS = 13,      // # of user regs (max 48)
    assign lsbfirst = spi_config[4];          // lsb shifted in first
    assign valid    = spi_config[5];          // user regs enable
 
+   //#####################################
+   //# USER SPACE REGISTERS
+   //#####################################
+
+   always @ (negedge spi_clk)
+     if(user_write)
+       user_regs[spi_addr[4:0]] <= spi_wdata[7:0]; 
+
    //#####################################   
    //# STATUS [1]
    //#####################################
@@ -117,7 +125,7 @@ module spi_slave_regs #( parameter UREGS = 13,      // # of user regs (max 48)
        spi_status[7:0] <= 8'b0; // clears previous data ready
      else if(access_in)
        spi_status[7:0] <= 8'd1; // data ready
-        
+
    //#####################################
    //# RX DATA FOR FETCH
    //#####################################
@@ -126,15 +134,8 @@ module spi_slave_regs #( parameter UREGS = 13,      // # of user regs (max 48)
    always @ (posedge clk)
      if(access_in)
        core_regs[63:0] <= core_data[63:0];
-  
-   //#####################################
-   //# USER SPACE REGISTERS
-   //#####################################
 
-   always @ (negedge spi_clk)
-     if(user_write)
-       user_regs[spi_addr[4:0]] <= spi_wdata[7:0]; 
-
+   
    //#####################################
    //# REGISTER VECTOR (FOR FLEXIBILITY)
    //#####################################
