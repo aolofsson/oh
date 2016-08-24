@@ -57,11 +57,13 @@ fedcba98_76543210_00000008_07_0400 // 64b data payload
 
 | FIELD   | DESCRIPTION                         |
 |-------- |-------------------------------------| 
-| [0]     | Disable spi                         |
+| [0]     | Disable spi controller              |
 | [1]     | Enable output interrupt             |
 | [2]     | cpol                                |
 | [3]     | cpha                                |
-| [4]     | LSB first transfer                  |
+| [4]     | LSB first transfer mode             |
+| [5]     | SS control mode (1=manual mode)     |
+| [6]     | Controls SS pin in manual SS mode   |
 
 **SPI_STATUS:**
 
