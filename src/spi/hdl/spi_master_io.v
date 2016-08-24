@@ -24,7 +24,7 @@ module spi_master_io
    output [63:0]    rx_data, // rx data
    output 	    rx_access, // transfer done
    // IO interface
-   output 	    sclk, // spi clock
+   output reg 	    sclk, // spi clock
    output 	    mosi, // slave input
    output 	    ss, // slave select
    input 	    miso       // slave output
@@ -124,9 +124,14 @@ module spi_master_io
    //#################################
    //# DRIVE OUTPUT CLOCK
    //#################################
+   always @ (posedge clk or negedge nreset)
+     if(~nreset)
+       sclk <= 1'b0;
+     else if (period_match & (spi_state[2:0]==`SPI_DATA))
+       sclk <= 1'b1;   
+     else if (phase_match & (spi_state[2:0]==`SPI_DATA))	       
+       sclk <= 1'b0;
    
-   assign sclk = clkout & (spi_state[2:0]==`SPI_DATA);
-
    //#################################
    //# TX SHIFT REGISTER
    //#################################
