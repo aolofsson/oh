@@ -103,6 +103,7 @@ module mio #( parameter IOW     = 64,        // IO width
    //################################  
    
    mrx #(.IOW(IOW),
+	 .AW(AW),
 	 .PW(PW),
 	 .TARGET(TARGET))
    mrx (/*AUTOINST*/
