@@ -10,11 +10,11 @@ module dut(/*AUTOARG*/
    //#####################################################################
 
    //parameters
-   parameter N       =  1;   
-   parameter AW      =  32;          // address width
-   parameter IOW     =  64;          // IO data width
-   localparam PW     =  104;         // standard packet   
-   parameter DEF_CFG =  18'h1070;    // for 104 bits   
+   parameter N       =  1;        // number of slices 
+   parameter AW      =  32;       // address width
+   parameter IOW     =  64;       // IO data width
+   parameter PW      =  104;      // standard packet   
+   parameter DEF_CFG =  18'h0010; // 16 bit interface, sdr mode   
    parameter DEF_CLK =  7;   
    
    //clock, reset
