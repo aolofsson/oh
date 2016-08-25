@@ -1,12 +1,10 @@
 `include "mio_regmap.vh"
 module mio_if (/*AUTOARG*/
    // Outputs
-   access_out, packet_out, wait_out, rx_wait_out, tx_access_out,
-   tx_packet_out,
+   access_out, packet_out, rx_wait_out,
    // Inputs
-   clk, nreset, amode, emode, lsbfirst, datasize, ctrlmode, dstaddr,
-   wait_in, access_in, packet_in, rx_access_in, rx_packet_in,
-   tx_wait_in
+   clk, nreset, amode, emode, lsbfirst, ctrlmode, dstaddr, wait_in,
+   rx_access_in, rx_packet_in
    );
 
    //#####################################################################
@@ -24,7 +22,6 @@ module mio_if (/*AUTOARG*/
    input 	    amode;         // auto address mode
    input 	    emode;         // emesh mode
    input 	    lsbfirst;      // lsbfirst transfer
-   input [7:0] 	    datasize;      // datasize
    input [4:0] 	    ctrlmode;      // emesh ctrlmode
    input [AW-1:0]   dstaddr;       // destination address for amode
    
@@ -32,21 +29,12 @@ module mio_if (/*AUTOARG*/
    output 	    access_out;    // pass through
    output [PW-1:0]  packet_out;    // packet for core from rx
    input 	    wait_in;       // pass through
-
-   input 	    access_in;     // pass through
-   input [PW-1:0]   packet_in;     // packet for tx from core
-   output 	    wait_out;      // pass through
-
    
    // datapath interface (fifo)
    input 	    rx_access_in;  // pass through
    input [MPW-1:0]  rx_packet_in;  // packet from rx fifo
    output 	    rx_wait_out;   // pass through
 
-   output 	    tx_access_out; // pass through
-   output [MPW-1:0] tx_packet_out; // packet to tx fifo
-   input 	    tx_wait_in;    // pass through
-   
    //#####################################################################
    //# BODY
    //#####################################################################
@@ -70,18 +58,10 @@ module mio_if (/*AUTOARG*/
    // End of automatics
    /*AUTOINPUT*/
 
-   // pass throughs
-   assign rx_wait_out   = wait_in;
-   assign access_out    = rx_access_in;
-   assign tx_access_out = access_in;
-   assign wait_out      = tx_wait_in;
+   wire [3:0] 		datasize;
    
-   // adapter for PW-->MPW width (MPW>=PW)
-   // shift up data on msbfirst shift 
-   assign tx_packet_out[MPW-1:0] = (~lsbfirst & emode ) ? {packet_in[PW-1:0],{(MPW-PW-8){1'b0}}} :
-				   (~lsbfirst )         ? {packet_in[PW-1:0],{(MPW-PW){1'b0}}}   :
-				                          packet_in[PW-1:0];
-
+   
+ 
    //#################################################
    // TRANSACTION FOR CORE (FROM RX)
    //#################################################

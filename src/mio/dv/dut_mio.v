@@ -11,11 +11,11 @@ module dut(/*AUTOARG*/
 
    //parameters
    parameter N       =  1;   
-   parameter AW      = 32;               // address width
-   parameter NMIO    =  8;               // IO data width
-   parameter DEF_CFG =  18'h1070;        // for 104 bits   
+   parameter AW      =  32;          // address width
+   parameter IOW     =  64;          // IO data width
+   localparam PW     =  104;         // standard packet   
+   parameter DEF_CFG =  18'h1070;    // for 104 bits   
    parameter DEF_CLK =  7;   
-   localparam PW     = 2*AW + 40;        // standard packet   
    
    //clock, reset
    input            clk1;
@@ -56,7 +56,7 @@ module dut(/*AUTOARG*/
    wire			rx_wait;		// From mio of mio.v
    wire			tx_access;		// From mio of mio.v
    wire			tx_clk;			// From mio of mio.v
-   wire [NMIO-1:0]	tx_packet;		// From mio of mio.v
+   wire [IOW-1:0]	tx_packet;		// From mio of mio.v
    // End of automatics
  
    
@@ -82,8 +82,8 @@ module dut(/*AUTOARG*/
             .clk	    (clk1),
 	    .rx_clk	    (tx_clk),
 	    .rx_access	    (tx_access),
-            .rx_packet	    (tx_packet[NMIO-1:0]),
-            .tx_packet	    (tx_packet[NMIO-1:0]),
+            .rx_packet	    (tx_packet[IOW-1:0]),
+            .tx_packet	    (tx_packet[IOW-1:0]),
 	    .tx_wait        (rx_wait),
             .access_in	    (mio_access_in),
          
@@ -91,13 +91,15 @@ module dut(/*AUTOARG*/
     */
    
    mio #(.AW(AW),
+	 .IOW(IOW),
+	 .PW(PW),
 	 .DEF_CFG(DEF_CFG),
 	 .DEF_CLK(DEF_CLK))
    mio (/*AUTOINST*/
 	// Outputs
 	.tx_clk				(tx_clk),
 	.tx_access			(tx_access),
-	.tx_packet			(tx_packet[NMIO-1:0]),	 // Templated
+	.tx_packet			(tx_packet[IOW-1:0]),	 // Templated
 	.rx_wait			(rx_wait),
 	.wait_out			(wait_out),
 	.access_out			(access_out),
@@ -111,7 +113,7 @@ module dut(/*AUTOARG*/
 	.tx_wait			(rx_wait),		 // Templated
 	.rx_clk				(tx_clk),		 // Templated
 	.rx_access			(tx_access),		 // Templated
-	.rx_packet			(tx_packet[NMIO-1:0]),	 // Templated
+	.rx_packet			(tx_packet[IOW-1:0]),	 // Templated
 	.access_in			(mio_access_in),	 // Templated
 	.packet_in			(packet_in[PW-1:0]),
 	.wait_in			(wait_in),

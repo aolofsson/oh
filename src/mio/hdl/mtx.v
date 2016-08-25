@@ -1,161 +1,93 @@
-`include "mio_constants.vh"
-module mtx (/*AUTOARG*/
-   // Outputs
-   tx_empty, tx_full, tx_prog_full, wait_out, tx_access, tx_packet,
-   // Inputs
-   clk, io_clk, nreset, tx_en, datasize, ddr_mode, lsbfirst,
-   access_in, packet_in, tx_wait
-   );
+//#############################################################################
+//# Purpose: MIO Transmit Datapath                                            #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//#############################################################################
+module mtx # ( parameter PW         = 104,               // fifo width
+	       parameter AW         = 32,               // fifo width
+	       parameter IOW        = 8,                 // I./O data width
+	       parameter FIFO_DEPTH = 16,                // fifo depth  
+	       parameter TARGET     = "GENERIC"         // fifo target
+	      )
+   (// reset, clk, cfg
+    input 	     clk, // main core clock   
+    input 	     io_clk, // clock for tx logic
+    input 	     nreset, // async active low reset
+    input 	     tx_en, // transmit enable   
+    input [7:0]      datasize, // size of data transmitted/received
+    input 	     ddr_mode, // configure mio in ddr mode
+    input 	     lsbfirst, // send bits lsb first
+    input 	     emode, //emesh mode
+    input [1:0]      iowidth,//input width
+    // status
+    output 	     tx_empty, // tx fifo is empty
+    output 	     tx_full, // tx fifo is full (should never happen!) 
+    output 	     tx_prog_full,// tx is getting full (stop sending!)    
+    // data to transmit
+    input 	     access_in, // fifo data valid
+    input [PW-1:0]   packet_in, // fifo packet  
+    output 	     wait_out, // wait pushback for fifo    
+    // IO interface (90 deg clock supplied outside this block)
+    output 	     tx_access, // access signal for IO
+    output [IOW-1:0] tx_packet, // packet for IO
+    input 	     tx_wait     // pushback from IO
+    );
 
-   //#####################################################################
-   //# INTERFACE
-   //#####################################################################
+   //###############
+   //# LOCAL WIRES
+   //###############
 
-   //parameters
-   parameter PW         = 104;               // fifo width
-   parameter NMIO       = 8;                 // IO data width
-   parameter FIFO_DEPTH = 32;                // fifo depth  
-   parameter TARGET     = "GENERIC";         // GENERIC,XILINX,ALTERA,ASIC
-   parameter CW         = $clog2(2*PW/NMIO); // transfer count width
-
-   //reset, clk, cfg
-   input             clk;         // main core clock   
-   input 	     io_clk;      // clock for tx logic
-   input 	     nreset;      // async active low reset
-   input 	     tx_en;       // transmit enable   
-   input [7:0] 	     datasize;    // size of data transmitted/received
-   input 	     ddr_mode;    // configure mio in ddr mode
-   input 	     lsbfirst;    // send bits lsb first
-   
-   //status
-   output 	     tx_empty;    // tx fifo is empty
-   output 	     tx_full;	   // tx fifo is full (should never happen!) 
-   output 	     tx_prog_full;// tx is getting full (stop sending!)
-   
-   // data to transmit
-   input 	      access_in;   // fifo data valid
-   input [PW-1:0]     packet_in;   // fifo packet  
-   output 	      wait_out;    // wait pushback for fifo
-   
-   //IO interface (90 deg clock supplied outside this block)
-   output 	      tx_access;   // access signal for IO
-   output [NMIO-1:0]  tx_packet;   // packet for IO
-   input 	      tx_wait;     // pushback from IO
-   
-   //#####################################################################
-   //# BODY
-   //#####################################################################
-  
    // End of automatics
    /*AUTOINPUT*/
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			fifo_access;		// From fifo of oh_fifo_cdc.v
-   wire [PW-1:0]	fifo_packet;		// From fifo of oh_fifo_cdc.v
-   wire			fifo_wait;		// From par2ser of oh_par2ser.v
-   wire			io_access;		// From par2ser of oh_par2ser.v
-   wire [2*NMIO-1:0]	io_packet;		// From par2ser of oh_par2ser.v
+   wire [63:0]		io_packet;		// From mtx_fifo of mtx_fifo.v
+   wire [7:0]		io_valid;		// From mtx_fifo of mtx_fifo.v
    wire			io_wait;		// From mtx_io of mtx_io.v
    // End of automatics
 
    //########################################
-   //# SYNCHRONIZATION FIFO
+   //# Synchronization FIFO
    //########################################
 
-  /*oh_fifo_cdc  AUTO_TEMPLATE (
-   // outputs
-   .prog_full	(tx_prog_full),
-   .full	(tx_full),
-   .empty	(tx_empty),
-   .wait_out    (wait_out),
-   .access_out  (fifo_access),
-   .packet_out  (fifo_packet[PW-1:0]),
-   // Inputs
-   .nreset	(nreset),
-   .clk_in	(clk),
-   .access_in	(access_in),
-   .packet_in	(packet_in[PW-1:0]),
-   .clk_out	(io_clk),
-   .wait_in	(fifo_wait),
-    );
-   */
-   
-   oh_fifo_cdc  #(.TARGET(TARGET),
-		  .DW(PW),
-		  .DEPTH(FIFO_DEPTH))
-   fifo  (.access_in			(tx_en & access_in),
-	  /*AUTOINST*/
-	  // Outputs
-	  .wait_out			(wait_out),		 // Templated
-	  .access_out			(fifo_access),		 // Templated
-	  .packet_out			(fifo_packet[PW-1:0]),	 // Templated
-	  .prog_full			(tx_prog_full),		 // Templated
-	  .full				(tx_full),		 // Templated
-	  .empty			(tx_empty),		 // Templated
-	  // Inputs
-	  .nreset			(nreset),		 // Templated
-	  .clk_in			(clk),			 // Templated
-	  .packet_in			(packet_in[PW-1:0]),	 // Templated
-	  .clk_out			(io_clk),		 // Templated
-	  .wait_in			(fifo_wait));		 // Templated
+   mtx_fifo #(.PW(PW),
+	      .AW(AW),
+	      .FIFO_DEPTH(FIFO_DEPTH),
+	      .TARGET(TARGET))   
+   mtx_fifo (/*AUTOINST*/
+	     // Outputs
+	     .wait_out			(wait_out),
+	     .io_packet			(io_packet[63:0]),
+	     .io_valid			(io_valid[7:0]),
+	     // Inputs
+	     .clk			(clk),
+	     .io_clk			(io_clk),
+	     .nreset			(nreset),
+	     .tx_en			(tx_en),
+	     .emode			(emode),
+	     .access_in			(access_in),
+	     .packet_in			(packet_in[PW-1:0]),
+	     .io_wait			(io_wait));
    
    //########################################
-   //# PROTOCOL
-   //########################################
-
-   /*oh_par2ser  AUTO_TEMPLATE (// outputs
-	    .dout			(io_packet[2*NMIO-1:0]),
-	    .access_out			(io_access),
-	    .wait_out			(fifo_wait),
-	    // inputs
-	    .clk			(io_clk),
-	    .nreset			(nreset),
-	    .din			(fifo_packet[PW-1:0]),
-	    .load			(fifo_access & ~io_wait),
-	    .shift			(1'b1),
-	    .datasize			(datasize),
-	    .lsbfirst			(lsbfirst),
-	    .fill			(1'b0),
-	    .wait_in			(io_wait),
-	    );
-    */
- 
-   oh_par2ser #(.PW(PW),
-		.SW(2*NMIO))
-   par2ser (/*AUTOINST*/
-	    // Outputs
-	    .dout			(io_packet[2*NMIO-1:0]), // Templated
-	    .access_out			(io_access),		 // Templated
-	    .wait_out			(fifo_wait),		 // Templated
-	    // Inputs
-	    .clk			(io_clk),		 // Templated
-	    .nreset			(nreset),		 // Templated
-	    .din			(fifo_packet[PW-1:0]),	 // Templated
-	    .load			(fifo_access & ~io_wait), // Templated
-	    .shift			(1'b1),			 // Templated
-	    .datasize			(datasize),		 // Templated
-	    .lsbfirst			(lsbfirst),		 // Templated
-	    .fill			(1'b0),			 // Templated
-	    .wait_in			(io_wait));		 // Templated
-  
-   //########################################
-   //# FAST IO (DDR)
+   //# IO Logic (DDR, shift register)
    //########################################
  
-   mtx_io #(.NMIO(NMIO))
+   mtx_io #(.IOW(IOW))
    mtx_io (/*AUTOINST*/
 	   // Outputs
-	   .tx_packet			(tx_packet[NMIO-1:0]),
+	   .tx_packet			(tx_packet[IOW-1:0]),
 	   .tx_access			(tx_access),
 	   .io_wait			(io_wait),
 	   // Inputs
 	   .nreset			(nreset),
 	   .io_clk			(io_clk),
 	   .ddr_mode			(ddr_mode),
-	   .lsbfirst			(lsbfirst),
+	   .iowidth			(iowidth[1:0]),
 	   .tx_wait			(tx_wait),
-	   .io_access			(io_access),
-	   .io_packet			(io_packet[2*NMIO-1:0]));
+	   .io_valid			(io_valid[7:0]),
+	   .io_packet			(io_packet[IOW-1:0]));
    
 endmodule // mtx
 // Local Variables:
