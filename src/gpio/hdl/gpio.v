@@ -35,12 +35,12 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
    reg [N-1:0] 	   gpio_itype;
    reg [N-1:0] 	   gpio_ipol;
    reg [N-1:0] 	   gpio_ilat;   
-   reg [N-1:0] 	   gpio_in_old;
    reg [N-1:0]	   read_data;
+   wire [N-1:0]    gpio_in_sync;
       
    //wires
+   reg [N-1:0] 	   data_old; //shadow
    wire [N-1:0]    ilat_clr;   
-   wire [N-1:0]    gpio_in_sync;
    wire [N-1:0]    reg_wdata;
    wire [N-1:0]    out_dmux;   
    wire [N-1:0]    rising_edge;   
@@ -111,7 +111,9 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
    //################################
    //# GPIO_DIR 
    //################################ 
-
+   //0=input
+   //1=output
+   
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        gpio_dir[N-1:0] <= 'b0;   
@@ -128,7 +130,7 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
 			     .din    (gpio_in[N-1:0]));
 
    always @ (posedge clk)
-       gpio_in_old[N-1:0] <= gpio_in_sync[N-1:0];
+       data_old[N-1:0] <= gpio_in_sync[N-1:0];
    
    //################################
    //# GPIO_OUT
@@ -176,9 +178,9 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
    //# INTERRUPT LOGIC (DEFAULT EDGE)
    //################################ 
    
-   assign rising_edge[N-1:0]  =  gpio_in_sync[N-1:0] & ~gpio_in_old[N-1:0];
+   assign rising_edge[N-1:0]  =  gpio_in_sync[N-1:0] & ~data_old[N-1:0];
 
-   assign falling_edge[N-1:0] = ~gpio_in_sync[N-1:0] & gpio_in_old[N-1:0];
+   assign falling_edge[N-1:0] = ~gpio_in_sync[N-1:0] & data_old[N-1:0];
 
    assign irq_event[N-1:0] = (rising_edge[N-1:0]   & ~gpio_itype[N-1:0] & gpio_ipol[N-1:0]) |
 			     (falling_edge[N-1:0]  & ~gpio_itype[N-1:0] & ~gpio_ipol[N-1:0]) |
