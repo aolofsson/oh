@@ -81,8 +81,8 @@ module mtx_fifo # ( parameter PW         = 136,           // packet width
        emesh_cycle[1:0] <= 2'b00;
    
    // valid bits depending on type of transaction
-   assign valid[7:0] = (emesh_cycle[0] && (AW==32))        ? 8'h1F : //40 bits
-		       (emesh_cycle[1] && (AW==64))        ? 8'h01 : //8 bits
+   assign valid[7:0] = (emesh_cycle[0] && (AW==32))       ? 8'h3F : //48 bits
+		       (emesh_cycle[1] && (AW==64))       ? 8'h02 : //16 bits
          	       (~emode & datamode_in[1:0]==2'b00) ? 8'h01 : //double
         	       (~emode & datamode_in[1:0]==2'b01) ? 8'h03 : //word
          	       (~emode & datamode_in[1:0]==2'b10) ? 8'h0F : //short	 
