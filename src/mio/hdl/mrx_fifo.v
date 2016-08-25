@@ -99,9 +99,10 @@ module mrx_fifo # ( parameter PW         = 104,        // fifo width
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        emode_valid[2:0] <= 3'b001;
+     else if(~emode)
+       emode_valid[2:0] <= 3'b001;
      else if(emode & fifo_access) 
        emode_valid[2:0] <= emode_next[2:0];   
-
 
    //Packet buffer
    assign mux_data[191:0] = {(3){fifo_data[63:0]}};

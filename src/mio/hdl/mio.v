@@ -7,7 +7,7 @@
 module mio #( parameter IOW     = 64,        // IO width
 	      parameter AW      = 32,        // address width
 	      parameter PW      = 104,       // emesh packet width
-	      parameter DEF_CFG  = 18'h1070, // default config   
+	      parameter DEF_CFG  = 18'h0010, // default config   
 	      parameter DEF_CLK  = 7,        // clock divider   
 	      parameter TARGET  = "GENERIC"  // GENERIC,XILINX,ALTERA,GENERIC,ASIC
 	      )
