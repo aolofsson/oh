@@ -31,7 +31,7 @@ module mio_regs #(parameter N        = 8,        // number of I/O pins
     output 	    emode, // epiphany packet mode
     output 	    amode, // mio packet mode
     output 	    dmode, // mio packet mode
-    output [1:0]    datasize, // mio datasize
+    output [1:0]    datamode, // mio datasize
     output [1:0]    iowidth, // mio io width
     output 	    lsbfirst, // lsb shift first
     output 	    framepol, // framepolarity (0=actrive high)   
@@ -133,7 +133,7 @@ module mio_regs #(parameter N        = 8,        // number of I/O pins
    assign dmode         = config_reg[3:2]==2'b01; // data mode (streaming)
    assign amode         = config_reg[3:2]==2'b10; // auto address mode
    assign iowidth[1:0]  = config_reg[5:4];        // iowidth(or 8,16,32,64 pins)
-   assign datasize[1:0] = config_reg[7:6];        // rx datasize(8,16,32,64)
+   assign datamode[1:0] = config_reg[7:6];        // rx datamode(8,16,32,64)
    assign ddr_mode      = config_reg[12];         // dual data rate mode   
    assign lsbfirst      = config_reg[13];         // lsb-first transmit
    assign framepol      = config_reg[14];         // frame polarity
