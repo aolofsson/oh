@@ -24,11 +24,14 @@ module mtx_io #(parameter IOW    = 64,          // IO width
    );
 
    //local wires
-   reg [63:0] 	   shiftreg;
-   reg [2:0] 	   tx_state;
-   reg [IOW-1:0]   tx_packet_sdr;
+   reg [63:0] 	    shiftreg;
+   reg [2:0] 	    tx_state;
+   reg [IOW-1:0]    tx_packet_sdr;
+   reg [7:0] 	    io_valid_reg;
    wire [IOW/2-1:0] tx_packet_ddr;
-   reg [7:0] 	   io_valid_reg;
+   wire 	    tx_wait_sync;
+   wire 	    transfer_active;
+   wire [7:0] 	    io_valid_next;
    
    //########################################
    //# STATE MACHINE
@@ -38,19 +41,22 @@ module mtx_io #(parameter IOW    = 64,          // IO width
    assign dmode16  = (iowidth[1:0]==2'b01);
    assign dmode32  = (iowidth[1:0]==2'b10);
    assign dmode64  = (iowidth[1:0]==2'b11);
+
+   assign io_valid_next[7:0] = dmode8  ? {1'b0,io_valid_reg[7:1]} :
+			       dmode16 ? {2'b0,io_valid_reg[7:2]} :
+			       dmode32 ? {4'b0,io_valid_reg[7:4]} :
+			                  8'b0;
+   
+   assign reload = ~transfer_active | dmode64 | (io_valid_next[7:0]==8'b0);
   
    always @ (posedge io_clk or negedge io_nreset)
      if(!io_nreset)
        io_valid_reg[7:0] <= 'b0;
-     else if(transfer_active & dmode8 )
-       io_valid_reg[7:0] <= {1'b0,io_valid_reg[7:1]};
-     else if(transfer_active & dmode16 )
-       io_valid_reg[7:0] <= {2'b0,io_valid_reg[7:2]};
-     else if(transfer_active & dmode32 )
-       io_valid_reg[7:0] <= {4'b0,io_valid_reg[7:4]};
-     else if(transfer_active & dmode32 )
-       io_valid_reg[7:0] <= 'b0;
-
+     else if(reload)
+       io_valid_reg[7:0] <= io_valid[7:0];
+     else
+       io_valid_reg[7:0] <= io_valid_next[7:0];
+       
    assign transfer_active = |io_valid_reg[7:0];
    
    //pipeline access signal
@@ -59,20 +65,22 @@ module mtx_io #(parameter IOW    = 64,          // IO width
        tx_access <= 1'b0;   
      else
        tx_access <= transfer_active;
+
+   assign io_wait = tx_wait_sync | ~reload;
    
    //########################################
    //# SHIFT REGISTER  (SHIFT DOWN)
    //########################################
 
    always @ (posedge io_clk)
-     if(transfer_active & dmode8)//8 bit
-       shiftreg[63:0] <= {8'b0,shiftreg[IOW-8-1:0]};   
-     else if(transfer_active & dmode16)//16 bit
-       shiftreg[63:0] <= {16'b0,shiftreg[IOW-16-1:0]};
-     else if(transfer_active & dmode32)//32 bit
-       shiftreg[63:0] <= {32'b0,shiftreg[IOW-32-1:0]};   
-     else
-       shiftreg[63:0] = io_packet[IOW-1:0];
+     if(reload)
+       shiftreg[63:0] <= io_packet[IOW-1:0];
+     else if(dmode8)//8 bit
+       shiftreg[63:0] <= {8'b0,shiftreg[IOW-1:8]};   
+     else if(dmode16)//16 bit
+       shiftreg[63:0] <= {16'b0,shiftreg[IOW-1:16]};
+     else if(dmode32)//32 bit
+       shiftreg[63:0] <= {32'b0,shiftreg[IOW-1:32]};   
    
    //########################################
    //# DDR OUTPUT
@@ -106,7 +114,7 @@ module mtx_io #(parameter IOW    = 64,          // IO width
    oh_dsync sync_wait(.nreset	(io_nreset),
 		      .clk	(io_clk),
 		      .din      (tx_wait),
-		      .dout     (io_wait));
+		      .dout     (tx_wait_sync));
    
 endmodule // mtx_io
 // Local Variables:
