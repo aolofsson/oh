@@ -24,22 +24,12 @@ module oh_fifo_cdc # (parameter DW        = 104,      //FIFO width
    output 	   empty // fifo is empty
     );
    
+   // local wires
    wire 	   wr_en;
    wire 	   rd_en;
-   
-   // FIFO control logic
-   assign wr_en    = access_in;
-   assign rd_en    = ~empty & ~wait_in;
-   assign wait_out = prog_full;        //wait_out should stall access_in signal
-
-   //Holds access high while waiting
-   always @ (posedge clk_out or negedge nreset)
-     if(!nreset)
-       access_out <= 1'b0;   
-     else if(~wait_in)
-       access_out <= rd_en;
-
-   //Read response fifo (from master)
+   wire 	   io_nreset;
+      
+   // parametric async fifo
    oh_fifo_async  #(.TARGET(TARGET),
 		    .DW(DW),
 		    .DEPTH(DEPTH))
@@ -54,6 +44,23 @@ module oh_fifo_cdc # (parameter DW        = 104,      //FIFO width
 	 .wr_en	    (wr_en),
 	 .din	    (packet_in[DW-1:0]),
 	 .rd_en	    (rd_en));
+
+   // FIFO control logic
+   assign wr_en    = access_in;
+   assign rd_en    = ~empty & ~wait_in;
+   assign wait_out = prog_full;         //wait_out should stall access_in signal
+
+   // pipeline access_out signal
+   always @ (posedge clk_out or negedge io_nreset)
+     if(!io_nreset)
+       access_out <= 1'b0;   
+     else if(~wait_in)
+       access_out <= rd_en;
+   
+   // be safe, synchronize reset with clk_out
+   oh_rsync sync_reset(.nrst_out  (io_nreset),
+		       .clk	  (clk_out),
+		       .nrst_in	  (nreset));
    
 endmodule // oh_fifo_cdc
 
