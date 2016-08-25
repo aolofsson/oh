@@ -32,15 +32,20 @@ module mtx_io #(parameter IOW    = 64,          // IO width
    wire 	    tx_wait_sync;
    wire 	    transfer_active;
    wire [7:0] 	    io_valid_next;
+   wire [IOW/2-1:0] ddr_data_even;
+   wire [IOW/2-1:0] ddr_data_odd;
    
    //########################################
    //# STATE MACHINE
    //########################################   
 
-   assign dmode8   = (iowidth[1:0]==2'b00);
-   assign dmode16  = (iowidth[1:0]==2'b01);
-   assign dmode32  = (iowidth[1:0]==2'b10);
-   assign dmode64  = (iowidth[1:0]==2'b11);
+   assign dmode8   = (iowidth[1:0]==2'b00) & ~ddr_mode;   
+   assign dmode16  = ((iowidth[1:0]==2'b01) & ~ddr_mode) |
+                     (iowidth[1:0]==2'b00) & ddr_mode;   
+   assign dmode32  = ((iowidth[1:0]==2'b10) & ~ddr_mode) |
+                     (iowidth[1:0]==2'b01) & ddr_mode;   
+   assign dmode64  = ((iowidth[1:0]==2'b11) & ~ddr_mode) |
+                     (iowidth[1:0]==2'b10) & ddr_mode;   
 
    assign io_valid_next[7:0] = dmode8  ? {1'b0,io_valid_reg[7:1]} :
 			       dmode16 ? {2'b0,io_valid_reg[7:2]} :
@@ -91,15 +96,21 @@ module mtx_io #(parameter IOW    = 64,          // IO width
      tx_packet_sdr[IOW-1:0] <= shiftreg[IOW-1:0];
       
    // ddr circuit (one stage pipeline delay!)
+   assign ddr_data_even[IOW/2-1:0] = shiftreg[IOW/2-1:0];
+
+   assign ddr_data_odd[IOW/2-1:0] = (iowidth[1:0]==2'b00) ? shiftreg[15:8]  :
+				    (iowidth[1:0]==2'b01) ? shiftreg[31:16] :
+				                            shiftreg[63:32];
+   
    oh_oddr#(.DW(IOW/2))
    data_oddr (.out	(tx_packet_ddr[IOW/2-1:0]),
               .clk	(io_clk),
-	      .din1	(shiftreg[IOW/2-1:0]),
-	      .din2	(shiftreg[IOW-1:IOW/2]));
+	      .din1	(ddr_data_even[IOW/2-1:0]),
+	      .din2	(ddr_data_odd[IOW/2-1:0]));
 
    //select between ddr/sdr
    assign tx_packet[IOW-1:0] = ddr_mode ? {{(IOW/2){1'b0}},tx_packet_ddr[IOW/2-1:0]}:
-		                           tx_packet_sdr[IOW-1:0];
+		                                           tx_packet_sdr[IOW-1:0];
    
    //########################################
    //# Synchronizers

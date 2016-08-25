@@ -31,18 +31,24 @@ module mrx_io #(parameter IOW    = 64,          // IO width
    wire [7:0] 	     data_select;
    wire [7:0] 	     valid_input;
    wire [7:0] 	     valid_next;   
+   wire [IOW/2-1:0]  ddr_even;
+   wire [IOW/2-1:0]  ddr_odd;   
    reg [63:0] 	     shiftreg;
-   reg 		     io_frame;
+   wire 	     io_frame;
    reg [IOW-1:0]     sdr_data;
-
+   reg [1:0] 	     rx_access_reg;
+   
    //########################################
    //# STATE MACHINE
    //########################################
 
-   assign dmode8   = (iowidth[1:0]==2'b00);
-   assign dmode16  = (iowidth[1:0]==2'b01);
-   assign dmode32  = (iowidth[1:0]==2'b10);
-   assign dmode64  = (iowidth[1:0]==2'b11);
+   assign dmode8   = (iowidth[1:0]==2'b00) & ~ddr_mode;   
+   assign dmode16  = ((iowidth[1:0]==2'b01) & ~ddr_mode) |
+                     (iowidth[1:0]==2'b00) & ddr_mode;   
+   assign dmode32  = ((iowidth[1:0]==2'b10) & ~ddr_mode) |
+                     (iowidth[1:0]==2'b01) & ddr_mode;   
+   assign dmode64  = ((iowidth[1:0]==2'b11) & ~ddr_mode) |
+                     (iowidth[1:0]==2'b10) & ddr_mode;   
 
    assign valid_input[7:0] = dmode8  ? 8'b00000001 :
 			     dmode16 ? 8'b00000011 :
@@ -78,15 +84,19 @@ module mrx_io #(parameter IOW    = 64,          // IO width
    //########################################
    //# DATA CAPTURE
    //########################################
-
+      
    // DDR
    oh_iddr #(.DW(IOW/2))
-   data_iddr(.q1			(ddr_data[IOW/2-1:0]),
-	     .q2			(ddr_data[IOW-1:IOW/2]),
+   data_iddr(.q1			(ddr_even[IOW/2-1:0]),
+	     .q2			(ddr_odd[IOW/2-1:0]),
 	     .clk			(rx_clk),
 	     .ce			(rx_access),
 	     .din			(rx_packet[IOW/2-1:0]));
- 
+
+   assign ddr_data[IOW-1:0] = (iowidth[1:0]==2'b00) ? {ddr_odd[7:0],ddr_even[7:0]}   :
+			      (iowidth[1:0]==2'b01) ? {ddr_odd[15:0],ddr_even[15:0]} :
+			                              {ddr_odd[31:0],ddr_even[31:0]};
+    
    // SDR
    always @ (posedge rx_clk)
      if(rx_access)
@@ -104,12 +114,15 @@ module mrx_io #(parameter IOW    = 64,          // IO width
 			                    io_data[IOW-1:0];
    
    // pipeline access signal
-     always @ (posedge rx_clk or negedge io_nreset)
-       if(!io_nreset)
-       io_frame <= 1'b0;
+   always @ (posedge rx_clk or negedge io_nreset)
+     if(!io_nreset)
+       rx_access_reg[1:0] <= 1'b0;
      else
-       io_frame <= rx_access;
- 
+       rx_access_reg[1:0] <= {rx_access_reg[0],rx_access};
+
+   assign io_frame = ddr_mode ? rx_access_reg[1] :
+                                rx_access_reg[0];
+    
    //########################################
    //# PACKETIZER
    //########################################
