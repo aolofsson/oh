@@ -10,17 +10,17 @@ module mrx_io #(parameter IOW    = 64,          // IO width
 		)
    
    ( //reset, clk, cfg
-     input 	     nreset, // async active low reset
-     input 	     ddr_mode, // select between sdr/ddr data
-     input [1:0]     iowidth, // dynamically configured io bus width
+     input 	      nreset, // async active low reset
+     input 	      ddr_mode, // select between sdr/ddr data
+     input [1:0]      iowidth, // dynamically configured io bus width
      //IO interface
-     input 	     rx_clk, // clock for IO
-     input [IOW-1:0] rx_packet, // data for IO
-     input 	     rx_access, // access signal for IO
+     input 	      rx_clk, // clock for IO
+     input [IOW-1:0]  rx_packet, // data for IO
+     input 	      rx_access, // access signal for IO
      //FIFO interface (core side)
-     output 	     io_access,// fifo write
-     output [7:0]    io_valid, // fifo byte valid
-     output [63:0]   io_packet // fifo packet
+     output 	      io_access,// fifo write
+     output reg [7:0] io_valid, // fifo byte valid
+     output [63:0]    io_packet // fifo packet
      );
    
    // local wires
@@ -29,11 +29,11 @@ module mrx_io #(parameter IOW    = 64,          // IO width
    wire [63:0] 	     io_data;
    wire [63:0] 	     mux_data;
    wire [7:0] 	     data_select;
-   
+   wire [7:0] 	     valid_input;
+   wire [7:0] 	     valid_next;   
    reg [63:0] 	     shiftreg;
    reg 		     io_frame;
    reg [IOW-1:0]     sdr_data;
-   reg [7:0] 	     io_valid_reg;
 
    //########################################
    //# STATE MACHINE
@@ -44,24 +44,36 @@ module mrx_io #(parameter IOW    = 64,          // IO width
    assign dmode32  = (iowidth[1:0]==2'b10);
    assign dmode64  = (iowidth[1:0]==2'b11);
 
+   assign valid_input[7:0] = dmode8  ? 8'b00000001 :
+			     dmode16 ? 8'b00000011 :
+			     dmode32 ? 8'b00001111 :
+                                       8'b11111111;
+   
+   assign valid_next[7:0] = dmode8  ? {io_valid[6:0],1'b1}     :
+			    dmode16 ? {io_valid[5:0],2'b11}    :
+                            dmode32 ? {io_valid[3:0],4'b1111} :
+			               8'b11111111;
+ 
    //Keep track of valid bytes in shift register
    always @ (posedge rx_clk or negedge io_nreset)
      if(!io_nreset)
-       io_valid_reg[7:0] <= 8'b0;
-     else if(io_frame & dmode8)
-       io_valid_reg[7:0] <= {io_valid_reg[6:0],1'b1};
-     else if(io_frame & dmode16)
-       io_valid_reg[7:0] <= {io_valid_reg[5:0],2'b11};
-     else if(io_frame & dmode32)
-       io_valid_reg[7:0] <= {io_valid_reg[3:0],4'b1111};
-     else if(io_frame & dmode64)
-       io_valid_reg[7:0] <= 8'b11111111;
+       io_valid[7:0] <= 8'b0;
+     else if(reload)
+       io_valid[7:0] <= valid_input[7:0];   
+     else if(io_frame)
+       io_valid[7:0] <= valid_next[7:0];
      else
-       io_valid_reg[7:0] <= 8'b0;
+       io_valid[7:0] <= 8'b0;
+   
+   assign reload = (io_frame &  transfer_done) |  // continuing stream
+		   (io_frame & ~transfer_active); // new frame
+
+   assign transfer_active = |io_valid[7:0];
+   assign transfer_done   = &io_valid[7:0];
 
    //Access signal for FIFO
-   assign io_access = (&io_valid_reg[7:0])               | // full vector
-		      (~io_frame | (|io_valid_reg[7:0]));  // partial vector 
+   assign io_access = transfer_done                 | // full vector
+		      (~io_frame & transfer_active);  // partial vector 
           
    //########################################
    //# DATA CAPTURE
@@ -103,12 +115,15 @@ module mrx_io #(parameter IOW    = 64,          // IO width
    //########################################
 
    //detect selection based on valid pattern edge
-   assign data_select[7:0] = io_valid_reg[7:0] ^ {io_valid_reg[7:1],1'b1};
-
+   assign data_select[7:0] = reload ? valid_input[7:0] :
+			              valid_next[7:0] & ~io_valid[7:0];
+   
    integer 	      i;   
    always @ (posedge rx_clk)
      for (i=0;i<8;i=i+1)
        shiftreg[i*8+:8] <= data_select[i] ? mux_data[i*8+:8] : shiftreg[i*8+:8];
+   
+   assign io_packet[63:0] = shiftreg[63:0];
    
    //########################################
    //# SYNCHRONIZERS
