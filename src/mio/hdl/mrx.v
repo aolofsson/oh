@@ -58,6 +58,7 @@ module mrx # ( parameter PW         = 104,               // fifo width
 	     .io_access			(io_access),
 	     .io_valid			(io_valid[7:0]),
 	     .io_packet			(io_packet[63:0]),
+	     .rx_clk			(rx_clk),
 	     .wait_in			(wait_in));
    
    

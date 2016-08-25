@@ -17,6 +17,7 @@ module mrx_fifo # ( parameter PW         = 104,        // fifo width
     input [7:0]     io_valid, // fifo byte valid
     input [63:0]    io_packet, // fifo packet
     output 	    rx_wait,
+    input 	    rx_clk,
     // transaction for mesh
     output 	    access_out, // fifo data valid
     output [PW-1:0] packet_out, // fifo packet
