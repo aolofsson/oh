@@ -90,9 +90,9 @@ module dv_ctrl(/*AUTOARG*/
    //START TEST
    always @ (posedge clk1 or negedge nreset)
      if(!nreset)
-       start = 1'b0;
+       start <= 1'b0;
      else if(dut_active)       
-       start = 1'b1;
+       start <= 1'b1;
 
    //STOP SIMULATION
    always @ (posedge clk1)
