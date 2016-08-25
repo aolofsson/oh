@@ -48,6 +48,7 @@ Mini-IO: A lightweight IO interface
 |         | For emode:
 |         | 0=1 (byte)                          |
 |         | 0=2 (16 bit)                        |
+
 |         | 0=4 (32 bit)                        |
 |         | 0=8 (64 bit)                        |
 | [12]    | DDR mode                            |

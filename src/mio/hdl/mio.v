@@ -51,7 +51,7 @@ module mio #( parameter IOW     = 64,        // IO width
    wire [15:0]		clkphase0;		// From mio_regs of mio_regs.v
    wire [15:0]		clkphase1;		// From mio_regs of mio_regs.v
    wire [4:0]		ctrlmode;		// From mio_regs of mio_regs.v
-   wire [1:0]		datasize;		// From mio_regs of mio_regs.v
+   wire [1:0]		datamode;		// From mio_regs of mio_regs.v
    wire			ddr_mode;		// From mio_regs of mio_regs.v
    wire			dmode;			// From mio_regs of mio_regs.v
    wire [AW-1:0]	dstaddr;		// From mio_regs of mio_regs.v
@@ -90,7 +90,6 @@ module mio #( parameter IOW     = 64,        // IO width
 	.clk				(clk),
 	.nreset				(nreset),
 	.tx_en				(tx_en),
-	.datasize			(datasize[7:0]),
 	.ddr_mode			(ddr_mode),
 	.lsbfirst			(lsbfirst),
 	.emode				(emode),
@@ -119,6 +118,11 @@ module mio #( parameter IOW     = 64,        // IO width
 	.nreset				(nreset),
 	.ddr_mode			(ddr_mode),
 	.iowidth			(iowidth[1:0]),
+	.amode				(amode),
+	.ctrlmode			(ctrlmode[4:0]),
+	.datamode			(datamode[1:0]),
+	.dstaddr			(dstaddr[AW-1:0]),
+	.emode				(emode),
 	.rx_clk				(rx_clk),
 	.rx_access			(rx_access),
 	.rx_packet			(rx_packet[IOW-1:0]),
@@ -148,7 +152,7 @@ module mio #( parameter IOW     = 64,        // IO width
 	     .emode			(emode),
 	     .amode			(amode),
 	     .dmode			(dmode),
-	     .datasize			(datasize[1:0]),
+	     .datamode			(datamode[1:0]),
 	     .iowidth			(iowidth[1:0]),
 	     .lsbfirst			(lsbfirst),
 	     .framepol			(framepol),

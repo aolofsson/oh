@@ -19,12 +19,12 @@ module mio_if (/*AUTOARG*/
    // reset, clk, config
    input            clk;           // main core clock   
    input 	    nreset;        // async active low reset
-   input 	    amode;         // auto address mode
    input 	    emode;         // emesh mode
-   input 	    lsbfirst;      // lsbfirst transfer
-   input [4:0] 	    ctrlmode;      // emesh ctrlmode
-   input [AW-1:0]   dstaddr;       // destination address for amode
-   
+   input [4:0] 	    ctrlmode;      // emode ctrlmode
+   input 	    amode;         // auto address mode
+   input [AW-1:0]   dstaddr;       // amode destination address
+   input [1:0] 	    datamode;      // amode datamode
+   //    
    // core interface
    output 	    access_out;    // pass through
    output [PW-1:0]  packet_out;    // packet for core from rx

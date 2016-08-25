@@ -15,6 +15,11 @@ module mrx # ( parameter PW         = 104,               // fifo width
     input 	    nreset, // async active low reset
     input 	    ddr_mode,
     input [1:0]     iowidth,
+    input 	    amode, // To mrx_fifo of mrx_fifo.v
+    input [4:0]     ctrlmode, // To mrx_fifo of mrx_fifo.v
+    input [1:0]     datamode, // To mrx_fifo of mrx_fifo.v
+    input [AW-1:0]  dstaddr, // To mrx_fifo of mrx_fifo.v
+    input 	    emode, // To mrx_fifo of mrx_fifo.v
     //status
     output 	    rx_empty, // rx fifo is empty
     output 	    rx_full, // rx fifo is full (should never happen!) 
@@ -55,6 +60,11 @@ module mrx # ( parameter PW         = 104,               // fifo width
 	     // Inputs
 	     .clk			(clk),
 	     .nreset			(nreset),
+	     .emode			(emode),
+	     .ctrlmode			(ctrlmode[4:0]),
+	     .amode			(amode),
+	     .dstaddr			(dstaddr[AW-1:0]),
+	     .datamode			(datamode[1:0]),
 	     .io_access			(io_access),
 	     .io_valid			(io_valid[7:0]),
 	     .io_packet			(io_packet[63:0]),

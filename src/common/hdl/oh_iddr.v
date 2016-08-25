@@ -1,5 +1,5 @@
 //#############################################################################
-//# Function: Dual data rate input buffer                                     #
+//# Function: Dual data rate input buffer (2 cycle delay)                     #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see LICENSE file in OH! repository)                        # 

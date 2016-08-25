@@ -15,7 +15,6 @@ module mtx # ( parameter PW         = 104,               // fifo width
     input 	     io_clk, // clock for tx logic
     input 	     nreset, // async active low reset
     input 	     tx_en, // transmit enable   
-    input [7:0]      datasize, // size of data transmitted/received
     input 	     ddr_mode, // configure mio in ddr mode
     input 	     lsbfirst, // send bits lsb first
     input 	     emode, //emesh mode
