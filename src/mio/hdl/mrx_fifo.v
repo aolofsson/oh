@@ -16,6 +16,7 @@ module mrx_fifo # ( parameter PW         = 104,        // fifo width
     input 	    io_access,// fifo write
     input [7:0]     io_valid, // fifo byte valid
     input [63:0]    io_packet, // fifo packet
+    output 	    rx_wait,
     // transaction for mesh
     output 	    access_out, // fifo data valid
     output [PW-1:0] packet_out, // fifo packet
@@ -34,7 +35,7 @@ module mrx_fifo # ( parameter PW         = 104,        // fifo width
 		  .DW(72),
 		  .DEPTH(FIFO_DEPTH))
    fifo  (// Outputs
-	  .wait_out			(fifo_wait_out),
+	  .wait_out			(rx_wait),
 	  .access_out			(fifo_access_out),
 	  .packet_out			(fifo_packet_out[71:0]),
 	  .prog_full			(),
