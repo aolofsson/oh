@@ -26,17 +26,18 @@ module mtx_fifo # ( parameter PW         = 136,           // packet width
     );
    
    //local wires
+   reg [1:0] 	   emesh_cycle;
+   reg [191:0] 	   packet_buffer;   
    wire 	   fifo_access_out;
    wire [71:0] 	   fifo_packet_out;
    wire 	   fifo_access_in;
    wire [71:0] 	   fifo_packet_in;
    wire [63:0] 	   data_wide;
-   wire [191:0]    packet_wide;   
-   reg [1:0] 	   emesh_cycle;
    wire [7:0] 	   valid;
    wire 	   emesh_wait;
    wire [63:0] 	   fifo_data_in;
-      
+  
+   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [4:0]		ctrlmode_in;		// From p2e of packet2emesh.v
@@ -67,22 +68,24 @@ module mtx_fifo # ( parameter PW         = 136,           // packet width
    assign data_wide[63:0]    =  {srcaddr_in[31:0],data_in[31:0]};
 
    // create a dummy wide packet to avoid warnings
-   assign packet_wide[191:0] = packet_in[PW-1:0];
+   always @ (posedge clk)
+     if(~wait_out & access_in)
+       packet_buffer[191:0] <= packet_in[PW-1:0];
     
    // Emesh write pipeline (note! fifo_wait means half full!)
    always @ (posedge clk or negedge nreset)
      if(!nreset)
        emesh_cycle[1:0] <= 'b0;
-     else if(emesh_cycle[0] && (AW==64))       // 2nd stall for 64bit
+     else if(emesh_cycle[0] && (AW==64))      // 2nd stall for 64bit
        emesh_cycle[1:0] <= 2'b10;
      else if(emode & access_in & ~fifo_wait)  // 1 stall for emesh
        emesh_cycle[1:0] <= 2'b01;
      else
        emesh_cycle[1:0] <= 2'b00;
-   
+
    // valid bits depending on type of transaction
    assign valid[7:0] = (emesh_cycle[0] && (AW==32))       ? 8'h3F : //48 bits
-		       (emesh_cycle[1] && (AW==64))       ? 8'h02 : //16 bits
+		       (emesh_cycle[1] && (AW==64))       ? 8'h03 : //16 bits
          	       (~emode & datamode_in[1:0]==2'b00) ? 8'h01 : //double
         	       (~emode & datamode_in[1:0]==2'b01) ? 8'h03 : //word
          	       (~emode & datamode_in[1:0]==2'b10) ? 8'h0F : //short	 
@@ -90,17 +93,17 @@ module mtx_fifo # ( parameter PW         = 136,           // packet width
 			   
    // folding data for fifo
    assign fifo_data_in[63:0] = ~emode          ? data_wide[63:0]       :
-                                emesh_cycle[0] ? packet_wide[127:64]   :
-      		                emesh_cycle[1] ? packet_wide[191:128]  :
-		                                 packet_wide[63:0];
+                                emesh_cycle[0] ? packet_buffer[127:64]   :
+      		                emesh_cycle[1] ? packet_buffer[191:128]  :
+		                                  packet_in[63:0];
 
    assign fifo_packet_in[71:0] = {fifo_data_in[63:0], valid[7:0]};
    
    // fifo access
    assign fifo_access_in = access_in | (|emesh_cycle[1:0]);
-      
+
    // pushback wait while emesh transaction is active or while fifo is half-full
-   assign wait_out = fifo_wait | (|emesh_cycle[1:0]);
+   assign wait_out = fifo_wait  | (|emesh_cycle[1:0]);
       
    //########################################################
    //# FIFO 
