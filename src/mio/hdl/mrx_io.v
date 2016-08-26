@@ -42,7 +42,7 @@ module mrx_io #(parameter IOW    = 64,          // IO width
    //# STATE MACHINE
    //########################################
 
-   assign dmode8   = (iowidth[1:0]==2'b00) & ~ddr_mode;   
+   assign dmode8   = (iowidth[1:0]==2'b00);   
    assign dmode16  = ((iowidth[1:0]==2'b01) & ~ddr_mode) |
                      (iowidth[1:0]==2'b00) & ddr_mode;   
    assign dmode32  = ((iowidth[1:0]==2'b10) & ~ddr_mode) |
@@ -93,8 +93,9 @@ module mrx_io #(parameter IOW    = 64,          // IO width
 	     .ce			(rx_access),
 	     .din			(rx_packet[IOW/2-1:0]));
 
-   assign ddr_data[IOW-1:0] = (iowidth[1:0]==2'b00) ? {ddr_odd[7:0],ddr_even[7:0]}   :
-			      (iowidth[1:0]==2'b01) ? {ddr_odd[15:0],ddr_even[15:0]} :
+   assign ddr_data[IOW-1:0] = (iowidth[1:0]==2'b00) ? {ddr_odd[3:0],ddr_even[3:0]}   :
+			      (iowidth[1:0]==2'b01) ? {ddr_odd[7:0],ddr_even[7:0]}   :
+			      (iowidth[1:0]==2'b10) ? {ddr_odd[15:0],ddr_even[15:0]} :
 			                              {ddr_odd[31:0],ddr_even[31:0]};
     
    // SDR
