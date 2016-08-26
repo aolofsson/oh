@@ -35,7 +35,6 @@ module spi_master_io
    //###############
    reg 		   fifo_empty_reg;
    reg 		   load_byte;
-   wire 	   rx_access;
    reg 		   ss_reg;   
    wire [7:0] 	   data_out;
    wire [15:0] 	   clkphase0;
@@ -47,6 +46,8 @@ module spi_master_io
    wire 	   spi_wait;
    wire 	   shift;
    wire 	   spi_active;
+   wire 	   tx_shift;
+   wire 	   rx_shift;
    
    /*AUTOWIRE*/
    

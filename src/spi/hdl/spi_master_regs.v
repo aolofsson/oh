@@ -164,7 +164,7 @@ module spi_master_regs # (parameter  CLKDIV = 1,    // default clkdiv
 	 `SPI_CLKDIV : reg_rdata[31:0] <= {24'b0,clkdiv_reg[7:0]};
 	 `SPI_RX0    : reg_rdata[31:0] <= rx_reg[31:0];
 	 `SPI_RX1    : reg_rdata[31:0] <= rx_reg[63:32];	 
-	 default : reg_rdata[31:0] <= 32'hDEADBEEF;	 
+	 default     : reg_rdata[31:0] <= 32'hDEADBEEF;	 
        endcase // case (dstaddr_in[5:0])
 
    always @ (posedge clk or negedge nreset)
@@ -181,11 +181,10 @@ module spi_master_regs # (parameter  CLKDIV = 1,    // default clkdiv
      end
    
    //create a single cycle pulse on register read
-   oh_edge2pulse 
-     e2pulse (.out (wait_pulse),
-	      .nreset (nreset),
-   	      .clk (clk),
-	      .in  (reg_read));
+   oh_edge2pulse e2pulse (.out    (wait_pulse),
+			  .nreset (nreset),
+   			  .clk    (clk),
+			  .in     (reg_read));
    
    //TODO: fix!
    assign wait_out = fifo_wait;

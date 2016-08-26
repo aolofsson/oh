@@ -50,6 +50,11 @@ module spi_slave_io #( parameter PW = 104  // packet width
    wire 	    ss_pulse;
    wire 	    spi_fetch;
    wire 	    byte_done;
+   wire 	    shift;
+   wire 	    rx_clk;
+   wire 	    tx_clk;
+   wire 	    next_byte;
+   
 
    //#################################
    //# MODES: TODO!
@@ -108,8 +113,6 @@ module spi_slave_io #( parameter PW = 104  // packet width
    //#################################
    //# SPI RX SHIFT REGISTER
    //#################################
-
-   assign shift = ~ss & spi_en;
    
    oh_ser2par #(.PW(8),
 		.SW(1))
