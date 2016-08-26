@@ -34,6 +34,12 @@ module mtx_io #(parameter IOW    = 64,          // IO width
    wire [7:0] 	    io_valid_next;
    wire [IOW/2-1:0] ddr_data_even;
    wire [IOW/2-1:0] ddr_data_odd;
+   wire 	    dmode8;
+   wire 	    dmode16;
+   wire 	    dmode32;
+   wire 	    dmode64;
+   wire 	    io_nreset;
+   wire 	    reload;
    
    //########################################
    //# STATE MACHINE

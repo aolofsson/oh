@@ -36,7 +36,8 @@ module mtx_fifo # ( parameter PW         = 136,           // packet width
    wire [7:0] 	   valid;
    wire 	   emesh_wait;
    wire [63:0] 	   fifo_data_in;
-  
+   wire 	   fifo_wait;
+   
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)

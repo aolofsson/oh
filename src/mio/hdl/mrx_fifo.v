@@ -46,7 +46,8 @@ module mrx_fifo # ( parameter PW         = 104,        // fifo width
    wire [AW-1:0]    amode_data;
    wire [PW-1:0]    emode_packet;
    wire 	    emode_done;
-      
+   wire 	    emode_active;
+   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [PW-1:0]	amode_packet;		// From e2p_amode of emesh2packet.v

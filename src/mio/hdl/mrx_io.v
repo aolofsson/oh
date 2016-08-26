@@ -33,10 +33,19 @@ module mrx_io #(parameter IOW    = 64,          // IO width
    wire [7:0] 	     valid_next;   
    wire [IOW/2-1:0]  ddr_even;
    wire [IOW/2-1:0]  ddr_odd;   
-   reg [63:0] 	     shiftreg;
    wire 	     io_frame;
+   wire 	     dmode8;
+   wire 	     dmode16;
+   wire 	     dmode32;
+   wire 	     dmode64;
+   wire 	     reload;
+   wire 	     transfer_done;
+   wire 	     transfer_active;
+   
+   reg [63:0] 	     shiftreg;
    reg [IOW-1:0]     sdr_data;
    reg [1:0] 	     rx_access_reg;
+   
    
    //########################################
    //# STATE MACHINE
