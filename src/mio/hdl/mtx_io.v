@@ -39,7 +39,7 @@ module mtx_io #(parameter IOW    = 64,          // IO width
    //# STATE MACHINE
    //########################################   
 
-   assign dmode8   = (iowidth[1:0]==2'b00) & ~ddr_mode;   
+   assign dmode8   = (iowidth[1:0]==2'b00);   
    assign dmode16  = ((iowidth[1:0]==2'b01) & ~ddr_mode) |
                      (iowidth[1:0]==2'b00) & ddr_mode;   
    assign dmode32  = ((iowidth[1:0]==2'b10) & ~ddr_mode) |
@@ -98,9 +98,10 @@ module mtx_io #(parameter IOW    = 64,          // IO width
    // ddr circuit (one stage pipeline delay!)
    assign ddr_data_even[IOW/2-1:0] = shiftreg[IOW/2-1:0];
 
-   assign ddr_data_odd[IOW/2-1:0] = (iowidth[1:0]==2'b00) ? shiftreg[15:8]  :
-				    (iowidth[1:0]==2'b01) ? shiftreg[31:16] :
-				                            shiftreg[63:32];
+   assign ddr_data_odd[IOW/2-1:0] = (iowidth[1:0]==2'b00) ? shiftreg[7:4]   : //byte
+				    (iowidth[1:0]==2'b01) ? shiftreg[15:8]  : //short
+    				    (iowidth[1:0]==2'b10) ? shiftreg[31:16] : //word
+				                            shiftreg[63:32];  //double
    
    oh_oddr#(.DW(IOW/2))
    data_oddr (.out	(tx_packet_ddr[IOW/2-1:0]),
