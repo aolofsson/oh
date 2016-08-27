@@ -29,7 +29,7 @@ module spi_slave_io #( parameter PW = 104  // packet width
     //core interface (synced to core clk)
     input 	    clk, // core clock
     input 	    nreset, // async active low reset   
-    output reg 	    access_out, // read or write core command   
+    output 	    access_out, // read or write core command   
     output [PW-1:0] packet_out, // packet
     input 	    wait_in // temporary pushback
     );
@@ -37,6 +37,7 @@ module spi_slave_io #( parameter PW = 104  // packet width
    //###############
    //# LOCAL WIRES
    //###############
+   reg 		    access_reg;   
    reg [1:0] 	    spi_state;   
    reg [7:0] 	    bit_count; 
    reg [7:0] 	    command_reg;   
@@ -55,7 +56,6 @@ module spi_slave_io #( parameter PW = 104  // packet width
    wire 	    tx_clk;
    wire 	    next_byte;
    
-
    //#################################
    //# MODES: TODO!
    //################################# 
@@ -123,20 +123,7 @@ module spi_slave_io #( parameter PW = 104  // packet width
 	       .din	 (mosi),
 	       .lsbfirst (lsbfirst), //msb first
 	       .shift	 (shift));
-   
-   //####################################
-   //# REMOTE TRANSAXTION SHIFT REGISTER
-   //####################################
-   
-   oh_ser2par #(.PW(PW),
-		.SW(1))
-   e_ser2par (// Outputs
-	      .dout	(packet_out[PW-1:0]),
-	      // Inputs
-	      .clk	(rx_clk),
-	      .din	(mosi),
-	      .lsbfirst	(lsbfirst), //msb first
-	      .shift	(shift));//rx_shift
+  
    
    //#################################
    //# TX SHIFT REGISTER
@@ -174,9 +161,25 @@ module spi_slave_io #( parameter PW = 104  // packet width
    assign spi_wdata[7:0] = lsbfirst ? {mosi, rx_data[7:1]}
 				    : {rx_data[6:0], mosi};
 
-   //###################################
-   //# REMOTE FETCH LOGIC
-   //###################################
+
+   //####################################
+   //# REMOTE TRANSACTION LOGIC
+   //####################################
+`ifdef DV_SPI_BYPASS
+   // Bypass spi for DV (B/C SPI IS SLOOOOOOOW!)
+   // Drive wires "packet_out" and "access_out" from testbench
+`else
+
+   //Create a complete packet (104/136 bits)
+   oh_ser2par #(.PW(PW),
+		.SW(1))
+   e_ser2par (// Outputs
+	      .dout	(packet_out[PW-1:0]),
+	      // Inputs
+	      .clk	(rx_clk),
+	      .din	(mosi),
+	      .lsbfirst	(lsbfirst), //msb first
+	      .shift	(shift));//rx_shift
    
    //sync the ss to free running clk
    oh_dsync dsync (.dout  (ss_sync),
@@ -195,9 +198,13 @@ module spi_slave_io #( parameter PW = 104  // packet width
    // pipeleining and holding pulse if there is wait
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       access_out <= 1'b0;   
+       access_reg <= 1'b0;   
      else if(~wait_in)
-       access_out <= spi_fetch;
+       access_reg <= spi_fetch;
+
+   assign access_out = access_reg;
+   
+`endif
    
 endmodule // spi_slave_io
 // Local Variables:
