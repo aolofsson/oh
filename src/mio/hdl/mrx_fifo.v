@@ -117,8 +117,11 @@ module mrx_fifo # ( parameter PW         = 104,        // fifo width
 
    assign emode_packet[PW-1:0] = emode_shiftreg[PW-1:0];
    
-   always @ (posedge clk)
-     emode_access <= emode_done;
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       emode_access <= 1'b0;
+     else
+       emode_access <= emode_done;
    
    //########################################################
    //# Transaction for Emesh
