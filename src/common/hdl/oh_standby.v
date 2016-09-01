@@ -33,9 +33,12 @@ module oh_standby #( parameter PD   = 5,  // cycles to stay awake after "wakeup"
    assign wakeup_now = |(wakeup_pulse[N-1:0]);
       
    // Stay away for PD cycles
-   always @ (posedge clkin)    
-     wakeup_pipe[PD-1:0] <= {wakeup_pipe[PD-2:0], wakeup_now};
-
+   always @ (posedge clkin or negedge nreset)
+     if(!nreset)
+       wakeup_pipe[PD-1:0] <= 'b0;   
+     else
+       wakeup_pipe[PD-1:0] <= {wakeup_pipe[PD-2:0], wakeup_now};
+   
    // Clock enable
    assign  clk_en    =  wakeup_now             | //immediate wakeup
                         (|wakeup_pipe[PD-1:0]) | //anything in pipe
