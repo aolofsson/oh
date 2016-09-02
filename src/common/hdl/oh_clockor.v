@@ -16,8 +16,24 @@ module oh_clockor #(parameter N    = 1)    // number of clock inputs
    generate
       if(ASIC)
 	begin : asic
-	   asic_clockor #(.N(N)) ior (.clkin(clkin[N-1:0]),
-				      .clkout(clkout));
+	   if(N==4)
+	     begin : g0
+		asic_clockor4 ior (/*AUTOINST*/
+				   // Outputs
+				   .clkout		(clkout),
+				   // Inputs
+				   .clkin		(clkin[3:0]));
+		
+	     end // block: g0
+	   else if(N==2)
+	     begin : g0
+		asic_clockor2 ior (/*AUTOINST*/
+				   // Outputs
+				   .clkout		(clkout),
+				   // Inputs
+				   .clkin		(clkin[1:0]));
+		
+	     end // block: g0
 	end
       else
 	begin : generic
