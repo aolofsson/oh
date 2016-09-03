@@ -52,8 +52,10 @@ module oh_par2ser #(parameter PW = 64, // parallel packet width
    assign wait_out  = wait_in | busy;
    
    // shift register
-   always @ (posedge clk)
-     if(start_transfer)
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       shiftreg[PW-1:0] = 'b0;   
+     else if(start_transfer)
        shiftreg[PW-1:0] = din[PW-1:0];
      else if(shift & lsbfirst)		 
        shiftreg[PW-1:0] = {{(SW){fill}}, shiftreg[PW-1:SW]};
