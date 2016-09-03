@@ -100,10 +100,10 @@ module oh_clockdiv
 	       .in  (clk0_sel[1:0]));
    
    oh_clockmux #(.N(2))
-   oh_clockmux0 (.clkout(clkout0),
-		 .en(clk0_sel[1:0]),
-		 .clkin({clk, clkout0_reg}));
-
+   mux_clk0 (.clkout(clkout0),
+	     .en(clk0_sel[1:0]),
+	     .clkin({clk, clkout0_reg}));
+   
    //###########################################
    //# CLKOUT1
    //###########################################
@@ -133,9 +133,9 @@ module oh_clockdiv
 	       .in  (clk1_sel[3:0]));
 
    oh_clockmux #(.N(4))
-   oh_clockmux1 (.clkout(clkout1),
-		 .en(clk1_sel[3:0]),
-		 .clkin({1'b0, clk, clkout1_shift, clkout1_reg}));
+   mux_clk1 (.clkout(clkout1),
+	     .en(clk1_sel[3:0]),
+	     .clkin({1'b0, clk, clkout1_shift, clkout1_reg}));
    
 endmodule // oh_clockdiv
 

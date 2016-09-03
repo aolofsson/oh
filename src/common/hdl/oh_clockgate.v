@@ -17,10 +17,10 @@ module oh_clockgate (
    generate
       if(ASIC)	     
 	begin : asic
-	   asic_icg asic_icg (.en(en),
-			      .te(te),
-			      .clk(clk),
-			      .eclk(eclk));
+	   asic_icg icg (.en(en),
+			 .te(te),
+			 .clk(clk),
+			 .eclk(eclk));
 	end
       else
 	begin : generic
