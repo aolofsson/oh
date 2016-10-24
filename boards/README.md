@@ -1,4 +1,4 @@
-OPEN SOURCE HARDWARE BOARDS
+LIST OF OPEN SOURCE PRINTED CIRCUIT BOARDS
 ======================================================
 
 1. [List of Single Board Computers (SBCs)](#single-board-computers)
@@ -11,18 +11,19 @@ OPEN SOURCE HARDWARE BOARDS
 
 # Single Board Computers
 
-| Name                                      | Type   | Tool    | Author         | Description                            |
-|-------------------------------------------|--------|---------| ---------------| ---------------------------------------|
-| [Arduino Uno](./arduino-uno.md)           | SBC    | SBC     | Arduino        | Arduino                                |
-| [Beaglebone Black](./beaglebone-black.md) | SBC    | Allegro | CircuitCo      | SBC with TI processor                  |
-| [Olinuxino](./olinuxino)                  | SBC    | KiCad   | Olimex         | Industrial grade single board computer |
-| [Parallella](./parallella.md)             | SBC    | Allegro | Adapteva       | SBC with Zynq FPGA + Epiphany          |
+| Name                                      | Type   | Tool    | Author           | Description                            |
+|-------------------------------------------|--------|---------| -----------------| ---------------------------------------|
+| [Arduino Uno](./arduino-uno.md)           | SBC    | SBC     | Arduino          | Arduino                                |
+| [Beaglebone Black](./beaglebone-black.md) | SBC    | Allegro | CircuitCo        | SBC with TI processor                  |
+| [Olinuxino](./olinuxino.md)               | SBC    | KiCad   | Olimex           | Industrial grade single board computer |
+| [Parallella](./parallella.md)             | SBC    | Allegro | Adapteva         | SBC with Zynq FPGA + Epiphany          |
+| [Rascal Micro](./rascal-micro.md)         | SBC    | Altium  | Brandon Stafford | Small SBC, works with Arduino shields  |
 
 # RF Boards
 
-| Name                                 | Type   | Tool    | Author              | Description                                    |
-|--------------------------------------|--------|---------| --------------------| -----------------------------------------------|
-| [Hack RF](./hackrf.md)               | RF     | KiCad   | Great Scott Gadgets | 1MHz-6GHz Half Duplex RF board                 |
+| Name                                   | Type   | Tool    | Author              | Description                                  |
+|----------------------------------------|--------|---------| --------------------| ---------------------------------------------|
+| [Hack RF](./hackrf.md)                 | RF     | KiCad   | Great Scott Gadgets | 1MHz-6GHz Half Duplex RF board               |
 | [Parallella Lime](./parallella-lime.md)| RF     | KiCad   | Lime Micro        | Parallella 300MHz-3.8GHz Parallella SDR board  |
 
 # Camera Boards
