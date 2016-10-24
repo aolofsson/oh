@@ -14,10 +14,10 @@ LIST OF OPEN SOURCE PRINTED CIRCUIT BOARDS
 | Name                                      | Type   | Tool    | Author           | Description                            |
 |-------------------------------------------|--------|---------| -----------------| ---------------------------------------|
 | [Arduino Uno](./arduino-uno.md)           | SBC    | SBC     | Arduino          | Arduino                                |
-| [Beaglebone Black](./beaglebone-black.md) | SBC    | Allegro | CircuitCo        | SBC with TI processor                  |
-| [Olinuxino](./olinuxino.md)               | SBC    | KiCad   | Olimex           | Industrial grade single board computer |
+| [Beaglebone Black](./beaglebone-black.md) | SBC    | Allegro | CircuitCo        | TI processor SBC                       |
+| [Olinuxino](./olinuxino.md)               | SBC    | KiCad   | Olimex           | Industrial grade SBC                   |
 | [Parallella](./parallella.md)             | SBC    | Allegro | Adapteva         | SBC with Zynq FPGA + Epiphany          |
-| [Rascal Micro](./rascal-micro.md)         | SBC    | Altium  | Brandon Stafford | Small SBC, works with Arduino shields  |
+| [Rascal Micro](./rascal-micro.md)         | SBC    | Altium  | Brandon Stafford | SBC that works with Arduino shields    |
 
 # RF Boards
 

@@ -5,4 +5,5 @@
 * CAD Tool: Allegro/Orcad
 * Author: CircuitCo
 * [Schematic](https://github.com/CircuitCo/BeagleBone-Black)
-* [Layout](https://github.com/parallella/parallella-hw/tree/master/aafm)
+* [Layout](https://github.com/CircuitCo/BeagleBone-Black)
+
