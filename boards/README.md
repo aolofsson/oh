@@ -1,6 +1,8 @@
 LIST OF OPEN SOURCE PRINTED CIRCUIT BOARDS
 ======================================================
 
+>> Open source means that the original source code and design files are provided under a copyleft or permissive open source license. 
+
 1. [List of Single Board Computers (SBCs)](#single-board-computers)
 2. [List of RF Boards](#rf-boards)
 3. [List of Camera Boards](#camera-boards)
