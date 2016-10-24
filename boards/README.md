@@ -20,23 +20,23 @@ OPEN SOURCE HARDWARE BOARDS
 
 # RF Boards
 
-| Name                                 | Type   | Tool    | Author              | Description                            |
-|--------------------------------------|--------|---------| --------------------| ---------------------------------------|
-| [Hack RF](./hackrf.md)               | RF     | KiCad   | Great Scott Gadgets | 1MHz-6GHz Half Duplex RF board         |
-| [Parallella RF](./parallella-lime.md)| RF     | KiCad   | Lime Micro          | 300MHz-3.8GHz Parallella SDR board     |
+| Name                                 | Type   | Tool    | Author              | Description                                    |
+|--------------------------------------|--------|---------| --------------------| -----------------------------------------------|
+| [Hack RF](./hackrf.md)               | RF     | KiCad   | Great Scott Gadgets | 1MHz-6GHz Half Duplex RF board                 |
+| [Parallella Lime](./parallella-lime.md)| RF     | KiCad   | Lime Micro        | Parallella 300MHz-3.8GHz Parallella SDR board  |
 
 # Camera Boards
 | Name                                  | Type   | Tool    | Author     | Description                                     |
 |---------------------------------------|--------|---------| -----------| ------------------------------------------------|
-| [KVison](./kvison.md)                 | Camera | Altium  | Emil Fresk | Stero camera board                              |
+| [KVision](./kvision.md)               | Camera | Altium  | Emil Fresk | Parallella Stero camera board                   |
 
 # Other Boards
-| Name                                  | Type   | Tool    | Author     | Description                                     |
-|---------------------------------------|--------|---------|------------|-------------------------------------------------|
-| [AAFM   ](./aafm.md)                  | FMC    | Allegro | BittWare   | FMC board with 4 Epiphany-III chips             |
-| [OpenLog](./datalog.md)               | Adapter| Eagle   | SparkFun   | Data logger                                     |
-| [MicroSD Adapter](./microsd-adapter)  | Adapter| Eagle   | Adafruit   | MicroSD to SD card adapter for RPI              |
-| [Porcupine](./porcupine.md)           | Adapter| KiCad   | Adapteva   | Parallella breakout board                       |
+| Name                                    | Type   | Tool    | Author     | Description                                     |
+|-----------------------------------------|--------|---------|------------|-------------------------------------------------|
+| [AAFM   ](./aafm.md)                    | FMC    | Allegro | BittWare   | FMC board with 4 Epiphany-III chips             |
+| [OpenLog](./openlog.md)                 | Adapter| Eagle   | SparkFun   | Data logger                                     |
+| [MicroSD Adapter](./microsd-adapter.md) | Adapter| Eagle   | Adafruit   | MicroSD to SD card adapter for RPI              |
+| [Porcupine](./porcupine.md)             | Adapter| KiCad   | Adapteva   | Parallella breakout board                       |
 
 # How to Add a Board
 1. Fork this repository to your personal github account using the 'fork' button above
