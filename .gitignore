@@ -54,3 +54,5 @@ xgui/
 #ASIC proprietary files
 proprietary/
 
+# parallella_base intermediate files
+src/parallella/fpga/parallella_base/src
