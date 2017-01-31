@@ -95,6 +95,7 @@ set_property supported_families  { \
 					 {zynq}       {Production} \
 					 {qzynq}      {Production} \
 					 {azynq}      {Production} \
+					 {zynquplus}  {Production} \
 				     }   [ipx::current_core]
 
 ### Write ZIP archive
