@@ -18,7 +18,7 @@ set hdl_files []
 #All constraints files
 set constraints_files [list \
 			   ../zcu102_timing.xdc \
-			   ../zcu102_io.xdc \
+			   ../zcu102_fmc0_io.xdc \
 			  ]
 
 ###########################################################
