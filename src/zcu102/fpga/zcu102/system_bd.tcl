@@ -1,6 +1,6 @@
 
 ################################################################
-# This is a generated script based on design: zcu102_dp_only
+# This is a generated script based on design: system
 #
 # Though there are limitations about the generated script,
 # the main purpose of this utility is to make learning
@@ -35,7 +35,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 ################################################################
 
 # To test this script, run the following commands from Vivado Tcl console:
-# source zcu102_dp_only_script.tcl
+# source system_script.tcl
 
 # If there is no project opened, this script will create a
 # project, but make sure you do not have an existing project
@@ -223,18 +223,14 @@ proc create_root_design { parentCell } {
   set si570 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 si570 ]
 
   # Create ports
-  set cclk_n [ create_bd_port -dir O cclk_n ]
-  set cclk_p [ create_bd_port -dir O cclk_p ]
+  set cclk0_n [ create_bd_port -dir O cclk0_n ]
+  set cclk0_p [ create_bd_port -dir O cclk0_p ]
+  set cclk1_n [ create_bd_port -dir O cclk1_n ]
+  set cclk1_p [ create_bd_port -dir O cclk1_p ]
   set chip_nreset [ create_bd_port -dir O chip_nreset ]
+  set clkpd_1p8v [ create_bd_port -dir O clkpd_1p8v ]
   set gpio_n [ create_bd_port -dir IO -from 11 -to 0 gpio_n ]
   set gpio_p [ create_bd_port -dir IO -from 11 -to 0 gpio_p ]
-  set hdmi_clk [ create_bd_port -dir O hdmi_clk ]
-  set hdmi_d [ create_bd_port -dir O -from 23 -to 8 hdmi_d ]
-  set hdmi_de [ create_bd_port -dir O hdmi_de ]
-  set hdmi_hsync [ create_bd_port -dir O hdmi_hsync ]
-  set hdmi_int [ create_bd_port -dir I hdmi_int ]
-  set hdmi_spdif [ create_bd_port -dir O hdmi_spdif ]
-  set hdmi_vsync [ create_bd_port -dir O hdmi_vsync ]
   set i2c_scl [ create_bd_port -dir IO i2c_scl ]
   set i2c_sda [ create_bd_port -dir IO i2c_sda ]
   set rxi_data_n [ create_bd_port -dir I -from 7 -to 0 rxi_data_n ]
@@ -260,18 +256,27 @@ proc create_root_design { parentCell } {
 
   # Create instance: axi_mem_intercon, and set properties
   set axi_mem_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_mem_intercon ]
-  set_property -dict [ list CONFIG.NUM_MI {1}  ] $axi_mem_intercon
-
-  # Create instance: zcu102_base_0, and set properties
-  set zcu102_base_0 [ create_bd_cell -type ip -vlnv www.parallella.org:user:zcu102_base:1.0 zcu102_base_0 ]
-  set_property -dict [ list CONFIG.NGPIO {12}  ] $zcu102_base_0
+  set_property -dict [ list \
+CONFIG.NUM_MI {1} \
+ ] $axi_mem_intercon
 
   # Create instance: proc_sys_reset_0, and set properties
   set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
 
-
   # Create instance: si570_clk
   create_hier_cell_si570_clk [current_bd_instance .] si570_clk
+
+  # Create instance: sys_concat_intc, and set properties
+  set sys_concat_intc [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 sys_concat_intc ]
+  set_property -dict [ list \
+CONFIG.NUM_PORTS {8} \
+ ] $sys_concat_intc
+
+  # Create instance: zcu102_base_0, and set properties
+  set zcu102_base_0 [ create_bd_cell -type ip -vlnv www.parallella.org:user:zcu102_base:1.0 zcu102_base_0 ]
+  set_property -dict [ list \
+CONFIG.NGPIO {12} \
+ ] $zcu102_base_0
 
   # Create instance: zynq_ultra_ps_e_0, and set properties
   set zynq_ultra_ps_e_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:zynq_ultra_ps_e:2.0 zynq_ultra_ps_e_0 ]
@@ -1338,7 +1343,7 @@ CONFIG.PSU__PMU__GPO5__IO {MIO 37} \
 CONFIG.PSU__PMU__PERIPHERAL__ENABLE {1} \
 CONFIG.PSU__PMU__PERIPHERAL__IO {<Select>} \
 CONFIG.PSU__PROTECTION__DEBUG {1} \
-CONFIG.PSU__PROTECTION__MASTERS {USB1:NonSecure;0|USB0:NonSecure;1|S_AXI_LPD:NA;0|S_AXI_HPC1_FPD:NA;0|S_AXI_HPC0_FPD:NA;0|S_AXI_HP3_FPD:NA;0|S_AXI_HP2_FPD:NA;0|S_AXI_HP1_FPD:NA;0|S_AXI_HP0_FPD:NA;0|S_AXI_ACP:NA;0|S_AXI_ACE:NA;0|SD1:Secure;1|SD0:Secure;0|SATA1:NonSecure;1|SATA0:NonSecure;1|RPU1:Secure;1|RPU0:Secure;1|QSPI:Secure;1|PMU:NA;1|PCIe:NonSecure;0|NAND:Secure;0|LDMA:NA;1|GPU:Secure;1|GEM3:Secure;1|GEM2:Secure;0|GEM1:Secure;0|GEM0:Secure;0|FDMA:NA;1|DP:NonSecure;1|DAP:NA;1|Coresight:NA;1|CSU:NA;1|APU:NA;1} \
+CONFIG.PSU__PROTECTION__MASTERS {USB1:NonSecure;0|USB0:NonSecure;1|S_AXI_LPD:NA;0|S_AXI_HPC1_FPD:NA;0|S_AXI_HPC0_FPD:NA;0|S_AXI_HP3_FPD:NA;0|S_AXI_HP2_FPD:NA;0|S_AXI_HP1_FPD:NA;1|S_AXI_HP0_FPD:NA;0|S_AXI_ACP:NA;0|S_AXI_ACE:NA;0|SD1:Secure;1|SD0:Secure;0|SATA1:NonSecure;1|SATA0:NonSecure;1|RPU1:Secure;1|RPU0:Secure;1|QSPI:Secure;1|PMU:NA;1|PCIe:NonSecure;0|NAND:Secure;0|LDMA:NA;1|GPU:Secure;1|GEM3:Secure;1|GEM2:Secure;0|GEM1:Secure;0|GEM0:Secure;0|FDMA:NA;1|DP:NonSecure;1|DAP:NA;1|Coresight:NA;1|CSU:NA;1|APU:NA;1} \
 CONFIG.PSU__PROTECTION__SLAVES {LPD;USB3_1_XHCI;FE300000;FE3FFFFF;0|LPD;USB3_1;FF9E0000;FF9EFFFF;0|LPD;USB3_0_XHCI;FE200000;FE2FFFFF;1|LPD;USB3_0;FF9D0000;FF9DFFFF;1|LPD;UART1;FF010000;FF01FFFF;1|LPD;UART0;FF000000;FF00FFFF;1|LPD;TTC3;FF140000;FF14FFFF;0|LPD;TTC2;FF130000;FF13FFFF;0|LPD;TTC1;FF120000;FF12FFFF;0|LPD;TTC0;FF110000;FF11FFFF;1|FPD;SWDT1;FD4D0000;FD4DFFFF;0|LPD;SWDT0;FF150000;FF15FFFF;1|LPD;SPI1;FF050000;FF05FFFF;0|LPD;SPI0;FF040000;FF04FFFF;0|FPD;SMMU_REG;FD5F0000;FD5FFFFF;1|FPD;SMMU;FD800000;FDFFFFFF;1|FPD;SIOU;FD3D0000;FD3DFFFF;1|FPD;SERDES;FD400000;FD47FFFF;1|LPD;SD1;FF170000;FF17FFFF;1|LPD;SD0;FF160000;FF16FFFF;0|FPD;SATA;FD0C0000;FD0CFFFF;1|LPD;RTC;FFA60000;FFA6FFFF;1|LPD;RSA_CORE;FFCE0000;FFCEFFFF;1|LPD;RPU;FF9A0000;FF9AFFFF;1|FPD;RCPU_GIC;F9000000;F900FFFF;1|LPD;R5_TCM_RAM_GLOBAL;FFE00000;FFE3FFFF;1|LPD;R5_1_Instruction_Cache;FFEC0000;FFECFFFF;1|LPD;R5_1_Data_Cache;FFED0000;FFEDFFFF;1|LPD;R5_1_BTCM_GLOBAL;FFEB0000;FFEBFFFF;1|LPD;R5_1_ATCM_GLOBAL;FFE90000;FFE9FFFF;1|LPD;R5_0_Instruction_Cache;FFE40000;FFE4FFFF;1|LPD;R5_0_Data_Cache;FFE50000;FFE5FFFF;1|LPD;R5_0_BTCM_GLOBAL;FFE20000;FFE2FFFF;1|LPD;R5_0_ATCM_GLOBAL;FFE00000;FFE0FFFF;1|LPD;QSPI_Linear_Address;C0000000;DFFFFFFF;1|LPD;QSPI;FF0F0000;FF0FFFFF;1|LPD;PUF;FFC30000;FFC3FFFF;1|LPD;PMU_RAM;FFDC0000;FFDFFFFF;1|LPD;PMU_GLOBAL;FFD80000;FFDBFFFF;1|FPD;PCIE_MAIN;FD0E0000;FD0EFFFF;0|FPD;PCIE_LOW;E0000000;EFFFFFFF;0|FPD;PCIE_HIGH;600000000;7FFFFFFFF;0|FPD;PCIE_DMA;FD0F0000;FD0FFFFF;0|FPD;PCIE_ATTRIB;FD480000;FD48FFFF;0|LPD;OCM_SLCR;FF960000;FF96FFFF;1|OCM;OCM;FFFC0000;FFFFFFFF;1|LPD;NAND;FF100000;FF10FFFF;0|LPD;MBISTJTAG;FFCF0000;FFCFFFFF;1|LPD;LPD_XPPU_SINK;FF9C0000;FF9CFFFF;1|LPD;LPD_SLCR_SECURE;FF4B0000;FF4DFFFF;1|LPD;LPD_SLCR;FF410000;FF4AFFFF;1|LPD;LPD_GPV;FE100000;FE1FFFFF;1|LPD;LDMA_7;FFAF0000;FFAFFFFF;1|LPD;LDMA_6;FFAE0000;FFAEFFFF;1|LPD;LDMA_5;FFAD0000;FFADFFFF;1|LPD;LDMA_4;FFAC0000;FFACFFFF;1|LPD;LDMA_3;FFAB0000;FFABFFFF;1|LPD;LDMA_2;FFAA0000;FFAAFFFF;1|LPD;LDMA_1;FFA90000;FFA9FFFF;1|LPD;LDMA_0;FFA80000;FFA8FFFF;1|LPD;IPI_CTRL;FF380000;FF3FFFFF;1|LPD;IOU_SLCR;FF180000;FF23FFFF;1|LPD;IOU_SECURE_SLCR;FF240000;FF24FFFF;1|LPD;IOU_SCNTRS;FF260000;FF26FFFF;1|LPD;IOU_SCNTR;FF250000;FF25FFFF;1|LPD;IOU_GPV;FE000000;FE0FFFFF;1|LPD;I2C1;FF030000;FF03FFFF;1|LPD;I2C0;FF020000;FF02FFFF;1|FPD;GPU;FD4B0000;FD4BFFFF;1|LPD;GPIO;FF0A0000;FF0AFFFF;1|LPD;GEM3;FF0E0000;FF0EFFFF;1|LPD;GEM2;FF0D0000;FF0DFFFF;0|LPD;GEM1;FF0C0000;FF0CFFFF;0|LPD;GEM0;FF0B0000;FF0BFFFF;0|FPD;GDMA_CH7;FD570000;FD57FFFF;1|FPD;FPD_XMPU_SINK;FD4F0000;FD4FFFFF;1|FPD;FPD_XMPU_CFG;FD5D0000;FD5DFFFF;1|FPD;FPD_SLCR_SECURE;FD690000;FD6CFFFF;1|FPD;FPD_SLCR;FD610000;FD68FFFF;1|FPD;FPD_GPV;FD700000;FD7FFFFF;1|FPD;FDMA_CH6;FD560000;FD56FFFF;1|FPD;FDMA_CH5;FD550000;FD55FFFF;1|FPD;FDMA_CH4;FD540000;FD54FFFF;1|FPD;FDMA_CH3;FD530000;FD53FFFF;1|FPD;FDMA_CH2;FD520000;FD52FFFF;1|FPD;FDMA_CH1;FD510000;FD51FFFF;1|FPD;FDMA_CH0;FD500000;FD50FFFF;1|LPD;EFUSE;FFCC0000;FFCCFFFF;1|FPD;Display Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD050000;FD05FFFF;1|FPD;DDR_XMPU4_CFG;FD040000;FD04FFFF;1|FPD;DDR_XMPU3_CFG;FD030000;FD03FFFF;1|FPD;DDR_XMPU2_CFG;FD020000;FD02FFFF;1|FPD;DDR_XMPU1_CFG;FD010000;FD01FFFF;1|FPD;DDR_XMPU0_CFG;FD000000;FD00FFFF;1|FPD;DDR_QOS_CTRL;FD090000;FD09FFFF;1|FPD;DDR_PHY;FD080000;FD08FFFF;1|DDR;DDR_LOW;0;7FFFFFFF;1|DDR;DDR_HIGH;800000000;87FFFFFFF;1|FPD;DDDR_CTRL;FD070000;FD070FFF;1|LPD;Coresight;FE800000;FEFFFFFF;1|LPD;CSU_WDT;FFCB0000;FFCBFFFF;1|LPD;CSU_ROM;FFC00000;FFC1FFFF;1|LPD;CSU_RAM;FFC40000;FFC5FFFF;1|LPD;CSU_LOCAL;FFC20000;FFC2FFFF;1|LPD;CSU_IOMODULE;FFC60000;FFC7FFFF;1|LPD;CSUDMA;FFC80000;FFC9FFFF;1|LPD;CSU;FFCA0000;FFCAFFFF;0|LPD;CRL_APB;FF5E0000;FF85FFFF;1|FPD;CRF_APB;FD1A0000;FD2DFFFF;1|FPD;CCI_REG;FD5E0000;FD5EFFFF;1|FPD;CCI_GPV;FD6E0000;FD6EFFFF;1|LPD;CAN1;FF070000;FF07FFFF;1|LPD;CAN0;FF060000;FF06FFFF;0|FPD;APU;FD5C0000;FD5CFFFF;1|LPD;APM_INTC_IOU;FFA20000;FFA2FFFF;1|LPD;APM_FPD_LPD;FFA30000;FFA3FFFF;1|FPD;APM_5;FD490000;FD49FFFF;1|FPD;APM_0;FD0B0000;FD0BFFFF;1|LPD;APM2;FFA10000;FFA1FFFF;1|LPD;APM1;FFA00000;FFA0FFFF;1|LPD;AMS;FFA50000;FFA5FFFF;1|FPD;AFI_5;FD3B0000;FD3BFFFF;1|FPD;AFI_4;FD3A0000;FD3AFFFF;1|FPD;AFI_3;FD390000;FD39FFFF;1|FPD;AFI_2;FD380000;FD38FFFF;1|FPD;AFI_1;FD370000;FD37FFFF;1|FPD;AFI_0;FD360000;FD36FFFF;1|LPD;AFIFM6;FF9B0000;FF9BFFFF;1|FPD;ACPU_GIC;F9000000;F907FFFF;1} \
 CONFIG.PSU__PSS_ALT_REF_CLK__ENABLE {0} \
 CONFIG.PSU__PSS_ALT_REF_CLK__FREQMHZ {33.333} \
@@ -2393,16 +2398,15 @@ CONFIG.PSU__VIDEO_REF_CLK__ENABLE.VALUE_SRC {DEFAULT} \
 CONFIG.PSU__VIDEO_REF_CLK__FREQMHZ.VALUE_SRC {DEFAULT} \
 CONFIG.PSU__VIDEO_REF_CLK__IO.VALUE_SRC {DEFAULT} \
  ] $zynq_ultra_ps_e_0
- #
+
   # Create instance: zynq_ultra_ps_e_0_axi_periph, and set properties
   set zynq_ultra_ps_e_0_axi_periph [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 zynq_ultra_ps_e_0_axi_periph ]
-  set_property -dict [ list CONFIG.NUM_MI {1}  ] $zynq_ultra_ps_e_0_axi_periph
-
-  # Create instance: sys_concat_intc, and set properties
-  set sys_concat_intc [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 sys_concat_intc ]
-  set_property -dict [ list CONFIG.NUM_PORTS {8}  ] $sys_concat_intc
+  set_property -dict [ list \
+CONFIG.NUM_MI {1} \
+ ] $zynq_ultra_ps_e_0_axi_periph
 
   # Create interface connections
+  connect_bd_intf_net -intf_net CLK_IN_D_1 [get_bd_intf_ports si570] [get_bd_intf_pins si570_clk/CLK_IN_D]
   connect_bd_intf_net -intf_net axi_mem_intercon_M00_AXI [get_bd_intf_pins axi_mem_intercon/M00_AXI] [get_bd_intf_pins zynq_ultra_ps_e_0/S_AXI_HP1_FPD]
   connect_bd_intf_net -intf_net zcu102_base_0_m_axi [get_bd_intf_pins axi_mem_intercon/S00_AXI] [get_bd_intf_pins zcu102_base_0/m_axi]
   connect_bd_intf_net -intf_net zynq_ultra_ps_e_0_M_AXI_HPM1_FPD [get_bd_intf_pins zynq_ultra_ps_e_0/M_AXI_HPM1_FPD] [get_bd_intf_pins zynq_ultra_ps_e_0_axi_periph/S00_AXI]
@@ -2413,14 +2417,28 @@ CONFIG.PSU__VIDEO_REF_CLK__IO.VALUE_SRC {DEFAULT} \
   connect_bd_net -net Net1 [get_bd_ports gpio_p] [get_bd_pins zcu102_base_0/gpio_p]
   connect_bd_net -net Net2 [get_bd_ports i2c_scl] [get_bd_pins zcu102_base_0/i2c_scl]
   connect_bd_net -net Net3 [get_bd_ports i2c_sda] [get_bd_pins zcu102_base_0/i2c_sda]
-  connect_bd_net -net zcu102_base_0_cclk_n [get_bd_ports cclk_n] [get_bd_pins zcu102_base_0/cclk_n]
-  connect_bd_net -net zcu102_base_0_cclk_p [get_bd_ports cclk_p] [get_bd_pins zcu102_base_0/cclk_p]
-  connect_bd_net -net zcu102_base_0_chip_resetb [get_bd_ports chip_nreset] [get_bd_pins zcu102_base_0/chip_nreset]
-  connect_bd_net -net zcu102_base_0_constant_zero [get_bd_pins zcu102_base_0/constant_zero] [get_bd_pins sys_concat_intc/In0] [get_bd_pins sys_concat_intc/In1] [get_bd_pins sys_concat_intc/In2] [get_bd_pins sys_concat_intc/In4] [get_bd_pins sys_concat_intc/In5] [get_bd_pins sys_concat_intc/In6] [get_bd_pins sys_concat_intc/In7]
-  connect_bd_net -net zcu102_base_0_i2c_scl_i [get_bd_pins zcu102_base_0/i2c_scl_i] [get_bd_pins zynq_ultra_ps_e_0/I2C0_SCL_I]
-  connect_bd_net -net zcu102_base_0_i2c_sda_i [get_bd_pins zcu102_base_0/i2c_sda_i] [get_bd_pins zynq_ultra_ps_e_0/I2C0_SDA_I]
-  connect_bd_net -net zcu102_base_0_mailbox_irq [get_bd_pins zcu102_base_0/mailbox_irq] [get_bd_pins sys_concat_intc/In3]
-  connect_bd_net -net zcu102_base_0_ps_gpio_i [get_bd_pins zcu102_base_0/ps_gpio_i] [get_bd_pins zynq_ultra_ps_e_0/GPIO_I]
+  connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins axi_mem_intercon/ARESETN] [get_bd_pins proc_sys_reset_0/interconnect_aresetn] [get_bd_pins zynq_ultra_ps_e_0_axi_periph/ARESETN]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins axi_mem_intercon/M00_ARESETN] [get_bd_pins axi_mem_intercon/S00_ARESETN] [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins zcu102_base_0/m_axi_aresetn] [get_bd_pins zcu102_base_0/s_axi_aresetn] [get_bd_pins zcu102_base_0/sys_nreset] [get_bd_pins zynq_ultra_ps_e_0_axi_periph/M00_ARESETN] [get_bd_pins zynq_ultra_ps_e_0_axi_periph/S00_ARESETN]
+  connect_bd_net -net rxi_data_n_1 [get_bd_ports rxi_data_n] [get_bd_pins zcu102_base_0/rxi_data_n]
+  connect_bd_net -net rxi_data_p_1 [get_bd_ports rxi_data_p] [get_bd_pins zcu102_base_0/rxi_data_p]
+  connect_bd_net -net rxi_frame_n_1 [get_bd_ports rxi_frame_n] [get_bd_pins zcu102_base_0/rxi_frame_n]
+  connect_bd_net -net rxi_frame_p_1 [get_bd_ports rxi_frame_p] [get_bd_pins zcu102_base_0/rxi_frame_p]
+  connect_bd_net -net rxi_lclk_n_1 [get_bd_ports rxi_lclk_n] [get_bd_pins zcu102_base_0/rxi_lclk_n]
+  connect_bd_net -net rxi_lclk_p_1 [get_bd_ports rxi_lclk_p] [get_bd_pins zcu102_base_0/rxi_lclk_p]
+  connect_bd_net -net sys_concat_intc_dout [get_bd_pins sys_concat_intc/dout] [get_bd_pins zynq_ultra_ps_e_0/pl_ps_irq1]
+  connect_bd_net -net txi_rd_wait_n_1 [get_bd_ports txi_rd_wait_n] [get_bd_pins zcu102_base_0/txi_rd_wait_n]
+  connect_bd_net -net txi_rd_wait_p_1 [get_bd_ports txi_rd_wait_p] [get_bd_pins zcu102_base_0/txi_rd_wait_p]
+  connect_bd_net -net txi_wr_wait_n_1 [get_bd_ports txi_wr_wait_n] [get_bd_pins zcu102_base_0/txi_wr_wait_n]
+  connect_bd_net -net txi_wr_wait_p_1 [get_bd_ports txi_wr_wait_p] [get_bd_pins zcu102_base_0/txi_wr_wait_p]
+  connect_bd_net -net video_clk_1 [get_bd_pins si570_clk/BUFG_O] [get_bd_pins zynq_ultra_ps_e_0/dp_video_in_clk]
+  connect_bd_net -net zcu102_base_0_cclk_n [get_bd_ports cclk0_n] [get_bd_ports cclk1_n] [get_bd_pins zcu102_base_0/cclk_n]
+  connect_bd_net -net zcu102_base_0_cclk_p [get_bd_ports cclk0_p] [get_bd_ports cclk1_p] [get_bd_pins zcu102_base_0/cclk_p]
+  connect_bd_net -net zcu102_base_0_chip_resetb [get_bd_ports chip_nreset] [get_bd_ports clkpd_1p8v] [get_bd_pins zcu102_base_0/chip_nreset]
+  connect_bd_net -net zcu102_base_0_constant_zero [get_bd_pins sys_concat_intc/In0] [get_bd_pins sys_concat_intc/In1] [get_bd_pins sys_concat_intc/In2] [get_bd_pins sys_concat_intc/In4] [get_bd_pins sys_concat_intc/In5] [get_bd_pins sys_concat_intc/In6] [get_bd_pins sys_concat_intc/In7] [get_bd_pins zcu102_base_0/constant_zero]
+  connect_bd_net -net zcu102_base_0_i2c_scl_i [get_bd_pins zcu102_base_0/i2c_scl_i]
+  connect_bd_net -net zcu102_base_0_i2c_sda_i [get_bd_pins zcu102_base_0/i2c_sda_i]
+  connect_bd_net -net zcu102_base_0_mailbox_irq [get_bd_pins sys_concat_intc/In3] [get_bd_pins zcu102_base_0/mailbox_irq]
+  connect_bd_net -net zcu102_base_0_ps_gpio_i [get_bd_pins zcu102_base_0/ps_gpio_i]
   connect_bd_net -net zcu102_base_0_rxo_rd_wait_n [get_bd_ports rxo_rd_wait_n] [get_bd_pins zcu102_base_0/rxo_rd_wait_n]
   connect_bd_net -net zcu102_base_0_rxo_rd_wait_p [get_bd_ports rxo_rd_wait_p] [get_bd_pins zcu102_base_0/rxo_rd_wait_p]
   connect_bd_net -net zcu102_base_0_rxo_wr_wait_n [get_bd_ports rxo_wr_wait_n] [get_bd_pins zcu102_base_0/rxo_wr_wait_n]
@@ -2431,42 +2449,18 @@ CONFIG.PSU__VIDEO_REF_CLK__IO.VALUE_SRC {DEFAULT} \
   connect_bd_net -net zcu102_base_0_txo_frame_p [get_bd_ports txo_frame_p] [get_bd_pins zcu102_base_0/txo_frame_p]
   connect_bd_net -net zcu102_base_0_txo_lclk_n [get_bd_ports txo_lclk_n] [get_bd_pins zcu102_base_0/txo_lclk_n]
   connect_bd_net -net zcu102_base_0_txo_lclk_p [get_bd_ports txo_lclk_p] [get_bd_pins zcu102_base_0/txo_lclk_p]
-  connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins axi_mem_intercon/ARESETN] [get_bd_pins proc_sys_reset_0/interconnect_aresetn] [get_bd_pins zynq_ultra_ps_e_0_axi_periph/ARESETN]
-  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins axi_mem_intercon/M00_ARESETN] [get_bd_pins axi_mem_intercon/S00_ARESETN] [get_bd_pins zcu102_base_0/m_axi_aresetn] [get_bd_pins zcu102_base_0/s_axi_aresetn] [get_bd_pins zcu102_base_0/sys_nreset] [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins zynq_ultra_ps_e_0_axi_periph/M00_ARESETN] [get_bd_pins zynq_ultra_ps_e_0_axi_periph/S00_ARESETN]
-  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins axi_mem_intercon/ACLK] [get_bd_pins axi_mem_intercon/M00_ACLK] [get_bd_pins axi_mem_intercon/S00_ACLK] [get_bd_pins zcu102_base_0/sys_clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins zynq_ultra_ps_e_0/MAXIHPM1_FPD_ACLK] [get_bd_pins zynq_ultra_ps_e_0/SAXIHP1_FPD_ACLK] [get_bd_pins zynq_ultra_ps_e_0_axi_periph/ACLK] [get_bd_pins zynq_ultra_ps_e_0_axi_periph/M00_ACLK] [get_bd_pins zynq_ultra_ps_e_0_axi_periph/S00_ACLK]
+  connect_bd_net -net zynq_ultra_ps_e_0_GPIO_O [get_bd_pins zcu102_base_0/ps_gpio_o]
+  connect_bd_net -net zynq_ultra_ps_e_0_GPIO_T [get_bd_pins zcu102_base_0/ps_gpio_t]
+  connect_bd_net -net zynq_ultra_ps_e_0_I2C0_SCL_O [get_bd_pins zcu102_base_0/i2c_scl_o]
+  connect_bd_net -net zynq_ultra_ps_e_0_I2C0_SCL_T [get_bd_pins zcu102_base_0/i2c_scl_t]
+  connect_bd_net -net zynq_ultra_ps_e_0_I2C0_SDA_O [get_bd_pins zcu102_base_0/i2c_sda_o]
+  connect_bd_net -net zynq_ultra_ps_e_0_I2C0_SDA_T [get_bd_pins zcu102_base_0/i2c_sda_t]
+  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins axi_mem_intercon/ACLK] [get_bd_pins axi_mem_intercon/M00_ACLK] [get_bd_pins axi_mem_intercon/S00_ACLK] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins zcu102_base_0/sys_clk] [get_bd_pins zynq_ultra_ps_e_0/maxihpm1_fpd_aclk] [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins zynq_ultra_ps_e_0/saxihp1_fpd_aclk] [get_bd_pins zynq_ultra_ps_e_0_axi_periph/ACLK] [get_bd_pins zynq_ultra_ps_e_0_axi_periph/M00_ACLK] [get_bd_pins zynq_ultra_ps_e_0_axi_periph/S00_ACLK]
   connect_bd_net -net zynq_ultra_ps_e_0_pl_resetn0 [get_bd_pins proc_sys_reset_0/ext_reset_in] [get_bd_pins zynq_ultra_ps_e_0/pl_resetn0]
-  connect_bd_net -net zynq_ultra_ps_e_0_GPIO_O [get_bd_pins zcu102_base_0/ps_gpio_o] [get_bd_pins zynq_ultra_ps_e_0/GPIO_O]
-  connect_bd_net -net zynq_ultra_ps_e_0_GPIO_T [get_bd_pins zcu102_base_0/ps_gpio_t] [get_bd_pins zynq_ultra_ps_e_0/GPIO_T]
-  connect_bd_net -net zynq_ultra_ps_e_0_I2C0_SCL_O [get_bd_pins zcu102_base_0/i2c_scl_o] [get_bd_pins zynq_ultra_ps_e_0/I2C0_SCL_O]
-  connect_bd_net -net zynq_ultra_ps_e_0_I2C0_SCL_T [get_bd_pins zcu102_base_0/i2c_scl_t] [get_bd_pins zynq_ultra_ps_e_0/I2C0_SCL_T]
-  connect_bd_net -net zynq_ultra_ps_e_0_I2C0_SDA_O [get_bd_pins zcu102_base_0/i2c_sda_o] [get_bd_pins zynq_ultra_ps_e_0/I2C0_SDA_O]
-  connect_bd_net -net zynq_ultra_ps_e_0_I2C0_SDA_T [get_bd_pins zcu102_base_0/i2c_sda_t] [get_bd_pins zynq_ultra_ps_e_0/I2C0_SDA_T]
-  connect_bd_net -net rxi_data_n_1 [get_bd_ports rxi_data_n] [get_bd_pins zcu102_base_0/rxi_data_n]
-  connect_bd_net -net rxi_data_p_1 [get_bd_ports rxi_data_p] [get_bd_pins zcu102_base_0/rxi_data_p]
-  connect_bd_net -net rxi_frame_n_1 [get_bd_ports rxi_frame_n] [get_bd_pins zcu102_base_0/rxi_frame_n]
-  connect_bd_net -net rxi_frame_p_1 [get_bd_ports rxi_frame_p] [get_bd_pins zcu102_base_0/rxi_frame_p]
-  connect_bd_net -net rxi_lclk_n_1 [get_bd_ports rxi_lclk_n] [get_bd_pins zcu102_base_0/rxi_lclk_n]
-  connect_bd_net -net rxi_lclk_p_1 [get_bd_ports rxi_lclk_p] [get_bd_pins zcu102_base_0/rxi_lclk_p]
-  connect_bd_net -net sys_concat_intc_dout [get_bd_pins zynq_ultra_ps_e_0/pl_ps_irq1] [get_bd_pins sys_concat_intc/dout]
-  connect_bd_net -net txi_rd_wait_n_1 [get_bd_ports txi_rd_wait_n] [get_bd_pins zcu102_base_0/txi_rd_wait_n]
-  connect_bd_net -net txi_rd_wait_p_1 [get_bd_ports txi_rd_wait_p] [get_bd_pins zcu102_base_0/txi_rd_wait_p]
-  connect_bd_net -net txi_wr_wait_n_1 [get_bd_ports txi_wr_wait_n] [get_bd_pins zcu102_base_0/txi_wr_wait_n]
-  connect_bd_net -net txi_wr_wait_p_1 [get_bd_ports txi_wr_wait_p] [get_bd_pins zcu102_base_0/txi_wr_wait_p]
 
   # Create address segments
-  create_bd_addr_seg -range 0x80000000 -offset 0x0 [get_bd_addr_spaces zcu102_base_0/m_axi] [get_bd_addr_segs zynq_ultra_ps_e_0/SAXIGP3/HP1_DDR_LOW] SEG_zynq_ultra_ps_e_0_HP1_DDR_LOW
-  create_bd_addr_seg -range 0x100000000 -offset 0x000500000000 [get_bd_addr_spaces zynq_ultra_ps_e_0/Data] [get_bd_addr_segs zcu102_base_0/s_axi/axi_lite] SEG_zcu102_base_0_axi_lite
-
-
-  # Restore current instance
-
-  # Create interface connections
-  connect_bd_intf_net -intf_net CLK_IN_D_1 [get_bd_intf_ports si570] [get_bd_intf_pins si570_clk/CLK_IN_D]
-
-  # Create port connections
-  connect_bd_net -net video_clk_1 [get_bd_pins si570_clk/BUFG_O] [get_bd_pins zynq_ultra_ps_e_0/dp_video_in_clk]
-
-  # Create address segments
+  create_bd_addr_seg -range 0x80000000 -offset 0x00000000 [get_bd_addr_spaces zcu102_base_0/m_axi] [get_bd_addr_segs zynq_ultra_ps_e_0/SAXIGP3/HP1_DDR_LOW] SEG_zynq_ultra_ps_e_0_HP1_DDR_LOW
+  create_bd_addr_seg -range 0x000100000000 -offset 0x000500000000 [get_bd_addr_spaces zynq_ultra_ps_e_0/Data] [get_bd_addr_segs zcu102_base_0/s_axi/axi_lite] SEG_zcu102_base_0_axi_lite
 
   # Restore current instance
   current_bd_instance $oldCurInst
