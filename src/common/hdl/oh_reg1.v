@@ -13,6 +13,9 @@ module oh_reg1 #(parameter DW = 1            // data width
      output [DW-1:0] out  // output data (stable/latched when clk=1)
      );
 
+`ifndef CFG_ASIC
+ `define CFG_ASIC 0
+`endif
    localparam ASIC = `CFG_ASIC;
    
    generate

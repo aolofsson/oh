@@ -13,6 +13,9 @@ module oh_rsync #(parameter PS = 2          // number of sync stages
     output nrst_out
     );
 
+`ifndef CFG_ASIC
+ `define CFG_ASIC 0
+`endif
    localparam ASIC = `CFG_ASIC;  // use ASIC lib
 
    generate

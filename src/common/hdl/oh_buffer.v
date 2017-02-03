@@ -11,6 +11,9 @@ module oh_buffer #(parameter N    = 1,  // number of inputs
      output [N-1:0] out // output
     );
 
+`ifndef CFG_ASIC
+ `define CFG_ASIC 0
+`endif
    localparam ASIC = `CFG_ASIC;
 
    generate

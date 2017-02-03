@@ -14,6 +14,9 @@ module oh_csa32 #(parameter DW   = 1 // data width
      output [DW-1:0] c   //carry
      );
 
+`ifndef CFG_ASIC
+ `define CFG_ASIC 0
+`endif
    localparam ASIC = `CFG_ASIC;  // use asic library
 
    generate

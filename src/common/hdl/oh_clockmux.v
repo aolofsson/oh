@@ -12,6 +12,9 @@ module oh_clockmux #(parameter N    = 1)    // number of clock inputs
     output 	  clkout 
     );
 
+`ifndef CFG_ASIC
+ `define CFG_ASIC 0
+`endif
     localparam ASIC = `CFG_ASIC;
 
     generate

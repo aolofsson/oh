@@ -13,6 +13,9 @@ module oh_delay  #(parameter DW   = 1, // width of data
     output [DW-1:0] out // output
     );
 
+`ifndef CFG_ASIC
+ `define CFG_ASIC 0
+`endif
    localparam ASIC = `CFG_ASIC;  // use asic library
    
    generate

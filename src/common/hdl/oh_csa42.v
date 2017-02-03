@@ -17,6 +17,9 @@ module oh_csa42 #( parameter DW    = 1 // data width
      output [DW-1:0] cout  //carry out
      );
 
+`ifndef CFG_ASIC
+ `define CFG_ASIC 0
+`endif
    localparam ASIC = `CFG_ASIC;  // use asic library
 
    generate

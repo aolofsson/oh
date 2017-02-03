@@ -33,6 +33,9 @@ module oh_memory_dp # (parameter DW    = 104,      //memory width
     input [DW-1:0]  bist_din  // data input
     );
 
+`ifndef CFG_ASIC
+ `define CFG_ASIC 0
+`endif
    localparam ASIC = `CFG_ASIC;  // use asic library
    
    generate
