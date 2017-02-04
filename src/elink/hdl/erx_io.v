@@ -313,30 +313,49 @@ module erx_io (/*AUTOARG*/
    genvar        j;
    generate for(j=0; j<9; j=j+1)
      begin : gen_idelay
-	(* IODELAY_GROUP = "IDELAY_GROUP" *) // Group name for IDELAYCTRL
-	
-	IDELAYE2 #(.CINVCTRL_SEL("FALSE"),
-		   .DELAY_SRC("IDATAIN"), 
-		   .HIGH_PERFORMANCE_MODE("FALSE"),
-		   .IDELAY_TYPE("VAR_LOAD"),
-		   .IDELAY_VALUE(5'b0),
-		   .PIPE_SEL("FALSE"),
+`define IDELAYCTRL_WONT_SYNTHESIZE
+`ifdef IDELAYCTRL_WONT_SYNTHESIZE
+	IDELAYE3 #(.DELAY_SRC("IDATAIN"),
+		   .DELAY_TYPE("VAR_LOAD"),
+		   .DELAY_VALUE(9'b0),
 		   .REFCLK_FREQUENCY(200.0),
-		   .SIGNAL_PATTERN("DATA"))
+		   .DELAY_FORMAT("COUNT"), // Ultrascale w/ COUNT can remove IDELAYCTRL (but then not stable over temp / voltage variations)
+		   .SIM_DEVICE("ULTRASCALE_PLUS_ES2"))
 
 	idelay_inst (.CNTVALUEOUT(),             // monitoring value       
 		     .DATAOUT(rxi_delay_out[j]), // delayed data
-		     .C(rx_lclk_div4),           // variable tap delay clock 
+		     .CLK(rx_lclk_div4),         // variable tap delay clock
 		     .CE(1'b0),                  // inc/dec tap value
-		     .CINVCTRL(1'b0),            // inverts clock polarity 
-		     .CNTVALUEIN(idelay_value[(j+1)*5-1:j*5]), //variable tap
+		     .CNTVALUEIN({4'b0, idelay_value[(j+1)*5-1:j*5]}), //variable tap (BROKEN!!! for Ultrascale, 9 bits / counter
 		     .DATAIN(1'b0),              // data from FPGA
 		     .IDATAIN(rxi_delay_in[j]),  // data from ibuf
 		     .INC(1'b0),                 // increment tap
-		     .LD(load_taps),             // load new  
-		     .LDPIPEEN(1'b0),            // only for pipeline mode
-		     .REGRST(1'b0)               // only for pipeline mode
-		     );
+		     .LOAD(load_taps),           // load new
+		     .EN_VTC(~load_taps),        // Enables IDELAYCTRL
+		     .RST(1'b0)                  //
+		   );
+`else
+	(* IODELAY_GROUP = "IDELAY_GROUP" *) // Group name for IDELAYCTRL
+	IDELAYE3 #(.DELAY_SRC("IDATAIN"),
+		   .DELAY_TYPE("VAR_LOAD"),
+		   .DELAY_VALUE(9'b0),
+		   .REFCLK_FREQUENCY(200.0),
+		   .DELAY_FORMAT("TIME"), // Ultrascale w/ COUNT can remove IDELAYCTRL (but then not stable over temp / voltage variations)
+		   .SIM_DEVICE("ULTRASCALE_PLUS_ES2"))
+
+	idelay_inst (.CNTVALUEOUT(),             // monitoring value       
+		     .DATAOUT(rxi_delay_out[j]), // delayed data
+		     .CLK(rx_lclk_div4),         // variable tap delay clock
+		     .CE(1'b0),                  // inc/dec tap value
+		     .CNTVALUEIN({4'b0, idelay_value[(j+1)*5-1:j*5]}), //variable tap (BROKEN!!! for Ultrascale, 9 bits / counter
+		     .DATAIN(1'b0),              // data from FPGA
+		     .IDATAIN(rxi_delay_in[j]),  // data from ibuf
+		     .INC(1'b0),                 // increment tap
+		     .LOAD(load_taps),           // load new
+		     .EN_VTC(~load_taps),        // Enables IDELAYCTRL
+		     .RST(1'b0)                  //
+		   );
+`endif
      end // block: gen_idelay
    endgenerate
    
@@ -348,29 +367,29 @@ module erx_io (/*AUTOARG*/
    genvar        i;
    generate for(i=0; i<8; i=i+1)
      begin : gen_iddr           
-	IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"), .SRTYPE("SYNC"))
+	// Ultrascale doesn't have .SRTYPE("SYNC")
+	IDDRE1 #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"))
 	iddr_data (
 		   .Q1 (rx_word_iddr[i]),
 		   .Q2 (rx_word_iddr[i+8]),
 		   .C  (rx_lclk_iddr),//rx_lclk_iddr
-		   .CE (1'b1),
+		   .CB  (~rx_lclk_iddr),
 		   .D  (rxi_delay_out[i] ^ invert_pins),
-		   .R  (1'b0),
-		   .S  (1'b0)
+		   .R  (1'b0)
 		   );
      end
      endgenerate
 
    //FRAME
-   IDDR #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"), .SRTYPE("SYNC"))
+   IDDRE1 #(.DDR_CLK_EDGE  ("SAME_EDGE_PIPELINED"))
+	// Ultrascale doesn't have .SRTYPE("SYNC")
 	iddr_frame (
 		   .Q1 (rx_frame_iddr),
 		   .Q2 (),    
 		   .C  (rx_lclk_iddr),//TODO: will this work?
-		   .CE (1'b1),
+		   .CB  (~rx_lclk_iddr),
 		   .D  (rxi_delay_out[8] ^ invert_pins),
-		   .R  (1'b0),
-		   .S  (1'b0)
+		   .R  (1'b0)
 		   );
    
 endmodule // erx_io

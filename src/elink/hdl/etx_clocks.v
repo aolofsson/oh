@@ -259,15 +259,12 @@ module etx_clocks (/*AUTOARG*/
    BUFIO bufio_cclk(.O(cclk_bufio), .I(cclk_mmcm));
 
    //CCLK oddr 
-   ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"), .SRTYPE("ASYNC"))
+   ODDRE1
    oddr_lclk (
               .Q  (cclk_oddr),
               .C  (cclk_bufio),
-              .CE (1'b1),
               .D1 (1'b1),
-              .D2 (1'b0),
-              .R  (1'b0),
-              .S  (1'b0));
+              .D2 (1'b0));
 	    
    //CCLK differential buffer
    OBUFDS  cclk_obuf (.O   (cclk_p),
