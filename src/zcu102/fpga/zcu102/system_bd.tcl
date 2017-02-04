@@ -43,7 +43,8 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 
 set list_projs [get_projects -quiet]
 if { $list_projs eq "" } {
-   create_project project_1 myproj -part xczu9eg-ffvb1156-2L-e-es2
+   create_project project_1 myproj -part xczu9eg-ffvb1156-2-i-es2
+   set_property BOARD_PART xilinx.com:zcu102:part0:2.0 [current_project]
 }
 
 
@@ -277,6 +278,18 @@ CONFIG.NUM_PORTS {8} \
   set_property -dict [ list \
 CONFIG.NGPIO {12} \
  ] $zcu102_base_0
+
+  set_property -dict [ list \
+CONFIG.SUPPORTS_NARROW_BURST {1} \
+CONFIG.NUM_READ_OUTSTANDING {2} \
+CONFIG.NUM_WRITE_OUTSTANDING {2} \
+CONFIG.MAX_BURST_LENGTH {256} \
+ ] [get_bd_intf_pins /zcu102_base_0/m_axi]
+
+  set_property -dict [ list \
+CONFIG.NUM_READ_OUTSTANDING {2} \
+CONFIG.NUM_WRITE_OUTSTANDING {2} \
+ ] [get_bd_intf_pins /zcu102_base_0/s_axi]
 
   # Create instance: zynq_ultra_ps_e_0, and set properties
   set zynq_ultra_ps_e_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:zynq_ultra_ps_e:2.0 zynq_ultra_ps_e_0 ]
@@ -2431,8 +2444,8 @@ CONFIG.NUM_MI {1} \
   connect_bd_net -net txi_wr_wait_n_1 [get_bd_ports txi_wr_wait_n] [get_bd_pins zcu102_base_0/txi_wr_wait_n]
   connect_bd_net -net txi_wr_wait_p_1 [get_bd_ports txi_wr_wait_p] [get_bd_pins zcu102_base_0/txi_wr_wait_p]
   connect_bd_net -net video_clk_1 [get_bd_pins si570_clk/BUFG_O] [get_bd_pins zynq_ultra_ps_e_0/dp_video_in_clk]
-  connect_bd_net -net zcu102_base_0_cclk_n [get_bd_ports cclk0_n] [get_bd_ports cclk1_n] [get_bd_pins zcu102_base_0/cclk_n]
-  connect_bd_net -net zcu102_base_0_cclk_p [get_bd_ports cclk0_p] [get_bd_ports cclk1_p] [get_bd_pins zcu102_base_0/cclk_p]
+  connect_bd_net -net zcu102_base_0_cclk0_n [get_bd_ports cclk0_n] [get_bd_pins zcu102_base_0/cclk_n]
+  connect_bd_net -net zcu102_base_0_cclk0_p [get_bd_ports cclk0_p] [get_bd_pins zcu102_base_0/cclk_p]
   connect_bd_net -net zcu102_base_0_chip_resetb [get_bd_ports chip_nreset] [get_bd_ports clkpd_1p8v] [get_bd_pins zcu102_base_0/chip_nreset]
   connect_bd_net -net zcu102_base_0_constant_zero [get_bd_pins sys_concat_intc/In0] [get_bd_pins sys_concat_intc/In1] [get_bd_pins sys_concat_intc/In2] [get_bd_pins sys_concat_intc/In4] [get_bd_pins sys_concat_intc/In5] [get_bd_pins sys_concat_intc/In6] [get_bd_pins sys_concat_intc/In7] [get_bd_pins zcu102_base_0/constant_zero]
   connect_bd_net -net zcu102_base_0_i2c_scl_i [get_bd_pins zcu102_base_0/i2c_scl_i]
@@ -2461,6 +2474,7 @@ CONFIG.NUM_MI {1} \
   # Create address segments
   create_bd_addr_seg -range 0x80000000 -offset 0x00000000 [get_bd_addr_spaces zcu102_base_0/m_axi] [get_bd_addr_segs zynq_ultra_ps_e_0/SAXIGP3/HP1_DDR_LOW] SEG_zynq_ultra_ps_e_0_HP1_DDR_LOW
   create_bd_addr_seg -range 0x000100000000 -offset 0x000500000000 [get_bd_addr_spaces zynq_ultra_ps_e_0/Data] [get_bd_addr_segs zcu102_base_0/s_axi/axi_lite] SEG_zcu102_base_0_axi_lite
+
 
   # Restore current instance
   current_bd_instance $oldCurInst
