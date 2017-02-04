@@ -396,8 +396,8 @@
 				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.PREFHDL">VERILOG</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.SILICON_REVISION">es2</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.SIMULATOR_LANGUAGE">MIXED</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.SPEEDGRADE">-2L</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.TEMPERATURE_GRADE">E</spirit:configurableElementValue>
+				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.SPEEDGRADE">-2</spirit:configurableElementValue>
+				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.TEMPERATURE_GRADE">I</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.USE_RDI_CUSTOMIZATION">TRUE</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.USE_RDI_GENERATION">TRUE</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="RUNTIME_PARAM.IPCONTEXT">IP_Flow</spirit:configurableElementValue>
