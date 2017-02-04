@@ -1,5 +1,13 @@
 # Zynq Ultrascale+ MPSoC zcu102 designs
 
+## Caveats
+
+- Only lower 5 bits (of 9) of IDELAY can be programmed ATM.
+- Vivado DRC bug(?) prevents us from using IDELAYCTRL.
+  This forces us to use .DELAY_FORMAT("COUNT") instead of "TIME" in IDELAYE3.
+  So no automatic PVT adjustments for now.
+- CLKIN_N1 and CLKIN_P1 not connected.
+
 ----
 ## EDITING SYSTEM>BD IN GUI (ONE TIME..)
 1. create ports
