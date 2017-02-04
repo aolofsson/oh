@@ -1,14 +1,14 @@
 #######################
 # Configuration Pins
 #######################
-set_property CFGBVS VCCO [current_design]
-set_property CONFIG_VOLTAGE 3.3 [current_design]
+#set_property CFGBVS VCCO [current_design]
+#set_property CONFIG_VOLTAGE 3.3 [current_design]
 
 #####################
 # Epiphany Reset
 # Schematic RESETB
 #####################
-set_property IOSTANDARD LVCMOS25 [get_ports {chip_nreset}]
+set_property IOSTANDARD LVCMOS18 [get_ports {chip_nreset}]
 set_property PACKAGE_PIN AC7 [get_ports {chip_nreset}]
 
 ##########################
@@ -25,19 +25,21 @@ set_property PACKAGE_PIN AC6 [get_ports {clkpd_1p8v}]
 # Connected to clock distributor chip.
 # Assume pass through will work.
 #####################
-set_property IOSTANDARD LVDS_25 [get_ports {cclk*}]
+set_property IOSTANDARD LVDS [get_ports {cclk*}]
 # (Tile 0-7)
 set_property PACKAGE_PIN W6 [get_ports cclk0_n]
+set_property PACKAGE_PIN W7 [get_ports cclk0_p]
 # (Tile 8-15)
-set_property PACKAGE_PIN AA12 [get_ports cclk1_n]
+#set_property PACKAGE_PIN AA12 [get_ports cclk1_n]
+#set_property PACKAGE_PIN Y12 [get_ports cclk1_p]
 
 #########################
 # FPGA Elink TX (chip RX)
 #########################
-set_property IOSTANDARD LVDS_25 [get_ports {txo*}]
-set_property IOSTANDARD LVDS_25 [get_ports {txi*}]
+set_property IOSTANDARD LVDS [get_ports {txo*}]
+set_property IOSTANDARD LVDS [get_ports {txi*}]
 set_property PACKAGE_PIN N11 [get_ports txo_lclk_n]
-set_property PACKAGE_PIN N8 [get_ports {txo_data_n[0]}]
+set_property PACKAGE_PIN N8  [get_ports {txo_data_n[0]}]
 set_property PACKAGE_PIN K13 [get_ports {txo_data_n[1]}]
 set_property PACKAGE_PIN M13 [get_ports {txo_data_n[2]}]
 set_property PACKAGE_PIN N12 [get_ports {txo_data_n[3]}]
@@ -52,25 +54,25 @@ set_property PACKAGE_PIN T6  [get_ports txi_wr_wait_n]
 # Wait signals
 #####################
 # ??? Parallella board has LVCMOS25 and a DIFF LINE RECEIVER
-set_property IOSTANDARD LVCMOS25 [get_ports {txi_rd_wait_*}]
+set_property IOSTANDARD LVDS [get_ports {txi_rd_wait_*}]
 set_property PACKAGE_PIN L10 [get_ports txi_rd_wait_n]
 
 
 #########################
 # FPGA ELink RX (chip TX)
 #########################
-set_property IOSTANDARD LVDS_25 [get_ports {rx*}]
+set_property IOSTANDARD LVDS [get_ports {rx*}]
 set_property PACKAGE_PIN Y3  [get_ports rxi_lclk_n]
 set_property PACKAGE_PIN AC4 [get_ports {rxi_data_n[0]}]
 set_property PACKAGE_PIN V1  [get_ports {rxi_data_n[1]}]
-set_property PACKAGE_PIN Y2  [get_ports {rxi_data_n[2]}]
+set_property PACKAGE_PIN Y1  [get_ports {rxi_data_n[2]}]
 set_property PACKAGE_PIN AA1 [get_ports {rxi_data_n[3]}]
 set_property PACKAGE_PIN AC3 [get_ports {rxi_data_n[4]}]
 set_property PACKAGE_PIN AC1 [get_ports {rxi_data_n[5]}]
 set_property PACKAGE_PIN U4  [get_ports {rxi_data_n[6]}]
 set_property PACKAGE_PIN V3  [get_ports {rxi_data_n[7]}]
-set_property PACKAGE_PIN V3  [get_ports rxi_frame_n]
-set_property PACKAGE_PIN W1  [get_ports rxo_rd_wait_n]
+set_property PACKAGE_PIN W1  [get_ports rxi_frame_n]
+set_property PACKAGE_PIN W4  [get_ports rxo_rd_wait_n]
 set_property PACKAGE_PIN AB5 [get_ports rxo_wr_wait_n]
 
 ###################
