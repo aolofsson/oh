@@ -37,7 +37,7 @@ module zcu102_base(/*AUTOARG*/
    parameter ID          = 12'h810;
    parameter S_IDW       = 12;       //ID width for S_AXI
    parameter M_IDW       = 6;        //ID width for M_AXI
-   parameter IOSTD_ELINK = "LVDS_25";
+   parameter IOSTD_ELINK = "LVDS";
    parameter NGPIO       = 24;
    parameter NPS         = 64;       //Number of PS signals
 
