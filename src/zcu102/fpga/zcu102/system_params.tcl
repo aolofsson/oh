@@ -6,7 +6,9 @@ set projdir ./
 
 #Device name
 #set partname "xczu9eg-ffvb1156-2L-e-es1"
-set partname "xczu9eg-ffvb1156-2L-e-es2"
+#set partname "xczu9eg-ffvb1156-2L-e-es2"
+set partname "xczu9eg-ffvb1156-2-i-es2"
+set board_part "xilinx.com:zcu102:part0:2.0"
 
 #Paths to all IP blocks to use in Vivado "system.bd"
 

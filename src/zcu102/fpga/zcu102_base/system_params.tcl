@@ -7,7 +7,8 @@ set design zcu102_base
 set projdir ./
 set root "../../.."
 #set partname "xczu9eg-ffvb1156-2L-e-es1"
-set partname "xczu9eg-ffvb1156-2L-e-es2"
+#set partname "xczu9eg-ffvb1156-2L-e-es2"
+set partname "xczu9eg-ffvb1156-2-i-es2"
 
 
 set hdl_files [list \
