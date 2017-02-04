@@ -9,4 +9,4 @@ source ../../../common/fpga/system_init.tcl
 ##...
 
 #STEP 4: SYNTEHSIZE AND CREATE BITSTRAM
-#source ../../../common/fpga/system_build.tcl
+source ../../../common/fpga/system_build.tcl
