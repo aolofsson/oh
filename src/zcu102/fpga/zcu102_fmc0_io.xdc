@@ -72,3 +72,16 @@ set_property PACKAGE_PIN V3  [get_ports {rxi_data_n[7]}]
 set_property PACKAGE_PIN V3  [get_ports rxi_frame_n]
 set_property PACKAGE_PIN W1  [get_ports rxo_rd_wait_n]
 set_property PACKAGE_PIN AB5 [get_ports rxo_wr_wait_n]
+
+###################
+# Pin Constraints #
+###################
+#
+# Video Clock SI570
+#
+# PL Port      Pin  Schematic
+#
+# si570_clk_n  L28  USER_MGT_SI570_N
+# si570_clk_p  L27  USER_MGT_SI570_P
+#
+set_property PACKAGE_PIN L28 [get_ports si570_clk_n]
