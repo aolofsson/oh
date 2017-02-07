@@ -1,15 +1,23 @@
 ###########################################################
+# DEFAULTS
+###########################################################
+if {![info exists design]} {
+    set design system
+    puts "INFO: Setting design name to '${design}'"
+}
+
+###########################################################
 # Save any gui changes
 ###########################################################
 validate_bd_design
-write_bd_tcl -force ./system_bd.tcl
-make_wrapper -files [get_files $projdir/${design}.srcs/sources_1/bd/system/system.bd] -top
+write_bd_tcl -force ./${design}_bd.tcl
+make_wrapper -files [get_files $projdir/${design}.srcs/sources_1/bd/${design}/${design}.bd] -top
 
 ###########################################################
-# Add generated wrapper file
+# ADD GENERATED WRAPPER FILE
 ###########################################################
-remove_files -fileset sources_1 $projdir/${design}.srcs/sources_1/bd/system/hdl/system_wrapper.v
-add_files -fileset sources_1 -norecurse $projdir/${design}.srcs/sources_1/bd/system/hdl/system_wrapper.v
+remove_files -fileset sources_1 $projdir/${design}.srcs/sources_1/bd/${design}/hdl/${design}_wrapper.v
+add_files -fileset sources_1 -norecurse $projdir/${design}.srcs/sources_1/bd/${design}/hdl/${design}_wrapper.v
 
 ###########################################################
 # PREPARE FOR SYNTHESIS
@@ -36,7 +44,7 @@ wait_on_run impl_1
 ###########################################################
 # CREATE NETLIST + REPORTS
 ###########################################################
-#write_verilog ./system.v
+#write_verilog ./${design}.v
 
 ###########################################################
 # Write Bitstream
