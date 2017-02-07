@@ -35,6 +35,10 @@ wait_on_run synth_1
 open_run synth_1
 report_timing_summary -file timing_synth.log
 
+###########################################################
+# CREATE HARDWARE DEFINITION FILE
+###########################################################
+write_hwdef -force -file "${design}.hwdef"
 
 ###########################################################
 # PLACE AND ROUTE
@@ -64,4 +68,7 @@ wait_on_run impl_1
 ###########################################################
 write_bitstream -force -bin_file -file ${design}.bit
 
-
+###########################################################
+# WRITE SYSTEM DEFINITION
+###########################################################
+write_sysdef -force -hwdef ${design}.hwdef -bitfile ${design}.bit -file ${design}.hdf
