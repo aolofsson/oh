@@ -15,9 +15,6 @@ module oh_dsync  #(parameter PS    = 2,        // number of sync stages
     output dout    // synchronized data
     );
    
-`ifndef CFG_ASIC
- `define CFG_ASIC 0
-`endif
    localparam ASIC = `CFG_ASIC;  // use asic library
 
    generate

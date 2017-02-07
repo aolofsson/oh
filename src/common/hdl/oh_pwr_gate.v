@@ -11,9 +11,6 @@ module oh_pwr_gate (
     output vddg     // gated output supply
     );
 
-`ifndef CFG_ASIC
- `define CFG_ASIC 0
-`endif
    localparam ASIC = `CFG_ASIC;  // use asic library
 
 `ifdef TARGET_SIM

@@ -12,9 +12,6 @@ module oh_clockgate (
      output eclk // enabled clock output
      );
 
-`ifndef CFG_ASIC
- `define CFG_ASIC 0
-`endif
    localparam ASIC = `CFG_ASIC;  // use ASIC lib
 
    generate
