@@ -226,8 +226,6 @@ proc create_root_design { parentCell } {
   # Create ports
   set cclk0_n [ create_bd_port -dir O cclk0_n ]
   set cclk0_p [ create_bd_port -dir O cclk0_p ]
-  set cclk1_n [ create_bd_port -dir O cclk1_n ]
-  set cclk1_p [ create_bd_port -dir O cclk1_p ]
   set chip_nreset [ create_bd_port -dir O chip_nreset ]
   set clkpd_1p8v [ create_bd_port -dir O clkpd_1p8v ]
   set gpio_n [ create_bd_port -dir IO -from 11 -to 0 gpio_n ]
