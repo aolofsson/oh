@@ -32,14 +32,17 @@ if {[info exists oh_synthesis_options]} {
 ###########################################################
 launch_runs synth_1
 wait_on_run synth_1
-#report_timing_summary -file synth_timing_summary.rpt
+open_run synth_1
+report_timing_summary -file timing_synth.log
+
 
 ###########################################################
 # PLACE AND ROUTE
 ###########################################################
 launch_runs impl_1
 wait_on_run impl_1
-#report_timing_summary -file impl_timing_summary.rpt
+open_run impl_1
+report_timing_summary -file timing_impl.log
 
 ###########################################################
 # CREATE NETLIST + REPORTS
