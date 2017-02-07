@@ -1,6 +1,9 @@
-
-M_DEPS := run.tcl
+M_DEPS += Makefile
+M_DEPS += run.tcl
+M_DEPS += system_bd.tcl
+M_DEPS += system_params.tcl
 M_DEPS += ../zcu102_base/zcu102_base.xpr
+M_DEPS += ../zcu102_base/zcu102_base.zip
 M_DEPS += ../zcu102_base/run.tcl
 
 M_VIVADO := vivado -mode batch -source
@@ -22,6 +25,11 @@ M_FLIST += results
 M_FLIST += system.hw
 M_FLIST += system.ip_user_files
 M_FLIST += system.sim
+M_FLIST += system.bin
+M_FLIST += system.bit
+M_FLIST += system.hdf
+M_FLIST += system.hwdef
+M_FLIST += vivado_*.str
 
 .PHONY: all clean
 
