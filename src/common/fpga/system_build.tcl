@@ -26,6 +26,11 @@ if {[info exists oh_synthesis_options]} {
     puts "INFO: Synthesis with following options: $oh_synthesis_options"
     set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} -value $oh_synthesis_options -objects [get_runs synth_1]
 }
+# Newer Vivado doesn't seem to support the above
+if {[info exists oh_verilog_define]} {
+    puts "INFO: Adding following verilog defines to fileset: ${oh_verilog_define}"
+    set_property verilog_define ${oh_verilog_define} [current_fileset]
+}
 
 ###########################################################
 # SYNTHESIS
