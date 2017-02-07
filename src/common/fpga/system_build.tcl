@@ -50,10 +50,15 @@ report_timing_summary -file timing_impl.log
 #write_verilog ./${design}.v
 
 ###########################################################
-# Write Bitstream
+# GENERATE BITSTREAM
 ###########################################################
+set_property STEPS.WRITE_BITSTREAM.ARGS.BIN_FILE true [get_runs impl_1]
 launch_runs impl_1 -to_step write_bitstream
 wait_on_run impl_1
 
+###########################################################
+# WRITE BITSTREAM
+###########################################################
+write_bitstream -force -bin_file -file ${design}.bit
 
 
