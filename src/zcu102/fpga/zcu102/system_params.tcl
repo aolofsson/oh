@@ -26,4 +26,5 @@ set constraints_files [list \
 ###########################################################
 # PREPARE FOR SYNTHESIS
 ###########################################################
-set oh_synthesis_options "-verilog_define CFG_ASIC=0"
+set oh_verilog_define "CFG_ASIC=0"
+set oh_synthesis_options "-verilog_define ${oh_verilog_define}"
