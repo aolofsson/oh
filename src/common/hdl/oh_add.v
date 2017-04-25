@@ -1,5 +1,5 @@
 //#############################################################################
-//# Function: Two's compliment adder/subtractor                               #
+//# Function: Two's complement adder/subtractor                               #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
