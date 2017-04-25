@@ -28,18 +28,32 @@ if {[llength $constraints_files] != 0} {
 
 #ADDING IP
 if {[llength $ip_files] != 0} {
-    
-    #Add to fileset
-    add_files -norecurse -fileset [get_filesets sources_1] $ip_files
+    file delete -force ip_tmp
+    file mkdir ip_tmp
 
     #Set mode for IP
     foreach file $ip_files {
+	set file_name [file tail $file]
+	set ip_name [file rootname [file tail $file]]
+	set local_file ip_tmp/$file_name
+
+	# Create local copy
+	file copy $file ip_tmp
+	add_files -norecurse -fileset [get_filesets sources_1] $local_file
+
+	# Upgrade if needed
+	set locked [get_property IS_LOCKED [get_ips $ip_name]]
+	set upgrade [get_property UPGRADE_VERSIONS [get_ips $ip_name]]
+	if {$upgrade != "" && $locked} {
+	    upgrade_ip [get_ips $ip_name]
+	}
+
 	#TODO: is this needed?
-	set file_obj [get_files -of_objects [get_filesets sources_1] $file]
-	set_property "synth_checkpoint_mode" "Singular" $file_obj
-    }    
-    #RERUN/UPGRADE IP
-    upgrade_ip [get_ips]
+	set local_file_obj [get_files -of_objects [get_filesets sources_1] $local_file]
+	set_property "synth_checkpoint_mode" "Singular" $local_file_obj
+    }
+
+
 }
 
 
@@ -95,6 +109,7 @@ set_property supported_families  { \
 					 {zynq}       {Production} \
 					 {qzynq}      {Production} \
 					 {azynq}      {Production} \
+					 {zynquplus}  {Production} \
 				     }   [ipx::current_core]
 
 ### Write ZIP archive

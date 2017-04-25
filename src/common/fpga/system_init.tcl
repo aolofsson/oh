@@ -8,6 +8,10 @@
 create_project -force $design $projdir -part $partname
 set_property target_language Verilog [current_project]
 
+if {[info exists board_part]} {
+    set_property board_part $board_part [current_project]
+}
+
 ###########################################################
 # Create Report/Results Directory
 ###########################################################

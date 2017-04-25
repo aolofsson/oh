@@ -210,12 +210,21 @@ module erx_clocks (/*AUTOARG*/
 	   // Idelay controller
 	   //###########################
 	   
+`define IDELAYCTRL_WONT_SYNTHESIZE
+`ifdef IDELAYCTRL_WONT_SYNTHESIZE
+	  assign idelay_ready = 'b1;
+`else
 	   (* IODELAY_GROUP = "IDELAY_GROUP" *) // Group name for IDELAYCTRL
-	   IDELAYCTRL idelayctrl_inst 
+	   IDELAYCTRL
+	    #(
+	      .SIM_DEVICE("ULTRASCALE_PLUS_ES2")
+	     ) idelayctrl_inst
 	     (
 	      .RDY(idelay_ready), // check ready flag in reset sequence?
 	      .REFCLK(idelay_ref_clk),//200MHz clk (78ps tap delay)
-	      .RST(idelay_reset));
+	      .RST(idelay_reset)
+	      );
+`endif
 	   
 	end // if (TARGET=="XILINX")
    endgenerate

@@ -123,41 +123,32 @@ module etx_io (/*AUTOARG*/
    genvar        i;
    generate for(i=0; i<8; i=i+1)
      begin : gen_oddr
-	ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
+	ODDRE1
 	oddr_data (
 		   .Q  (txo_data_ddr[i]),
 		   .C  (tx_lclk_io),
-		   .CE (1'b1),
 		   .D1 (tx_data16[i+8] ^ invert_pins),
-		   .D2 (tx_data16[i] ^ invert_pins),
-		   .R  (1'b0),
-		   .S  (1'b0)
+		   .D2 (tx_data16[i] ^ invert_pins)
 		   );
      end
      endgenerate
 
    //FRAME
-   ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
+   ODDRE1
    oddr_frame (
 	      .Q  (txo_frame_ddr),
 	      .C  (tx_lclk_io),
-	      .CE (1'b1),
 	      .D1 (tx_frame16 ^ invert_pins),
-	      .D2 (tx_frame16 ^ invert_pins),
-	      .R  (1'b0), //reset
-	      .S  (1'b0)
+	      .D2 (tx_frame16 ^ invert_pins)
 	      );
    
    //LCLK
-   ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
+   ODDRE1
    oddr_lclk (
 	      .Q  (txo_lclk90),
 	      .C  (tx_lclk90),
-	      .CE (1'b1),
 	      .D1 (1'b1 ^ invert_pins),
-	      .D2 (1'b0 ^ invert_pins),
-	      .R  (1'b0),//should be no reason to reset clock, static input
-	      .S  (1'b0)
+	      .D2 (1'b0 ^ invert_pins)
 	      );
 		    
    //Buffer drivers
@@ -195,7 +186,8 @@ module etx_io (/*AUTOARG*/
    endgenerate
       
 //TODO: Come up with cleaner defines for this
-`ifdef TODO
+`define ZYNQMP
+`ifdef ZYNQMP
   IBUFDS
      #(.DIFF_TERM  ("TRUE"),     // Differential termination
        .IOSTANDARD (IOSTD_ELINK))
