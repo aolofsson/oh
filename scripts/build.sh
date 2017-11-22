@@ -22,6 +22,7 @@ $OH_HOME/scripts/link.sh
 iverilog -g2005\
  -DTARGET_SIM=1\
  -DCFG_ASIC=0\
+ -DCFG_PLATFORM=\"ZYNQ\"\
  $DUT\
  $OH_HOME/symlinks/dv/dv_top.v\
  -y .\

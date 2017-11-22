@@ -7,6 +7,7 @@ module etx_io (/*AUTOARG*/
    txi_rd_wait_p, txi_rd_wait_n, tx_data_slow, tx_frame_slow
    );
    
+   parameter PLATFORM    = `CFG_PLATFORM;   
    parameter IOSTD_ELINK = "LVDS_25";
    parameter PW          = 104;
    parameter ETYPE       = 0; // 0 = parallella
@@ -118,55 +119,84 @@ module etx_io (/*AUTOARG*/
    //############################################
    //# IO DRIVER STUFF
    //############################################  
+   generate
+      genvar i;
+      if(PLATFORM=="ULTRASCALE")
+	begin : ultrascale
+	   //DATA
+	   for(i=0; i<8; i=i+1)
+	     begin : gen_oddr
+		ODDRE1 oddr_data (.Q  (txo_data_ddr[i]),
+				  .C  (tx_lclk_io),
+				  .D1 (tx_data16[i+8] ^ invert_pins),
+				  .D2 (tx_data16[i] ^ invert_pins));
+	     end
+	   //FRAME
+	   ODDRE1 oddr_frame (.Q  (txo_frame_ddr),
+			 .C  (tx_lclk_io),
+			 .D1 (tx_frame16 ^ invert_pins),
+			 .D2 (tx_frame16 ^ invert_pins));
+	   
+	   //LCLK
+	   ODDRE1 oddr_lclk (.Q  (txo_lclk90),
+			     .C  (tx_lclk90),
+			     .D1 (1'b1 ^ invert_pins),
+			     .D2 (1'b0 ^ invert_pins));
+	end // block: ultrascale
+      else
+	begin : zynq
+	   for(i=0; i<8; i=i+1)
+	     begin : gen_oddr
+		ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
+		oddr_data (
+			   .Q  (txo_data_ddr[i]),
+			   .C  (tx_lclk_io),
+			   .CE (1'b1),
+			   .D1 (tx_data16[i+8] ^ invert_pins),
+			   .D2 (tx_data16[i] ^ invert_pins),
+			   .R  (1'b0),
+			   .S  (1'b0)
+			   );
+	     end
+	   //FRAME
+	   ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
+	   oddr_frame (
+		       .Q  (txo_frame_ddr),
+		       .C  (tx_lclk_io),
+		       .CE (1'b1),
+		       .D1 (tx_frame16 ^ invert_pins),
+		       .D2 (tx_frame16 ^ invert_pins),
+		       .R  (1'b0), //reset
+		       .S  (1'b0)
+		       );
+	   
+	   //LCLK
+	   ODDR #(.DDR_CLK_EDGE  ("SAME_EDGE"))
+	   oddr_lclk (
+		      .Q  (txo_lclk90),
+		      .C  (tx_lclk90),
+		      .CE (1'b1),
+		      .D1 (1'b1 ^ invert_pins),
+		      .D2 (1'b0 ^ invert_pins),
+		      .R  (1'b0),//should be no reason to reset clock, static input
+		      .S  (1'b0)
+		      );
+	end
+	   
+	endgenerate
 
-   //DATA
-   genvar        i;
-   generate for(i=0; i<8; i=i+1)
-     begin : gen_oddr
-	ODDRE1
-	oddr_data (
-		   .Q  (txo_data_ddr[i]),
-		   .C  (tx_lclk_io),
-		   .D1 (tx_data16[i+8] ^ invert_pins),
-		   .D2 (tx_data16[i] ^ invert_pins)
-		   );
-     end
-     endgenerate
-
-   //FRAME
-   ODDRE1
-   oddr_frame (
-	      .Q  (txo_frame_ddr),
-	      .C  (tx_lclk_io),
-	      .D1 (tx_frame16 ^ invert_pins),
-	      .D2 (tx_frame16 ^ invert_pins)
-	      );
-   
-   //LCLK
-   ODDRE1
-   oddr_lclk (
-	      .Q  (txo_lclk90),
-	      .C  (tx_lclk90),
-	      .D1 (1'b1 ^ invert_pins),
-	      .D2 (1'b0 ^ invert_pins)
-	      );
-		    
    //Buffer drivers
-   OBUFDS obufds_data[7:0] (
-			     .O   (txo_data_p[7:0]),
-			     .OB  (txo_data_n[7:0]),
-			     .I   (txo_data_ddr[7:0])
-			     );
+   OBUFDS obufds_data[7:0] (.O   (txo_data_p[7:0]),
+			    .OB  (txo_data_n[7:0]),
+			    .I   (txo_data_ddr[7:0]));
    
-   OBUFDS obufds_frame ( .O   (txo_frame_p),
-			 .OB  (txo_frame_n),
-			 .I   (txo_frame_ddr)
-			 );
-
-   OBUFDS obufds_lclk ( .O   (txo_lclk_p),
-			.OB  (txo_lclk_n),
-			.I   (txo_lclk90)
-			);
+   OBUFDS obufds_frame (.O   (txo_frame_p),
+			.OB  (txo_frame_n),
+			.I   (txo_frame_ddr));
+   
+   OBUFDS obufds_lclk (.O   (txo_lclk_p),
+		       .OB  (txo_lclk_n),
+		       .I   (txo_lclk90));
    //Wait inputs
    generate
       if(ETYPE==1)
