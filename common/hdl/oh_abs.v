@@ -1,4 +1,8 @@
-module oh_abs (/*AUTOARG*/);
+module oh_abs (/*AUTOARG*/
+   a,
+   out,
+   overflow
+);
 
    //###############################################################
    //# Parameters

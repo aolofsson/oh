@@ -5,7 +5,10 @@ module oh_hamming_enc (/*AUTOARG*/
    in, reset
    );
 
- 
+   output out;
+
+   input in;
+   input reset;
 endmodule // oh_hamming_enc
 
 
