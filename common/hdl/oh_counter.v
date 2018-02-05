@@ -30,6 +30,7 @@ module oh_counter (/*AUTOARG*/
    //# Interface
    //###############################################################
    reg [DW-1:0]    count;
+   wire [DW-1:0]   count_in;
    
    always @(posedge clk)
      if(load)

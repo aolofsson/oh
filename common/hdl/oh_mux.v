@@ -30,7 +30,7 @@ module oh_mux (/*AUTOARG*/
      begin
 	out[DW-1:0] = 'b0;
 	for(i=0;i<N;i=i+1)
-	  out[DW-1:0] |= {(DW){sel[i]}} & in[((i+1)*DW-1)-:DW];
+	  out[DW-1:0] = out[DW-1:0] | {(DW){sel[i]}} & in[((i+1)*DW-1)-:DW];
      end
 
 endmodule // oh_mux
