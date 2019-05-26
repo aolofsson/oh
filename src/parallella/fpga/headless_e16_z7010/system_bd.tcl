@@ -198,7 +198,7 @@ proc create_root_design { parentCell } {
   set gpio_n [ create_bd_port -dir IO -from 11 -to 0 gpio_n ]
   set gpio_p [ create_bd_port -dir IO -from 11 -to 0 gpio_p ]
   set hdmi_clk [ create_bd_port -dir O hdmi_clk ]
-  set hdmi_d [ create_bd_port -dir O -from 23 -to 8 hdmi_d ]
+  set hdmi_d [ create_bd_port -dir O -from 15 -to 0 hdmi_d ]
   set hdmi_de [ create_bd_port -dir O hdmi_de ]
   set hdmi_hsync [ create_bd_port -dir O hdmi_hsync ]
   set hdmi_int [ create_bd_port -dir I hdmi_int ]
