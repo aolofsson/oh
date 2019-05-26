@@ -371,18 +371,18 @@ proc create_root_design { parentCell } {
    CONFIG.NUM_MI {4} \
  ] $axi_hdmi_intercon
 
-  # Create instance: axi_parallella_m_axi_intercon, and set properties
-  set axi_parallella_m_axi_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_parallella_m_axi_intercon ]
+  # Create instance: axi_parallella_m_intercon, and set properties
+  set axi_parallella_m_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_parallella_m_intercon ]
   set_property -dict [ list \
    CONFIG.NUM_MI {1} \
    CONFIG.NUM_SI {1} \
- ] $axi_parallella_m_axi_intercon
+ ] $axi_parallella_m_intercon
 
-  # Create instance: axi_parallella_s_axi_intercon, and set properties
-  set axi_parallella_s_axi_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_parallella_s_axi_intercon ]
+  # Create instance: axi_parallella_s_intercon, and set properties
+  set axi_parallella_s_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_parallella_s_intercon ]
   set_property -dict [ list \
    CONFIG.NUM_MI {1} \
- ] $axi_parallella_s_axi_intercon
+ ] $axi_parallella_s_intercon
 
   # Create instance: hdmi_0
   create_hier_cell_hdmi_0 [current_bd_instance .] hdmi_0
@@ -817,16 +817,16 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net axi_hdmi_intercon_M01_AXI [get_bd_intf_pins axi_hdmi_intercon/M01_AXI] [get_bd_intf_pins hdmi_0/S_AXI_LITE]
   connect_bd_intf_net -intf_net axi_hdmi_intercon_M02_AXI [get_bd_intf_pins axi_hdmi_intercon/M02_AXI] [get_bd_intf_pins hdmi_0/s_axi1]
   connect_bd_intf_net -intf_net axi_hdmi_intercon_M03_AXI [get_bd_intf_pins axi_hdmi_intercon/M03_AXI] [get_bd_intf_pins hdmi_0/s_axi2]
-  connect_bd_intf_net -intf_net axi_parallella_m_axi_intercon_M00_AXI [get_bd_intf_pins axi_parallella_m_axi_intercon/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP1]
-  connect_bd_intf_net -intf_net axi_parallella_s_axi_intercon_M00_AXI [get_bd_intf_pins axi_parallella_s_axi_intercon/M00_AXI] [get_bd_intf_pins parallella_base_0/s_axi]
+  connect_bd_intf_net -intf_net axi_parallella_m_intercon_M00_AXI [get_bd_intf_pins axi_parallella_m_intercon/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP1]
+  connect_bd_intf_net -intf_net axi_parallella_s_intercon_M00_AXI [get_bd_intf_pins axi_parallella_s_intercon/M00_AXI] [get_bd_intf_pins parallella_base_0/s_axi]
   connect_bd_intf_net -intf_net hdmi_0_DMA_REQ [get_bd_intf_pins hdmi_0/DMA_REQ] [get_bd_intf_pins processing_system7_0/DMA0_REQ]
   connect_bd_intf_net -intf_net hdmi_0_M00_AXI [get_bd_intf_pins hdmi_0/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP0]
-  connect_bd_intf_net -intf_net parallella_base_0_m_axi [get_bd_intf_pins axi_parallella_m_axi_intercon/S00_AXI] [get_bd_intf_pins parallella_base_0/m_axi]
+  connect_bd_intf_net -intf_net parallella_base_0_m_axi [get_bd_intf_pins axi_parallella_m_intercon/S00_AXI] [get_bd_intf_pins parallella_base_0/m_axi]
   connect_bd_intf_net -intf_net processing_system7_0_DDR [get_bd_intf_ports DDR] [get_bd_intf_pins processing_system7_0/DDR]
   connect_bd_intf_net -intf_net processing_system7_0_DMA0_ACK [get_bd_intf_pins hdmi_0/DMA_ACK] [get_bd_intf_pins processing_system7_0/DMA0_ACK]
   connect_bd_intf_net -intf_net processing_system7_0_FIXED_IO [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins processing_system7_0/FIXED_IO]
   connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP0 [get_bd_intf_pins axi_hdmi_intercon/S00_AXI] [get_bd_intf_pins processing_system7_0/M_AXI_GP0]
-  connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP1 [get_bd_intf_pins axi_parallella_s_axi_intercon/S00_AXI] [get_bd_intf_pins processing_system7_0/M_AXI_GP1]
+  connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP1 [get_bd_intf_pins axi_parallella_s_intercon/S00_AXI] [get_bd_intf_pins processing_system7_0/M_AXI_GP1]
 
   # Create port connections
   connect_bd_net -net hdmi_0_hdmi_16_data [get_bd_ports hdmi_d] [get_bd_pins hdmi_0/hdmi_16_data]
@@ -859,9 +859,9 @@ proc create_root_design { parentCell } {
   connect_bd_net -net parallella_base_0_txo_frame_p [get_bd_ports txo_frame_p] [get_bd_pins parallella_base_0/txo_frame_p]
   connect_bd_net -net parallella_base_0_txo_lclk_n [get_bd_ports txo_lclk_n] [get_bd_pins parallella_base_0/txo_lclk_n]
   connect_bd_net -net parallella_base_0_txo_lclk_p [get_bd_ports txo_lclk_p] [get_bd_pins parallella_base_0/txo_lclk_p]
-  connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins axi_hdmi_intercon/ARESETN] [get_bd_pins axi_parallella_m_axi_intercon/ARESETN] [get_bd_pins axi_parallella_s_axi_intercon/ARESETN] [get_bd_pins proc_sys_reset_0/interconnect_aresetn]
-  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins axi_hdmi_intercon/M00_ARESETN] [get_bd_pins axi_hdmi_intercon/M01_ARESETN] [get_bd_pins axi_hdmi_intercon/M02_ARESETN] [get_bd_pins axi_hdmi_intercon/M03_ARESETN] [get_bd_pins axi_hdmi_intercon/S00_ARESETN] [get_bd_pins axi_parallella_m_axi_intercon/M00_ARESETN] [get_bd_pins axi_parallella_m_axi_intercon/S00_ARESETN] [get_bd_pins axi_parallella_s_axi_intercon/M00_ARESETN] [get_bd_pins axi_parallella_s_axi_intercon/S00_ARESETN] [get_bd_pins hdmi_0/axi_resetn] [get_bd_pins parallella_base_0/m_axi_aresetn] [get_bd_pins parallella_base_0/s_axi_aresetn] [get_bd_pins parallella_base_0/sys_nreset] [get_bd_pins proc_sys_reset_0/peripheral_aresetn]
-  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins axi_hdmi_intercon/ACLK] [get_bd_pins axi_hdmi_intercon/M00_ACLK] [get_bd_pins axi_hdmi_intercon/M01_ACLK] [get_bd_pins axi_hdmi_intercon/M02_ACLK] [get_bd_pins axi_hdmi_intercon/M03_ACLK] [get_bd_pins axi_hdmi_intercon/S00_ACLK] [get_bd_pins axi_parallella_m_axi_intercon/ACLK] [get_bd_pins axi_parallella_m_axi_intercon/M00_ACLK] [get_bd_pins axi_parallella_m_axi_intercon/S00_ACLK] [get_bd_pins axi_parallella_s_axi_intercon/ACLK] [get_bd_pins axi_parallella_s_axi_intercon/M00_ACLK] [get_bd_pins axi_parallella_s_axi_intercon/S00_ACLK] [get_bd_pins hdmi_0/s_axi_aclk] [get_bd_pins parallella_base_0/sys_clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins processing_system7_0/DMA0_ACLK] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins processing_system7_0/M_AXI_GP1_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP1_ACLK]
+  connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins axi_hdmi_intercon/ARESETN] [get_bd_pins axi_parallella_m_intercon/ARESETN] [get_bd_pins axi_parallella_s_intercon/ARESETN] [get_bd_pins proc_sys_reset_0/interconnect_aresetn]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins axi_hdmi_intercon/M00_ARESETN] [get_bd_pins axi_hdmi_intercon/M01_ARESETN] [get_bd_pins axi_hdmi_intercon/M02_ARESETN] [get_bd_pins axi_hdmi_intercon/M03_ARESETN] [get_bd_pins axi_hdmi_intercon/S00_ARESETN] [get_bd_pins axi_parallella_m_intercon/M00_ARESETN] [get_bd_pins axi_parallella_m_intercon/S00_ARESETN] [get_bd_pins axi_parallella_s_intercon/M00_ARESETN] [get_bd_pins axi_parallella_s_intercon/S00_ARESETN] [get_bd_pins hdmi_0/axi_resetn] [get_bd_pins parallella_base_0/m_axi_aresetn] [get_bd_pins parallella_base_0/s_axi_aresetn] [get_bd_pins parallella_base_0/sys_nreset] [get_bd_pins proc_sys_reset_0/peripheral_aresetn]
+  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins axi_hdmi_intercon/ACLK] [get_bd_pins axi_hdmi_intercon/M00_ACLK] [get_bd_pins axi_hdmi_intercon/M01_ACLK] [get_bd_pins axi_hdmi_intercon/M02_ACLK] [get_bd_pins axi_hdmi_intercon/M03_ACLK] [get_bd_pins axi_hdmi_intercon/S00_ACLK] [get_bd_pins axi_parallella_m_intercon/ACLK] [get_bd_pins axi_parallella_m_intercon/M00_ACLK] [get_bd_pins axi_parallella_m_intercon/S00_ACLK] [get_bd_pins axi_parallella_s_intercon/ACLK] [get_bd_pins axi_parallella_s_intercon/M00_ACLK] [get_bd_pins axi_parallella_s_intercon/S00_ACLK] [get_bd_pins hdmi_0/s_axi_aclk] [get_bd_pins parallella_base_0/sys_clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins processing_system7_0/DMA0_ACLK] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins processing_system7_0/M_AXI_GP1_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP1_ACLK]
   connect_bd_net -net processing_system7_0_FCLK_CLK2 [get_bd_pins hdmi_0/clk] [get_bd_pins processing_system7_0/FCLK_CLK2]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins proc_sys_reset_0/ext_reset_in] [get_bd_pins processing_system7_0/FCLK_RESET0_N]
   connect_bd_net -net processing_system7_0_GPIO_O [get_bd_pins parallella_base_0/ps_gpio_o] [get_bd_pins processing_system7_0/GPIO_O]
