@@ -10,7 +10,7 @@ set partname "xc7z020clg400-1"
 
 #Paths to all IP blocks to use in Vivado "system.bd"
 
-set ip_repos [list "../parallella_base" "../../../../../parallella-fpga/AdiHDLLib/library"]
+set ip_repos [list "../parallella_base" "../../../adi/hdl/library"]
 
 #All source files
 set hdl_files []
