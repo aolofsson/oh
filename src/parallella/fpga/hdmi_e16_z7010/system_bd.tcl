@@ -128,9 +128,9 @@ xilinx.com:ip:proc_sys_reset:5.0\
 xilinx.com:ip:processing_system7:5.5\
 xilinx.com:ip:xlconcat:2.1\
 analog.com:user:axi_clkgen:1.0\
+analog.com:user:axi_dmac:1.0\
 analog.com:user:axi_hdmi_tx:1.0\
 analog.com:user:axi_spdif_tx:1.0\
-xilinx.com:ip:axi_vdma:6.3\
 xilinx.com:ip:clk_wiz:6.0\
 "
 
@@ -219,6 +219,15 @@ proc create_hier_cell_hdmi_0 { parentCell nameHier } {
   # Create instance: axi_clkgen_0, and set properties
   set axi_clkgen_0 [ create_bd_cell -type ip -vlnv analog.com:user:axi_clkgen:1.0 axi_clkgen_0 ]
 
+  # Create instance: axi_dmac_0, and set properties
+  set axi_dmac_0 [ create_bd_cell -type ip -vlnv analog.com:user:axi_dmac:1.0 axi_dmac_0 ]
+  set_property -dict [ list \
+   CONFIG.CYCLIC {true} \
+   CONFIG.DMA_2D_TRANSFER {true} \
+   CONFIG.DMA_TYPE_DEST {1} \
+   CONFIG.DMA_TYPE_SRC {0} \
+ ] $axi_dmac_0
+
   # Create instance: axi_hdmi_tx_0, and set properties
   set axi_hdmi_tx_0 [ create_bd_cell -type ip -vlnv analog.com:user:axi_hdmi_tx:1.0 axi_hdmi_tx_0 ]
 
@@ -234,14 +243,6 @@ proc create_hier_cell_hdmi_0 { parentCell nameHier } {
    CONFIG.DMA_TYPE {1} \
    CONFIG.S_AXI_ADDRESS_WIDTH {16} \
  ] $axi_spdif_tx_0
-
-  # Create instance: axi_vdma_0, and set properties
-  set axi_vdma_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_vdma:6.3 axi_vdma_0 ]
-  set_property -dict [ list \
-   CONFIG.c_include_s2mm {0} \
-   CONFIG.c_m_axis_mm2s_tdata_width {64} \
-   CONFIG.c_use_mm2s_fsync {1} \
- ] $axi_vdma_0
 
   # Create instance: clk_wiz_0, and set properties
   set clk_wiz_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 clk_wiz_0 ]
@@ -272,30 +273,30 @@ proc create_hier_cell_hdmi_0 { parentCell nameHier } {
   # Create interface connections
   connect_bd_intf_net -intf_net DMA_ACK_1 [get_bd_intf_pins DMA_ACK] [get_bd_intf_pins axi_spdif_tx_0/dma_ack]
   connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins S_AXI] [get_bd_intf_pins axi_spdif_tx_0/s_axi]
-  connect_bd_intf_net -intf_net S_AXI_LITE_1 [get_bd_intf_pins S_AXI_LITE] [get_bd_intf_pins axi_vdma_0/S_AXI_LITE]
+  connect_bd_intf_net -intf_net S_AXI_LITE_1 [get_bd_intf_pins S_AXI_LITE] [get_bd_intf_pins axi_dmac_0/s_axi]
+  connect_bd_intf_net -intf_net axi_dmac_0_m_src_axi [get_bd_intf_pins axi_dmac_0/m_src_axi] [get_bd_intf_pins axi_interconnect_0/S00_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M00_AXI [get_bd_intf_pins M00_AXI] [get_bd_intf_pins axi_interconnect_0/M00_AXI]
   connect_bd_intf_net -intf_net axi_spdif_tx_0_DMA_REQ [get_bd_intf_pins DMA_REQ] [get_bd_intf_pins axi_spdif_tx_0/dma_req]
-  connect_bd_intf_net -intf_net axi_vdma_0_M_AXI_MM2S [get_bd_intf_pins axi_interconnect_0/S00_AXI] [get_bd_intf_pins axi_vdma_0/M_AXI_MM2S]
   connect_bd_intf_net -intf_net s_axi1_1 [get_bd_intf_pins s_axi1] [get_bd_intf_pins axi_clkgen_0/s_axi]
   connect_bd_intf_net -intf_net s_axi2_1 [get_bd_intf_pins s_axi2] [get_bd_intf_pins axi_hdmi_tx_0/s_axi]
 
   # Create port connections
   connect_bd_net -net axi_clkgen_0_clk_0 [get_bd_pins axi_clkgen_0/clk_0] [get_bd_pins axi_hdmi_tx_0/hdmi_clk]
+  connect_bd_net -net axi_dmac_0_irq [get_bd_pins mm2s_introut] [get_bd_pins axi_dmac_0/irq]
+  connect_bd_net -net axi_dmac_0_m_axis_data [get_bd_pins axi_dmac_0/m_axis_data] [get_bd_pins axi_hdmi_tx_0/vdma_data]
+  connect_bd_net -net axi_dmac_0_m_axis_last [get_bd_pins axi_dmac_0/m_axis_last] [get_bd_pins axi_hdmi_tx_0/vdma_end_of_frame]
+  connect_bd_net -net axi_dmac_0_m_axis_valid [get_bd_pins axi_dmac_0/m_axis_valid] [get_bd_pins axi_hdmi_tx_0/vdma_valid]
   connect_bd_net -net axi_hdmi_tx_0_hdmi_16_data [get_bd_pins hdmi_16_data] [get_bd_pins axi_hdmi_tx_0/hdmi_16_data]
   connect_bd_net -net axi_hdmi_tx_0_hdmi_16_data_e [get_bd_pins hdmi_16_data_e] [get_bd_pins axi_hdmi_tx_0/hdmi_16_data_e]
   connect_bd_net -net axi_hdmi_tx_0_hdmi_16_hsync [get_bd_pins hdmi_16_hsync] [get_bd_pins axi_hdmi_tx_0/hdmi_16_hsync]
   connect_bd_net -net axi_hdmi_tx_0_hdmi_16_vsync [get_bd_pins hdmi_16_vsync] [get_bd_pins axi_hdmi_tx_0/hdmi_16_vsync]
   connect_bd_net -net axi_hdmi_tx_0_hdmi_out_clk [get_bd_pins hdmi_out_clk] [get_bd_pins axi_hdmi_tx_0/hdmi_out_clk]
-  connect_bd_net -net axi_hdmi_tx_0_vdma_fs [get_bd_pins axi_vdma_0/mm2s_fsync]
-  connect_bd_net -net axi_hdmi_tx_0_vdma_ready [get_bd_pins axi_hdmi_tx_0/vdma_ready] [get_bd_pins axi_vdma_0/m_axis_mm2s_tready]
-  connect_bd_net -net axi_resetn_1 [get_bd_pins axi_resetn] [get_bd_pins axi_clkgen_0/s_axi_aresetn] [get_bd_pins axi_hdmi_tx_0/s_axi_aresetn] [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins axi_interconnect_0/M00_ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_spdif_tx_0/dma_req_rstn] [get_bd_pins axi_spdif_tx_0/s_axi_aresetn] [get_bd_pins axi_vdma_0/axi_resetn] [get_bd_pins clk_wiz_0/resetn]
+  connect_bd_net -net axi_hdmi_tx_0_vdma_ready [get_bd_pins axi_dmac_0/m_axis_ready] [get_bd_pins axi_hdmi_tx_0/vdma_ready]
+  connect_bd_net -net axi_resetn_1 [get_bd_pins axi_resetn] [get_bd_pins axi_clkgen_0/s_axi_aresetn] [get_bd_pins axi_dmac_0/m_src_axi_aresetn] [get_bd_pins axi_dmac_0/s_axi_aresetn] [get_bd_pins axi_hdmi_tx_0/s_axi_aresetn] [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins axi_interconnect_0/M00_ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_spdif_tx_0/dma_req_rstn] [get_bd_pins axi_spdif_tx_0/s_axi_aresetn] [get_bd_pins clk_wiz_0/resetn]
   connect_bd_net -net axi_spdif_tx_0_spdif_tx_o [get_bd_pins spdif_tx_o] [get_bd_pins axi_spdif_tx_0/spdif_tx_o]
-  connect_bd_net -net axi_vdma_0_m_axis_mm2s_tdata [get_bd_pins axi_hdmi_tx_0/vdma_data] [get_bd_pins axi_vdma_0/m_axis_mm2s_tdata]
-  connect_bd_net -net axi_vdma_0_m_axis_mm2s_tvalid [get_bd_pins axi_hdmi_tx_0/vdma_valid] [get_bd_pins axi_vdma_0/m_axis_mm2s_tvalid]
-  connect_bd_net -net axi_vdma_0_mm2s_introut [get_bd_pins mm2s_introut] [get_bd_pins axi_vdma_0/mm2s_introut]
   connect_bd_net -net clk_1 [get_bd_pins clk] [get_bd_pins axi_clkgen_0/clk] [get_bd_pins clk_wiz_0/clk_in1]
   connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins axi_spdif_tx_0/spdif_data_clk] [get_bd_pins clk_wiz_0/clk_out1]
-  connect_bd_net -net s_axi_aclk_1 [get_bd_pins s_axi_aclk] [get_bd_pins axi_clkgen_0/s_axi_aclk] [get_bd_pins axi_hdmi_tx_0/s_axi_aclk] [get_bd_pins axi_hdmi_tx_0/vdma_clk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_spdif_tx_0/dma_req_aclk] [get_bd_pins axi_spdif_tx_0/s_axi_aclk] [get_bd_pins axi_vdma_0/m_axi_mm2s_aclk] [get_bd_pins axi_vdma_0/m_axis_mm2s_aclk] [get_bd_pins axi_vdma_0/s_axi_lite_aclk]
+  connect_bd_net -net s_axi_aclk_1 [get_bd_pins s_axi_aclk] [get_bd_pins axi_clkgen_0/s_axi_aclk] [get_bd_pins axi_dmac_0/m_axis_aclk] [get_bd_pins axi_dmac_0/m_src_axi_aclk] [get_bd_pins axi_dmac_0/s_axi_aclk] [get_bd_pins axi_hdmi_tx_0/s_axi_aclk] [get_bd_pins axi_hdmi_tx_0/vdma_clk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_spdif_tx_0/dma_req_aclk] [get_bd_pins axi_spdif_tx_0/s_axi_aclk]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -894,11 +895,11 @@ proc create_root_design { parentCell } {
   # Create address segments
   create_bd_addr_seg -range 0x40000000 -offset 0x00000000 [get_bd_addr_spaces parallella_base_0/m_axi] [get_bd_addr_segs processing_system7_0/S_AXI_HP1/HP1_DDR_LOWOCM] SEG_processing_system7_0_HP1_DDR_LOWOCM
   create_bd_addr_seg -range 0x00010000 -offset 0x66000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs hdmi_0/axi_clkgen_0/s_axi/axi_lite] SEG_axi_clkgen_0_axi_lite
+  create_bd_addr_seg -range 0x00001000 -offset 0x43000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs hdmi_0/axi_dmac_0/s_axi/axi_lite] SEG_axi_dmac_0_axi_lite
   create_bd_addr_seg -range 0x00010000 -offset 0x6C000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs hdmi_0/axi_hdmi_tx_0/s_axi/axi_lite] SEG_axi_hdmi_tx_0_axi_lite
   create_bd_addr_seg -range 0x00010000 -offset 0x75C00000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs hdmi_0/axi_spdif_tx_0/s_axi/axi_lite] SEG_axi_spdif_tx_0_axi_lite
-  create_bd_addr_seg -range 0x00010000 -offset 0x43000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs hdmi_0/axi_vdma_0/S_AXI_LITE/Reg] SEG_axi_vdma_0_Reg
   create_bd_addr_seg -range 0x40000000 -offset 0x80000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs parallella_base_0/s_axi/axi_lite] SEG_parallella_base_0_axi_lite
-  create_bd_addr_seg -range 0x40000000 -offset 0x00000000 [get_bd_addr_spaces hdmi_0/axi_vdma_0/Data_MM2S] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
+  create_bd_addr_seg -range 0x40000000 -offset 0x00000000 [get_bd_addr_spaces hdmi_0/axi_dmac_0/m_src_axi] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
 
 
   # Restore current instance
