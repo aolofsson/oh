@@ -1,5 +1,5 @@
 LIBRARY := ./hdl/library
-IPS := axi_clkgen axi_hdmi_tx axi_spdif_tx
+IPS := axi_clkgen axi_hdmi_tx axi_spdif_tx axi_dmac
 
 .PHONY: all clean
 
