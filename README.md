@@ -1,7 +1,7 @@
 =======
 # OH! Open Hardware for Chip Designers
 
-## Introduction 
+## Introduction
 
 OH! is an open-source library of hardware building blocks based on silicon proven design practices at 0.35um to 28nm. The library is being used by Adapteva in designing its next generation ASIC.
 
@@ -193,6 +193,8 @@ TBD
 * [GTKWave](http://gtkwave.sourceforge.net)
 * [Wavedrom](http://wavedrom.com/editor.html)
 * [FuseSoC](https://github.com/olofk/fusesoc)
+* [OpenROAD](https://github.com/The-OpenROAD-Project/OpenROAD)
+
 
 ## License
 The OH! repository source code is licensed under the MIT license unless otherwise specified. See [LICENSE](LICENSE) for MIT copyright terms. Design specific licenses can be found in the folder root (eg: aes/LICENSE) 
