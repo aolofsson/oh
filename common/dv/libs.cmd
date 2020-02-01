@@ -1,4 +1,5 @@
--y .
+
+
 -y ../../common/dv
 -y ../../emesh/dv
 -y ../../memory/dv
@@ -29,3 +30,4 @@
 +incdir+../../gpio/hdl
 +incdir+../../spi/hdl
 +incdir+../../mio/hdl
+
