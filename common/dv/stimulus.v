@@ -1,11 +1,13 @@
-/*
- * Reads transctions from file in Epiphany Memory Format (EMF) and drives
- * packet output.
- * 
- * NOTE: wait comes in one next cycle, this block adjusts for that!
- * 
- */ 
-`timescale 1ns/1ps
+// A stimulus file provides inputs signals to the design under test (DUT).
+// This stimulus module is designed to be compatible with verilog simulators,
+// emulators, and FPGA prototyping.
+//
+// Memory format: 
+// b0      =valid,
+// b1-15   =wait time
+// b16=bxxx=packet
+//
+`timescale 1ns/1ps //TODO: Find a better place for this!
 module stimulus (/*AUTOARG*/
    // Outputs
    stim_access, stim_packet, stim_count, stim_done, stim_wait,
@@ -14,26 +16,44 @@ module stimulus (/*AUTOARG*/
    );
 
    //stimulus 
-   parameter PW     = 32;             //size of packet
-   parameter MAW    = 15;    
-   parameter MD     = 1<<MAW;         //limit test to 1K transactions
-   parameter INDEX  = 1;
-   parameter NAME   = "not_declared";
+   parameter PW     = 32;         //Memory width=PW+
+   parameter MAW    = 15;         //Memory address width
+   parameter MD     = 1<<MAW;     //Memory depth
+   parameter MEMH   = 1;          //1=read from memh file
+   parameter NAME   = "NONAME";   //
    parameter WAIT   = 0;
+
+   
    
    //Inputs
-   input           clk;
-   input           nreset;
-   input           start;
+   input           clk;               // single clock
+   input           nreset;            // async negative edge reset
+   input           start;             // Start driving stimulus ("ready/go/por")
+      
+   //DUT Transaction
    input           dut_wait;
-   
-   //outputs
    output          stim_access;   
    output [PW-1:0] stim_packet;   
    output [31:0]   stim_count;
    output 	   stim_done;   
    output 	   stim_wait;   
 
+   //External Write Path
+   input           dut_wait;
+   output          stim_access;   
+   output [PW-1:0] stim_packet;   
+   output [31:0]   stim_count;
+   output 	   stim_done;   
+   output 	   stim_wait;   
+
+
+   
+   //##############################
+   //Dual Ported Stimulus Memory
+   //##############################
+
+
+   
    //variables
    reg 		   mem_access;
    reg [PW+16-1:0] mem_data;
