@@ -4,52 +4,56 @@
 // No looping supported!
 //
 // Memory format: 
-// b0       = valid,
-// b1-15    = wait time
-// b16-bxxx = packet
+// b0      = valid,
+// b1-7    = wait time
+// b8-bxxx = packet
 //
 // Test Process:
 // 1. Zero out memory (or write program)
 // 2. Set go signal
 //
-module stimulus #( parameter PW       = 32,       // Memory width=PW+
-		   parameter MAW      = 15,       // Memory address width
-		   parameter INIT     = 1,        // 1=init from memh file
-		   parameter FILENAME = "NONAME"  // Name of memh file
+module stimulus #( parameter DW       = 32,    // Memory width=DW+
+		   parameter MAW      = 15,    // Memory address width
+		   parameter HEXFILE = "NONE"  // Name of hex file
 		   )
    (   
-       //Inputs
-       input 	       nreset, // Async negative edge reset
+       //Asynchronous Stimulus Reset
+       input 	       nreset,
+       input 	       ext_start, // Start driving stimulus
+       //External Load port
        input 	       ext_clk,// External clock for write path  
        input 	       ext_access, // Valid packet for memory
-       input [PW-1:0]  ext_packet, // Packet for memory
-       input 	       ext_start, // Start driving stimulus      
+       input [DW-1:0]  ext_packet, // Packet for memory
        //DUT Drive port
        input 	       dut_clk, // DUT side clock
        input 	       dut_wait, // DUT stall signal
        output 	       stim_access, // Access signal  
-       output [PW-1:0] stim_packet, // Packet
+       output [DW-1:0] stim_packet, // Packet
        output 	       stim_done // Stimulus program done
        );
 
    localparam MD       = 1<<MAW;  // Memory depth
-
    
    //Registers
-   reg [PW+16-1:0]     ram[MD-1:0];
+   reg [DW-1:0]        ram[MD-1:0];
+   reg [1:0] 	       rd_state;   
    reg [MAW-1:0]       wr_addr;
    reg [MAW-1:0]       rd_addr;
    reg [255:0] 	       memhfile;
-   
+   reg [1:0] 	       sync_pipe;
+   reg [6:0] 	       rd_delay;
+   reg [DW-1:0]        stim_packet;
+   reg 		       stim_read;
+
    //#################################
    // Init memory if configured
    //#################################
    generate
-      if(INIT)
+      if(!(HEXFILE=="NONE"))
 	initial
 	  begin
-	     $display("Initializing SRAM from %s", FILENAME);	
-	     $readmemh(FILENAME, ram);
+	     $display("Initializing STIMULUS from %s", HEXFILE);	
+	     $readmemh(HEXFILE, ram);
 	  end
    endgenerate
    
@@ -59,87 +63,78 @@ module stimulus #( parameter PW       = 32,       // Memory width=PW+
 
    always @ (posedge ext_clk or negedge nreset)
      if(!nreset)
-       begin	  	
-	  wr_addr[MAW-1:0]      <= 'b0;	   	  
-       end
+       wr_addr[MAW-1:0] <= 'b0;	   	  
      else if(ext_access)
-       begin
-	  ram[wr_addr[MAW-1:0]] <= ext_packet[PW-1:0];
-	  wr_addr[MAW-1:0]      <= wr_addr[MAW-1:0] + 1;
-       end
-
-   //Synchronize start signal to rd_clk
-   oh_dsync oh_dsync(.clk	(ext_clk),
-		     .din	(ext_start),
-		     .dout	(dut_start));
-      
+       wr_addr[MAW-1:0]   <= wr_addr[MAW-1:0] + 1;
+   
+   //Synchronize ext_start to dut_clk domain   
+   always @ (posedge dut_clk or negedge nreset)		 
+     if(!nreset)
+       sync_pipe[1:0] <= 1'b0;
+     else
+       sync_pipe[1:0] <= {sync_pipe[0],ext_start};	      	      
+   assign dut_start = sync_pipe[1];
+   
    //#################################
    // Read port state machine
    //#################################
    //1. Start on dut_start
-   //2. After thar update rd state machine on all not wait
-   always @ (posedge rd_clk or negedge nreset)
+   //2. After thar update rd state machine on all not stall and not wait
+   //3. Set end state on special end packet
+
+`define STIM_IDLE   2'b00
+`define STIM_ACTIVE 2'b01  
+`define STIM_PAUSE  2'b10
+`define STIM_DONE   2'b11
+   
+   always @ (posedge dut_clk or negedge nreset)
      if(!nreset)
-       begin	  	
-	  rd_addr[MAW-1:0]    <= 'b0;
-	  rd_en               <= 'b0;
-       end
-     else if(ext_start) //read first cycle
-       rd_en               <=1'b1;
-     else if(rd_en & ~dut_wait)
-       rd_addr[MAW-1:0]    <= rd_addr[MAW-1:0]+1'b1;
-     else if(ext_
-	     rd_addr[MAW-1:0]    <= 'b0;
-
-  
-       end
-     else if((state[1:0]==`IDLE))//not started
        begin
-	  state[1:0] <= `GO;//going
+	  rd_state[1:0]     <= `STIM_IDLE;
+	  rd_addr[MAW-1:0]  <= 'b0;
+	  rd_delay[6:0]     <= 'b0;
        end
      else if(~dut_wait)
-       if((wait_counter[15:0]==0) & (stim_count < stim_end) & (state[1:0]==`GO))//going
-	 begin
-	    wait_counter[15:0]   <= stimarray[stim_addr];//first 15 bits
-	    mem_data[PW+16-1:0]  <= stimarray[stim_addr];//FIX: used 2D indexiing?
-	    mem_access           <= 1'b1;	  
-	    stim_addr[MAW-1:0]   <= stim_addr[MAW-1:0] + 1'b1; 
-	    stim_count           <= stim_count + 1'b1; 
-       end         
-       else if((wait_counter[15:0]==0) & (stim_count == stim_end) & (state[1:0]==`GO)) //not waiting and done
-	 begin
-	    state[1:0]          <= `DONE;//gone
-	    mem_access          <= 1'b0;	  
-	 end
-       else if(wait_counter>0)
-	 begin
-	    mem_access          <= 1'b0;	  
-	    wait_counter[15:0]  <= wait_counter[15:0] - 1'b1;
-	 end
-	    
-   //Use to finish simulation
-   assign stim_done           = ~dut_wait & (state[1:0]==`DONE);
+       case (rd_state[1:0])
+	 `STIM_IDLE : 
+	   rd_state[1:0]       <= dut_start ? `STIM_ACTIVE : `STIM_IDLE;
+	 `STIM_ACTIVE :
+	   begin
+	      rd_state[1:0]    <= (|rd_delay[6:0]) ? `STIM_PAUSE :
+			          ~stim_packet[0]  ? `STIM_DONE  :
+	                      		             `STIM_ACTIVE;
+	      rd_addr[MAW-1:0] <= rd_addr[MAW-1:0] + 1'b1;
+	      rd_delay[6:0]    <= stim_packet[7:1];
+	   end
+	 `STIM_PAUSE :
+	   begin
+	      rd_state[1:0]    <= (|rd_delay[6:0]) ? `STIM_PAUSE : `STIM_ACTIVE;
+	      rd_delay[6:0]    <= rd_delay[6:0] - 1'b1;
+	   end
+       endcase // case (rd_state[1:0])
    
-   //Removing delay value
-	    always @ (posedge clk or negedge nreset)
-     if(~nreset)
-       begin
-	  mem_access_reg <= 'b0;
-	  mem_packet_reg <= 'b0;	  
-	  stim_packet    <= 'b0;	  
-	  stim_access    <= 'b0;	  
-       end
-     else if(~dut_wait)
-       begin
-	  mem_access_reg <= mem_access;
-	  mem_packet_reg <= mem_data[PW+16-1:16];	  
-	  stim_packet    <= mem_packet_reg;
-	  stim_access    <= mem_access_reg;
-       end
+   //Output Driver
+   assign stim_done           = (rd_state[1:0] == `STIM_DONE);
+   
+   //#################################
+   // RAM
+   //#################################
 
-   
-   
-   
+   //write port
+   always @(posedge ext_clk)    
+     if(ext_access)
+       ram[wr_addr[MAW-1:0]] <= ext_packet[DW-1:0];
+
+   //read port
+   always @ (posedge dut_clk)
+     begin
+	stim_packet[DW-1:0] <= ram[rd_addr[MAW-1:0]];
+	stim_read           <= (rd_state==`STIM_ACTIVE); //mem-cycle adjust
+     end
+
+   //Shut off access immediately, but pipeline delay by one cycle
+   assign stim_access = stim_packet[0] & stim_read & ~stim_done;
+      
 endmodule // stimulus
 
-
+  
