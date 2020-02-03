@@ -1,118 +1,99 @@
 // A stimulus file provides inputs signals to the design under test (DUT).
 // This stimulus module is designed to be compatible with verilog simulators,
-// emulators, and FPGA prototyping.
+// emulators, and FPGA prototyping. This is akin to a simple test vector generator
+// No looping supported!
 //
 // Memory format: 
-// b0      =valid,
-// b1-15   =wait time
-// b16=bxxx=packet
+// b0       = valid,
+// b1-15    = wait time
+// b16-bxxx = packet
 //
-`timescale 1ns/1ps //TODO: Find a better place for this!
-module stimulus (/*AUTOARG*/
-   // Outputs
-   stim_access, stim_packet, stim_count, stim_done, stim_wait,
-   // Inputs
-   clk, nreset, start, dut_wait
-   );
+// Test Process:
+// 1. Zero out memory (or write program)
+// 2. Set go signal
+//
+module stimulus #( parameter PW       = 32,       // Memory width=PW+
+		   parameter MAW      = 15,       // Memory address width
+		   parameter INIT     = 1,        // 1=init from memh file
+		   parameter FILENAME = "NONAME"  // Name of memh file
+		   )
+   (   
+       //Inputs
+       input 	       nreset, // Async negative edge reset
+       input 	       ext_clk,// External clock for write path  
+       input 	       ext_access, // Valid packet for memory
+       input [PW-1:0]  ext_packet, // Packet for memory
+       input 	       ext_start, // Start driving stimulus      
+       //DUT Drive port
+       input 	       dut_clk, // DUT side clock
+       input 	       dut_wait, // DUT stall signal
+       output 	       stim_access, // Access signal  
+       output [PW-1:0] stim_packet, // Packet
+       output 	       stim_done // Stimulus program done
+       );
 
-   //stimulus 
-   parameter PW     = 32;         //Memory width=PW+
-   parameter MAW    = 15;         //Memory address width
-   parameter MD     = 1<<MAW;     //Memory depth
-   parameter MEMH   = 1;          //1=read from memh file
-   parameter NAME   = "NONAME";   //
-   parameter WAIT   = 0;
-
-   
-   
-   //Inputs
-   input           clk;               // single clock
-   input           nreset;            // async negative edge reset
-   input           start;             // Start driving stimulus ("ready/go/por")
-      
-   //DUT Transaction
-   input           dut_wait;
-   output          stim_access;   
-   output [PW-1:0] stim_packet;   
-   output [31:0]   stim_count;
-   output 	   stim_done;   
-   output 	   stim_wait;   
-
-   //External Write Path
-   input           dut_wait;
-   output          stim_access;   
-   output [PW-1:0] stim_packet;   
-   output [31:0]   stim_count;
-   output 	   stim_done;   
-   output 	   stim_wait;   
-
+   localparam MD       = 1<<MAW;  // Memory depth
 
    
-   //##############################
-   //Dual Ported Stimulus Memory
-   //##############################
+   //Registers
+   reg [PW+16-1:0]     ram[MD-1:0];
+   reg [MAW-1:0]       wr_addr;
+   reg [MAW-1:0]       rd_addr;
+   reg [255:0] 	       memhfile;
+   
+   //#################################
+   // Init memory if configured
+   //#################################
+   generate
+      if(INIT)
+	initial
+	  begin
+	     $display("Initializing SRAM from %s", FILENAME);	
+	     $readmemh(FILENAME, ram);
+	  end
+   endgenerate
+   
+   //#################################
+   // Write port state machine
+   //#################################
 
-
-   
-   //variables
-   reg 		   mem_access;
-   reg [PW+16-1:0] mem_data;
-   reg [PW+16-1:0] stimarray[MD-1:0];
-   reg [MAW-1:0]   stim_addr;
-   reg [1:0] 	   state;
-   reg [31:0] 	   stim_count;
-   reg [15:0]      wait_counter;
-   reg [PW-1:0]    stim_packet;
-   reg 		   stim_access;
-   reg [PW-1:0]    mem_packet_reg;
-   reg 		   mem_access_reg;
-   
-   //Read in stimulus
-   integer 	   i,j;
-
-   reg [255:0] 	   testfile;
-   integer 	   fd;
-   reg [128*8:0]   str;
-   reg [31:0] 	   stim_end;
-   wire 	   stall_random;
-   
-   //Read Stimulus
-   initial begin
-      $sformat(testfile[255:0],"%0s_%0d%s",NAME,INDEX,".emf");
-      fd = $fopen(testfile, "r");
-      if(!fd)
-	begin
-	   $display("could not open the file %0s\n", testfile);
-	   $finish;
-	end
-      //Read stimulus from file      
-      j=0;      
-      while ($fgets(str, fd)) begin 
-	 if ($sscanf(str,"%h", stimarray[j]))
-	   begin
-	      //$display("%0s %0d data=%0h", testfile, j, stimarray[j]);
-	      j=j+1;
-	   end	 
-      end
-      stim_end[31:0]=j;      
-   end
-
-   
-`define IDLE  2'b00
-`define DONE  2'b10
-`define GO    2'b01
-   
-   always @ (posedge clk or negedge nreset)
+   always @ (posedge ext_clk or negedge nreset)
      if(!nreset)
        begin	  	
-	  state[1:0]          <= `IDLE;
-	  mem_access          <= 1'b0;	  
-	  mem_data            <= 'd0;
-	  stim_count          <= 0;
-	  stim_addr[MAW-1:0]  <= 'b0;	   	  
-	  wait_counter        <= 'b0;
+	  wr_addr[MAW-1:0]      <= 'b0;	   	  
        end
-     else if(start & (state[1:0]==`IDLE))//not started
+     else if(ext_access)
+       begin
+	  ram[wr_addr[MAW-1:0]] <= ext_packet[PW-1:0];
+	  wr_addr[MAW-1:0]      <= wr_addr[MAW-1:0] + 1;
+       end
+
+   //Synchronize start signal to rd_clk
+   oh_dsync oh_dsync(.clk	(ext_clk),
+		     .din	(ext_start),
+		     .dout	(dut_start));
+      
+   //#################################
+   // Read port state machine
+   //#################################
+   //1. Start on dut_start
+   //2. After thar update rd state machine on all not wait
+   always @ (posedge rd_clk or negedge nreset)
+     if(!nreset)
+       begin	  	
+	  rd_addr[MAW-1:0]    <= 'b0;
+	  rd_en               <= 'b0;
+       end
+     else if(ext_start) //read first cycle
+       rd_en               <=1'b1;
+     else if(rd_en & ~dut_wait)
+       rd_addr[MAW-1:0]    <= rd_addr[MAW-1:0]+1'b1;
+     else if(ext_
+	     rd_addr[MAW-1:0]    <= 'b0;
+
+  
+       end
+     else if((state[1:0]==`IDLE))//not started
        begin
 	  state[1:0] <= `GO;//going
        end
@@ -134,14 +115,13 @@ module stimulus (/*AUTOARG*/
 	 begin
 	    mem_access          <= 1'b0;	  
 	    wait_counter[15:0]  <= wait_counter[15:0] - 1'b1;
-	 end  
-
+	 end
+	    
    //Use to finish simulation
    assign stim_done           = ~dut_wait & (state[1:0]==`DONE);
    
    //Removing delay value
-   //assign stim_packet[PW-1:0] = mem_data[PW+16-1:  
-   always @ (posedge clk or negedge nreset)
+	    always @ (posedge clk or negedge nreset)
      if(~nreset)
        begin
 	  mem_access_reg <= 'b0;
@@ -157,32 +137,7 @@ module stimulus (/*AUTOARG*/
 	  stim_access    <= mem_access_reg;
        end
 
-   //assign stim_packet = dut_wait ? stim_packet_reg : mem_data[PW+16-1:16];
-   //assign stim_access = dut_wait ? stim_access_reg : mem_access;
-   //assign stim_access = dut_wait ? 1'b0 : mem_access;
    
-   //TODO: Implement
-   assign stim_wait = stall_random;
-
-   //Random wait generator
-   //TODO: make this a module
-   
-   generate
-      if(WAIT)
-	begin	   
-	   reg [15:0] stall_counter;  
-	   always @ (posedge clk or negedge nreset)
-	     if(!nreset)
-	       stall_counter[15:0] <= 'b0;   
-	     else
-	       stall_counter[15:0] <= stall_counter+1'b1;         
-	   assign stall_random      = (|stall_counter[6:0]);//(|wait_counter[3:0]);//1'b0;
-	end
-      else
-	begin
-	   assign stall_random = 1'b0;
-	end // else: !if(WAIT)
-   endgenerate
    
    
 endmodule // stimulus
