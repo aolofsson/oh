@@ -35,7 +35,7 @@ module stimulus #( parameter DW       = 32,    // Memory width=DW+
    localparam MD       = 1<<MAW;  // Memory depth
    
    //Registers
-   reg [DW-1:0]        ram[MD-1:0];
+   reg [DW-1:0]        ram[0:MD-1];
    reg [1:0] 	       rd_state;   
    reg [MAW-1:0]       wr_addr;
    reg [MAW-1:0]       rd_addr;
