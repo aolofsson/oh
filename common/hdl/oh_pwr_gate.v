@@ -11,19 +11,15 @@ module oh_pwr_gate (
     output vddg     // gated output supply
     );
 
-   localparam ASIC = `CFG_ASIC;  // use asic library
-
 `ifdef TARGET_SIM
    assign vddg = ((vdd===1'b1) && (npower===1'b0)) ? 1'b1 : 1'bX; 		  
 `else
-   generate
-      if(ASIC)	
-	begin : asic
-	   asic_pwr_header i_header (.npower(npower),
+ `ifdef CFG_ASIC
+   asic_pwr_header i_header (.npower(npower),
 				     .vdd(vdd),
 				     .vddg(vddg));
-	end
-   endgenerate   
+ `endif
 `endif
+
    
 endmodule // oh_pwr_gate

@@ -13,20 +13,13 @@ module oh_delay  #(parameter DW   = 1, // width of data
     output [DW-1:0] out // output
     );
 
-   localparam ASIC = `CFG_ASIC;  // use asic library
-   
-   generate
-      if(ASIC)
-	begin
-	   asic_delay i_delay[DW-1:0] (.in(in[DW-1:0]),
-				       .out(out[DW-1:0]));
-	end
-      else
-	begin
-	   assign out[DW-1:0] = in [DW-1:0];
-	end	
-endgenerate
-    
+`ifdef CFG_ASIC
+   asic_delay i_delay[DW-1:0] (.in(in[DW-1:0]),
+			       .out(out[DW-1:0]));
+`else
+   assign out[DW-1:0] = in [DW-1:0];
+`endif
+     
 endmodule // oh_delay
 
 

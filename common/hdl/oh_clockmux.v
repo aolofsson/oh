@@ -12,26 +12,25 @@ module oh_clockmux #(parameter N    = 1)    // number of clock inputs
     output 	  clkout 
     );
 
-    localparam ASIC = `CFG_ASIC;
-
+`ifdef CFG_ASIC
     generate
-       if(ASIC& (N==2))
+       if((N==2))
 	 begin : asic
 	    asic_clockmux2 imux (.clkin(clkin[N-1:0]),
 				 .en(en[N-1:0]),
 				 .clkout(clkout));
 	 end
-       else if(ASIC & (N==4))
+       else if((N==4))
 	 begin : asic
 	    asic_clockmux4 imux (.clkin(clkin[N-1:0]),
 				 .en(en[N-1:0]),
 				 .clkout(clkout));
 	 end
-       else
-	 begin : generic
-	    assign clkout = |(clkin[N-1:0] & en[N-1:0]);
-	 end
-    endgenerate   
+    endgenerate
+`else // !`ifdef CFG_ASIC
+       assign clkout = |(clkin[N-1:0] & en[N-1:0]);
+`endif
+       
 endmodule // oh_clockmux
 
 

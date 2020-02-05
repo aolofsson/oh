@@ -12,30 +12,23 @@ module oh_clockgate (
      output eclk // enabled clock output
      );
 
-   localparam ASIC = `CFG_ASIC;  // use ASIC lib
-
-   generate
-      if(ASIC)	     
-	begin : asic
-	   asic_icg icg (.en(en),
-			 .te(te),
-			 .clk(clk),
-			 .eclk(eclk));
-	end
-      else
-	begin : generic
-	   wire    en_sh;
-	   wire    en_sl;
-	   //Stable low/valid rising edge enable
-	   assign   en_sl = en | te;
-	   //Stable high enable signal
-	   oh_lat0 lat0 (.out (en_sh),
-			 .in  (en_sl),
-			 .clk (clk));
-	   
-	   assign eclk =  clk & en_sh;
-	end 
-   endgenerate
+`ifdef CFG_ASIC
+   asic_icg icg (.en(en),
+		 .te(te),
+		 .clk(clk),
+		 .eclk(eclk));
+`else
+   wire     en_sh;
+   wire     en_sl;
+   //Stable low/valid rising edge enable
+   assign   en_sl = en | te;
+   //Stable high enable signal
+   oh_lat0 lat0 (.out (en_sh),
+		 .in  (en_sl),
+		 .clk (clk));
+   
+   assign eclk =  clk & en_sh;
+`endif // !`ifdef CFG_ASIC
         
 endmodule // oh_clockgate
 

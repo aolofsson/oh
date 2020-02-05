@@ -13,19 +13,13 @@ module oh_pwr_isohi #(parameter DW   = 1        // width of data inputs
     output [DW-1:0] out // out = iso | in
     );
 
-   localparam ASIC = `CFG_ASIC;  // use ASIC lib
-
-   generate
-      if(ASIC)	
-	begin : asic
-	   asic_iso_hi iiso [DW-1:0] (.iso(iso),
+`ifdef CFG_ASIC
+    asic_iso_hi iiso [DW-1:0] (.iso(iso),
 				      .in(in[DW-1:0]),
 				      .out(out[DW-1:0]));
-	end
-      else
-	begin : gen
-	   assign out[DW-1:0] = {(DW){iso}} | in[DW-1:0];
-	end
-   endgenerate   
+`else
+   assign out[DW-1:0] = {(DW){iso}} | in[DW-1:0];
+`endif
+   
+endmodule // oh_pwr_isohi
 
-endmodule // oh_buf

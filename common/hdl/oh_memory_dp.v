@@ -33,42 +33,37 @@ module oh_memory_dp # (parameter DW    = 104,      //memory width
     input [DW-1:0]  bist_din  // data input
     );
 
-   localparam ASIC = `CFG_ASIC;  // use asic library
+
+`ifdef CFG_ASIC   
    
-   generate
-      if(ASIC)
-	begin : asic
-	   oh_memory_ram #(.DW(DW),
-			   .DEPTH(DEPTH))	     
-	   memory_dp (//read port
-		      .rd_dout	(rd_dout[DW-1:0]),
-		      .rd_clk	(rd_clk),
-		      .rd_en	(rd_en),
-		      .rd_addr	(rd_addr[AW-1:0]),
-		      //write port
-		      .wr_en	(wr_en),
-		      .wr_clk	(wr_clk),
-		      .wr_addr	(wr_addr[AW-1:0]),
-		      .wr_wem	(wr_wem[DW-1:0]),
-		      .wr_din	(wr_din[DW-1:0]));
-	end // if (ASIC)
-      else
-	begin : generic
-	   oh_memory_ram #(.DW(DW),
-			   .DEPTH(DEPTH))	     
-	   memory_dp (//read port
-		      .rd_dout	(rd_dout[DW-1:0]),
-		      .rd_clk	(rd_clk),
-		      .rd_en	(rd_en),
-		      .rd_addr	(rd_addr[AW-1:0]),
-		      //write port
-		      .wr_en	(wr_en),
-		      .wr_clk	(wr_clk),
-		      .wr_addr	(wr_addr[AW-1:0]),
-		      .wr_wem	(wr_wem[DW-1:0]),
-		      .wr_din	(wr_din[DW-1:0]));
-	end // else: !if(ASIC)
-   endgenerate
+   oh_memory_ram #(.DW(DW),
+		   .DEPTH(DEPTH))	     
+   memory_dp (//read port
+	      .rd_dout	(rd_dout[DW-1:0]),
+	      .rd_clk	(rd_clk),
+	      .rd_en	(rd_en),
+	      .rd_addr	(rd_addr[AW-1:0]),
+	      //write port
+	      .wr_en	(wr_en),
+	      .wr_clk	(wr_clk),
+	      .wr_addr	(wr_addr[AW-1:0]),
+	      .wr_wem	(wr_wem[DW-1:0]),
+	      .wr_din	(wr_din[DW-1:0]));
+`else
+   oh_memory_ram #(.DW(DW),
+		   .DEPTH(DEPTH))	     
+   memory_dp (//read port
+	      .rd_dout	(rd_dout[DW-1:0]),
+	      .rd_clk	(rd_clk),
+	      .rd_en	(rd_en),
+	      .rd_addr	(rd_addr[AW-1:0]),
+	      //write port
+	      .wr_en	(wr_en),
+	      .wr_clk	(wr_clk),
+	      .wr_addr	(wr_addr[AW-1:0]),
+	      .wr_wem	(wr_wem[DW-1:0]),
+	      .wr_din	(wr_din[DW-1:0]));
+`endif // !`ifdef CFG_ASIC
       
 endmodule // oh_memory_dp
 
