@@ -41,7 +41,7 @@ module oh_memory_sp  # (parameter DW    = 104,          // memory width
 	   asic_sram_sp #(.DW(DW),
 			  .DEPTH(DEPTH),
 			  .MCW(MCW))	     
-	   sram_sp (// Outputs
+	   macro (// Outputs
 		    .dout       (dout[DW-1:0]),
 		    // Inputs
 		    .clk        (clk),
@@ -66,7 +66,7 @@ module oh_memory_sp  # (parameter DW    = 104,          // memory width
 	begin : g0
 	   oh_memory_ram #(.DW(DW),
 			   .DEPTH(DEPTH))	     
-	   sram_sp (//read port
+	   macro (//read port
 		    .rd_dout (dout[DW-1:0]),
 		    .rd_clk  (clk),
 		    .rd_addr (addr[AW-1:0]),
