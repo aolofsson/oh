@@ -20,6 +20,8 @@ module stimulus #( parameter DW       = 32,    // Memory width=DW+
        //Asynchronous Stimulus Reset
        input 	       nreset,
        input 	       ext_start, // Start driving stimulus
+       input 	       use_timestamps,//b1-7 used for timestamps
+       input 	       ignore_valid,//b0 valid bit ignored 
        //External Load port
        input 	       ext_clk,// External clock for write path  
        input 	       ext_access, // Valid packet for memory
@@ -101,10 +103,10 @@ module stimulus #( parameter DW       = 32,    // Memory width=DW+
 	 `STIM_ACTIVE :
 	   begin
 	      rd_state[1:0]    <= (|rd_delay[6:0]) ? `STIM_PAUSE :
-			          ~stim_packet[0]  ? `STIM_DONE  :
+			          ~stim_valid      ? `STIM_DONE  :
 	                      		             `STIM_ACTIVE;
 	      rd_addr[MAW-1:0] <= rd_addr[MAW-1:0] + 1'b1;
-	      rd_delay[6:0]    <= stim_packet[7:1];
+	      rd_delay[6:0]    <= {(7){use_timestamps}} & stim_packet[7:1];
 	   end
 	 `STIM_PAUSE :
 	   begin
@@ -115,7 +117,8 @@ module stimulus #( parameter DW       = 32,    // Memory width=DW+
    
    //Output Driver
    assign stim_done           = (rd_state[1:0] == `STIM_DONE);
-   
+   assign stim_valid          = ignore_valid | stim_packet[0];
+      
    //#################################
    // RAM
    //#################################
@@ -133,7 +136,7 @@ module stimulus #( parameter DW       = 32,    // Memory width=DW+
      end
 
    //Shut off access immediately, but pipeline delay by one cycle
-   assign stim_access = stim_packet[0] & stim_read & ~stim_done;
+   assign stim_access = stim_valid & stim_read & ~stim_done;
       
 endmodule // stimulus
 
