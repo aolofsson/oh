@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+#############################################################################
+# asm2elf <arch> <inputfile> <outputfile>
+#
+# Uses gcc
+#
+# Simple utility for converting assembly to hex, example below:
+#
+#          .globl _start
+#   _start: 
+#           lui         a0,0x1
+#
+#############################################################################
+import subprocess
+import sys
+import re
+import os
+
+ARCH   = sys.argv[1]
+ASM    = sys.argv[2]
+ELF    = sys.argv[3]
+
+#############################################
+#SETUP
+
+LINKERSCRIPT="tmp.ld"
+
+if(ARCH=="riscv64"):
+    GCCROOT=ARCH + "-unknown-elf-"
+    OUTPUT="riscv"
+else:
+    GCCROOT="e-"
+    OUTPUT="epiphany"
+    
+#############################################
+#PRINT LINKER FILE
+f=open("tmp.ld",'w')
+f.write("""OUTPUT_ARCH( "riscv" )
+ENTRY(_start)
+
+SECTIONS
+{
+  . = 0x00000000;
+  .text.init : { *(.text.init) }
+  . = ALIGN(0x1000);
+  .tohost : { *(.tohost) }
+  . = ALIGN(0x1000);
+  .text : { *(.text) }
+  . = ALIGN(0x1000);
+  .data : { *(.data) }
+  .bss : { *(.bss) }
+  _end = .;
+}""")
+
+f.close()
+
+#############################################
+#RUN GCC
+CMD=GCCROOT + "gcc -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles" + " -T" + LINKERSCRIPT + " -o " + ELF + " " + ASM
+print(CMD)
+os.system(CMD)
+
+
+
+
+
+
+

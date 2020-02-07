@@ -1,47 +1,32 @@
 #!/usr/bin/env python3
 #############################################################################
-# elf2hex <inputfile> <outputfile> <memory-width> [-emf] [-offset]
+# elf2hex <arch> <inputfile> <outputfile>
 #
-# Script uses objcopy to dump a a
-#
-# The script assumes the hex file has max 16 byte entries per line
-#
-# Script also supports creating EMF transactions with one address per data
+# Uses '<arch>-unknown-elf-objcopy'  
 #
 #############################################################################
+import os
 import sys
-import re
 
-hexin  = sys.argv[1]
-hexout = sys.argv[2]
-width  = int(int(sys.argv[3])/8) #needed for both
-emf    = 0 # emf
-offset = 0 #TODO: specify as hex offset, only for emf
+ARCH = sys.argv[1]
+ELF  = sys.argv[2]
+HEX  = sys.argv[3]
 
-#1. Read file into list and strip off trail junk
-list = [line.rstrip('  \n') for line in open(hexin)]
+#############################################
+#SETUP
+if(ARCH=="riscv64"):
+    GCCROOT=ARCH + "-unknown-elf-"
+else:
+    GCCROOT="e-"
+    
+##############################################
+#RUN OBJCOPY
+CMD=GCCROOT + "objcopy -Overilog" + " " + ELF + " " + HEX
+print(CMD)
+os.system(CMD)
 
-#2. Loop through byte list and print to output file
-fileout=open(hexout,"w")
-for line in list:
-    if (~line.find('@')): #detects new memory section
-        address = offset + int(line.replace('@','',1),16)
-        if(emf):
-            print ("Not Implemented")
-        else:
-            file.write("@"+format(address, 'x'))
-    else:
-        bytes=line.split(' ')
-        length=len(bytes)
-        for i in range(0,(16-length)): # zero extend buffer for simplicity
-            bytes.append("00")
-        for i in range(0,16,width):
-            sublist=bytes[i:i+width]
-            sublist.reverse()
-            word=""
-            word=word.join(sublist)
-            if(emf):
-                print ("Not Implemented")
-            else :
-                file.write(word)
-file.close()
+
+
+
+
+
