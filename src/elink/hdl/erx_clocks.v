@@ -12,6 +12,7 @@ module erx_clocks (/*AUTOARG*/
    parameter RXCLK_PHASE     = 0;           // 270;
    parameter PLL_VCO_MULT    = 4;           // RX
    parameter TARGET          = `CFG_TARGET; // "XILINX", "ALTERA" etc
+   parameter PLATFORM        = `CFG_PLATFORM;
 
    //Override reset counter size for simulation
 `ifdef TARGET_SIM
@@ -210,6 +211,9 @@ module erx_clocks (/*AUTOARG*/
 	   // Idelay controller
 	   //###########################
 	   
+   //generate
+      if(PLATFORM=="ULTRASCALE")
+	begin : ultrascale
 `define IDELAYCTRL_WONT_SYNTHESIZE
 `ifdef IDELAYCTRL_WONT_SYNTHESIZE
 	  assign idelay_ready = 'b1;
@@ -225,7 +229,18 @@ module erx_clocks (/*AUTOARG*/
 	      .RST(idelay_reset)
 	      );
 `endif
-	   
+	end // block: ultrascale
+      else // PLATFORM="ZYNQ"
+	begin: zynq
+	 (* IODELAY_GROUP = "IDELAY_GROUP" *) // Group name for IDELAYCTRL
+	 IDELAYCTRL idelayctrl_inst 
+	   (
+	    .RDY(idelay_ready), // check ready flag in reset sequence?
+	    .REFCLK(idelay_ref_clk),//200MHz clk (78ps tap delay)
+	    .RST(idelay_reset));
+	end // block: zynq
+   //endgenerate
+
 	end // if (TARGET=="XILINX")
    endgenerate
 

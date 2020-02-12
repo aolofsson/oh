@@ -214,22 +214,21 @@ module etx_io (/*AUTOARG*/
 	      .O     (tx_wr_wait_async));	 
 	end
    endgenerate
-      
-//TODO: Come up with cleaner defines for this
-`define ZYNQMP
-`ifdef ZYNQMP
-  IBUFDS
-     #(.DIFF_TERM  ("TRUE"),     // Differential termination
-       .IOSTANDARD (IOSTD_ELINK))
-      ibufds_rdwait
-     (.I     (txi_rd_wait_p),
-      .IB    (txi_rd_wait_n),
-      .O     (tx_rd_wait_async));
-`else
-   //On Parallella this signal comes in single-ended
-   assign tx_rd_wait_async = txi_rd_wait_p;
-`endif
-   
+
+   generate
+      if(PLATFORM=="ULTRASCALE")
+	IBUFDS
+	   #(.DIFF_TERM  ("TRUE"),     // Differential termination
+	     .IOSTANDARD (IOSTD_ELINK))
+	    ibufds_rdwait
+	   (.I     (txi_rd_wait_p),
+	    .IB    (txi_rd_wait_n),
+	    .O     (tx_rd_wait_async));
+      else // ZYNQ
+	 //On Parallella this signal comes in single-ended
+	 assign tx_rd_wait_async = txi_rd_wait_p;
+   endgenerate
+
 endmodule // etx_io
 // Local Variables:
 // verilog-library-directories:("." "../../emesh/hdl" "../../common/hdl")

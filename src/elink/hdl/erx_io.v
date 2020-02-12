@@ -318,6 +318,7 @@ module erx_io (/*AUTOARG*/
       
       if(PLATFORM=="ULTRASCALE")
 	begin : ultrascale
+	   genvar        j;
 	   for(j=0; j<9; j=j+1)
 	     begin : gen_idelay
 `define IDELAYCTRL_WONT_SYNTHESIZE

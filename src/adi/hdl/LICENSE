@@ -1,0 +1,57 @@
+
+In this HDL repository, there are many different and unique modules, consisting
+of various HDL (Verilog or VHDL) components. The individual modules are
+developed independently, and may be accompanied by separate and unique license
+terms (such as GPL, LGPL, BSD, modified BSD, commercial or others). Your license
+rights with respect to individual modules accompanied by separate license terms
+are defined by those terms. The license agreement for each module is generally
+located in the module source code. Nothing else shall restrict, limit, or
+otherwise affect any rights or obligations you may have, or conditions to which
+you may be subject, under such license terms. This agreement does not limit your
+rights under, or grant you rights that supersede, the license terms of any
+particular module.
+
+The mere aggregation of these modules (putting them side by side in the same
+source code repository or on a hard disk) does not mean that there is one master
+license for all the files. It is up to you, the user, to ensure that during the
+building a project, which combines these modules together so that they form a
+bit file (either one, or multiple for partial reconfiguration), all the individual
+licenses are compatible. For example, if a single module is covered by the GPL,
+the whole combination must also be released under the GPL. If you can't, or
+won't, do that, you may not distribute the resulting bit file.
+
+The majority of ADI created modules are dual-licensed, allowing the user to pick
+which license they want to use, (and the rights and obligations they have).
+    - The ADI BSD license, which allows you to make bit files, and not release your
+      source, as long as it attaches to an ADI device. This is not truly open
+      source, since it does place extra restrictions on developers.
+    - The GPL v2 license, which allows you to make bit files, but you must release
+      all other HDL (except vendor produced, which we consider as a run-time library),
+      permitted by GPL section 3, along with your bit file. This is truly open
+      source, and places no additional restrictions on use or fields of endeavor. The
+      GPL is ideal for use cases such as open source projects with open source
+      distribution, student/academic purposes, hobby projects, internal research
+      projects without external distribution, or other projects where all GPL
+      obligations can be met.
+
+In these cases, support is handled via web (https://ez.analog.com/community/fpga),
+on a best effort basis. Note that our best efforts may not match your product
+development schedule. This is a free, non-deterministic support, and is not meant
+as a replacement for professional services. However, if this is not adequate
+for your needs, or you require support within a specific time frame we recommend
+you seek alternatives including seeking professional service and/or commercial/deterministic
+support.
+
+There are also specific modules which are only single-licensed, as listed
+below. This list may not be complete, it's up to the user to check each module
+license.
+    - SPDIF, which is released under the LGPL license only. See
+      https://opencores.org/project,spdif_interface for support.
+    - The ADI created JESD Core, which is released under the GPL and a commercial
+      license only.
+       + The commercial license gives you the full rights to create and distribute
+         bit files on your own terms without any open source license obligations,
+         and special avenues for support may be possible. If you are interested
+         in such a license, contact us at jesd204-licensing@analog.com for more
+         information.
+
