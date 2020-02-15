@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+#############################################################################
+# trace2trace <inputfile> <outputfile>
+#
+# Converts a simulation trace file to the epiphany trace format
+#
+# Simulators supported: ovpsim, spike
+#
+#############################################################################
+import re
+import sys
+
+#Input ARguments
+with open(sys.argv[1], 'r') as f:
+    file_content = f.read()
+
+fileout=open(sys.argv[2],"w")
+
+
+#Reading input file into buffer
+list=file_content.split('\'riscvOVPsim/cpu\'')
+
+#Opening output file
+
+for i in list:
+    instr=i.replace('\n',' ')                   #replace all newlines in middle of strings
+    instr=instr.replace('Info','')              #remove info
+    instr=re.sub('\(SIGNATURE_DUMP.*','',instr) #remove  crud from end of file
+    if(re.search('^\,',instr)) :                #filter out more crud
+        fields=instr.split()                    #split into fields
+        pc=re.sub('\(.*','',fields[1])
+        opcode=fields[2]
+        name=fields[3].rjust(8)
+        if(re.search('\-\>',instr)) :
+            #print("XXX" + instr)
+            reg=fields[-4]
+            val=fields[-1]
+        else :
+            reg=""
+            val=""
+        fileout.write("TRACE:  cpu_0.trace  PC=" + str(pc).zfill(3) + "  I=" + name + "  F=-------- " + reg + "=" + val + "\n")
+fileout.close()
+            
