@@ -25,42 +25,61 @@ ELF    = sys.argv[3]
 
 LINKERSCRIPT="tmp.ld"
 
-if(ARCH=="riscv64"):
-    GCCROOT=ARCH + "-unknown-elf-"
+if(ARCH=="rv32i"):
+    GCC="riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32"
+    GCCOPT=" -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles"
     OUTPUT="riscv"
 else:
-    GCCROOT="e-"
+    GCC="e-gcc"
+    GCCOPT=" -static -fvisibility=hidden -nostdlib -nostartfiles"
     OUTPUT="epiphany"
     
 #############################################
 #PRINT LINKER FILE
 f=open("tmp.ld",'w')
-f.write("""OUTPUT_ARCH( "riscv" )
-ENTRY(_start)
-
-SECTIONS
-{
-  . = 0x00000000;
-  .text.init : { *(.text.init) }
-  . = ALIGN(0x1000);
-  .tohost : { *(.tohost) }
-  . = ALIGN(0x1000);
-  .text : { *(.text) }
-  . = ALIGN(0x1000);
-  .data : { *(.data) }
-  .bss : { *(.bss) }
-  _end = .;
-}""")
-
+f.write("OUTPUT_ARCH( \"" + OUTPUT + "\" )\n") 
+if(ARCH=="rv32i"):
+    f.write("""ENTRY(_start)
+    SECTIONS
+    {
+    . = 0x80000000;
+    .text.trap : { *(.text.trap) }
+    
+    . = 0x00000000;
+    .text.init : { *(.text.init) }
+    
+    . = ALIGN(0x1000);
+    .tohost : { *(.tohost) }
+    . = ALIGN(0x1000);
+    .text : { *(.text) }
+    . = ALIGN(0x1000);
+    .data : { *(.data) }
+    .data.string : { *(.data.string)}
+    .bss : { *(.bss) }
+    _end = .;
+    }""")
+else:
+    f.write("""ENTRY(_start)
+    SECTIONS
+    {
+    . = 0x00000000;
+    .text.init : { *(.text.init) }
+    . = ALIGN(0x1000);
+    .tohost : { *(.tohost) }
+    . = ALIGN(0x1000);
+    .text : { *(.text) }
+    . = ALIGN(0x1000);
+    .data : { *(.data) }
+    .bss : { *(.bss) }
+    _end = .;
+    }""")
 f.close()
 
 #############################################
 #RUN GCC
-CMD=GCCROOT + "gcc -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles" + " -T" + LINKERSCRIPT + " -o " + ELF + " " + ASM
+CMD = GCC + GCCOPT + " -T" + LINKERSCRIPT + " -o " + ELF + " " + ASM
 print(CMD)
 os.system(CMD)
-
-
 
 
 
