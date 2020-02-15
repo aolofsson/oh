@@ -27,7 +27,7 @@ list = [line.rstrip('  \n') for line in open(hexin)]
 fileout=open(hexout,"w")
 for line in list:
     if (~line.find('@')): #detects new memory section
-        address = offset + int(line.replace('@','',1),16)
+        address = offset + int(int(line.replace('@','',1),16)/8)
         if(emf):
             print ("Not Implemented")
         else:
