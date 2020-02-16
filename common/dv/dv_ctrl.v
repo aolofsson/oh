@@ -10,7 +10,7 @@ module dv_ctrl(/*AUTOARG*/
    parameter CFG_CLK1_PHASE  = CFG_CLK1_PERIOD/2;
    parameter CFG_CLK2_PERIOD = 20;
    parameter CFG_CLK2_PHASE  = CFG_CLK2_PERIOD/2;
-   parameter CFG_TIMEOUT     = 500;
+   parameter CFG_TIMEOUT     = 5000;
 
    output nreset;     // async active low reset
    output clk1;       // main clock
@@ -96,11 +96,26 @@ module dv_ctrl(/*AUTOARG*/
 
    //STOP SIMULATION
    always @ (posedge clk1)
-     if(stim_done & test_done)       
-       #(CFG_TIMEOUT) $finish;	  
-   	   
+     if(stim_done & test_done)
+       begin
+	  //$display("TEST DONE");	  
+	  //$finish;
+       end
+
+
+   //#################################
+   // TIMEOUT
+   //#################################
+   inital
+     begin
+	#(CFG_TIMEOUT) 
+	$display("TEST FAILED ON TIMEOUT");	
+	$finish;
+     end
+   
+   //#################################
    //WAVEFORM DUMP
-   //Better solution?
+   //#################################
 `ifndef VERILATOR 
    initial
      begin
@@ -108,6 +123,8 @@ module dv_ctrl(/*AUTOARG*/
 	$dumpvars(0, dv_top);
      end
 `endif
+
+   
    
 endmodule // dv_ctrl
 

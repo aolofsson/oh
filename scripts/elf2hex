@@ -14,8 +14,8 @@ HEX  = sys.argv[3]
 
 #############################################
 #SETUP
-if(ARCH=="riscv64"):
-    GCCROOT=ARCH + "-unknown-elf-"
+if(ARCH=="rv32i"):
+    GCCROOT="riscv64-unknown-elf-"
 else:
     GCCROOT="e-"
     
@@ -24,7 +24,10 @@ else:
 CMD=GCCROOT + "objcopy -Overilog" + " " + ELF + " " + HEX
 print(CMD)
 os.system(CMD)
-
+#RUN OBJDUMP
+CMD=GCCROOT + "objdump -D" + " " + ELF + " > " + HEX + ".dump"
+print(CMD)
+os.system(CMD)
 
 
 
