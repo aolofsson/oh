@@ -77,7 +77,8 @@ for i in list:
             reg=fields[-4]
             reg=regs[reg]
             val=fields[-1]
-            update=reg + "=" + val.zfill(16);
+            if(re.search('^r',reg)) :
+                update=reg + "=" + val.zfill(16); #don't update csrs for now
         else :
             update=""
         fileout.write("TRACE:  cpu_0.trace  PC=" + pc + "  I=" + name + "  F=-------- " + update + "\n")
