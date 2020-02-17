@@ -106,7 +106,7 @@ module dv_ctrl(/*AUTOARG*/
    //#################################
    // TIMEOUT
    //#################################
-   inital
+   initial
      begin
 	#(CFG_TIMEOUT) 
 	$display("TEST FAILED ON TIMEOUT");	
