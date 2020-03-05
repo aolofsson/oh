@@ -19,7 +19,7 @@ module oh_datagate #(parameter DW = 32, // width of data inputs
    reg [N-1:0]    enable_pipe;   
    
    always @ (posedge clk)
-     enable_pipe[PS-1:0] <= {enable_pipe[PS-2:0],en};
+     enable_pipe[N-1:0] <= {enable_pipe[N-2:0],en};
    
    //Mask to 0 if no valid for last N cycles
    assign enable = en | (|enable_pipe[N-1:0]);
