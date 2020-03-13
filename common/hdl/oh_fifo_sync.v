@@ -7,6 +7,7 @@
 
 module oh_fifo_sync #(parameter DW        = 104,      //FIFO width
 		      parameter DEPTH     = 32,       //FIFO depth
+		      parameter REG       = 1,        //Register fifo output
 		      parameter PROG_FULL = (DEPTH/2),//prog_full threshold  
 		      parameter AW = $clog2(DEPTH)    //rd_count width
 		      ) 
@@ -28,12 +29,14 @@ module oh_fifo_sync #(parameter DW        = 104,      //FIFO width
    reg [AW-1:0]        rd_addr;
    wire 	       fifo_read;
    wire 	       fifo_write;
-   
-   assign empty       = (rd_count[AW-1:0] == 0);   
-   assign prog_full   = (rd_count[AW-1:0] >= PROG_FULL);   
-   assign full        = (rd_count[AW-1:0] == (DEPTH-1));
+
    assign fifo_read   = rd_en & ~empty;
    assign fifo_write  = wr_en & ~full;
+   assign prog_full   = (rd_count[AW-1:0] >= PROG_FULL);   
+   assign full        = (rd_count[AW-1:0] == (DEPTH-1));
+   assign fifo_empty  = (rd_count[AW-1:0] == 0);     
+
+ 
    
    always @ (posedge clk or negedge nreset) 
      if(~nreset) 
@@ -63,11 +66,26 @@ module oh_fifo_sync #(parameter DW        = 104,      //FIFO width
           rd_addr[AW-1:0] <= rd_addr[AW-1:0]  + 'd1;
           rd_count[AW-1:0]<= rd_count[AW-1:0] - 'd1;
        end
+
+   //Empty register to account for RAM output register  
+   generate
+      if(REG)
+	begin
+	   reg empty_reg;	   
+	   always @ (posedge clk)
+	     empty_reg <= fifo_empty;
+	   assign empty= empty_reg;
+	end
+      else
+	assign empty= fifo_empty;
+   endgenerate
+
    
    // GENERIC DUAL PORTED MEMORY
    oh_memory_dp 
      #(.DW(DW),
-       .DEPTH(DEPTH))
+       .DEPTH(DEPTH),
+       .REG(REG))
    mem (// read port
 	.rd_dout	(dout[DW-1:0]),
 	.rd_clk		(clk),
