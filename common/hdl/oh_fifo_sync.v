@@ -5,11 +5,11 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_fifo_sync #(parameter DW        = 104,      //FIFO width
-		      parameter DEPTH     = 32,       //FIFO depth
-		      parameter REG       = 1,        //Register fifo output
-		      parameter PROG_FULL = (DEPTH/2),//prog_full threshold  
-		      parameter AW = $clog2(DEPTH)    //rd_count width
+module oh_fifo_sync #(parameter DW        = 104,     //FIFO width
+		      parameter DEPTH     = 32,      //FIFO depth
+		      parameter REG       = 1,       //Register fifo output
+		      parameter PROG_FULL = DEPTH-1, //prog_full threshold  
+		      parameter AW = $clog2(DEPTH)   //rd_count width
 		      ) 
 (
    input 	       clk, // clock
@@ -25,45 +25,44 @@ module oh_fifo_sync #(parameter DW        = 104,      //FIFO width
    output reg [AW-1:0] rd_count     // valid entries in fifo
  );
    
-   reg [AW-1:0]        wr_addr;
-   reg [AW-1:0]        rd_addr;
+   reg [AW:0]          wr_addr;
+   reg [AW:0]          rd_addr;
    wire 	       fifo_read;
    wire 	       fifo_write;
 
    assign fifo_read   = rd_en & ~empty;
    assign fifo_write  = wr_en & ~full;
-   assign prog_full   = (rd_count[AW-1:0] >= PROG_FULL);   
-   assign full        = (rd_count[AW-1:0] == (DEPTH-1));
-   assign fifo_empty  = (rd_count[AW-1:0] == 0);     
-
- 
+   assign prog_full   = (rd_count[AW-1:0] == PROG_FULL);
+   assign ptr_match   = (wr_addr[AW-1:0] == rd_addr[AW-1:0]);
+   assign full        = ptr_match & (wr_addr[AW]==!rd_addr[AW]);
+   assign fifo_empty  = ptr_match & (wr_addr[AW]==rd_addr[AW]);
    
    always @ (posedge clk or negedge nreset) 
      if(~nreset) 
        begin	   
-          wr_addr[AW-1:0]   <= 'd0;
-          rd_addr[AW-1:0]   <= 'b0;
-          rd_count[AW-1:0]  <= 'b0;
+          wr_addr[AW:0]   <= 'd0;
+          rd_addr[AW:0]   <= 'b0;
+          rd_count[AW:0]  <= 'b0;
        end
      else if(clear) 
        begin	   
-          wr_addr[AW-1:0]   <= 'd0;
-          rd_addr[AW-1:0]   <= 'b0;
-          rd_count[AW-1:0]  <= 'b0;
+          wr_addr[AW:0]   <= 'd0;
+          rd_addr[AW:0]   <= 'b0;
+          rd_count[AW:0]  <= 'b0;
        end
      else if(fifo_write & fifo_read) 
        begin
-	  wr_addr[AW-1:0] <= wr_addr[AW-1:0] + 'd1;
-	  rd_addr[AW-1:0] <= rd_addr[AW-1:0] + 'd1;	      
+	  wr_addr[AW:0] <= wr_addr[AW:0] + 'd1;
+	  rd_addr[AW:0] <= rd_addr[AW:0] + 'd1;	      
        end 
      else if(fifo_write) 
        begin
-	  wr_addr[AW-1:0] <= wr_addr[AW-1:0]  + 'd1;
+	  wr_addr[AW:0]   <=  wr_addr[AW:0]   + 'd1;
 	  rd_count[AW-1:0]<= rd_count[AW-1:0] + 'd1;	
        end 
      else if(fifo_read) 
        begin	      
-          rd_addr[AW-1:0] <= rd_addr[AW-1:0]  + 'd1;
+          rd_addr[AW:0]   <= rd_addr[AW:0]  + 'd1;
           rd_count[AW-1:0]<= rd_count[AW-1:0] - 'd1;
        end
 
@@ -74,10 +73,10 @@ module oh_fifo_sync #(parameter DW        = 104,      //FIFO width
 	   reg empty_reg;	   
 	   always @ (posedge clk)
 	     empty_reg <= fifo_empty;
-	   assign empty= empty_reg;
+	   assign empty = empty_reg;
 	end
       else
-	assign empty= fifo_empty;
+	assign empty = fifo_empty;
    endgenerate
 
    
