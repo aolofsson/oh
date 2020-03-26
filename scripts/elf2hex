@@ -2,7 +2,8 @@
 #############################################################################
 # elf2hex <arch> <inputfile> <outputfile>
 #
-# Uses '<arch>-unknown-elf-objcopy'  
+# Arch: e (for epiphany)
+#       rv32i/rv64i/etc (for riscv)
 #
 #############################################################################
 import os
@@ -14,10 +15,10 @@ HEX  = sys.argv[3]
 
 #############################################
 #SETUP
-if(ARCH=="rv32i"):
-    GCCROOT="riscv64-unknown-elf-"
-else:
+if(ARCH=="e"):
     GCCROOT="e-"
+else:
+    GCCROOT="riscv64-unknown-elf-"
     
 ##############################################
 #RUN OBJCOPY
