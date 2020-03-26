@@ -9,7 +9,8 @@ module oh_fifo_sync #(parameter DW        = 104,     //FIFO width
 		      parameter DEPTH     = 32,      //FIFO depth
 		      parameter REG       = 1,       //Register fifo output
 		      parameter PROG_FULL = DEPTH-1, //prog_full threshold  
-		      parameter AW = $clog2(DEPTH)   //rd_count width
+		      parameter AW = $clog2(DEPTH),  //rd_count width
+		      parameter DUMPVAR = 1          // dump array
 		      ) 
 (
    input 	       clk, // clock
@@ -84,6 +85,7 @@ module oh_fifo_sync #(parameter DW        = 104,     //FIFO width
    oh_memory_dp 
      #(.DW(DW),
        .DEPTH(DEPTH),
+       .DUMPVAR(DUMPVAR),
        .REG(REG))
    mem (// read port
 	.rd_dout	(dout[DW-1:0]),
@@ -97,4 +99,18 @@ module oh_fifo_sync #(parameter DW        = 104,     //FIFO width
 	.wr_addr	(wr_addr[AW-1:0]),
 	.wr_din	        (din[DW-1:0]));
 
+
+`ifdef TARGET_SIM
+   assign rd_error = rd_en & empty;
+   assign wr_error = wr_en & full;
+   
+   always @ (posedge rd_error)
+     #1 if(rd_error)
+       $display ("ERROR: Reading empty FIFO in %m at ",$time);
+   always @ (posedge wr_error)
+     #1 if(wr_error)
+       $display ("ERROR: Writing full FIFO in %m at ",$time);
+  
+`endif   			
+   
 endmodule // oh_fifo_sync
