@@ -33,14 +33,15 @@ module dv_ctrl(/*AUTOARG*/
    reg [6:0] clk1_phase;
    reg [6:0] clk2_phase;   
    integer   seed,r;
-
+   reg [1023:0] testname;
    //#################################
    // RANDOM NUMBER GENERATOR
    // (SEED SUPPLIED EXERNALLY)
    //#################################
    initial
      begin
-	r=$value$plusargs("SEED=%s", seed);	
+	r=$value$plusargs("SEED=%s", seed);
+	r=$value$plusargs("TESTNAME=%s", testname[1023:0]);
 	$display("SEED=%d", seed);	
 `ifdef CFG_RANDOM
 	clk1_phase = 1 + {$random(seed)}; //generate random values
@@ -109,7 +110,7 @@ module dv_ctrl(/*AUTOARG*/
    initial
      begin
 	#(CFG_TIMEOUT) 
-	$display("TEST FAILED ON TIMEOUT");	
+	$display("TEST %0s FAILED ON TIMEOUT",testname);	
 	$finish;
      end
    
