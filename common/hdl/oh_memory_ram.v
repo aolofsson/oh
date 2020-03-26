@@ -5,10 +5,11 @@
 //# License:  MIT  (see LICENSE file in OH! repository)                       # 
 //#############################################################################
 
-module oh_memory_ram  # (parameter DW    = 104,           // memory width
-			 parameter DEPTH = 32,            // memory depth
-			 parameter REG   = 1,             // register output
-			 parameter AW    = $clog2(DEPTH)  // address width  
+module oh_memory_ram  # (parameter DW      = 104,           // memory width
+			 parameter DEPTH   = 32,            // memory depth
+			 parameter REG     = 1,             // register output
+			 parameter AW      = $clog2(DEPTH), // address width
+			 parameter DUMPVAR = 0              // dump array
 			 ) 
    (// read-port
     input 	    rd_clk,// rd clock
@@ -57,8 +58,27 @@ module oh_memory_ram  # (parameter DW    = 104,           // memory width
 	   assign rd_dout[DW-1:0] = rdata[DW-1:0];
 	end
    endgenerate
+
+//##########################
+//# SIMULATION/DEBUG LOGIC
+//##########################
+
+`ifdef TARGET_SIM
+   generate
+      if(DUMPVAR)
+	begin
+	   integer i;	   
+	   initial
+	     for (i = 0; i < DEPTH; i = i + 1)
+	       $dumpvars(0,ram[i]);
+	end
+   endgenerate
+   
+`endif //  `ifdef TARGET_SIM
+
   
-endmodule // oh_memory_ram
+endmodule
+
 
 
 
