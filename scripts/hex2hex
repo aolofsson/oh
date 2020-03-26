@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 #############################################################################
-# hex2hex <inputfile> <outputfile> <memory-width> [-emf] [-offset]
+# hex2hex <inputfile> <outputfile> <memory-width> <offset>
 #
 # Script uses objcopy to dump a Verilog comptatible hex file
 #
 # The script assumes the hex file has max 16 byte entries per line
 #
 # Script also supports creating EMF transactions with one address per data
+#
+# Offset to remove from all hex addresses
 #
 #############################################################################
 import sys
@@ -15,8 +17,8 @@ import re
 hexin  = sys.argv[1]
 hexout = sys.argv[2]
 width  = int(int(sys.argv[3])/8) #needed for both
+offset = int(sys.argv[4],16)
 emf    = 0 # emf
-offset = 0 #TODO: specify as hex offset, only for emf
 
 ###################################################
 # Read file into list and strip off trail junk
@@ -27,7 +29,7 @@ list = [line.rstrip('  \n') for line in open(hexin)]
 fileout=open(hexout,"w")
 for line in list:
     if (~line.find('@')): #detects new memory section
-        address = offset + int(int(line.replace('@','',1),16)/8)
+        address = int((int(line.replace('@','',1),16)-offset)/8)
         if(emf):
             print ("Not Implemented")
         else:
