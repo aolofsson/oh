@@ -8,7 +8,8 @@
 module oh_memory_dp # (parameter DW    = 104,      //memory width
 		       parameter DEPTH = 32,       //memory depth
 		       parameter PROJ  = "",       //project name
-		       parameter MCW   = 8,         //repair/config vector width
+		       parameter MCW   = 8,        //repair/config vector width
+		       parameter REG   = 1,        //register memory output
 		       parameter AW    = $clog2(DEPTH) // address bus width
 		       ) 
    (// Memory interface (dual port)
@@ -37,8 +38,9 @@ module oh_memory_dp # (parameter DW    = 104,      //memory width
 `ifdef CFG_ASIC   
    
    oh_memory_ram #(.DW(DW),
-		   .DEPTH(DEPTH))	     
-   memory_dp (//read port
+		   .DEPTH(DEPTH),
+		   .REG(REG))	     
+   macro (//read port
 	      .rd_dout	(rd_dout[DW-1:0]),
 	      .rd_clk	(rd_clk),
 	      .rd_en	(rd_en),
@@ -51,8 +53,9 @@ module oh_memory_dp # (parameter DW    = 104,      //memory width
 	      .wr_din	(wr_din[DW-1:0]));
 `else
    oh_memory_ram #(.DW(DW),
-		   .DEPTH(DEPTH))	     
-   memory_dp (//read port
+		   .DEPTH(DEPTH),
+		   .REG(REG))	     
+   macro (//read port
 	      .rd_dout	(rd_dout[DW-1:0]),
 	      .rd_clk	(rd_clk),
 	      .rd_en	(rd_en),

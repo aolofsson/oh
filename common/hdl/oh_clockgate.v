@@ -7,7 +7,7 @@
 
 module oh_clockgate (
      input  clk, // clock input 
-     input  te, // test enable enable   
+     input  te, // test enable   
      input  en, // enable (from positive edge FF)
      output eclk // enabled clock output
      );
