@@ -2,13 +2,16 @@
 #############################################################################
 # trace2trace <inputfile> <outputfile>
 #
-# Converts a simulation trace file to the epiphany trace format
+# Converts a simulator trace file to the epiphany trace format
 #
-# Simulators supported: ovpsim, spike
+# Formats: spike, cgen
 #
 #############################################################################
 import re
 import sys
+
+simulator="spike"
+offset=0xffffffff00000000
 
 #Input Arguments
 with open(sys.argv[1], 'r') as f:
@@ -16,10 +19,7 @@ with open(sys.argv[1], 'r') as f:
 
 fileout=open(sys.argv[2],"w")
 
-#Reading input file into buffer
-list=file_content.split('\'riscvOVPsim/cpu\'')
- 
-#ABI dictionary
+#RISC-V ABI dictionary
 regs={
     "zero":"r0",
     "ra":"r1",
@@ -60,27 +60,53 @@ regs={
     "mepc":"mepc",
     "mcause":"mcause",
 }
-    
-#Format Trace
-for i in list:
-    instr=i.replace('\n',' ')                   #replace all newlines in middle of strings
-    instr=instr.replace('Info','')              #remove info
-    instr=re.sub('\(SIGNATURE_DUMP.*','',instr) #remove  crud from end of file
-    if(re.search('^\,',instr)) :                #filter out more crud
-        fields=instr.split()                    #split into fields
-        pc=re.sub('\(.*','',fields[1])
-        pc=re.sub('0x','',pc)                   #removing hex prefix
-        opcode=fields[2]
-        name=fields[3].rjust(8)
-        if(re.search('\-\>',instr)) :
-            #print("XXX" + instr)
-            reg=fields[-4]
-            reg=regs[reg]
-            val=fields[-1]
-            if(re.search('^r',reg)) :
-                update=reg + "=" + val.zfill(16); #don't update csrs for now
-        else :
-            update=""
-        fileout.write("TRACE:  cpu_0.trace  PC=" + pc + "  I=" + name + "  F=-------- " + update + "\n")
+
+
+#Reading input file into buffer
+if(simulator=="spike") :
+    trap=0
+    list=file_content.split('core   0: ')           #split based on core 0
+    for i in list:
+        i=re.sub(r'\n', ' ', i)                     #combine lines
+        i=re.sub(r'x (\d{1})',r'x\1', i)            #fix brain dead spike print for regs
+        i=re.sub(r'^0x0000000000001(.*)',r'', i)    #remove spike boot rom
+        if(bool(re.search('trap_user_ecall',i))):#filter out everything after ecall 
+           trap=1
+        #filter empty instructions
+        if((bool(re.search('0x',i))) & (trap==0)):
+            fields=i.split()                     
+            pc=int(fields[0],16)
+            opcode=fields[1]
+            asm=fields[2]
+            #for j in fields:
+            #    print (j)
+            if(re.search('0x',fields[-2])):
+                memaddr="--"
+                memdata="--"
+                reg="--"
+                regdata="--"
+            elif(re.search('mem',i)):
+                memaddr=fields[-2]
+                memdata=fields[-1]
+                reg="--"
+                regdata="--" 
+            else:
+                reg="x{0:02}".format(int(re.sub(r'x',r'', fields[-2])))
+                regdata=fields[-1]
+                memaddr="--"
+                memdata="--"
+            #Remove offsets
+            if(pc>=offset):
+                pc=pc-offset
+            #List of entires
+            flist=["0x{0:08x}".format(pc),
+                   opcode,
+                   "{:<8}".format(asm),
+                   "{:<3}".format(reg),
+                   "{:<10}".format(regdata),
+                   "{:<10}".format(memaddr),
+                   "{:<10}".format(memdata)]
+            outputstring='  ,  '.join(flist)
+            fileout.write(outputstring + "\n")
 fileout.close()
-            
+
