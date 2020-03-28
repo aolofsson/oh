@@ -22,7 +22,7 @@ module oh_memory_ram  # (parameter DW    = 104,           //memory width
     input [DW-1:0] 	wr_din // data input
     );
    
-   reg [DW-1:0]        ram    [DEPTH-1:0];  
+   reg [DW-1:0]        ram    [0:DEPTH-1];  
    integer 	       i;
       
    //registered read port
