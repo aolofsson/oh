@@ -27,7 +27,6 @@ module oh_mux4 #(parameter DW = 1 ) // width of mux
    wire 	    error;
    assign error = (sel0 | sel1 | sel2 | sel3) &
    		  ~(sel0 ^ sel1 ^ sel2 ^ sel3);
-
    always @ (posedge error)
      begin
 	#1 if(error)

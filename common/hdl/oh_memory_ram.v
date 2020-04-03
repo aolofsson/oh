@@ -25,7 +25,6 @@ module oh_memory_ram  # (parameter DW      = 104,           // memory width
     );
    
    reg [DW-1:0]        ram    [0:DEPTH-1];  
-   reg [DW-1:0]        ram    [DEPTH-1:0];  
    wire [DW-1:0]       rdata;
    integer 	       i;
 

@@ -5,12 +5,14 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_memory_dp # (parameter DW    = 104,      //memory width
-		       parameter DEPTH = 32,       //memory depth
-		       parameter PROJ  = "",       //project name
-		       parameter MCW   = 8,        //repair/config vector width
-		       parameter REG   = 1,        //register memory output
-		       parameter AW    = $clog2(DEPTH) // address bus width
+module oh_memory_dp # (parameter DW    = 104,           // memory width
+		       parameter DEPTH = 32,            // memory depth
+		       parameter PROJ  = "",            // project name
+		       parameter MCW   = 8,             // repair word width
+		       parameter REG   = 1,             // register output
+		       parameter AW    = $clog2(DEPTH), // address width 
+		       parameter DUMPVAR = 0            // dump array
+		       
 		       ) 
    (// Memory interface (dual port)
     input 	    wr_clk, //write clock
@@ -54,6 +56,7 @@ module oh_memory_dp # (parameter DW    = 104,      //memory width
 `else
    oh_memory_ram #(.DW(DW),
 		   .DEPTH(DEPTH),
+		   .DUMPVAR(DUMPVAR),
 		   .REG(REG))	     
    macro (//read port
 	      .rd_dout	(rd_dout[DW-1:0]),
