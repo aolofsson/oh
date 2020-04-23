@@ -1,5 +1,5 @@
 /* verilator lint_off STMTDLY */
-module dv_ctrl(/*AUTOARG*/
+module oh_siminit(/*AUTOARG*/
    // Outputs
    nreset, clk1, clk2, start, vdd, vss,
    // Inputs
@@ -42,7 +42,7 @@ module dv_ctrl(/*AUTOARG*/
      begin
 	r=$value$plusargs("SEED=%s", seed);
 	r=$value$plusargs("TESTNAME=%s", testname[1023:0]);
-	$display("SEED=%d", seed);	
+	//$display("SEED=%d", seed);	
 `ifdef CFG_RANDOM
 	clk1_phase = 1 + {$random(seed)}; //generate random values
 	clk2_phase = 1 + {$random(seed)}; //generate random values
@@ -50,7 +50,7 @@ module dv_ctrl(/*AUTOARG*/
 	clk1_phase = CFG_CLK1_PHASE;	
 	clk2_phase = CFG_CLK2_PHASE; 
 `endif
-	$display("clk1_phase=%d clk2_phase=%d", clk1_phase,clk2_phase);	
+	//$display("clk1_phase=%d clk2_phase=%d", clk1_phase,clk2_phase);	
      end
    
    //#################################
@@ -88,6 +88,7 @@ module dv_ctrl(/*AUTOARG*/
    //#################################
    //SYNCHRONOUS STIMULUS
    //#################################
+
    //START TEST
    always @ (posedge clk1 or negedge nreset)
      if(!nreset)
@@ -103,7 +104,12 @@ module dv_ctrl(/*AUTOARG*/
 	  //$finish;
        end
 
-
+   //#################################
+   // CONFIG
+   //#################################
+   initial
+     $timeformat(-9, 0, " ns", 20);
+   
    //#################################
    // TIMEOUT
    //#################################
