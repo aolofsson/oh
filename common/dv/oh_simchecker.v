@@ -16,15 +16,15 @@
  * 
  *****************************************************************************/
 
-module dv_checker 
-   (
-    //Inputs 
-    input 	   clk,
-    input 	   nreset,
-    input [DW-1:0] result, // result to check
-    input [DW-1:0] reference, // reference result
-    output 	   fail, //fail indicator
-    );
+module oh_simchecker 
+  (
+   //Inputs 
+   input 	  clk,
+   input 	  nreset,
+   input [DW-1:0] result, // result to check
+   input [DW-1:0] reference, // reference result
+   output 	  fail //fail indicator
+   );
 
    reg 		   fail;
    always @ (negedge clk or negedge nreset)
@@ -35,4 +35,5 @@ module dv_checker
 	  fail <= 1'b1;	  
 	  $display("ERROR(%0t): result=%b reference=%b", result, reference);
        end	 
-endmodule // dv_checker
+endmodule // oh_simchecker
+
