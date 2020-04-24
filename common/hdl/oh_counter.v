@@ -18,7 +18,7 @@ module oh_counter #(parameter DW   = 32  // width of data inputs
     input [DW-1:0]  load_data, // input data to load
     //outputs
     output [DW-1:0] count, // count value
-    output 	    wraparund // wraparound indicator
+    output 	    wraparound // wraparound indicator
     );
    
    // local variables
