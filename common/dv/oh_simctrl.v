@@ -43,6 +43,14 @@ module oh_simctrl #( parameter CFG_CLK1_PERIOD = 10,
 	$timeformat(-9, 0, " ns", 20);
      end
    
+`ifndef VERILATOR 
+   initial
+     begin
+	$dumpfile("waveform.vcd");
+	$dumpvars(0, dv_top);
+     end
+`endif
+   
    //#################################
    // RANDOM NUMBER GENERATOR
    // (SEED SUPPLIED EXERNALLY)
@@ -104,6 +112,7 @@ module oh_simctrl #( parameter CFG_CLK1_PERIOD = 10,
    always @ (posedge clk1)
      if(stim_done & test_done)
        begin
+	  $display("-------------------");
 	  if(test_fail)
 	    $display("TEST %0s FAILED", testname);
 	  else
@@ -122,20 +131,9 @@ module oh_simctrl #( parameter CFG_CLK1_PERIOD = 10,
 	$finish;
      end
    
-   //#################################
-   //WAVEFORM DUMP
-   //#################################
-`ifndef VERILATOR 
-   initial
-     begin
-	$dumpfile("waveform.vcd");
-	$dumpvars(0, dv_top);
-     end
-`endif
+endmodule // oh_simctrl
 
-   
-   
-endmodule // dv_ctrl
+
 
 
 

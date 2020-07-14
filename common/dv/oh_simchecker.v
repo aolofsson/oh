@@ -9,14 +9,14 @@ module oh_simchecker #(parameter DW = 32 // Datapath width
    output reg 	  fail //fail indicator
    );
    
-   always @ (posedge clk or negedge nreset)
+   always @ (negedge clk or negedge nreset)
      if(~nreset)
        fail <= 1'b0;   
      else  if(result!==reference)
        begin
 	  fail <= 1'b1;	  
 `ifdef CFG_SIM 
-	  $display("ERROR(%0t): result=%b reference=%b", result, reference);
+	  $display("ERROR(%0t): result=%b reference=%b", $time, result, reference);
 `endif
        end	 
 endmodule // oh_simchecker
