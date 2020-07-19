@@ -105,9 +105,13 @@ module oh_simctrl #( parameter CFG_CLK1_PERIOD = 10,
    always @ (posedge clk1 or negedge nreset)
      if(!nreset)
        start <= 1'b0;
-     else if(dut_active)       
-       start <= 1'b1;
-
+     else if(dut_active & ~start)
+       begin
+	  $display("-------------------");
+	  $display("TEST %0s STARTED", testname);
+	  start <= 1'b1; 
+       end
+   
    //STOP SIMULATION ON END
    always @ (posedge clk1)
      if(stim_done & test_done)
