@@ -5,14 +5,14 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_regfile # (parameter REGS  = 32,  // number of registeres
-		     parameter RW    = 64,  // register width
-		     parameter RP    = 5,   // read ports
-		     parameter WP    = 3   // write prots
+module oh_regfile # (parameter REGS  = 32,         // number of registeres
+		     parameter RW    = 64,         // register width
+		     parameter RP    = 5,          // read ports
+		     parameter WP    = 3,          // write prots
+		     parameter RAW   = $clog2(REGS)// (derived) rf addr width
 		     ) 
    (//Control inputs
     input 	       clk,
-    input 	       nreset,
     // Write Ports (concatenated)
     input [WP-1:0]     wr_valid, // write access
     input [WP*RAW-1:0] wr_addr, // register address
@@ -23,22 +23,30 @@ module oh_regfile # (parameter REGS  = 32,  // number of registeres
     output [RP*RW-1:0] rd_data // output data
     );
 
-   localparam RAW = $clog2(REGS);
-
-   genvar 	       i;
    
-   reg [RW-1:0] mem [0:REGS-1];
+   reg [RW-1:0]  mem [0:REGS-1];
+   wire [WP-1:0] write_en [0:REGS-1];
+
+   genvar 	 i,j;
 
    //TODO: Make an array of cells
    
    //#########################################
    // write ports
    //#########################################	
-   for (i=0;i<WP;i=i+1)
-     always @ (posedge clk)
-       if (wr_valid[i])
-         mem[wr_addr[(i+1)*RAW-1:i*RAW]] <= wr_data[(i+1)*RW-1:i*RW];
-   
+
+   //Write Select lines
+   for(i=0;i<REGS;i=i+1)
+     for(j=0;j<WP;j=j+1)
+       assign write_en[i][j] = wr_valid[j] & (wr_addr[j*RAW+:RAW] == i);
+
+   //Memory array
+   for(i=0;i<REGS;i=i+1)
+     for(j=0;j<WP;j=j+1)
+       always @ (posedge clk)
+	 if (write_en[i][j])
+	   mem[i] <= wr_data[j*RW+:RW];
+
    //#########################################
    // read ports
    //#########################################	
