@@ -15,7 +15,7 @@ module oh_simctrl #( parameter CFG_CLK1_PERIOD = 10,
     input  dut_active, // dut  reset sequence is done
     input  stim_done, // stimulus is done  
     input  test_done, // test is done
-    input  test_fail  // test failed
+    input  test_diff  // diff between dut and reference
     );
    
    
@@ -30,7 +30,8 @@ module oh_simctrl #( parameter CFG_CLK1_PERIOD = 10,
    reg 	     clk1=0;
    reg 	     clk2=0;
    reg [6:0] clk1_phase;
-   reg [6:0] clk2_phase;   
+   reg [6:0] clk2_phase;
+   reg 	     test_fail;   
    integer   seed,r;
    reg [1023:0] testname;
 
@@ -113,8 +114,12 @@ module oh_simctrl #( parameter CFG_CLK1_PERIOD = 10,
        end
    
    //STOP SIMULATION ON END
-   always @ (posedge clk1)
-     if(stim_done & test_done)
+   always @ (posedge clk1 or negedge nreset)
+     if(!nreset)
+       test_fail <= 1'b0;
+     else if (test_diff)
+       test_fail <= 1'b1;
+     else if(stim_done & test_done)
        begin
 	  $display("-------------------");
 	  if(test_fail)
