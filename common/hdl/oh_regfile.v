@@ -22,31 +22,41 @@ module oh_regfile # (parameter REGS  = 32,         // number of registeres
     input [RP*RAW-1:0] rd_addr, // register address
     output [RP*RW-1:0] rd_data // output data
     );
-
    
-   reg [RW-1:0]  mem [0:REGS-1];
-   wire [WP-1:0] write_en [0:REGS-1];
+   
+   reg [RW-1:0]        mem[0:REGS-1];
+   wire [WP-1:0]       write_en [0:REGS-1];
+   wire [RW-1:0]       datamux [0:REGS-1];
 
-   genvar 	 i,j;
-
+   genvar 	       i,j;
+   
    //TODO: Make an array of cells
    
    //#########################################
    // write ports
    //#########################################	
 
-   //Write Select lines
+   //One hote write enables
    for(i=0;i<REGS;i=i+1)
      for(j=0;j<WP;j=j+1)
        assign write_en[i][j] = wr_valid[j] & (wr_addr[j*RAW+:RAW] == i);
 
-   //Memory array
-   for(i=0;i<REGS;i=i+1)
-     for(j=0;j<WP;j=j+1)
-       always @ (posedge clk)
-	 if (write_en[i][j])
-	   mem[i] <= wr_data[j*RW+:RW];
 
+   //Multi Write-Port Mux
+   for(i=0;i<REGS;i=i+1) 
+     begin: gmux
+	oh_mux #(.DW(RW), .N(WP))
+	iwrmux(.out (datamux[i][RW-1:0]),
+	       .sel (write_en[i][WP-1:0]),
+	       .in  (wr_data[WP*RW-1:0]));
+     end
+	     		 
+   //Memory Array Write
+   for(i=0;i<REGS;i=i+1)
+     always @ (posedge clk)
+       if (|write_en[i][WP-1:0])
+	 mem[i] <= datamux[i];
+   
    //#########################################
    // read ports
    //#########################################	
