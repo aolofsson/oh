@@ -90,11 +90,11 @@ module oh_simctrl #( parameter CFG_CLK1_PERIOD = 10,
 	nreset   = 'b0;
 	vdd      = 'b0;
 	vss      = 'b0;	
-	#(clk1_phase * 10 + 100)   //ramping voltage
+	#(clk1_phase * 10 + 10)   //ramping voltage
 	vdd      = 'bx;
-	#(clk1_phase * 10 + 100)   //voltage is safe
+	#(clk1_phase * 10 + 10)   //voltage is safe
 	vdd      = 'b1;
-	#(clk1_phase * 40 + 100)   //hold reset for 20 clk cycles
+	#(clk1_phase * 40 + 10)   //hold reset for 20 clk cycles
 	nreset   = 'b1;
      end
 
@@ -117,18 +117,18 @@ module oh_simctrl #( parameter CFG_CLK1_PERIOD = 10,
    always @ (posedge clk1 or negedge nreset)
      if(!nreset)
        test_fail <= 1'b0;
-     else if (test_diff)
-       test_fail <= 1'b1;
      else if(stim_done & test_done)
        begin
-	  $display("-------------------");
+	  #500
+	    $display("-------------------");
 	  if(test_fail)
 	    $display("TEST %0s FAILED", testname);
 	  else
-	    $display("TEST %0s PASSED", testname);
-	  #100
-	    $finish;
+	    $display("TEST %0s PASSED", testname);	  
+	  $finish;
        end
+     else if (test_diff)
+       test_fail <= 1'b1;
    
    //#################################
    // TIMEOUT
