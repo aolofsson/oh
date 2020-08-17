@@ -30,6 +30,8 @@ module oh_fifo_sync #(parameter DW        = 104,     //FIFO width
    reg [AW:0]          rd_addr;
    wire 	       fifo_read;
    wire 	       fifo_write;
+   wire 	       ptr_match;
+   wire 	       fifo_empty;
 
    assign fifo_read   = rd_en & ~empty;
    assign fifo_write  = wr_en & ~full;
@@ -43,13 +45,13 @@ module oh_fifo_sync #(parameter DW        = 104,     //FIFO width
        begin	   
           wr_addr[AW:0]   <= 'd0;
           rd_addr[AW:0]   <= 'b0;
-          rd_count[AW:0]  <= 'b0;
+          rd_count[AW-1:0]  <= 'b0;
        end
      else if(clear) 
        begin	   
           wr_addr[AW:0]   <= 'd0;
           rd_addr[AW:0]   <= 'b0;
-          rd_count[AW:0]  <= 'b0;
+          rd_count[AW-1:0]  <= 'b0;
        end
      else if(fifo_write & fifo_read) 
        begin
@@ -67,19 +69,13 @@ module oh_fifo_sync #(parameter DW        = 104,     //FIFO width
           rd_count[AW-1:0]<= rd_count[AW-1:0] - 'd1;
        end
 
-   //Empty register to account for RAM output register  
-   generate
-      if(REG)
-	begin
-	   reg empty_reg;	   
-	   always @ (posedge clk)
-	     empty_reg <= fifo_empty;
-	   assign empty = empty_reg;
-	end
-      else
-	assign empty = fifo_empty;
-   endgenerate
+   //Pipeline register to account for RAM output register  
+   reg empty_reg;	   
+   always @ (posedge clk)
+     empty_reg <= fifo_empty;
 
+   assign empty = (REG==1) ? empty_reg :
+		             fifo_empty;
    
    // GENERIC DUAL PORTED MEMORY
    oh_memory_dp 

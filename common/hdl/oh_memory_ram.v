@@ -44,21 +44,15 @@ module oh_memory_ram  # (parameter DW      = 104,           // memory width
    assign rdata[DW-1:0] = ram[rd_addr[AW-1:0]];
    
    //Configurable output register
-   generate
-      if(REG)
-	begin
-	   reg [DW-1:0] rd_reg;
-	   always @ (posedge rd_clk)
-	     if(rd_en)       
-	       rd_reg[DW-1:0] <= rdata[DW-1:0];
-	   assign rd_dout[DW-1:0] = rd_reg[DW-1:0];
-	end
-      else
-	begin
-	   assign rd_dout[DW-1:0] = rdata[DW-1:0];
-	end
-   endgenerate
-
+   reg [DW-1:0]        rd_reg;
+   always @ (posedge rd_clk)
+     if(rd_en)       
+       rd_reg[DW-1:0] <= rdata[DW-1:0];
+   
+   //Drive output from register or RAM directly
+   assign rd_dout[DW-1:0] = (REG==1) ? rd_reg[DW-1:0] :
+		                       rdata[DW-1:0];
+   
 //##########################
 //# SIMULATION/DEBUG LOGIC
 //##########################

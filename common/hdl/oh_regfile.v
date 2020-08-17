@@ -37,34 +37,41 @@ module oh_regfile # (parameter REGS  = 32,         // number of registeres
    //#########################################	
 
    //One hote write enables
-   for(i=0;i<REGS;i=i+1)
-     for(j=0;j<WP;j=j+1)
-       assign write_en[i][j] = wr_valid[j] & (wr_addr[j*RAW+:RAW] == i);
-
-
+   for(i=0;i<REGS;i=i+1) 
+     begin: gen_regwrite
+	for(j=0;j<WP;j=j+1) 
+	  begin: gen_wp	
+	     assign write_en[i][j] = wr_valid[j] & (wr_addr[j*RAW+:RAW] == i);
+	  end
+     end
+   
    //Multi Write-Port Mux
    for(i=0;i<REGS;i=i+1) 
-     begin: gmux
+     begin: gen_wrmux
 	oh_mux #(.DW(RW), .N(WP))
 	iwrmux(.out (datamux[i][RW-1:0]),
 	       .sel (write_en[i][WP-1:0]),
 	       .in  (wr_data[WP*RW-1:0]));
      end
-	     		 
+   
    //Memory Array Write
-   for(i=0;i<REGS;i=i+1)
-     always @ (posedge clk)
-       if (|write_en[i][WP-1:0])
-	 mem[i] <= datamux[i];
+   for(i=0;i<REGS;i=i+1) 
+     begin: gen_reg
+	always @ (posedge clk)
+	  if (|write_en[i][WP-1:0])
+	    mem[i] <= datamux[i];
+end
+   
    
    //#########################################
    // read ports
    //#########################################	
    
-   for (i=0;i<RP;i=i+1)
-     assign rd_data[i*RW+:RW] = {(RW){rd_valid[i]}} & 
+   for (i=0;i<RP;i=i+1) begin: gen_rdport
+      assign rd_data[i*RW+:RW] = {(RW){rd_valid[i]}} & 
 				mem[rd_addr[i*RAW+:RAW]];
-   
+   end
+      
 endmodule // oh_regfile
 
 

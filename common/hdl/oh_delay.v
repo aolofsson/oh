@@ -20,9 +20,10 @@ module oh_delay  #(parameter DW = 1, // width of data
    generate
       always @ (posedge clk)
 	sync_pipe[0]<=in[DW-1:0];
-      for(i=1;i<N;i=i+1)
-        always @ (posedge clk)
-	  sync_pipe[i]<=sync_pipe[i-1];
+      for(i=1;i<N;i=i+1) begin: gen_pipe
+         always @ (posedge clk)
+	   sync_pipe[i]<=sync_pipe[i-1];
+      end
    endgenerate
 
    assign out[DW-1:0] = sync_pipe[N-1];

@@ -20,8 +20,11 @@ module oh_standby #(parameter PD = 5,// cycles to stay awake after "wakeup"
 
    //Wire declarations
    reg [PD-1:0]	wakeup_pipe;
-
-
+   wire 	sync_reset;
+   wire 	sync_reset_pulse;
+   wire 	wakeup_now;
+   wire 	clk_en;
+   
    //####################################################################
    // -Creating an edge one clock cycle pulse on rising edge of reset
    // -Event can be used to boot a CPU and any other master as an example
