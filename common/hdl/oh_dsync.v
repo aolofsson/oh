@@ -24,7 +24,7 @@ module oh_dsync  #(parameter PS    = 2,        // number of sync stages
    reg [PS:0] sync_pipe; 
    always @ (posedge clk or negedge nreset)		 
      if(!nreset)
-       sync_pipe[PS:0] <= 1'b0;
+       sync_pipe[PS:0] <= 'b0;
      else
        sync_pipe[PS:0] <= {sync_pipe[PS-1:0],din};	      	      
    // drive randomize delay from testbench
