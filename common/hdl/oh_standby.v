@@ -36,6 +36,7 @@ module oh_standby #(parameter PD = 5,// cycles to stay awake after "wakeup"
    oh_dsync #(.PS(2)) oh_dsync (//outputs
 				.dout(sync_reset),
 				//inputs
+				.nreset(nreset),
 				.din(nreset),
 				.clk(clkin)
 				);
