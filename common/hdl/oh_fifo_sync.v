@@ -93,7 +93,17 @@ module oh_fifo_sync #(parameter DW        = 104,     //FIFO width
 	.wr_en		(fifo_write),
   	.wr_wem		({(DW){1'b1}}),
 	.wr_addr	(wr_addr[AW-1:0]),
-	.wr_din	        (din[DW-1:0]));
+	.wr_din	        (din[DW-1:0]),
+	// not needed
+	.shutdown	(1'b0),
+	.memconfig	(8'b0),
+	.memrepair	(8'b0),
+	.bist_en	(1'b0),
+	.bist_we	(1'b0),
+	.bist_wem	({(DW){1'b0}}),
+	.bist_addr	({(AW){1'b0}}),
+	.bist_din	({(DW){1'b0}})
+	/*AUTOINST*/);
 
 
 `ifdef TARGET_SIM
@@ -110,3 +120,7 @@ module oh_fifo_sync #(parameter DW        = 104,     //FIFO width
 `endif   			
    
 endmodule // oh_fifo_sync
+
+// Local Variables:
+// verilog-library-directories:("." "../dv" "../../fpu/hdl" "../../../oh/common/hdl") 
+// End:
