@@ -48,7 +48,7 @@ module oh_simctrl #( parameter CFG_CLK1_PERIOD = 10,
    initial
      begin
 	$dumpfile("waveform.vcd");
-	$dumpvars(0, dv_top);
+	$dumpvars(0, testbench);
      end
 `endif
    
@@ -120,8 +120,8 @@ module oh_simctrl #( parameter CFG_CLK1_PERIOD = 10,
      else if(stim_done & test_done)
        begin
 	  #500
-	    $display("-------------------");
-	  if(test_fail)
+	  $display("-------------------");
+	  if(test_fail | test_diff)
 	    $display("TEST %0s FAILED", testname);
 	  else
 	    $display("TEST %0s PASSED", testname);	  
