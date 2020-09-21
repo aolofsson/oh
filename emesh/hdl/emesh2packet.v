@@ -10,7 +10,7 @@ module emesh2packet #(parameter AW = 32,   // address width
     //Emesh signal bundle
     input 	    write_out, 
     input [1:0]     datamode_out,
-    input [4:0]     ctrlmode_out,
+    input [12:0]    ctrlmode_out,
     input [AW-1:0]  dstaddr_out,
     input [AW-1:0]  data_out, 
     input [AW-1:0]  srcaddr_out, 
@@ -38,8 +38,16 @@ module emesh2packet #(parameter AW = 32,   // address width
    assign packet_out[2:1]     = datamode_out[1:0];
    assign packet_out[7:3]     = ctrlmode_out[4:0];
      
-   generate   
-     if(PW==136)
+   generate
+      if(PW==144)
+	begin : p144
+	   assign packet_out[39:8]    = dstaddr_out[31:0];
+	   assign packet_out[71:40]   = data_out[31:0];    // | srcaddr_out[63:32]
+	   assign packet_out[103:72]  = srcaddr_out[31:0]; // (data_out[63:32])   
+	   assign packet_out[135:104] = dstaddr_out[63:32];
+	   assign packet_out[143:136] = ctrlmode_out[12:5];
+	end
+      else if(PW==136)
 	begin : p136
 	   assign packet_out[39:8]    = dstaddr_out[31:0];
 	   assign packet_out[71:40]   = data_out[31:0];    // | srcaddr_out[63:32]
