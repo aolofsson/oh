@@ -28,8 +28,8 @@ module oh_oddr #(parameter DW  = 1) // width of data inputs
    always @ (negedge clk)
      q2_sh[DW-1:0] <= q2_sl[DW-1:0];
        
-   assign out[DW-1:0] = clk ? q1_sl[DW-1:0] : 
-	                      q2_sh[DW-1:0];
+   assign out[DW-1:0] = ~clk ? q1_sl[DW-1:0] : 
+	                       q2_sh[DW-1:0];
       
 endmodule // oh_oddr
 
