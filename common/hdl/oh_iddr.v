@@ -9,32 +9,43 @@ module oh_iddr #(parameter DW      = 1 // width of data inputs
 		 )
    (
     input 		clk, // clock
-    input 		ce, // clock enable, set to high to clock in data
-    input [DW-1:0] 	din, // data input sampled on both edges of clock
-    output reg [DW-1:0] q1, // iddr rising edge sampled data
-    output reg [DW-1:0] q2   // iddr falling edge sampled data
+    input 		ce0, // 1st cycle enable
+    input 		ce1, // 2nd cycle enable
+    input [DW/2-1:0] 	din, // data input sampled on both edges of clock
+    output reg [DW-1:0] dout // iddr aligned
     );
    
    //regs("sl"=stable low, "sh"=stable high)
-   reg [DW-1:0]     q1_sl;
-   reg [DW-1:0]     q2_sh;
+   reg [DW/2-1:0]     din_sl;
+   reg [DW/2-1:0]     din_sh;
+   reg 		      ce0_negedge;
    
-   // rising edge sample
-   always @ (posedge clk)
-     if(ce)
-       q1_sl[DW-1:0] <= din[DW-1:0];
-   
-   // falling edge sample
+   //########################
+   // Pipeline valid for negedge
+   //########################
    always @ (negedge clk)
-     q2_sh[DW-1:0] <= din[DW-1:0];
-   
-   // pipeline for alignment
+     ce0_negedge <= ce0;
+
+   //########################
+   // Dual edge sampling
+   //########################
+
    always @ (posedge clk)
-     begin
-	q1[DW-1:0] <= q1_sl[DW-1:0];
-	q2[DW-1:0] <= q2_sh[DW-1:0];
-     end
+     if(ce0)
+       din_sl[DW/2-1:0] <= din[DW/2-1:0];
+   always @ (negedge clk)
+     if(ce0_negedge)
+       din_sh[DW/2-1:0] <= din[DW/2-1:0];
+
+   //########################
+   // Aign pipeline
+   //########################
+   always @ (posedge clk)
+     if(ce1)
+       dout[DW-1:0] <= {din_sh[DW/2-1:0],
+			din_sl[DW/2-1:0]};
             
 endmodule // oh_iddr
+
 
 
