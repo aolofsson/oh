@@ -13,14 +13,15 @@ module oh_iobuf #(parameter N    = 1,            // BUS WIDTH
     inout 	   vddio,// io supply
     inout 	   vss, // ground
     //CONTROLS
-    input [1:0]    pullsel, //pullup/pulldown select 
+    input 	   enpullup, //enable pullup
+    input 	   enpulldown, //enable pulldown
     input 	   slewlimit, //slew limiter
     input [3:0]    drivestrength, //drive strength
     //DATA
     input [N-1:0]  ie, //input enable
     input [N-1:0]  oe, //output enable
-    input [N-1:0]  out,//output TO pad
-    output [N-1:0] in, //input FROM pad
+    output [N-1:0] out,//output to core
+    input [N-1:0]  in, //input from core
     //BIDIRECTIONAL PAD
     inout [N-1:0]  pad
     );
@@ -30,8 +31,8 @@ module oh_iobuf #(parameter N    = 1,            // BUS WIDTH
    //TODO: Model power signals
    for (i = 0; i < N; i = i + 1) begin : gen_buf
       if(TYPE=="BEHAVIORAL") begin : gen_beh
-	 assign pad[i] = oe[i] ? out[i] : 1'bZ;
-	 assign in[i]  = ie[i] ? pad[i] : 1'b0;
+	 assign pad[i] = oe[i] ? in[i] : 1'bZ;
+	 assign out[i] = ie[i] ? pad[i] : 1'b0;
       end
       else begin : gen_custom
 	 
