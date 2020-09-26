@@ -15,11 +15,11 @@ module ememory # (parameter AW    = 32,     // address width
     // incoming read/write
     input 	    access_in,
     input [PW-1:0]  packet_in, 
-    output 	    wait_out, //pushback
+    output 	    ready_out, //pushback
     // back to mesh (readback data)
     output reg 	    access_out,
     output [PW-1:0] packet_out, 
-    input 	    wait_in   //pushback
+    input 	    ready_in   //pushback
     );
    
    //derived parameters
@@ -45,8 +45,8 @@ module ememory # (parameter AW    = 32,     // address width
    reg  [2:0]       align_addr;
    wire [DW-1:0]    din_aligned;
    wire [63:0]      dout_aligned;
-   wire 	    wait_random; //TODO: make random  
-   wire 	    wait_all;
+   wire 	    ready_random; //TODO: make random  
+   wire 	    ready_all;
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [4:0]		ctrlmode_in;		// From p2e of packet2emesh.v
@@ -72,13 +72,13 @@ module ememory # (parameter AW    = 32,     // address width
    
       
    //Access-in
-   assign en     =  access_in & ~wait_all & ~wait_all;
-   assign mem_rd = (access_in & ~write_in & ~wait_all);   
+   assign en     =  access_in & ready_all & ready_all;
+   assign mem_rd = (access_in & ~write_in & ready_all);   
 
 
    //Pushback Circuit (pass through problems?)
-   assign wait_all = (wait_random | wait_in);
-   assign wait_out = wait_all;// & access_in
+   assign ready_all = (ready_random | ready_in);
+   assign readt_out = ready_all;// & access_in
    
    //Address-in (shifted by three bits, 64 bit wide memory)
    assign addr[MAW-1:0] = dstaddr_in[MAW+2:3];     
@@ -202,7 +202,7 @@ module ememory # (parameter AW    = 32,     // address width
 			   )
 	   emesh_monitor (.dut_access	(access_in & write_in),
 			  .dut_packet	(packet_in[PW-1:0]),
-			  .wait_in	(wait_random),
+			  .ready_in	(ready_random),
 			  /*AUTOINST*/
 			  // Inputs
 			  .clk			(clk),
@@ -216,17 +216,17 @@ module ememory # (parameter AW    = 32,     // address width
    generate
       if(WAIT)
 	begin	   
-	   reg [8:0] wait_counter;  
+	   reg [8:0] ready_counter;  
 	   always @ (posedge clk or negedge nreset)
 	     if(!nreset)
-	       wait_counter[8:0] <= 'b0;   
+	       ready_counter[8:0] <= 'b0;   
 	     else
-	       wait_counter[8:0] <= wait_counter+1'b1;         
-	   assign wait_random      = (|wait_counter[5:0]);//(|wait_counter[3:0]);//1'b0;
+	       ready_counter[8:0] <= ready_counter+1'b1;         
+	   assign ready_random      = (|ready_counter[5:0]);//(|ready_counter[3:0]);//1'b0;
 	end
       else
 	begin
-	   assign wait_random = 1'b0;
+	   assign ready_random = 1'b0;
 	end // else: !if(WAIT)
    endgenerate
   

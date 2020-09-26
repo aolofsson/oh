@@ -1,8 +1,8 @@
 module emesh_mux (/*AUTOARG*/
    // Outputs
-   wait_out, access_out, packet_out,
+   ready_out, access_out, packet_out,
    // Inputs
-   access_in, packet_in, wait_in
+   access_in, packet_in, ready_in
    );
    
    //#####################################################################
@@ -22,12 +22,12 @@ module emesh_mux (/*AUTOARG*/
    //Incoming transaction
    input [N-1:0]    access_in;
    input [N*PW-1:0] packet_in;
-   output [N-1:0]   wait_out;
+   output [N-1:0]   ready_out;
 
    //Outgoing transaction
    output 	    access_out;
    output [PW-1:0]  packet_out;
-   input 	    wait_in;
+   input 	    ready_in;
    
    //#####################################################################
    //# BODY
@@ -61,8 +61,8 @@ module emesh_mux (/*AUTOARG*/
    //access signal
    assign access_out = |(access_in[N-1:0]);
 
-   //raise wait signals 
-   assign wait_out[N-1:0] = access_in[N-1:0] & (~grants[N-1:0] | {(N){wait_in}});
+   //raise ready signals 
+   assign ready_out[N-1:0] = ~(access_in[N-1:0] & ~grants[N-1:0]) & {(N){ready_in}});
 
    //parametrized mux
    always @*

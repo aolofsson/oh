@@ -15,12 +15,12 @@ module oh_fifo_cdc # (parameter DW        = 104,      //FIFO width
     input 	    clk_in, // write clock
     input 	    valid_in, // write valid
     input [DW-1:0]  packet_in, // write packet
-    output 	    wait_out, // write pushback
+    output 	    ready_out, // write pushback
     //Read Side
     input 	    clk_out, //read clock
     output reg 	    valid_out, //read valid
     output [DW-1:0] packet_out, //read packet
-    input 	    wait_in, // read pushback
+    input 	    ready_in, // read pushback
     //Status
     output 	    prog_full, // fifo is half full
     output 	    full, // fifo is full
@@ -49,9 +49,8 @@ module oh_fifo_cdc # (parameter DW        = 104,      //FIFO width
 
    // FIFO control logic
    assign wr_en    = valid_in;
-   assign rd_en    = ~empty & ~wait_in;
-   assign wait_out = prog_full;
-
+   assign rd_en    = ~empty & ready_in;
+   assign ready_out = ~prog_full;
 
    //async asser, sync deassert of reset
    oh_rsync sync_reset(.nrst_out  (nreset_out),
@@ -62,7 +61,7 @@ module oh_fifo_cdc # (parameter DW        = 104,      //FIFO width
    always @ (posedge clk_out or negedge nreset_out)
      if(!nreset_out)
        valid_out <= 1'b0;   
-     else if(~wait_in)
+     else if(ready_in)
        valid_out <= rd_en;
    
 endmodule // oh_fifo_cdc

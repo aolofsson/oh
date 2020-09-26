@@ -1,7 +1,7 @@
 /* verilator lint_off STMTDLY */
 module emesh_monitor(/*AUTOARG*/
    // Inputs
-   clk, nreset, dut_access, dut_packet, wait_in, coreid
+   clk, nreset, dut_access, dut_packet, ready_in, coreid
    );
 
    parameter PW     = 104;
@@ -16,7 +16,7 @@ module emesh_monitor(/*AUTOARG*/
    //monitors transaction on the wire
    input            dut_access;
    input [PW-1:0]   dut_packet;   
-   input 	    wait_in;  
+   input 	    ready_in;  
    input [IDW-1:0]  coreid;   
 
    //core name for trace
@@ -34,7 +34,7 @@ module emesh_monitor(/*AUTOARG*/
      end
    
    always @ (posedge clk or negedge nreset)
-     if(nreset & dut_access & ~wait_in)
+     if(nreset & dut_access & ready_in)
        begin
 	  $fwrite(ftrace, "%h_%h_%h_%h\n",dut_packet[PW-1:72],dut_packet[71:40],dut_packet[39:8],dut_packet[7:0]);   
 	  //$display("%h_%h_%h_%h\n",dut_packet[PW-1:72],dut_packet[71:40],dut_packet[39:8],dut_packet[7:0]);   
