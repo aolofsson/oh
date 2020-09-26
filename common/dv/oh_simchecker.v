@@ -16,7 +16,7 @@ module oh_simchecker #(parameter DW = 32 // Datapath width
        begin
 	  diff <= 1'b1;	  
 `ifdef CFG_SIM 
-	  $display("ERROR(%0t): result=%h reference=%h", $time, result, reference);
+	  $display("ERROR(%0t): result= %d(%h) reference= %d(%h)", $time, result,result, reference, reference);
 `endif
        end
      else
