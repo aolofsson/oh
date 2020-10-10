@@ -76,6 +76,7 @@
  * CMD[3] indicates
  * Near/Far indicates whether to enable AW or AW/2 packet width
  * All transactions are LSB aligned  
+ * No return address for AW16 (point to point)
  * 
  ******************************************************************************/
 module emesh2packet 
