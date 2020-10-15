@@ -36,26 +36,25 @@
  * The command field has the following options:
  * 
  * 
- *  | Command[15:0]   | 15:12   | 11:8    | 7     | 6:4       | 3:0   |
- *  |-----------------|---------|---------|-----------|-------|-------|
- *  | WRITE-START     |         | LEN[3:0]| LOCAL | SIZE[2:0] | 0000  |
- *  | WRITE-STOP      |         |         | LOCAL |           | 0001  |
- *  | WRITE-MULTICAST |         |         | LOCAL | SIZE[2:0] | 0010  |
- *  | TBD             |         |         | LOCAL | SIZE[2:0] | 0011  |
- *  | TBD             |         |         | LOCAL | SIZE[2:0] | 0100  |
- *  | TBD             |         |         | LOCAL | SIZE[2:0] | 0101  |
- *  | TBD             |         |         | LOCAL | SIZE[2:0] | 0110  |
- *  | TBD             |         |         | LOCAL | SIZE[2:0] | 0111  |
- *  |-----------------|-------  |---------|-------|-----------|-------|
- *  | READ            |         | LEN[3:0]| LOCAL | SIZE[2:0] | 1000  |
- *  | TBD             |         |         | LOCAL | 0,DIR[1:0]| 1010  |
- *  | TBD             |         |         | LOCAL | 0,DIR[1:0]| 1010  |
- *  | CAS             |         |         | LOCAL | SIZE[2:0] | 1011  |
- *  | ATOMIC-ADD      |         |         | LOCAL | SIZE[2:0] | 1100  |
- *  | ATOMIC-AND      |         |         | LOCAL | SIZE[2:0] | 1101  |
- *  | ATOMIC-OR       |         |         | LOCAL | SIZE[2:0] | 1110  |
- *  | ATOMIC-XOR      |         |         | LOCAL | SIZE[2:0] | 1111  |
-
+ *  | Command[15:0]   | 15:11     | 10:8      | 7:4      | 3:0  |
+ *  |-----------------|-----------|-----------|----------|------|
+ *  | WRITE-START     | USER[7:3] | SIZE[2:0] | LEN[3:0] | 0000 |
+ *  | WRITE-STOP      | USER[7:3] | SIZE[2:0] | LEN[3:0] | 0001 |
+ *  | WRITE-MULTICAST | USER[7:3] | SIZE[2:0] | LEN[3:0] | 0010 |
+ *  | TBD             | USER[7:3] | SIZE[2:0] | LEN[3:0] | 0011 |
+ *  | TBD             | USER[7:3] | SIZE[2:0] | LEN[3:0] | 0100 |
+ *  | TBD             | USER[7:3] | SIZE[2:0] | LEN[3:0] | 0101 |
+ *  | TBD             | USER[7:3] | SIZE[2:0] | LEN[3:0] | 0110 |
+ *  | TBD             | USER[7:3] | SIZE[2:0] | LEN[3:0] | 0111 |
+ *  |-----------------|-----------|-----------|----------|------|
+ *  | READ            | USER[7:3] | SIZE[2:0] | LEN[3:0] | 1000 |
+ *  | TBD             | USER[7:3] | SIZE[2:0] | LEN[3:0] | 1010 |
+ *  | TBD             | USER[7:3] | SIZE[2:0] | LEN[3:0] | 1010 |
+ *  | CAS             | USER[7:3] | SIZE[2:0] | LEN[3:0] | 1011 |
+ *  | ATOMIC-ADD      | USER[7:3] | SIZE[2:0] | LEN[3:0] | 1100 |
+ *  | ATOMIC-AND      | USER[7:3] | SIZE[2:0] | LEN[3:0] | 1101 |
+ *  | ATOMIC-OR       | USER[7:3] | SIZE[2:0] | LEN[3:0] | 1110 |
+ *  | ATOMIC-XOR      | USER[7:3] | SIZE[2:0] | LEN[3:0] | 1111 |
  * 
  * SIZE DECODE:
  * 000=8b
@@ -63,19 +62,16 @@
  * 010=32b
  * 011=64b
  * 100=128b
- * 1xx=reserved
+ * 1XX=reserved
  * 
- * DIR DECODE:
- * 00=north
- * 01=east
- * 10=west
- * 11=south
+ * LENGTH DECODE:
+ * 0000=1 beat (single transaction)
+ * 0001=2 beat
+ * ...
+ * 1111=16 beats
  * 
- * Basic commands at bits [7:0] for all address widths
  * AW32/AW64/AW128 formats are compatible
  * AW16 format is a standalone format not compatible with any other
- * CMD[3] indicates
- * Near/Far indicates whether to enable AW or AW/2 packet width
  * All transactions are LSB aligned  
  * No return address for AW16 (point to point)
  * 
@@ -84,13 +80,12 @@ module enoc_pack
   #(parameter AW = 64,
     parameter PW = 144)
    (
-    //Emesh signal bundle
+    //Command Inputs
     input [3:0]      opcode_in,
+    input [3:0]      length_in,//burst length(1-16)
     input [2:0]      size_in,//size of each transfer
-    input [3:0]      len_in,//bust length(up to 16)
-    input [7:0]      ctrl_in, //control field
-    input 	     local_in,//local address/remote address
-    input 	     stop_in,//stop burst
+    input [7:3]      user_in, //user control field
+    //Address/Data
     input [AW-1:0]   dstaddr_in, //destination address
     input [AW-1:0]   srcaddr_in, //source address (for reads)
     input [2*AW-1:0] data_in, //data
@@ -99,9 +94,16 @@ module enoc_pack
     );
    
    //############################################
-   // Command Decode
+   // Command Field
    //############################################
-   enoc_decode enoc_decode (.opcode		(opcode_in[3:0]),
+   wire [15:0] 	     cmd_out;
+
+   assign cmd_out[3:0]   = opcode_in[3:0];   
+   assign cmd_out[7:4]   = length_in[3:0];
+   assign cmd_out[10:8]  = size_in[2:0];
+   assign cmd_out[15:11] = user_in[7:3];
+   
+   enoc_decode enoc_decode (.cmd_in		(cmd_out[15:0]),
 			    /*AUTOINST*/
 			    // Outputs
 			    .cmd_write		(cmd_write),
@@ -114,18 +116,7 @@ module enoc_pack
 			    .cmd_atomic_and	(cmd_atomic_and),
 			    .cmd_atomic_or	(cmd_atomic_or),
 			    .cmd_atomic_xor	(cmd_atomic_xor));
-      
-   //############################################
-   // Command Field
-   //############################################
-   wire [15:0] 	     cmd_out;
-
-   assign cmd_out[3:0]   = opcode_in[3:0];   
-   assign cmd_out[6:4]   = size_in[2:0];
-   assign cmd_out[7]     = local_in;   
-   assign cmd_out[11:8]  = len_in[3:0];//TODO: mux based on type
-   assign cmd_out[15:12] = ctrl_in[7:4];//TODO: what do these do?
-
+   
    generate
       //############################
       // 16-Bit ("lite/apb like")
