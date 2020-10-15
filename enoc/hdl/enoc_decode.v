@@ -10,6 +10,7 @@ module enoc_decode
    //Emesh signal bundle
    input [3:0] opcode,
    //Writes
+   output      cmd_write,
    output      cmd_write_start,
    output      cmd_write_stop,
    output      cmd_write_multicast,
