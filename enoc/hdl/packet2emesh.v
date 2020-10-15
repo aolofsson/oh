@@ -16,6 +16,7 @@ module packet2emesh
     input [PW-1:0]    packet_in,
     //Emesh signal bundle 
     output [15:0]     cmd_in, // command
+    output 	      write_in,// indicates a write transaction
     output [AW-1:0]   dstaddr_in, // read/write target address
     output [AW-1:0]   srcaddr_in, // read return address
     output [2*AW-1:0] data_in     // write data
@@ -117,6 +118,8 @@ module packet2emesh
 	end
       end // block: aw128
    endgenerate  
+
+   assign write_in = cmd_in[3];
    
 endmodule // packet2emesh
 

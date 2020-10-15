@@ -36,25 +36,25 @@
  * The command field has the following options:
  * 
  * 
- *  | Command[15:0]   | 15:8  | 7        | 6:4         | 3:0   |
- *  |-----------------|-------|----------|-------------|-------|
- *  | WRITE-SINGLE    | CTRL  | NEAR/FAR | SIZE[2:0]   | 0000  |
- *  | WRITE-IRQ       | CTRL  | NEAR/FAR | SIZE[2:0]   | 0001  |
- *  | WRITE-START     | LEN   | NEAR/FAR | SIZE[2:0]   | 0010  |
- *  | WRITE-STREAM    | CTRL  | STOP     | CTRL        | 0011  |
- *  | WRITE-MULTICAST |       | NEAR/FAR | SIZE[2:0]   | 0100  |
- *  | WRITE-IO        |       | NEAR/FAR | 64,DIR[1:0] | 0101  |
- *  | TBD             |       | NEAR/FAR | SIZE[2:0]   | 0110  |
- *  | TBD             |       | NEAR/FAR | SIZE[2:0]   | 0111  |
- *  |-----------------|-------|----------|-------------|-------|
- *  | READ            | CH    | NEAR/FAR | SIZE[2:0]   | 1000  |
- *  | ATOMIC-OP       | CH    | NEAR/FAR | SIZE[2:0]   | 1001  |
- *  | CAS             | CH    | NEAR/FAR | SIZE[2:0]   | 1010  |
- *  | READ-IO         | CH    | NEAR/FAR | 64,DIR[1:0] | 1011  |
- *  | TBD             | CH    | NEAR/FAR | SIZE[2:0]   | 1101  |
- *  | TBD             | CH    | NEAR/FAR | SIZE[2:0]   | 1110  |
- *  | TBD             | CH    | NEAR/FAR | SIZE[2:0]   | 1111  |
- *  | TBD             | CH    | NEAR/FAR | SIZE[2:0]   | 1111  |
+ *  | Command[15:0]   | 15:12   | 11:8    | 7     | 6:4       | 3:0   |
+ *  |-----------------|---------|---------|-----------|-------|-------|
+ *  | WRITE-SINGLE    |         |         | LOCAL | SIZE[2:0] | 0000  |
+ *  | WRITE-IRQ       |         |         | LOCAL | SIZE[2:0] | 0001  |
+ *  | WRITE-BURST     |         | LEN[3:0]| LOCAL | SIZE[2:0] | 0010  |
+ *  | WRITE-BURSTDATA |         |         | STOP  |           | 0011  |
+ *  | WRITE-MULTICAST |         |         | LOCAL | SIZE[2:0] | 0100  |
+ *  | WRITE-IO        |         |         | LOCAL | 0,DIR[1:0]| 0101  |
+ *  | TBD             |         |         | LOCAL | SIZE[2:0] | 0110  |
+ *  | TBD             |         |         | LOCAL | SIZE[2:0] | 0111  |
+ *  |-----------------|-------  |---------|-------|-----------|-------|
+ *  | READ            |         | LEN[3:0]| LOCAL | SIZE[2:0] | 1000  |
+ *  | ATOMIC-ADD      |         |         | LOCAL | SIZE[2:0] | 1001  |
+ *  | ATOMIC-AND      |         |         | LOCAL | SIZE[2:0] | 1010  |
+ *  | ATOMIC-OR       |         |         | LOCAL | SIZE[2:0] | 1011  |
+ *  | ATOMIC-XOR      |         |         | LOCAL | SIZE[2:0] | 1100  |
+ *  | CAS             |         |         | LOCAL | SIZE[2:0] | 1101  |
+ *  | READ-IO         |         |         | LOCAL | 0,DIR[1:0]| 1110  |
+ *  | TBD             |         |         | LOCAL | 0,DIR[1:0]| 1111  |
  * 
  * SIZE DECODE:
  * 000=8b
@@ -84,17 +84,30 @@ module emesh2packet
     parameter PW = 144)
    (
     //Emesh signal bundle
-    input [15:0]     cmd_out, //cmd[15:8] can be optionally set to zero
-    input [AW-1:0]   dstaddr_out, //destination address
-    input [AW-1:0]   srcaddr_out, //source address (for reads)
-    input [2*AW-1:0] data_out, //data
+    input [3:0]      opcode_in,
+    input [2:0]      size_in,//size of each transfer
+    input [3:0]      burst_in,//length of burst (up to 16)
+    input [7:0]      ctrl_in, 
+    input 	     local_in,//local address
+    input 	     stop_in,
+    input [15:0]     cmd_out,//transaction  command
+    input [AW-1:0]   dstaddr_in, //destination address
+    input [AW-1:0]   srcaddr_in, //source address (for reads)
+    input [2*AW-1:0] data_in, //data
     //Output packet
     output [PW-1:0]  packet_out
     );
    
-   //Selector for src/data field
-   assign write  = cmd_out[3];
-
+   //############################################
+   // Hard Coded selector for read/write formats
+   //############################################
+ 
+   assign cmd_out[3:0]  = opcode_in[3:0];
+   assign cmd_out[6:4]  = size_in[2:0];
+   assign cmd_out[7]    = local_in
+   assign cmd_out[15:8] = ctrl_in[7:0];   
+   assign write         = ~cmd_out[3];
+   
    generate
       //############################
       // 16-Bit ("lite/apb like")
