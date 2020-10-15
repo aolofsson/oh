@@ -103,19 +103,22 @@ module enoc_pack
    assign cmd_out[10:8]  = size_in[2:0];
    assign cmd_out[15:11] = user_in[7:3];
    
-   enoc_decode enoc_decode (.cmd_in		(cmd_out[15:0]),
-			    /*AUTOINST*/
+   //Decode (only write indicator needed)
+   enoc_decode enoc_decode (//Inputs
+			    .cmd_in		(cmd_out[15:0]),
 			    // Outputs
 			    .cmd_write		(cmd_write),
-			    .cmd_write_start	(cmd_write_start),
-			    .cmd_write_stop	(cmd_write_stop),
-			    .cmd_write_multicast(cmd_write_multicast),
-			    .cmd_read		(cmd_read),
-			    .cmd_cas		(cmd_cas),
-			    .cmd_atomic_add	(cmd_atomic_add),
-			    .cmd_atomic_and	(cmd_atomic_and),
-			    .cmd_atomic_or	(cmd_atomic_or),
-			    .cmd_atomic_xor	(cmd_atomic_xor));
+			    .cmd_write_stop	(),
+			    .cmd_read		(),
+			    .cmd_atomic_add	(),
+			    .cmd_atomic_and	(),
+			    .cmd_atomic_or	(),
+			    .cmd_atomic_xor	(),
+			    .cmd_cas		(),
+			    .cmd_opcode		(),
+			    .cmd_length		(),
+			    .cmd_size		(),
+			    .cmd_user		());
    
    generate
       //############################

@@ -5,7 +5,7 @@
  *
  * Documentation:
  * 
- * see ./enoc_pack.v
+ * see ./enoc_pack.v for packet formatting
  * 
  ******************************************************************************/
 module enoc_unpack
@@ -14,40 +14,49 @@ module enoc_unpack
    (
     //Input packet
     input [PW-1:0]    packet_in,
-    //Emesh signal bundle 
-    output [3:0]      opcode_out,
-    output [2:0]      size_out,//size of each transfer
-    output [3:0]      len_out,//bust length(up to 16)
-    output [7:0]      user_out, //user field
-    output 	      local_out,//local address/remote address
-    output 	      stop_out,//stop burst
-    output [15:0]     cmd_out, // command
-    output [AW-1:0]   dstaddr_out, // read/write target address
-    output [AW-1:0]   srcaddr_out, // read return address
-    output [2*AW-1:0] data_out     // write data
+    //Write
+    output 	      cmd_write,//start write
+    output 	      cmd_write_stop,//stop burst
+    //Read
+    output 	      cmd_read,
+    //Atomic read/write
+    output 	      cmd_atomic_add,
+    output 	      cmd_atomic_and,
+    output 	      cmd_atomic_or,
+    output 	      cmd_atomic_xor,
+    output 	      cmd_cas,
+    //Command Fields
+    output [3:0]      cmd_opcode,//raw opcode
+    output [3:0]      cmd_length,//bust length(up to 16)
+    output [2:0]      cmd_size,//size of each transfer
+    output [7:0]      cmd_user, //user field
+    //Address/Data
+    output [AW-1:0]   dstaddr, // read/write target address
+    output [AW-1:0]   srcaddr, // read return address
+    output [2*AW-1:0] data     // write data
     );
 
    wire [15:0] cmd_out;
 
    //############################################
-   // Command Decode (for write signal)
+   // Command Decode
    //############################################
-   
-   enoc_decode enoc_decode (/*AUTOINST*/
+
+   enoc_decode enoc_decode (//Input
+			    .cmd_in		(cmd_out[15:0]),
 			    // Outputs
 			    .cmd_write		(cmd_write),
-			    .cmd_write_start	(cmd_write_start),
 			    .cmd_write_stop	(cmd_write_stop),
-			    .cmd_write_multicast(cmd_write_multicast),
 			    .cmd_read		(cmd_read),
 			    .cmd_cas		(cmd_cas),
 			    .cmd_atomic_add	(cmd_atomic_add),
 			    .cmd_atomic_and	(cmd_atomic_and),
 			    .cmd_atomic_or	(cmd_atomic_or),
 			    .cmd_atomic_xor	(cmd_atomic_xor),
-			    );
-
-   
+			    .cmd_opcode		(cmd_opcode[3:0]),
+			    .cmd_user		(cmd_user[7:0]),
+			    .cmd_length		(cmd_length[3:0]),
+			    .cmd_size		(cmd_size[2:0]));
    generate
       //######################
       // 16-Bit ("lite/apb like")
@@ -145,10 +154,8 @@ module enoc_unpack
       end // block: aw128
    endgenerate  
 
-   
+endmodule // enoc_unpack
 
-output [15:0]     cmd_out, // command
-endmodule // packet2emesh
 
 
 
