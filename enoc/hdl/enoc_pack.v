@@ -62,7 +62,9 @@
  * 010=32b
  * 011=64b
  * 100=128b
- * 1XX=reserved
+ * 101=256b
+ * 110=512b
+ * 111=1024b
  * 
  * LENGTH DECODE:
  * 0000=1 beat (single transaction)
