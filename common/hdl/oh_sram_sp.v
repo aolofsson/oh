@@ -1,15 +1,16 @@
 //#############################################################################
-//# Function: Single Port Memory                                              #
+//# Function: Single Port SRAM                                                #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_memory_sp  # (parameter DW    = 104,          // memory width
-			parameter DEPTH = 32,           // memory depth
-			parameter MCW   = 8,            // repair/config width
-			parameter AW    = $clog2(DEPTH) // address bus width  
-		       ) 
+module oh_sram_sp  
+  # (parameter DW    = 104,          // memory width
+     parameter DEPTH = 32,           // memory depth
+     parameter MCW   = 8,            // repair/config width
+     parameter AW    = $clog2(DEPTH) // address bus width  
+     ) 
    (// memory interface (single port)
     input 	    clk, // clock
     input 	    en, // memory access   

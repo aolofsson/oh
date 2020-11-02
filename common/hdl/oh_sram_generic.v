@@ -1,16 +1,16 @@
 //#############################################################################
-//# Function: Generic RAM memory                                              #
+//# Function: Generic SRAM memory                                             #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT  (see LICENSE file in OH! repository)                       # 
 //#############################################################################
 
-module oh_memory_ram  # (parameter DW      = 104,           // memory width
-			 parameter DEPTH   = 32,            // memory depth
-			 parameter REG     = 1,             // register output
-			 parameter AW      = $clog2(DEPTH), // address width
-			 parameter DUMPVAR = 0              // dump array
-			 ) 
+module oh_sram_generic  # (parameter DW      = 104,           // memory width
+			   parameter DEPTH   = 32,            // memory depth
+			   parameter REG     = 1,             // register output
+			   parameter AW      = $clog2(DEPTH), // address width
+			   parameter DUMPVAR = 0              // dump array
+			   ) 
    (// read-port
     input 	    rd_clk,// rd clock
     input 	    rd_en, // memory access

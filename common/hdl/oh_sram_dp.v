@@ -1,19 +1,19 @@
 //#############################################################################
-//# Function: Dual Port Memory                                                #
+//# Function: Dual Port SRAM                                                  #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_memory_dp # (parameter DW    = 104,           // memory width
-		       parameter DEPTH = 32,            // memory depth
-		       parameter PROJ  = "",            // project name
-		       parameter MCW   = 8,             // repair word width
-		       parameter REG   = 1,             // register output
-		       parameter AW    = $clog2(DEPTH), // address width 
-		       parameter DUMPVAR = 0            // dump array
-		       
-		       ) 
+module oh_sram_dp 
+  # (parameter DW    = 104,           // memory width
+     parameter DEPTH = 32,            // memory depth
+     parameter PROJ  = "",            // project name
+     parameter MCW   = 8,             // repair word width
+     parameter REG   = 1,             // register output
+     parameter AW    = $clog2(DEPTH), // address width 
+     parameter DUMPVAR = 0            // dump array     
+     ) 
    (// Memory interface (dual port)
     input 	    wr_clk, //write clock
     input 	    wr_en, //write enable
