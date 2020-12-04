@@ -19,21 +19,15 @@ module oh_sram_sp
     input [AW-1:0]  addr, // address
     input [DW-1:0]  din, // data input
     output [DW-1:0] dout, // data output
-    // Power/repair (ASICs)
+    // Power control
     input 	    vss, // common ground   
     input 	    vdd, // periphery power rail
     input 	    vddm, // sram array power rail
-    input 	    shutdown, // shutdown signal from always on domain   
-    input [MCW-1:0] memconfig, // generic memory config      
-    input [MCW-1:0] memrepair, // repair vector   
-    // BIST interface (ASICs)
-    input 	    bist_en, // bist enable
-    input 	    bist_we, // write enable global signal   
-    input [DW-1:0]  bist_wem, // write enable vector
-    input [AW-1:0]  bist_addr, // address
-    input [DW-1:0]  bist_din  // data input
+    input 	    shutdown, // shutdown signal from always on domain
+    // Repair/macro modes (ASICs)
+    input [7:0]     memconfig, // generic memory config      
+    input [7:0]     memrepair // repair vector   
     );
-
 
 `ifdef CFG_ASIC
    asic_sram_sp #(.DW(DW),

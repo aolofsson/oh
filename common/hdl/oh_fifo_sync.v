@@ -5,27 +5,42 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        # 
 //#############################################################################
 
-module oh_fifo_sync #(parameter DW        = 104,     //FIFO width
-		      parameter DEPTH     = 32,      //FIFO depth
-		      parameter REG       = 1,       //Register fifo output
-		      parameter PROG_FULL = DEPTH-1, //prog_full threshold  
-		      parameter AW = $clog2(DEPTH),  //rd_count width
-		      parameter DUMPVAR = 1          // dump array
-		      ) 
-(
-   input 	       clk, // clock
-   input 	       nreset, //async reset
-   input 	       clear, //clears reset (synchronous signal)
-   input [DW-1:0]      din, // data to write
-   input 	       wr_en, // write fifo
-   input 	       rd_en, // read fifo
-   output [DW-1:0]     dout, // output data (next cycle)
-   output 	       full, // fifo full
-   output 	       prog_full, // fifo is almost full
-   output 	       empty, // fifo is empty  
-   output reg [AW-1:0] rd_count     // valid entries in fifo
+module oh_fifo_sync 
+  #(parameter DW        = 104,           // FIFO width
+    parameter DEPTH     = 32,            // FIFO depth
+    parameter REG       = 1,             // Register fifo output
+    parameter PROG_FULL = DEPTH-1,       // prog_full threshold  
+    parameter AW        = $clog2(DEPTH), // rd_count width (derived)
+    parameter DUMPVAR   = 1              // dump array (for debug)
+    ) 
+   (
+    //basic interface
+    input 		clk, // clock
+    input 		nreset, //async reset
+    input 		clear, //clear fifo (synchronous)
+    input 		shutdown,//power down signal for memory
+    //write port
+    input [DW-1:0] 	din, // data to write
+    input 		wr_en, // write fifo
+    output 		full, // fifo full
+    output 		prog_full, // fifo is almost full
+    //read port
+    input 		rd_en, // read fifo    
+    output [DW-1:0] 	dout, // output data (next cycle)
+    output 		empty, // fifo is empty  
+    output reg [AW-1:0] rd_count // valid entries in fifo
+    //test interface for ASIC (leave floating for non-ASICs)
+    input [7:0] 	memconfig,
+    input [7:0] 	memrepair
+    input 		bist_en,
+    input 		bist_we,
+    input [DW-1:0] 	bist_wem,
+    input [DW-1:0] 	bist_din,
+    input [AW-1:0] 	bist_addr,
+    output [DW-1:0] 	bist_dout,
  );
    
+   //local wires
    reg [AW:0]          wr_addr;
    reg [AW:0]          rd_addr;
    wire 	       fifo_read;
@@ -78,33 +93,32 @@ module oh_fifo_sync #(parameter DW        = 104,     //FIFO width
 		             fifo_empty;
    
    // GENERIC DUAL PORTED MEMORY
-   oh_memory_dp 
+   oh_mem_dp 
      #(.DW(DW),
        .DEPTH(DEPTH),
        .DUMPVAR(DUMPVAR),
        .REG(REG))
-   mem (// read port
-	.rd_dout	(dout[DW-1:0]),
-	.rd_clk		(clk),
-	.rd_en		(fifo_read),
-	.rd_addr	(rd_addr[AW-1:0]),
-	// write port
-	.wr_clk		(clk),
-	.wr_en		(fifo_write),
-  	.wr_wem		({(DW){1'b1}}),
-	.wr_addr	(wr_addr[AW-1:0]),
-	.wr_din	        (din[DW-1:0]),
-	// not needed
-	.shutdown	(1'b0),
-	.memconfig	(8'b0),
-	.memrepair	(8'b0),
-	.bist_en	(1'b0),
-	.bist_we	(1'b0),
-	.bist_wem	({(DW){1'b0}}),
-	.bist_addr	({(AW){1'b0}}),
-	.bist_din	({(DW){1'b0}})
-	/*AUTOINST*/);
-
+   oh_mem_dp (// read port
+	       .rd_dout	        (dout[DW-1:0]),
+	       .rd_clk		(clk),
+	       .rd_en		(fifo_read),
+	       .rd_addr	        (rd_addr[AW-1:0]),
+	       // write port
+	       .wr_clk		(clk),
+	       .wr_en		(fifo_write),
+  	       .wr_wem		({(DW){1'b1}}),
+	       .wr_addr	        (wr_addr[AW-1:0]),
+	       .wr_din	        (din[DW-1:0]),
+	       // hard macro signals
+	       .shutdown	(shutdown),
+	       .memconfig	(memconfig),
+	       .memrepair	(memrepair),
+	       .bist_en	        (bist_en),
+	       .bist_we	        (bist_we),
+	       .bist_wem	(bist_wem[DW-1:0]),
+	       .bist_addr	(bist_addr[AW-1:0]),
+	       .bist_din	(bist_din[DW-1:0]),
+	       .bist_dout       (bist_dout[DW-1:0]));
 
 `ifdef TARGET_SIM
    assign rd_error = rd_en & empty;
