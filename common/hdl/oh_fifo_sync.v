@@ -6,13 +6,14 @@
 //#############################################################################
 
 module oh_fifo_sync 
-  #(parameter DW     = 104,          // FIFO width
-    parameter DEPTH  = 32,           // FIFO depth
-    parameter REG    = 1,            // Register fifo output    
-    parameter AW     = $clog2(DEPTH),// rd_count width (derived)
-    parameter TYPE   = "soft",       // hard=hard macro,soft=synthesizable
-    parameter CONFIG = "default",    // hard macro user config pass through
-    parameter SHAPE  = "square"      // hard macro shape (square, tall, wide)
+  #(parameter DW       = 104,          // FIFO width
+    parameter DEPTH    = 32,           // FIFO depth
+    parameter REG      = 1,            // Register fifo output    
+    parameter AW       = $clog2(DEPTH),// rd_count width (derived)
+    parameter PROGFULL = DEPTH-1,      // programmable almost full level
+    parameter TYPE     = "soft",       // hard=hard macro,soft=synthesizable
+    parameter CONFIG   = "default",    // hard macro user config pass through
+    parameter SHAPE    = "square"      // hard macro shape (square, tall, wide)
     ) 
    (
     //basic interface
@@ -24,7 +25,7 @@ module oh_fifo_sync
     input [DW-1:0] 	din, // data to write
     input 		wr_en, // write fifo
     output 		full, // fifo full
-    output 		prog_full, // fifo is almost full
+    output 		almost_full, //progfull level reached 
     //read port
     input 		rd_en, // read fifo    
     output [DW-1:0] 	dout, // output data (next cycle)
@@ -56,7 +57,7 @@ module oh_fifo_sync
    //############################
    assign fifo_read   = rd_en & ~empty;
    assign fifo_write  = wr_en & ~full;
-   assign prog_full   = (rd_count[AW-1:0] == (DEPTH-1));
+   assign almost_full = (rd_count[AW-1:0] == PROGFULL);
    assign ptr_match   = (wr_addr[AW-1:0] == rd_addr[AW-1:0]);
    assign full        = ptr_match & (wr_addr[AW]==!rd_addr[AW]);
    assign fifo_empty  = ptr_match & (wr_addr[AW]==rd_addr[AW]);
