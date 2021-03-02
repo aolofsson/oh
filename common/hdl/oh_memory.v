@@ -42,7 +42,7 @@ module oh_memory
     );
    
    generate
-      if(TYPE=="soft") begin: soft
+      if(TYPE=="soft") begin: ram_soft
 	 oh_ram #(.DW(DW),
 		  .DEPTH(DEPTH),
 		  .REG(REG),
@@ -60,7 +60,7 @@ module oh_memory
 		.wr_wem			(wr_wem[DW-1:0]),
 		.wr_din			(wr_din[DW-1:0]));
       end // block: soft
-      else begin: hard
+      else begin: ram_hard
 	 //#########################################
 	 // Hard coded RAM Macros
 	 //#########################################
