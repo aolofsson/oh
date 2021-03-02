@@ -21,7 +21,21 @@ module oh_ram  # (parameter DW      = 104,          // memory width
     input 	    wr_en, // memory access
     input [AW-1:0]  wr_addr, // address
     input [DW-1:0]  wr_wem, // write enable vector    
-    input [DW-1:0]  wr_din // data input
+    input [DW-1:0]  wr_din, // data input
+    // BIST interface
+    input 	    bist_en, // bist enable
+    input 	    bist_we, // write enable global signal   
+    input [DW-1:0]  bist_wem, // write enable vector
+    input [AW-1:0]  bist_addr, // address
+    input [DW-1:0]  bist_din, // data input
+    input [DW-1:0]  bist_dout, // data input
+    // Power/repair (hard macro only)
+    input 	    shutdown, // shutdown signal
+    input 	    vss, // ground signal
+    input 	    vdd, // memory array power
+    input 	    vddio, // periphery/io power
+    input [7:0]     memconfig, // generic memory config      
+    input [7:0]     memrepair // repair vector
     );
    
    reg [DW-1:0]        ram    [0:DEPTH-1];  
