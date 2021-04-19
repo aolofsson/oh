@@ -18,7 +18,7 @@ module oh_lat1 #(parameter DW    = 1         //data width
 			     .out(out[DW-1:0]));
 `else
    reg [DW-1:0]      out_reg;	   
-   always @ (clk or in)
+   always_latch
      if (clk)
        out_reg[DW-1:0] <= in[DW-1:0];
    assign out[DW-1:0] = out_reg[DW-1:0];	
