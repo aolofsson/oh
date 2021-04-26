@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+#############################################################################
+# elf2hex <arch> <inputfile> <outputfile>
+#
+# Arch: e (for epiphany)
+#       rv32i/rv64i/etc (for riscv)
+#
+#############################################################################
+import os
+import sys
+
+ARCH = sys.argv[1]
+ELF  = sys.argv[2]
+HEX  = sys.argv[3]
+
+#############################################
+#SETUP
+if(ARCH=="e"):
+    GCCROOT="e-"
+else:
+    GCCROOT="riscv64-unknown-elf-"
+    
+##############################################
+#RUN OBJCOPY
+CMD=GCCROOT + "objcopy -Overilog" + " " + ELF + " " + HEX
+print(CMD)
+os.system(CMD)
+#RUN OBJDUMP
+CMD=GCCROOT + "objdump -D" + " " + ELF + " > " + HEX + ".dump"
+print(CMD)
+os.system(CMD)
+
+
+
+
+

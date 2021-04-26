@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+#############################################################################
+# asm2elf <arch> <inputfile> <outputfile>
+#
+# Uses gcc
+#
+# Simple utility for converting assembly to hex, example below:
+#
+#          .globl _start
+#   _start: 
+#           lui         a0,0x1
+#
+#############################################################################
+import subprocess
+import sys
+import re
+import os
+
+ARCH   = sys.argv[1]
+ASM    = sys.argv[2]
+ELF    = sys.argv[3]
+
+#############################################
+#SETUP
+
+LINKERSCRIPT="tmp.ld"
+
+if(ARCH=="rv32i"):
+    GCC="riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32"
+    GCCOPT=" -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles"
+    OUTPUT="riscv"
+else:
+    GCC="e-gcc"
+    GCCOPT=" -static -fvisibility=hidden -nostdlib -nostartfiles"
+    OUTPUT="epiphany"
+    
+#############################################
+#PRINT LINKER FILE
+f=open("tmp.ld",'w')
+f.write("OUTPUT_ARCH( \"" + OUTPUT + "\" )\n") 
+if(ARCH=="rv32i"):
+    f.write("""ENTRY(_start)
+    SECTIONS
+    {
+    . = 0x80000000;
+    .text.trap : { *(.text.trap) }
+    
+    . = 0x00000000;
+    .text.init : { *(.text.init) }
+    
+    . = ALIGN(0x1000);
+    .tohost : { *(.tohost) }
+    . = ALIGN(0x1000);
+    .text : { *(.text) }
+    . = ALIGN(0x1000);
+    .data : { *(.data) }
+    .data.string : { *(.data.string)}
+    .bss : { *(.bss) }
+    _end = .;
+    }""")
+else:
+    f.write("""ENTRY(_start)
+    SECTIONS
+    {
+    . = 0x00000000;
+    .text.init : { *(.text.init) }
+    . = ALIGN(0x1000);
+    .tohost : { *(.tohost) }
+    . = ALIGN(0x1000);
+    .text : { *(.text) }
+    . = ALIGN(0x1000);
+    .data : { *(.data) }
+    .bss : { *(.bss) }
+    _end = .;
+    }""")
+f.close()
+
+#############################################
+#RUN GCC
+CMD = GCC + GCCOPT + " -T" + LINKERSCRIPT + " -o " + ELF + " " + ASM
+print(CMD)
+os.system(CMD)
+
+
+
+
+
