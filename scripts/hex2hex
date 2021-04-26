@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+#############################################################################
+# hex2hex <inputfile> <outputfile> <memory-width> <offset>
+#
+# Script uses objcopy to dump a Verilog comptatible hex file
+#
+# The script assumes the hex file has max 16 byte entries per line
+#
+# Script also supports creating EMF transactions with one address per data
+#
+# Offset to remove from all hex addresses
+#
+#############################################################################
+import sys
+import re
+
+hexin  = sys.argv[1]
+hexout = sys.argv[2]
+width  = int(int(sys.argv[3])/8) #needed for both
+offset = int(sys.argv[4],16)
+emf    = 0 # emf
+
+###################################################
+# Read file into list and strip off trail junk
+list = [line.rstrip('  \n') for line in open(hexin)]
+
+###################################################
+# Loop through byte list and print to output file
+fileout=open(hexout,"w")
+for line in list:
+    if (~line.find('@')): #detects new memory section
+        address = int((int(line.replace('@','',1),16)-offset)/8)
+        if(emf):
+            print ("Not Implemented")
+        else:
+            fileout.write("@"+format(address, 'x')+"\n")
+    else: #write out data byte stream
+        bytes=line.split(' ')
+        length=len(bytes)
+        for i in range(0,(16-length)): # zero extend buffer for simplicity
+            bytes.append("00")
+        for i in range(0,16,width):
+            sublist=bytes[i:i+width]
+            sublist.reverse()
+            word=""
+            word=word.join(sublist)
+            if(emf):
+                print ("Not Implemented")
+            else :
+                fileout.write(word+"\n")
+fileout.close()
