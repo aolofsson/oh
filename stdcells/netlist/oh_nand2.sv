@@ -1,7 +1,8 @@
 
 module oh_nand2 
-  #(parameter NMODEL          = "nmos",		  
-    parameter PMODEL          = "pmos",	  
+  #(parameter MODE            = "rtl",
+    parameter NMODEL          = "nmos",		  
+    parameter PMODEL          = "pmos",
     parameter integer W[3:0]  = {0,1,2,3},
     parameter integer L[3:0]  = {0,1,2,3},
     parameter integer M[3:0]  = {1,1,2,4},
@@ -24,13 +25,13 @@ module oh_nand2
    oh_pmos m3 (.d(z),   .g(b),.s(vdd), .bulk(vdd));
    
    // Driving Parameters
-   defparam m0.MODEL = NMODEL;   
+   defparam m0.MODEL = NMODEL;
    defparam m0.W     = W[0];   
    defparam m0.L     = L[0];
    defparam m0.M     = M[0];
    defparam m0.NF    = NF[0];
 
-   defparam m1.MODEL = NMODEL;   
+   defparam m1.MODEL = NMODEL;
    defparam m1.W     = W[1];   
    defparam m1.L     = L[1];
    defparam m1.M     = M[1];

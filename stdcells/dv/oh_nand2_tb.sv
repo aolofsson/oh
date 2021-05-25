@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+`define OH_DEBUG
 module testbench();
    supply0 vss;
    supply1 vdd;
@@ -23,21 +24,22 @@ module testbench();
      end
    
    // DUT
-   defparam dut.NMODEL = "nmos";
-   defparam dut.PMODEL = "pmos";   
-   defparam dut.W      = {0,1,2,3};
-   defparam dut.L      = {0,1,2,3};
-   defparam dut.M      = {0,1,2,3};
-   defparam dut.NF     = {0,1,2,3};
-   
-   oh_nand2 dut (/*AUTOINST*/
-		 // Outputs
-		 .z			(z),
-		 // Inputs
-		 .vdd			(vdd),
-		 .vss			(vss),
-		 .a			(a),
-		 .b			(b));
+   oh_nand2 #(.SIM("switch"),
+	      .NMODEL("nmos"),
+	      .PMODEL("pmos"),
+	      .W({0,1,2,3}),
+	      .L({4,5,6,7}),
+	      .M({8,9,10,11}),
+	      .NF({12,13,14,15}))
+   dut (/*AUTOINST*/
+	// Outputs
+	.z			(z),
+	// Inputs
+	.vdd			(vdd),
+	.vss			(vss),
+	.a			(a),
+	.b			(b));
+
    
    
 endmodule // top
