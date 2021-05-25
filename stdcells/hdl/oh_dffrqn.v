@@ -15,7 +15,7 @@ module oh_dffrqn #(parameter DW = 1) // array width
    
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       qn <= {{(DW)}{1'b1}};
+       qn <= {DW{1'b1}};
      else
        qn <= ~d;
    

@@ -15,7 +15,7 @@ module oh_dffsq #(parameter DW = 1) // array width
    
    always @ (posedge clk or negedge nset)
      if(!nset)
-       q <= {{(DW)}{1'b1}};
+       q <= {DW{1'b1}};
      else
        q <= d;
       
