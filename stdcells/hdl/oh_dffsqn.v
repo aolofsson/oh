@@ -15,7 +15,7 @@ module oh_dffsqn #(parameter DW = 1) // array width
    
    always @ (posedge clk or negedge nset)
      if(!nset)
-       qn <= 'b1;
+       qn <= 'b0;
      else
        qn <= ~d;
    

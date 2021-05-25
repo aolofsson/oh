@@ -1,15 +1,17 @@
 //#############################################################################
 //# Function:  Positive edge-triggered static D-type flop-flop with async     #
-//#            active low preset.                                             # 
+//#            active low preset and scan input.                              # 
 //# Copyright: OH Project Authors. ALl rights Reserved.                       #
 //# License:   MIT (see LICENSE file in OH repository)                        # 
 //#############################################################################
 
-module oh_dffsq #(parameter DW = 1) // array width
+module oh_sdffsq #(parameter DW = 1) // array width
    (
-    input [DW-1:0]     d,
-    input [DW-1:0]     clk,
-    input [DW-1:0]     nset,
+    input [DW-1:0] 	d,
+    input [DW-1:0] 	si,
+    input [DW-1:0] 	se,
+    input [DW-1:0] 	clk,
+    input [DW-1:0] 	nset,
     output reg [DW-1:0] q
     );
    
@@ -17,6 +19,6 @@ module oh_dffsq #(parameter DW = 1) // array width
      if(!nset)
        q <= {{(DW)}{1'b1}};
      else
-       q <= d;
+       q <= se ? si : d;
       
 endmodule

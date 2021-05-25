@@ -1,11 +1,11 @@
 //#############################################################################
 //# Function:  Positive edge-triggered static inverting D-type flop-flop with #
-//             async active low reset.                                        # 
+//             async active low reset and scan input                          # 
 //# Copyright: OH Project Authors. ALl rights Reserved.                       #
 //# License:   MIT (see LICENSE file in OH repository)                        # 
 //#############################################################################
 
-module oh_dffrqn #(parameter DW = 1) // array width
+module oh_sdffrqn #(parameter DW = 1) // array width
    (
     input [DW-1:0] 	d,
     input [DW-1:0] 	clk,
@@ -17,6 +17,6 @@ module oh_dffrqn #(parameter DW = 1) // array width
      if(!nreset)
        qn <= {{(DW)}{1'b1}};
      else
-       qn <= ~d;
+       qn <=  se ? ~si : ~d;
    
 endmodule
