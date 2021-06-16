@@ -32,8 +32,9 @@ module oh_padring
     parameter WE_VSS     =  8 
     )
    (
-    //CORE SIGNALS
+    //CONTINUOUS GROUND
     inout 		   vss,
+    
     inout 		   vdd,
     //NORTH
     inout [NO_DOMAINS-1:0] no_vddio,
