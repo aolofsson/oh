@@ -48,11 +48,11 @@ MODULE_LICENSE("GPL");
 #define PL_MEM_END              0x80000000UL
 
 #define ERX_REG_START 0x810F0300
-#define ERX_REG_END 0x810F03FF
+#define ERX_REG_END 0x810F07FF
 #define ERX_CFG_REG 0x0 	// 0xF0300
-#define MAILBOX_LO_REG 0x20 	// 0xF0320
-#define MAILBOX_HI_REG 0x24 	// 0xF0324
-#define MAILBOX_STATE 0x28 	// 0xF0328
+#define MAILBOX_LO_REG 0x430 	// 0xF0730
+#define MAILBOX_HI_REG 0x434 	// 0xF0734
+#define MAILBOX_STATE 0x438 	// 0xF0738
 #define MAILBOX_ENABLE (0x1 << 28) 	// bit 28 in ERX_CFG_REG
 
 static int major = 0;
