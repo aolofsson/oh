@@ -22,14 +22,14 @@ module oh_fifo_sync
     input 		clear, //clear fifo (synchronous)
     //write port
     input [DW-1:0] 	din, // data to write
-    input 		wr_en, // write fifo
+    input 		write, // write fifo
     output 		full, // fifo full
-    output 		almost_full, //progfull level reached 
+    output 		progfull, //programmable full level
     //read port
-    input 		rd_en, // read fifo    
+    input 		read, // read fifo
     output [DW-1:0] 	dout, // output data (next cycle)
     output 		empty, // fifo is empty  
-    output reg [AW-1:0] rd_count, // valid entries in fifo
+    output reg [AW-1:0] count, // valid entries in fifo
     // BIST interface
     input 		bist_en, // bist enable
     input 		bist_we, // write enable global signal   
@@ -56,12 +56,13 @@ module oh_fifo_sync
    wire 	       ptr_match;
    wire 	       fifo_empty;
 
-   //############################
+   //#########################################################
    // FIFO Control
-   //############################
-   assign fifo_read   = rd_en & ~empty;
-   assign fifo_write  = wr_en & ~full;
-   assign almost_full = (rd_count[AW-1:0] == PROGFULL);
+   //#########################################################
+   
+   assign fifo_read   = read & ~empty;
+   assign fifo_write  = write & ~full;
+   assign almost_full = (count[AW-1:0] == PROGFULL);
    assign ptr_match   = (wr_addr[AW-1:0] == rd_addr[AW-1:0]);
    assign full        = ptr_match & (wr_addr[AW]==!rd_addr[AW]);
    assign fifo_empty  = ptr_match & (wr_addr[AW]==rd_addr[AW]);
@@ -71,13 +72,13 @@ module oh_fifo_sync
        begin	   
           wr_addr[AW:0]   <= 'd0;
           rd_addr[AW:0]   <= 'b0;
-          rd_count[AW-1:0]  <= 'b0;
+          count[AW-1:0]  <= 'b0;
        end
      else if(clear) 
        begin	   
-          wr_addr[AW:0]   <= 'd0;
-          rd_addr[AW:0]   <= 'b0;
-          rd_count[AW-1:0]  <= 'b0;
+          wr_addr[AW:0]  <= 'd0;
+          rd_addr[AW:0]  <= 'b0;
+          count[AW-1:0]  <= 'b0;
        end
      else if(fifo_write & fifo_read) 
        begin
@@ -86,13 +87,13 @@ module oh_fifo_sync
        end 
      else if(fifo_write) 
        begin
-	  wr_addr[AW:0]   <=  wr_addr[AW:0]   + 'd1;
-	  rd_count[AW-1:0]<= rd_count[AW-1:0] + 'd1;	
+	  wr_addr[AW:0] <= wr_addr[AW:0]   + 'd1;
+	  count[AW-1:0] <= count[AW-1:0] + 'd1;	
        end 
      else if(fifo_read) 
        begin	      
-          rd_addr[AW:0]   <= rd_addr[AW:0]  + 'd1;
-          rd_count[AW-1:0]<= rd_count[AW-1:0] - 'd1;
+          rd_addr[AW:0] <= rd_addr[AW:0]  + 'd1;
+          count[AW-1:0] <= count[AW-1:0] - 'd1;
        end
 
    //Pipeline register to account for RAM output register  
@@ -102,6 +103,16 @@ module oh_fifo_sync
 
    assign empty = (REG==1) ? empty_reg :
 		             fifo_empty;
+   
+   //############################
+   // Memory Array
+   //############################
+   generate
+      if(TYPE=="soft") begin: ram_soft
+	 
+      end
+   
+
    //############################
    // Dual Ported Memory
    //############################
@@ -123,7 +134,7 @@ module oh_fifo_sync
 	      .wr_en	 (fifo_write),
   	      .wr_wem    ({(DW){1'b1}}),
 	      .wr_addr   (wr_addr[AW-1:0]),
-	      .wr_din    (din[DW-1:0]),
+	      .wr_din    (wr_din[DW-1:0]),
 	      /*AUTOINST*/
 	      // Inputs
 	      .bist_en			(bist_en),

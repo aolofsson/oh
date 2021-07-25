@@ -2,11 +2,11 @@
 //# Function: Dual data rate input buffer (2 cycle delay)                     #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module oh_iddr #(parameter DW      = 1 // width of data inputs
-		 )
+module oh_iddr
+  #(parameter DW  = 2) // width of data inputs
    (
     input 		clk, // clock
     input 		ce0, // 1st cycle enable
@@ -14,12 +14,12 @@ module oh_iddr #(parameter DW      = 1 // width of data inputs
     input [DW/2-1:0] 	din, // data input sampled on both edges of clock
     output reg [DW-1:0] dout // iddr aligned
     );
-   
+
    //regs("sl"=stable low, "sh"=stable high)
    reg [DW/2-1:0]     din_sl;
    reg [DW/2-1:0]     din_sh;
    reg 		      ce0_negedge;
-   
+
    //########################
    // Pipeline valid for negedge
    //########################
@@ -44,8 +44,5 @@ module oh_iddr #(parameter DW      = 1 // width of data inputs
      if(ce1)
        dout[DW-1:0] <= {din_sh[DW/2-1:0],
 			din_sl[DW/2-1:0]};
-            
+
 endmodule // oh_iddr
-
-
-

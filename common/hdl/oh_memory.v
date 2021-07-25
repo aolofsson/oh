@@ -82,7 +82,7 @@ module oh_memory
 		    .DUALPORT(DUALPORT),
 		    .CONFIG(CONFIG),
 		    .SHAPE(SHAPE))
-	 asic_ram(
+	 ram(
 		  // Outputs
 		  .rd_dout		(rd_dout[DW-1:0]),
 		  // Inputs

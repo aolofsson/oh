@@ -2,7 +2,7 @@
 //# Function: Achive high latch                                               #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
 module oh_lat1 #(parameter DW    = 1         //data width
@@ -17,11 +17,11 @@ module oh_lat1 #(parameter DW    = 1         //data width
 			     .in(in[DW-1:0]),
 			     .out(out[DW-1:0]));
 `else
-   reg [DW-1:0]      out_reg;	   
-   always_latch
+   reg [DW-1:0]      out_reg;
+   always @ (clk or in)
      if (clk)
        out_reg[DW-1:0] <= in[DW-1:0];
-   assign out[DW-1:0] = out_reg[DW-1:0];	
+   assign out[DW-1:0] = out_reg[DW-1:0];
 `endif
-   
+
 endmodule // oh_lat1
