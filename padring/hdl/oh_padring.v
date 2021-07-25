@@ -41,7 +41,7 @@ module oh_padring
     inout [NO_DOMAINS-1:0] no_vssio,
     inout [NO_GPIO-1:0]    no_pad, // pad
     output [NO_GPIO-1:0]   no_din, // data from pad
-    input [NO_GPIO-1-1:0]  no_dout, // data to pad
+    input [NO_GPIO-1:0]  no_dout, // data to pad
     input [NO_GPIO*8-1:0]  no_cfg, // config
     input [NO_GPIO-1:0]    no_ie, // input enable
     input [NO_GPIO-1:0]    no_oen, // output enable (bar)    
@@ -50,7 +50,7 @@ module oh_padring
     inout [SO_DOMAINS-1:0] so_vssio,
     inout [SO_GPIO-1:0]    so_pad, // pad
     output [SO_GPIO-1:0]   so_din, // data from pad
-    input [SO_GPIO-1-1:0]  so_dout, // data to pad
+    input [SO_GPIO-1:0]  so_dout, // data to pad
     input [SO_GPIO*8-1:0]  so_cfg, // config
     input [SO_GPIO-1:0]    so_ie, // input enable
     input [SO_GPIO-1:0]    so_oen, // output enable (bar)
@@ -59,7 +59,7 @@ module oh_padring
     inout [EA_DOMAINS-1:0] ea_vssio,
     inout [EA_GPIO-1:0]    ea_pad, // pad
     output [EA_GPIO-1:0]   ea_din, // data from pad
-    input [EA_GPIO-1-1:0]  ea_dout, // data to pad
+    input [EA_GPIO-1:0]  ea_dout, // data to pad
     input [EA_GPIO*8-1:0]  ea_cfg, // config
     input [EA_GPIO-1:0]    ea_ie, // input enable
     input [EA_GPIO-1:0]    ea_oen, // output enable (bar)
@@ -68,7 +68,7 @@ module oh_padring
     inout [WE_DOMAINS-1:0] we_vssio,
     inout [WE_GPIO-1:0]    we_pad, // pad
     output [WE_GPIO-1:0]   we_din, // data from pad
-    input [WE_GPIO-1-1:0]  we_dout, // data to pad
+    input [WE_GPIO-1:0]  we_dout, // data to pad
     input [WE_GPIO*8-1:0]  we_cfg, // config
     input [WE_GPIO-1:0]    we_ie, // input enable
     input [WE_GPIO-1:0]    we_oen // output enable (bar)
