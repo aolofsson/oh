@@ -6,9 +6,9 @@
 //#############################################################################
 
 module oh_dsync
-  #(parameter PS    = 2,     // number of sync stages
-    parameter DELAY = 0,      // random delay
-    parameter TYPE  = "soft" // hard=hard macro,soft=synthesizable
+  #(parameter SYNCPIPE = 2,     // number of sync stages
+    parameter DELAY    = 0,     // random delay
+    parameter SYN      = "true"  // true=synthesizable
     )
    (
     input  clk, // clock
@@ -18,24 +18,26 @@ module oh_dsync
     );
 
    generate
-      if(TYPE=="soft")
+      if(SYN=="true")
 	begin
-	   reg [PS:0] sync_pipe;
+	   reg [SYNCPIPE:0] sync_pipe;
 	   always @ (posedge clk or negedge nreset)
 	     if(!nreset)
-	       sync_pipe[PS:0] <= 'b0;
+	       sync_pipe[SYNCPIPE:0] <= 'b0;
 	     else
-	       sync_pipe[PS:0] <= {sync_pipe[PS-1:0],din};
+	       sync_pipe[SYNCPIPE:0] <= {sync_pipe[SYNCPIPE-1:0],din};
 	   // drive randomize delay from testbench
-	   assign dout = (DELAY & sync_pipe[PS]) |  //extra cycle
-			 (~DELAY & sync_pipe[PS-1]); //default
+	   assign dout = (DELAY & sync_pipe[SYNCPIPE]) |  //extra cycle
+			 (~DELAY & sync_pipe[SYNCPIPE-1]); //default
 	end // block: reg
       else
 	begin
-	   asic_dsync asic_dsync (.clk(clk),
-				  .nreset(nreset),
-				  .din(din),
-				  .dout(dout));
+	   asic_dsync  #(.TYPE(TYPE),
+			 .SYNCPIPE(SYNCPIPE))
+	   asic_dsync (.clk(clk),
+		       .nreset(nreset),
+		       .din(din),
+		       .dout(dout));
 	end
    endgenerate
 endmodule // oh_dsync

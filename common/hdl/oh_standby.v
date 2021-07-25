@@ -2,11 +2,14 @@
 //# Purpose: Low power standby state machine                                  #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module oh_standby #(parameter PD = 5,// cycles to stay awake after "wakeup" 
-		    parameter N  = 5)// cycles delay of irq_reset after posedge
+module oh_standby
+  #(parameter PD       = 5,       // cycles to stay awake after "wakeup"
+    parameter SYNCPIPE = 2,       // depth of synchronization pipeline
+    parameter SYN      = "true",  // hard (macro) or soft (rtl)
+    parameter DELAY    = 5)       // cycles delay of irq_reset after posedge
    (//inputs
     input  clkin, //clock input
     input  nreset,//async active low reset
@@ -24,53 +27,56 @@ module oh_standby #(parameter PD = 5,// cycles to stay awake after "wakeup"
    wire 	sync_reset_pulse;
    wire 	wakeup_now;
    wire 	clk_en;
-   
+
    //####################################################################
    // -Creating an edge one clock cycle pulse on rising edge of reset
    // -Event can be used to boot a CPU and any other master as an example
-   // -Given the clock dependancies, it was deemed safest to put this 
+   // -Given the clock dependancies, it was deemed safest to put this
    //  function here
    //####################################################################
-   
+
    // Synchronizing reset to clock to avoid metastability
-   oh_dsync #(.PS(2)) oh_dsync (//outputs
-				.dout(sync_reset),
-				//inputs
-				.nreset(nreset),
-				.din(nreset),
-				.clk(clkin)
-				);
-   
+   oh_dsync #(.SYNCPIPE(SYNCPIPE),
+	      .SYN(SYN))
+   oh_dsync (//outputs
+	     .dout(sync_reset),
+	     //inputs
+	     .nreset(nreset),
+	     .din(nreset),
+	     .clk(clkin)
+	     );
+
    // Detecting rising edge of delayed reset
-   oh_edge2pulse oh_e2p (//outputs
-			 .out	 (sync_reset_pulse),
-			 //inputs
-			 .clk	 (clkin),
-			 .nreset (nreset),
-			 .in	 (sync_reset));
+   oh_edge2pulse oh_edge2pulse  (//outputs
+				 .out	 (sync_reset_pulse),
+				 //inputs
+				 .clk	 (clkin),
+				 .nreset (nreset),
+				 .in	 (sync_reset));
 
    // Delay irq event by N clock cycles
-   oh_delay #(.N(N)) oh_delay (//outputs
-			       .out	 (resetout),
-			       //inputs
-			       .in	 (sync_reset_pulse),
-			       .clk	 (clkin));
-   
+   oh_delay #(.N(DELAY))
+   oh_delay (//outputs
+	     .out	 (resetout),
+	     //inputs
+	     .in	 (sync_reset_pulse),
+	     .clk	 (clkin));
+
    //####################################################################
    // Clock gating circuit for output clock
    // EVent can be used to boot a CPU andcany other master as an example
    //####################################################################
 
    //Adding reset to wakeup signal
-   assign wakeup_now = sync_reset_pulse | wakeup;   
+   assign wakeup_now = sync_reset_pulse | wakeup;
 
    // Stay awake for PD cycles
    always @ (posedge clkin or negedge nreset)
      if(!nreset)
-       wakeup_pipe[PD-1:0] <= 'b0;   
+       wakeup_pipe[PD-1:0] <= 'b0;
      else
        wakeup_pipe[PD-1:0] <= {wakeup_pipe[PD-2:0], wakeup_now};
-   
+
    // Clock enable
    assign  clk_en    =  wakeup                 | //immediate wakeup
                         (|wakeup_pipe[PD-1:0]) | //anything in pipe
@@ -83,7 +89,3 @@ module oh_standby #(parameter PD = 5,// cycles to stay awake after "wakeup"
      			       .te(testenable));
 
 endmodule // oh_standby
-
-
-
-	

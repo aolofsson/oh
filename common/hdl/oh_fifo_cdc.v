@@ -2,13 +2,14 @@
 //# Function: Clock domain crossing FIFO                                      #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module oh_fifo_cdc # (parameter DW        = 104,      //FIFO width
-		      parameter DEPTH     = 32,       //FIFO depth (entries)
-		      parameter TARGET    = "GENERIC" //XILINX,ALTERA,GENERIC
-		      )
+module oh_fifo_cdc
+  #(parameter DW     = 104,          // FIFO width
+    parameter DEPTH  = 32,           // FIFO depth
+    parameter AW     = $clog2(DEPTH) // rd_count width (derived)
+    )
    (
     input 	    nreset, // async active low reset
     //Write Side
@@ -26,43 +27,59 @@ module oh_fifo_cdc # (parameter DW        = 104,      //FIFO width
     output 	    full, // fifo is full
     output 	    empty // fifo is empty
     );
-   
-   // local wires
-   wire 	   wr_en;
-   wire 	   rd_en;
-      
-   // parametric async fifo
-   oh_fifo_async  #(.TARGET(TARGET),
-		    .DW(DW),
-		    .DEPTH(DEPTH))
-   fifo (.prog_full (prog_full),
-	 .full	    (full),
-	 .rd_count  (),
-	 .nreset    (nreset),
-	 .dout	    (packet_out[DW-1:0]),
-	 .empty	    (empty),
-	 .wr_clk    (clk_in),
-	 .rd_clk    (clk_out),
-	 .wr_en	    (wr_en),
-	 .din	    (packet_in[DW-1:0]),
-	 .rd_en	    (rd_en));
 
    // FIFO control logic
    assign wr_en    = valid_in;
    assign rd_en    = ~empty & ready_in;
-   assign ready_out = ~prog_full;
+   assign ready_out = ~(wr_almost_full | wr_full | wr_prog_full);
 
    //async asser, sync deassert of reset
    oh_rsync sync_reset(.nrst_out  (nreset_out),
                        .clk       (clk_out),
                        .nrst_in   (nreset));
-   
+
    //align valid signal with FIFO read delay
    always @ (posedge clk_out or negedge nreset_out)
      if(!nreset_out)
-       valid_out <= 1'b0;   
+       valid_out <= 1'b0;
      else if(ready_in)
        valid_out <= rd_en;
-   
-endmodule // oh_fifo_cdc
 
+   // parametric async fifo
+   oh_fifo_async  #(.SYN("true"),
+		    .DW(DW),
+		    .DEPTH(DEPTH))
+   oh_fifo_async (
+		  .rd_clk		(clk_out),
+		  .rd_dout		(packet_out[DW-1:0]),
+		  .wr_clk		(clk_in),
+		  .wr_din		(packet_in[DW-1:0]),
+		  .memconfig		(8'b0),
+		  .memrepair		(8'b0),
+		  .shutdown             (1'b0),
+		  .vddio                (1'b1),
+		  .vdd                  (1'b0),
+		  .vss                  (1'b0),
+		  .bist_en		(bist_en),
+		  .bist_we		(bist_we),
+		  .bist_wem		({(DW){1'b0}}),
+		  .bist_addr		({(AW){1'b0}}),
+		  .bist_din		({(DW){1'b0}}),
+		  .bist_dout		(),
+		  .wr_count		(),
+		  .rd_count		(),
+		  /*AUTOINST*/
+		  // Outputs
+		  .wr_full		(wr_full),
+		  .wr_almost_full	(wr_almost_full),
+		  .wr_prog_full		(wr_prog_full),
+		  .rd_empty		(rd_empty),
+		  // Inputs
+		  .nreset		(nreset),
+		  .wr_en		(wr_en),
+		  .rd_en		(rd_en));
+
+endmodule // oh_fifo_cdc
+// Local Variables:
+// verilog-library-directories:("." "../fpga/" "../dv")
+// End:
