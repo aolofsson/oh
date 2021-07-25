@@ -19,9 +19,8 @@ module oh_fifo_async
     parameter PROGFULL = DEPTH-1,      // programmable almost full level
     parameter SHAPE    = "square"      // hard macro shape (square, tall, wide)
     )
-   (
-    //basic interface
-    input 	    nreset, //async reset
+   (//nreset
+    input 	    nreset,
     //write port
     input 	    wr_clk,
     input [DW-1:0]  wr_din, // data to write
@@ -53,7 +52,6 @@ module oh_fifo_async
     );
 
    //local wires
-   wire [AW-1:0] 	wr_count;  // valid entries in fifo
    reg [AW:0] 		wr_addr;       // extra bit for wraparound comparison
    reg [AW:0] 		rd_addr;
    wire [AW:0] 		wr_addr_gray;
@@ -61,6 +59,9 @@ module oh_fifo_async
    wire [AW:0] 		rd_addr_gray;
    wire [AW:0] 		rd_addr_gray_sync;
    wire [AW:0] 		rd_addr_sync;
+   wire 		fifo_write;
+   wire 		rd_nreset;
+   wire 		wr_nreset;
 
 
 
@@ -71,13 +72,13 @@ module oh_fifo_async
    oh_rsync #(.SYN(SYN),
 	      .SYNCPIPE(SYNCPIPE))
    wr_rsync (.nrst_out (wr_nreset),
-	     .clk      (wrclk),
+	     .clk      (wr_clk),
 	     .nrst_in  (nreset));
 
    oh_rsync #(.SYN(SYN),
 	      .SYNCPIPE(SYNCPIPE))
    rd_rsync (.nrst_out (rd_nreset),
-	     .clk      (rdclk),
+	     .clk      (rd_clk),
 	     .nrst_in  (nreset));
 
    //###########################
@@ -112,15 +113,15 @@ module oh_fifo_async
    // convert to gray code (only one bit can toggle)
    oh_bin2gray #(.DW(AW+1))
    wr_bin2gray (.out    (wr_addr_gray[AW:0]),
-		.in	   (wr_addr[AW:0]));
+		.in	(wr_addr[AW:0]));
 
    // synchronize to read clock
    oh_dsync #(.SYN(SYN),
 	      .SYNCPIPE(SYNCPIPE))
-   wr_sync[AW:0] (.dout (wr_addr_gray_sync[AW:0]),
-		  .clk  (rdclk),
-		  .nreset(rd_nreset),
-		  .din  (wr_addr_gray[AW:0]));
+   wr_sync[AW:0] (.dout   (wr_addr_gray_sync[AW:0]),
+		  .clk    (rd_clk),
+		  .nreset (rd_nreset),
+		  .din    (wr_addr_gray[AW:0]));
 
    //###########################
    //# READ ---> WRITE
@@ -128,13 +129,13 @@ module oh_fifo_async
 
    oh_bin2gray #(.DW(AW+1))
    rd_bin2gray (.out   (rd_addr_gray[AW:0]),
-		.in	  (rd_addr[AW:0]));
+		.in    (rd_addr[AW:0]));
 
    //synchronize to wr clock
    oh_dsync  #(.SYN(SYN),
 	       .SYNCPIPE(SYNCPIPE))
    rd_sync[AW:0] (.dout   (rd_addr_gray_sync[AW:0]),
-		  .clk    (wrclk),
+		  .clk    (wr_clk),
 		  .nreset (wr_nreset),
 		  .din    (rd_addr_gray[AW:0]));
 
@@ -149,9 +150,6 @@ module oh_fifo_async
    assign wr_full  =  (wr_addr[AW-1:0] == rd_addr_sync[AW-1:0]) &
 		      (wr_addr[AW]     != rd_addr_sync[AW]);
 
-
-
-
    //###########################
    //# Memory Array
    //###########################
@@ -159,7 +157,6 @@ module oh_fifo_async
    oh_memory_dp #(.DW(DW),
 		  .DEPTH(DEPTH),
 		  .REG(REG),
-		  .SYN(SYN),
 		  .SYN(SYN),
 		  .SHAPE(SHAPE))
    oh_memory_dp(.wr_wem			({(DW){1'b1}}),

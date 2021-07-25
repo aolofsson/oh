@@ -40,7 +40,7 @@ module oh_memory_dp
     );
 
    generate
-      if(SYN=="true") begin: soft
+      if(SYN=="true") begin
 	 //#########################################
 	 // Generic RAM for synthesis
 	 //#########################################
@@ -53,7 +53,8 @@ module oh_memory_dp
 	 always @(posedge wr_clk)
 	   for (i=0;i<DW;i=i+1)
 	     if (wr_en & wr_wem[i])
-               ram[wr_addr[AW-1:0]][i] <= wr_din[i];
+               ram[wr_addr[AW-1:0]][i] = wr_din[i];
+
 	 //read port
 	 assign rdata[DW-1:0] = ram[rd_addr[AW-1:0]];
 
@@ -67,7 +68,7 @@ module oh_memory_dp
 	 assign rd_dout[DW-1:0] = (REG==1) ? rd_reg[DW-1:0] :
 		                  rdata[DW-1:0];
       end // block: soft
-      else begin: hard
+      else begin
 	 asic_memory_dp #(.DW(DW),
 			  .DEPTH(DEPTH),
 			  .SHAPE(SHAPE),
