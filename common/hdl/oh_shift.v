@@ -8,7 +8,7 @@
 module oh_shift
   #(parameter DW   = 32,        // Operator width (8,16,32,64,128)
     parameter S    = $clog2(DW),// stages=shift width
-    parameter TYPE = "SOFT"     // SOFT /
+    parameter SYN = "TRUE"      // TRUE is synthesizable
     )
    (
     //Inputs
@@ -21,7 +21,7 @@ module oh_shift
     );
 
    generate
-      if(TYPE=="SOFT")  begin: gbehavioral
+      if(SYN=="TRUE")  begin: gbehavioral
 
 	 wire [2*DW-1:0] in_sext;
 	 wire [DW-1:0] 	 sr_result;
