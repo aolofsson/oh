@@ -1,26 +1,36 @@
 //#############################################################################
-//# Function: Bidirectional port with output-enable                           #
+//# Function: Tristate Driver                                                 #
 //#############################################################################
-//# Author:   Ola Jeppsson                                                    #
+//# Author:  Andreas Olofsson                                                 #
 //# SPDX-License-Identifier:     MIT                                          #
 //#############################################################################
 
-module oh_tristate #(parameter N = 1) // width of port
+module oh_tristate
+  #(parameter DW   = 32,        // block width
+    parameter SYN  = "TRUE",    // synthesizable
+    parameter TYPE = "DEFAULT"  // implementation type
+    )
    (
-    inout  [N-1:0]  io,   // bidirectional port
-    input  [N-1:0]  oe,   // output enable (1 = output, 0 = input)
-    output [N-1:0]  in,   // port as input
-    input  [N-1:0]  out   // port as output
+    input [DW-1:0]  in, // signal to io
+    input [DW-1:0]  oe, // output enable (1 = drive, 0 = high-z)
+    output [DW-1:0] out // output
     );
 
-    assign in[N-1:0] = io[N-1:0];
-
-    genvar i;
+   genvar 	    i;
     generate
-      for (i = 0; i < N; i = i + 1)
-      begin : gen_oh_tristate
-	assign io[i] = oe[i] ? out[i] : 1'bZ;
+      if(SYN=="TRUE") begin
+	 for (i = 0; i < DW; i = i + 1) begin
+	    assign out[i] = oe[i] ? in[i] : 1'bz;
+	 end
+      end
+      else begin
+	 asic_tristate #(.TYPE(TYPE),
+			 .DW(DW))
+	 asic_tristate (// Outputs
+			.out	(out[DW-1:0]),
+			// Inputs
+			.in	(in[DW-1:0]),
+			.ie	(ie[DW-1:0]));
       end
     endgenerate
-
-endmodule // oh_tristate
+endmodule
