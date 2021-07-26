@@ -5,23 +5,33 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module oh_lat1 #(parameter DW    = 1         //data width
-		 )
-   ( input 	     clk, // clk, latch when clk=1
-     input [DW-1:0]  in,  // input data
-     output [DW-1:0] out  // output data (stable/latched when clk=0)
-     );
+module oh_lat1
+  #(parameter N    = 1,        // number of sync stages
+    parameter SYN  = "TRUE",   // synthesizable (or not)
+    parameter TYPE = "DEFAULT" // scell type/size
+    )
+   (input 	   clk, // clk
+    input [N-1:0]  in,  // input data
+    output [N-1:0] out  // output data
+    );
 
-`ifdef CFG_ASIC
-   asic_lat1 i_lat [DW-1:0] (.clk(clk),
-			     .in(in[DW-1:0]),
-			     .out(out[DW-1:0]));
-`else
-   reg [DW-1:0]      out_reg;
-   always @ (clk or in)
-     if (clk)
-       out_reg[DW-1:0] <= in[DW-1:0];
-   assign out[DW-1:0] = out_reg[DW-1:0];
-`endif
+   generate
+      if(SYN == "TRUE") begin
+	 reg [N-1:0]      out_reg;
+	 always @ (clk or in)
+	   if (clk)
+	     out_reg[N-1:0] <= in[N-1:0];
+
+	 assign out[N-1:0] = out_reg[N-1:0];
+      end
+      else begin
+	 for (i=0;i<N;i=i+1) begin
+	    asic_lat1 #(.TYPE(TYPE))
+	    asic_lat1 (.clk(clk),
+		       .in(in[i]),
+		       .out(out[i]));
+	 end
+      end
+   endgenerate
 
 endmodule // oh_lat1
