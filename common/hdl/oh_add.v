@@ -26,7 +26,8 @@ module oh_add
 	 assign {cout,sum[DW-1:0]} = a[DW-1:0] + b[DW-1:0] + cin;
       end
       else begin
-	 asic_add #(.TYPE(TYPE))
+	 asic_add #(.TYPE(TYPE),
+		    .DW(DW))
 	 asic_add (// Outputs
 		   .sum		(sum[DW-1:0]),
 		   .carry	(carry[DW-1:0]),

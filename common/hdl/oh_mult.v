@@ -30,6 +30,17 @@ module oh_mult
 				    $signed({b_sext,b[DW-1:0]});
       end
       else begin
+	 asic_mult #(.TYPE(TYPE),
+		     .DW(DW))
+	 asic_mult (// Outputs
+		    .product	(product[2*DW-1:0]),
+		    .sum	(sum[2*DW-1:0]),
+		    .carry	(carry[2*DW-1:0]),
+		    // Inputs
+		    .a		(a[DW-1:0]),
+		    .b		(b[DW-1:0]),
+		    .asigned	(asigned),
+		    .bsigned	(bsigned));
 
       end
    endgenerate
