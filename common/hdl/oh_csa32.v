@@ -6,36 +6,35 @@
 //#############################################################################
 
 module oh_csa32
-  #(parameter DW    = 1,      // number of sync stages
-    parameter SYN   = "true"  // true = synthesizable
+  #(parameter N    = 1,        // number of sync stages
+    parameter SYN  = "TRUE",   // synthesizable (or not)
+    parameter TYPE = "DEFAULT" // scell type/size
     )
-   ( input [DW-1:0]  in0, //input
-     input [DW-1:0]  in1,//input
-     input [DW-1:0]  in2,//input
-     output [DW-1:0] s, //sum
-     output [DW-1:0] c   //carry
+   ( input [N-1:0]  in0, //input
+     input [N-1:0]  in1, //input
+     input [N-1:0]  in2, //input
+     output [N-1:0] s,   //sum
+     output [N-1:0] c    //carry
      );
 
    generate
-      if(SYN=="true")
-	begin
-	   assign s[DW-1:0] = in0[DW-1:0] ^ in1[DW-1:0] ^ in2[DW-1:0];
+      if(SYN == "TRUE") begin
+	 assign s[N-1:0] = in0[N-1:0] ^ in1[N-1:0] ^ in2[N-1:0];
 
-	   assign c[DW-1:0] = (in0[DW-1:0] & in1[DW-1:0]) |
-			    (in1[DW-1:0] & in2[DW-1:0]) |
-			      (in2[DW-1:0] & in0[DW-1:0] );
-	end
-      else
-	begin
-	   genvar 	     i;
-	   for (i=0;i<DW;i=i+1)
-	     begin
-		asic_csa32 asic_csa32  (.s(s[i]),
-					.c(c[i]),
-					.in2(in2[i]),
-					.in1(in1[i]),
-					.in0(in0[i]));
-	   end
-	end
+	 assign c[N-1:0] = (in0[N-1:0] & in1[N-1:0]) |
+			    (in1[N-1:0] & in2[N-1:0]) |
+			   (in2[N-1:0] & in0[N-1:0] );
+      end
+      else begin
+	 genvar 	     i;
+	 for (i=0;i<N;i=i+1) begin
+	    asic_csa32 #(.TYPE(TYPE))
+	    asic_csa32  (.s(s[i]),
+			 .c(c[i]),
+			 .in2(in2[i]),
+			 .in1(in1[i]),
+			 .in0(in0[i]));
+	 end
+      end
    endgenerate
-endmodule // oh_csa32
+endmodule
