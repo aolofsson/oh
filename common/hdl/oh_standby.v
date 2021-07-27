@@ -8,8 +8,9 @@
 module oh_standby
   #(parameter PD       = 5,       // cycles to stay awake after "wakeup"
     parameter SYNCPIPE = 2,       // depth of synchronization pipeline
-    parameter SYN      = "true",  // hard (macro) or soft (rtl)
-    parameter DELAY    = 5)       // cycles delay of irq_reset after posedge
+    parameter SYN      = "TRUE",  // TRUE is synthesizable
+    parameter DELAY    = 5        // cycles delay of irq_reset after posedge
+    )
    (//inputs
     input  clkin, //clock input
     input  nreset,//async active low reset
@@ -22,11 +23,12 @@ module oh_standby
     );
 
    //Wire declarations
-   reg [PD-1:0]	wakeup_pipe;
-   wire 	sync_reset;
-   wire 	sync_reset_pulse;
-   wire 	wakeup_now;
-   wire 	clk_en;
+   reg [PD-1:0]             wakeup_pipe;
+   wire 		    sync_reset;
+   wire 		    sync_reset_pulse;
+   wire 		    wakeup_now;
+   wire 		    clk_en;
+   wire [$clog2(DELAY)-1:0] delay_sel;
 
    //####################################################################
    // -Creating an edge one clock cycle pulse on rising edge of reset
@@ -55,11 +57,14 @@ module oh_standby
 				 .in	 (sync_reset));
 
    // Delay irq event by N clock cycles
-   oh_delay #(.N(DELAY))
+   assign delay_sel = DELAY;
+   oh_delay #(.N(1),
+	      .MAXDELAY(DELAY))
    oh_delay (//outputs
 	     .out	 (resetout),
 	     //inputs
 	     .in	 (sync_reset_pulse),
+	     .sel	 (delay_sel),
 	     .clk	 (clkin));
 
    //####################################################################

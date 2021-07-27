@@ -1,33 +1,41 @@
 //#############################################################################
-//# Function: "ONE HOT" N:1 MUX                                               #
+//# Function: One hot N:1 MUX                                                 #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module oh_mux #( parameter DW  = 1, // width of data inputs
-		 parameter N   = 1  // number of inputs
-		 )
+module oh_mux
+  #(parameter N   = 32,        // vector width
+    parameter M   = 2,         // number of vectors
+    parameter SYN  = "TRUE",    // synthesizable (or not)
+    parameter TYPE = "DEFAULT"  // implementation type
+    )
    (
-    input [N-1:0]    sel, // select vector
-    input [N*DW-1:0] in, // concatenated input {..,in1[DW-1:0],in0[DW-1:0]
-    output [DW-1:0]  out  // output
+    input [M-1:0]   sel, // select vector
+    input [M*N-1:0] in,  // concatenated input {..,in1[N-1:0],in0[N-1:0]
+    output [N-1:0]  out  // output
     );
-   
-   //local variable
-   reg [DW-1:0]     mux;
-   
-   integer 	    i;   
-   always @*
-     begin
-	mux[DW-1:0] = 'b0;
-	for(i=0;i<N;i=i+1)
-	  mux[DW-1:0] = mux[DW-1:0] | {(DW){sel[i]}} & in[((i+1)*DW-1)-:DW];
-     end
 
-   assign out[DW-1:0] = mux;
-   
-endmodule // oh_mux
-
-
-
+   generate
+      if(SYN == "TRUE") begin
+	 reg [N-1:0]     mux;
+	 integer 	 i;
+	 always @*
+	   begin
+	      mux[N-1:0] = 'b0;
+	      for(i=0;i<M;i=i+1)
+		mux[N-1:0] = mux[N-1:0] | {(N){sel[i]}} & in[((i+1)*N-1)-:N];
+	   end
+	 assign out[N-1:0] = mux[N-1];
+      end
+      else begin
+	 //TODO: implement
+	 asic_mux #(.TYPE(TYPE),
+		    .N(N))
+	 asic_mux(.out	(out),
+		  .sel  (sel[N-1:0]),
+		  .in	(in[N-1:0]));
+      end
+   endgenerate
+endmodule

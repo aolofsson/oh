@@ -6,8 +6,9 @@
 //#############################################################################
 
 module oh_rsync
-  #(parameter SYNCPIPE = 2,      // number of sync stages
-    parameter SYN      = "true"  // true=synthesizable
+  #(parameter SYNCPIPE = 2,        // number of sync stages
+    parameter SYN      = "TRUE",   // true=synthesizable
+    parameter TYPE     = "DEFAULT" // scell type/size
     )
    (
     input  clk,
@@ -16,7 +17,7 @@ module oh_rsync
     );
 
    generate
-      if(SYN=="true")
+      if(SYN == "TRUE")
 	begin
 	   reg [SYNCPIPE-1:0] sync_pipe;
 	   always @ (posedge clk or negedge nrst_in)
@@ -29,6 +30,7 @@ module oh_rsync
       else
 	begin
 	   asic_rsync #(.TYPE(TYPE),
+			.SYN(SYN),
 			.SYNCPIPE(SYNCPIPE))
 	   asic_rsync (.clk(clk),
 		       .nrst_in(nrst_in),

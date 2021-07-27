@@ -6,15 +6,15 @@
 //#############################################################################
 
 module oh_csa32
-  #(parameter N    = 1,        // number of sync stages
+  #(parameter N    = 1,        // vector width
     parameter SYN  = "TRUE",   // synthesizable (or not)
     parameter TYPE = "DEFAULT" // scell type/size
     )
-   ( input [N-1:0]  in0, //input
-     input [N-1:0]  in1, //input
-     input [N-1:0]  in2, //input
-     output [N-1:0] s,   //sum
-     output [N-1:0] c    //carry
+   ( input [N-1:0]  in0, // input
+     input [N-1:0]  in1, // input
+     input [N-1:0]  in2, // input
+     output [N-1:0] s,   // sum
+     output [N-1:0] c    // carry
      );
 
    generate
@@ -22,7 +22,7 @@ module oh_csa32
 	 assign s[N-1:0] = in0[N-1:0] ^ in1[N-1:0] ^ in2[N-1:0];
 
 	 assign c[N-1:0] = (in0[N-1:0] & in1[N-1:0]) |
-			    (in1[N-1:0] & in2[N-1:0]) |
+			   (in1[N-1:0] & in2[N-1:0]) |
 			   (in2[N-1:0] & in0[N-1:0] );
       end
       else begin

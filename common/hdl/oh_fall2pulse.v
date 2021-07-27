@@ -2,26 +2,26 @@
 //# Function: Converts a falling edge to a single cycle pulse                 #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module oh_fall2pulse #(parameter DW = 1) //data width
+module oh_fall2pulse
+  #( parameter N = 1) //data width
    (
-      input 	      clk, // clock  
-      input 	      nreset, // async active low reset   
-      input [DW-1:0]  in, // edge input
-      output [DW-1:0] out     // one cycle pulse
+    input 	   clk, // clock
+    input 	   nreset, // async active low reset
+    input [N-1:0]  in, // edge input
+    output [N-1:0] out     // one cycle pulse
     );
-   
-   reg [DW-1:0]    in_reg;
+
+   reg [N-1:0] 	   in_reg;
 
    always @ (posedge clk or negedge nreset)
      if(!nreset)
-       in_reg[DW-1:0]  <= 'b0 ;
+       in_reg[N-1:0] <= 'b0 ;
      else
-       in_reg[DW-1:0]  <= in[DW-1:0] ;
-   
-   assign out[DW-1:0]  = ~in[DW-1:0] & in_reg[DW-1:0] ;
-   
-endmodule // oh_fall2pulse
+       in_reg[N-1:0] <= in[N-1:0] ;
 
+   assign out[N-1:0] = ~in[N-1:0] & in_reg[N-1:0] ;
+
+endmodule // oh_fall2pulse

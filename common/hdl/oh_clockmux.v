@@ -1,5 +1,5 @@
 //#############################################################################
-//# Function: Clock mux                                                       #
+//# Function: Parametrized clock mux (N to 1)                                 #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see LICENSE file in OH! repository)                        #

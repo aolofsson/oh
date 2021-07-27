@@ -49,7 +49,7 @@ module oh_regfile
    //Multi Write-Port Mux
    for(i=0;i<REGS;i=i+1)
      begin: gen_wrmux
-	oh_mux #(.DW(RW), .N(WP))
+	oh_mux #(.N(RW), .M(WP))
 	iwrmux(.out (datamux[i][RW-1:0]),
 	       .sel (write_en[i][WP-1:0]),
 	       .in  (wr_data[WP*RW-1:0]));

@@ -1,19 +1,20 @@
 //#############################################################################
-//# Function: BCD Seven Segment Decoderh                                      #
+//# Function: BCD Seven Segment Decoder                                       #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
 module oh_7seg_decode
-  ( input [3:0] bcd,  //0-9
-    output a, //a segment (1=0ff)
-    output b, //b segment
-    output c, //c segment
-    output d, //d segment
-    output e, //e segment
-    output f, //f segment
-    output g    //g segment
+  (
+    input [3:0] bcd, // 0-9
+    output 	a,   // a segment (1=0ff)
+    output 	b,   // b segment
+    output 	c,   // c segment
+    output 	d,   // d segment
+    output 	e,   // e segment
+    output 	f,   // f segment
+    output 	g    // g segment
     );
 
    assign a = (bcd[3:0] == 4'h1) | (bcd[3:0] == 4'h4);
@@ -36,4 +37,4 @@ module oh_7seg_decode
    assign g = (bcd[3:0] == 4'h0) | (bcd[3:0] == 4'h1) |
 	      (bcd[3:0] == 4'h7);
 
-endmodule // oh_7seg_decode
+endmodule

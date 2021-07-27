@@ -6,43 +6,64 @@
 //#############################################################################
 
 module oh_iddr
-  #(parameter DW  = 2) // width of data inputs
+  #(parameter N    = 1,        // vector width
+    parameter SYN  = "TRUE",   // synthesizable (or not)
+    parameter TYPE = "DEFAULT" // scell type/size
+    )
    (
-    input 		clk, // clock
-    input 		ce0, // 1st cycle enable
-    input 		ce1, // 2nd cycle enable
-    input [DW/2-1:0] 	din, // data input sampled on both edges of clock
-    output reg [DW-1:0] dout // iddr aligned
+    input 		 clk, // clock
+    input 		 en0, // 1st cycle enable
+    input 		 en1, // 2nd cycle enable
+    input [N-1:0] 	 in, // data input sampled on both edges of clock
+    output reg [2*N-1:0] out // iddr aligned
     );
 
-   //regs("sl"=stable low, "sh"=stable high)
-   reg [DW/2-1:0]     din_sl;
-   reg [DW/2-1:0]     din_sh;
-   reg 		      ce0_negedge;
+   generate
+      if(SYN == "TRUE") begin
 
-   //########################
-   // Pipeline valid for negedge
-   //########################
-   always @ (negedge clk)
-     ce0_negedge <= ce0;
+	 //regs("sl"=stable low, "sh"=stable high)
+	 reg [N-1:0]     in_sl;
+	 reg [N-1:0] 	 in_sh;
+	 reg 		 en0_negedge;
 
-   //########################
-   // Dual edge sampling
-   //########################
+	 //########################
+	 // Pipeline valid for negedge
+	 //########################
+	 always @ (negedge clk)
+	   en0_negedge <= en0;
 
-   always @ (posedge clk)
-     if(ce0)
-       din_sl[DW/2-1:0] <= din[DW/2-1:0];
-   always @ (negedge clk)
-     if(ce0_negedge)
-       din_sh[DW/2-1:0] <= din[DW/2-1:0];
+	 //########################
+	 // Dual edge sampling
+	 //########################
 
-   //########################
-   // Aign pipeline
-   //########################
-   always @ (posedge clk)
-     if(ce1)
-       dout[DW-1:0] <= {din_sh[DW/2-1:0],
-			din_sl[DW/2-1:0]};
+	 always @ (posedge clk)
+	   if(en0)
+	     in_sl[N-1:0] <= in[N-1:0];
+	 always @ (negedge clk)
+	   if(en0_negedge)
+	     in_sh[N-1:0] <= in[N-1:0];
+
+	 //########################
+	 // Aign pipeline
+	 //########################
+	 always @ (posedge clk)
+	   if(en1)
+	     out[2*N-1:0] <= {in_sh[N-1:0],
+			      in_sl[N-1:0]};
+
+      end
+      else begin
+	 for (i=0;i<N;i=i+1) begin
+	    asic_iddr #(.TYPE(TYPE))
+	    asic_iddr(// Outputs
+		      .out	(out[2*N-1:0]),
+		      // Inputs
+		      .clk	(clk),
+		      .en0	(en0),
+		      .en1	(en1),
+		      .in	(in[N-1:0]));
+	 end
+      end
+   endgenerate
 
 endmodule // oh_iddr

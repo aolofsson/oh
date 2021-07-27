@@ -6,8 +6,10 @@
 //#############################################################################
 
 module oh_debouncer
-  #( parameter BOUNCE    = 100, // bounce time (s)
-     parameter FREQUENCY = 1000000 // clock frequency (1Mhz)
+  #( parameter BOUNCE    = 100,      // bounce time (s)
+     parameter FREQUENCY = 1000000,  // clock frequency (1Mhz)
+     parameter SYN       = "TRUE",   // synthesizable (or not)
+     parameter TYPE      = "DEFAULT" // scell type/size
      )
    (
     input  clk, // clock to synchronize to
@@ -16,22 +18,26 @@ module oh_debouncer
     output clean_out // clean signal to logic
     );
 
-   parameter integer CW  = $clog2(BOUNCE*FREQUENCY);
+   parameter integer COUNTER_WIDTH  = $clog2(BOUNCE*FREQUENCY);
 
    //regs
    reg 	  noisy_reg;
    reg 	  clean_reg;
 
    // synchronize incoming signal
-   oh_dsync dsync (.dout   (noisy_synced),
-		   .clk	   (clk),
-		   .nreset (nreset),
-		   .din	   (noisy_in));
+   oh_dsync #(.SYN(SYN),
+	      .TYPE(TYPE))
+   dsync (.dout   (noisy_synced),
+	  .clk    (clk),
+	  .nreset (nreset),
+	  .din	  (noisy_in));
 
    // synchronize reset to clk
-   oh_rsync rsync (.nrst_out (nreset_synced),
-		   .clk	     (clk),
-		   .nrst_in  (nreset));
+   oh_rsync #(.SYN(SYN),
+	      .TYPE(TYPE))
+   rsync (.nrst_out (nreset_synced),
+	  .clk	    (clk),
+	  .nrst_in  (nreset));
 
    // detecting change in state on input
    always @ (posedge clk or negedge nreset)
@@ -43,18 +49,20 @@ module oh_debouncer
    assign change_detected = noisy_reg ^ noisy_synced;
 
    // synchronous counter "filter"
-   oh_counter #(.DW(CW))
+   oh_counter #(.N(COUNTER_WIDTH),
+		.SYN(SYN),
+		.TYPE(TYPE))
    oh_counter (// Outputs
 	       .count	   (),
 	       .wraparound (wraparound),
 	       // Inputs
 	       .clk	   (clk),
 	       .in	   (1'b1),
-	       .dir        (1'b0),//increment
+	       .dec        (1'b0),
 	       .en	   (1'b1),
 	       .autowrap   (1'b0),
 	       .load  	   (change_detected | ~nreset_synced),
-	       .load_data  ({(CW){1'b0}})
+	       .load_data  ({(COUNTER_WIDTH){1'b0}})
 	       );
 
    // sample noisy signal safely

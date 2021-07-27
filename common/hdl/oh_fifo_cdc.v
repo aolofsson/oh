@@ -6,26 +6,28 @@
 //#############################################################################
 
 module oh_fifo_cdc
-  #(parameter DW     = 104,          // FIFO width
-    parameter DEPTH  = 32,           // FIFO depth
-    parameter AW     = $clog2(DEPTH) // rd_count width (derived)
+  #(parameter N     = 32,           // FIFO width
+    parameter DEPTH = 32,           // FIFO depth
+    parameter SYN   = "TRUE",       // true=synthesizable
+    parameter TYPE  = "DEFAULT",    // true=synthesizable
+    parameter AW    = $clog2(DEPTH) // rd_count width (derived)
     )
    (
-    input 	    nreset, // async active low reset
+    input 	   nreset,     // async active low reset
     //Write Side
-    input 	    clk_in, // write clock
-    input 	    valid_in, // write valid
-    input [DW-1:0]  packet_in, // write packet
-    output 	    ready_out, // write pushback
+    input 	   clk_in,     // write clock
+    input 	   valid_in,   // write valid
+    input [N-1:0]  packet_in,  // write packet
+    output 	   ready_out,  // write pushback
     //Read Side
-    input 	    clk_out, //read clock
-    output reg 	    valid_out, //read valid
-    output [DW-1:0] packet_out, //read packet
-    input 	    ready_in, // read pushback
+    input 	   clk_out,    // read clock
+    output reg 	   valid_out,  // read valid
+    output [N-1:0] packet_out, // read packet
+    input 	   ready_in,   // read pushback
     //Status
-    output 	    prog_full, // fifo is half full
-    output 	    full, // fifo is full
-    output 	    empty // fifo is empty
+    output 	   prog_full, // fifo is half full
+    output 	   full,      // fifo is full
+    output 	   empty      // fifo is empty
     );
 
    // FIFO control logic
@@ -34,9 +36,11 @@ module oh_fifo_cdc
    assign ready_out = ~(wr_almost_full | wr_full | wr_prog_full);
 
    //async asser, sync deassert of reset
-   oh_rsync sync_reset(.nrst_out  (nreset_out),
-                       .clk       (clk_out),
-                       .nrst_in   (nreset));
+   oh_rsync #(.SYN(SYN),
+	      .TYPE(TYPE))
+   sync_reset(.nrst_out  (nreset_out),
+              .clk       (clk_out),
+              .nrst_in   (nreset));
 
    //align valid signal with FIFO read delay
    always @ (posedge clk_out or negedge nreset_out)
@@ -46,14 +50,14 @@ module oh_fifo_cdc
        valid_out <= rd_en;
 
    // parametric async fifo
-   oh_fifo_async  #(.SYN("true"),
-		    .DW(DW),
+   oh_fifo_async  #(.SYN(SYN),
+		    .N(N),
 		    .DEPTH(DEPTH))
    oh_fifo_async (
 		  .rd_clk		(clk_out),
-		  .rd_dout		(packet_out[DW-1:0]),
+		  .rd_dout		(packet_out[N-1:0]),
 		  .wr_clk		(clk_in),
-		  .wr_din		(packet_in[DW-1:0]),
+		  .wr_din		(packet_in[N-1:0]),
 		  .memconfig		(8'b0),
 		  .memrepair		(8'b0),
 		  .shutdown             (1'b0),
@@ -62,9 +66,9 @@ module oh_fifo_cdc
 		  .vss                  (1'b0),
 		  .bist_en		(bist_en),
 		  .bist_we		(bist_we),
-		  .bist_wem		({(DW){1'b0}}),
+		  .bist_wem		({(N){1'b0}}),
 		  .bist_addr		({(AW){1'b0}}),
-		  .bist_din		({(DW){1'b0}}),
+		  .bist_din		({(N){1'b0}}),
 		  .bist_dout		(),
 		  .wr_count		(),
 		  .rd_count		(),

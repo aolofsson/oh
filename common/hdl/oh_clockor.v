@@ -2,39 +2,30 @@
 //# Function: Clock 'OR' gate                                                 #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
-//# License:  MIT (see LICENSE file in OH! repository)                        # 
+//# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module oh_clockor #(parameter N    = 1)    // number of clock inputs
+module oh_clockor
+  #(parameter N    = 2,        // number of clock inputs)
+    parameter SYN  = "TRUE",   // synthesizable (or not)
+    parameter TYPE = "DEFAULT" // implementation type
+    )
    (
-    input [N-1:0] clkin,// one hot clock inputs (only one is active!) 
-    output 	  clkout 
+    input [N-1:0] clkin, // clock input
+    output 	  clkout // clock output
     );
 
-`ifdef CFG_ASIC
    generate
-      if((N==4))
-	begin : asic
-	   asic_clockor4 ior (/*AUTOINST*/
-			      // Outputs
-			      .clkout		(clkout),
-			      // Inputs
-			      .clkin		(clkin[3:0]));
-	   
-	end // block: g0
-      else if((N==2))
-	begin : asic
-	   asic_clockor2 ior (/*AUTOINST*/
-			      // Outputs
-			      .clkout		(clkout),
-			      // Inputs
-			      .clkin		(clkin[1:0]));
-	end
+      if(SYN == "TRUE") begin
+	 assign clkout = |(clkin[N-1:0]);
+      end
+      else begin
+	 asic_clockor #(.TYPE(TYPE),
+			.N(N))
+	 asic_clockor(// Outputs
+		      .clkout		(clkout),
+		      // Inputs
+		      .clkin		(clkin[N-1:0]));
+      end
    endgenerate
-`else
-   assign clkout = |(clkin[N-1:0]);
-`endif
-     
-endmodule // oh_clockmux
-
-
+endmodule

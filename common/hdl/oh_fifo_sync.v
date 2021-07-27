@@ -6,13 +6,13 @@
 //#############################################################################
 
 module oh_fifo_sync
-  #(parameter DW       = 104,          // FIFO width
+  #(parameter N       = 32,            // FIFO width
     parameter DEPTH    = 32,           // FIFO depth
     parameter REG      = 1,            // Register fifo output
     parameter SYNCPIPE = 2,            // depth of synchronization pipeline
-    parameter SYN      = "true",       // synthesizable
-    parameter TYPE     = "default",    // implementation type
-    parameter SHAPE    = "square",     // hard macro shape (square, tall, wide),
+    parameter SYN      = "TRUE",       // synthesizable
+    parameter TYPE     = "DEFAULT",    // implementation type
+    parameter SHAPE    = "SQUARE",     // hard macro shape (square, tall, wide),
     parameter PROGFULL = DEPTH-1,      // programmable almost full level
     parameter AW       = $clog2(DEPTH) // count width (derived)
     )
@@ -23,7 +23,7 @@ module oh_fifo_sync
     input 		clear, //clear fifo (synchronous)
     //write port
     input 		wr_clk,
-    input [DW-1:0] 	wr_din, // data to write
+    input [N-1:0] 	wr_din, // data to write
     input 		wr_en, // write fifo
     output 		wr_full, // fifo full
     output 		wr_almost_full, //one entry left
@@ -31,16 +31,16 @@ module oh_fifo_sync
     output reg [AW-1:0] wr_count, // pessimistic report of entries from wr side
     //read port
     input 		rd_clk,
-    output [DW-1:0] 	rd_dout, // output data (next cycle)
+    output [N-1:0] 	rd_dout, // output data (next cycle)
     input 		rd_en, // read fifo
     output 		rd_empty, // fifo is empty
     // BIST interface
     input 		bist_en, // bist enable
     input 		bist_we, // write enable global signal
-    input [DW-1:0] 	bist_wem, // write enable vector
+    input [N-1:0] 	bist_wem, // write enable vector
     input [AW-1:0] 	bist_addr, // address
-    input [DW-1:0] 	bist_din, // data input
-    input [DW-1:0] 	bist_dout, // data input
+    input [N-1:0] 	bist_din, // data input
+    input [N-1:0] 	bist_dout, // data input
     // Power/repair (hard macro only)
     input 		shutdown, // shutdown signal
     input 		vss, // ground signal
@@ -111,29 +111,29 @@ module oh_fifo_sync
    //# Memory Array
    //###########################
 
-   oh_memory_dp #(.DW(DW),
+   oh_memory_dp #(.N(N),
 		  .DEPTH(DEPTH),
 		  .REG(REG),
 		  .SYN(SYN),
 		  .TYPE(TYPE),
 		  .SHAPE(SHAPE))
-   oh_memory_dp(.wr_wem			({(DW){1'b1}}),
+   oh_memory_dp(.wr_wem			({(N){1'b1}}),
 		/*AUTOINST*/
 		// Outputs
-		.rd_dout		(rd_dout[DW-1:0]),
+		.rd_dout		(rd_dout[N-1:0]),
 		// Inputs
 		.wr_clk			(wr_clk),
 		.wr_en			(wr_en),
 		.wr_addr		(wr_addr[AW-1:0]),
-		.wr_din			(wr_din[DW-1:0]),
+		.wr_din			(wr_din[N-1:0]),
 		.rd_clk			(rd_clk),
 		.rd_en			(rd_en),
 		.rd_addr		(rd_addr[AW-1:0]),
 		.bist_en		(bist_en),
 		.bist_we		(bist_we),
-		.bist_wem		(bist_wem[DW-1:0]),
+		.bist_wem		(bist_wem[N-1:0]),
 		.bist_addr		(bist_addr[AW-1:0]),
-		.bist_din		(bist_din[DW-1:0]),
+		.bist_din		(bist_din[N-1:0]),
 		.shutdown		(shutdown),
 		.vss			(vss),
 		.vdd			(vdd),
