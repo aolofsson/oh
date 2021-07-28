@@ -1,0 +1,24 @@
+//#############################################################################
+//# Function:  Positive edge-triggered static D-type flop-flop with async     #
+//#            active low preset and scan input.                              #
+//# Copyright: OH Project Authors. ALl rights Reserved.                       #
+//# License:   MIT (see LICENSE file in OH repository)                        #
+//#############################################################################
+
+module asic_sdffsq
+   (
+    input      d,
+    input      si,
+    input      se,
+    input      clk,
+    input      nset,
+    output reg q
+    );
+
+   always @ (posedge clk or negedge nset)
+     if(!nset)
+       q <= 1'b1;
+     else
+       q <= se ? si : d;
+
+endmodule
