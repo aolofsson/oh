@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_keeper
-   (
+module asic_keeper #(parameter PROP = "DEFAULT")   (
     inout z
     );
 

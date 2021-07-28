@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_csa32
-  ( input  a,
+module asic_csa32 #(parameter PROP = "DEFAULT")  ( input  a,
     input  b,
     input  c,
     output sum,

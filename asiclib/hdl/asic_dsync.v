@@ -5,8 +5,7 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module asic_dsync
-   (
+module asic_dsync #(parameter PROP = "DEFAULT")   (
     input  clk,    // clock
     input  nreset, // async active low reset
     input  in,     // input data

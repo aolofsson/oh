@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_decap
-   (
+module asic_decap #(parameter PROP = "DEFAULT")   (
     input  vss,
     output vdd
     );

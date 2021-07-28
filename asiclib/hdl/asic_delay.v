@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_delay
-   (
+module asic_delay #(parameter PROP = "DEFAULT")   (
     input  a,
     output z
     );

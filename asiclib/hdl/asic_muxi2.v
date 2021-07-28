@@ -5,8 +5,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_muxi2
-   (
+module asic_muxi2 #(parameter PROP = "DEFAULT")   (
     input  d0,
     input  d1,
     input  s,

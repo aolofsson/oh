@@ -5,8 +5,7 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module asic_dmux7
-   (
+module asic_dmux7 #(parameter PROP = "DEFAULT")   (
     input  sel6,
     input  sel5,
     input  sel4,

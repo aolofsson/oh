@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_clkicgand
-  (
+module asic_clkicgand #(parameter PROP = "DEFAULT")  (
    input  clk, // clock input
    input  te, // test enable
    input  en, // enable (from positive edge FF)

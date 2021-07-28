@@ -5,8 +5,7 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module asic_clkmux2
-   (
+module asic_clkmux2 #(parameter PROP = "DEFAULT")   (
     input  clk0,
     input  clk1,
     input  sel,

@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_oa211
-   (
+module asic_oa211 #(parameter PROP = "DEFAULT")   (
     input  a0,
     input  a1,
     input  b0,

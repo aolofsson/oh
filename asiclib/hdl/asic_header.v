@@ -5,8 +5,7 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module asic_header
-   (
+module asic_header #(parameter PROP = "DEFAULT")   (
     input  sleep,  // 1 = disabled vdd
     input  vddin,  // input supply
     output vddout  // gated output supply

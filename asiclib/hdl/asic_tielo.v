@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_tielo
-  (
+module asic_tielo #(parameter PROP = "DEFAULT")  (
    output z
    );
 

@@ -5,8 +5,7 @@
 //# License:   MIT (see LICENSE file in OH repository)                        #
 //#############################################################################
 
-module asic_rsync
-  (
+module asic_rsync #(parameter PROP = "DEFAULT")  (
    input  clk,
    input  nrst_in,
    output nrst_out

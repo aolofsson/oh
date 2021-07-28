@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_dffnq
-   (
+module asic_dffnq #(parameter PROP = "DEFAULT")   (
     input      d,
     input      clk,
     output reg q

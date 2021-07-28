@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_tbuf
-  (
+module asic_tbuf #(parameter PROP = "DEFAULT")  (
    input  a,
    input  oe,
    output z

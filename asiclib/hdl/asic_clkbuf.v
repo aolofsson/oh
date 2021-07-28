@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_clkbuf
-   (
+module asic_clkbuf #(parameter PROP = "DEFAULT")   (
     input  a,
     output z
     );

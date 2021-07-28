@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_oddr
-  (
+module asic_oddr #(parameter PROP = "DEFAULT")  (
    input  clk, // clock input
    input  in0, // data for clk=0
    input  in1, // data for clk=1

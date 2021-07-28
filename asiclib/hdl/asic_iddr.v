@@ -3,8 +3,7 @@
 //# Copyright: OH Project Authors. All rights Reserved.                       #
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
-module asic_iddr
-   (
+module asic_iddr #(parameter PROP = "DEFAULT")   (
     input      clk,     // clock
     input      in,      // data input sampled on both edges of clock
     output reg outrise, // rising edge sample

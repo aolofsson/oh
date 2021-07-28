@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_antenna
-   (
+module asic_antenna #(parameter PROP = "DEFAULT")   (
     input  vss,
     output z
     );

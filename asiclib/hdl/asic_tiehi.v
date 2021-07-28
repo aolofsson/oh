@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_tiehi
-   (
+module asic_tiehi #(parameter PROP = "DEFAULT")   (
     output z
     );
 

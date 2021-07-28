@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_clkand2
-   (
+module asic_clkand2 #(parameter PROP = "DEFAULT")   (
     input  a,
     input  b,
     output z

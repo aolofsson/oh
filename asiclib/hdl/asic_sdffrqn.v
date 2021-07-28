@@ -5,8 +5,7 @@
 //# License:   MIT (see LICENSE file in OH repository)                        #
 //#############################################################################
 
-module asic_sdffrqn
-   (
+module asic_sdffrqn #(parameter PROP = "DEFAULT")   (
     input      d,
     input      si,
     input      se,

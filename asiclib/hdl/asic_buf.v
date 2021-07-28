@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_buf
-   (
+module asic_buf #(parameter PROP = "DEFAULT")   (
     input  a,
     output z
     );

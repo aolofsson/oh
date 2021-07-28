@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_xnor3
-   (
+module asic_xnor3 #(parameter PROP = "DEFAULT")   (
     input  a,
     input  b,
     input  c,

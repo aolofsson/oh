@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_or3
-  (
+module asic_or3 #(parameter PROP = "DEFAULT")  (
     input a,
     input b,
     input c,

@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_oai33
-   (
+module asic_oai33 #(parameter PROP = "DEFAULT")   (
     input  a0,
     input  a1,
     input  a2,

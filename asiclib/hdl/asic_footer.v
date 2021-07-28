@@ -5,8 +5,7 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module asic_footer
-   (
+module asic_footer #(parameter PROP = "DEFAULT")   (
     input  nsleep, // 0 = disabled ground
     input  vssin,  // input supply
     output vssout  // gated output supply

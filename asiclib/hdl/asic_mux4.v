@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_mux4
-  (
+module asic_mux4 #(parameter PROP = "DEFAULT")  (
    input  d0,
    input  d1,
    input  d2,

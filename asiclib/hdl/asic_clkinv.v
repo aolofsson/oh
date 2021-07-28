@@ -4,8 +4,7 @@
 //# License:  MIT (see LICENSE file in OH repository)                         #
 //#############################################################################
 
-module asic_clkinv
-  (
+module asic_clkinv #(parameter PROP = "DEFAULT")  (
     input  a,
     output z
     );
