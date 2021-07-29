@@ -17,7 +17,7 @@ module emesh_readback (/*AUTOARG*/
    output 	   ready_out;    // pushback from mesh
 
    // register/memory data (already pipelined)
-   input [63:0]    read_data;   // data from register/memory
+   input [63:0]    read_data;   // data from register/memorye
 
    // output transaction
    output 	   access_out;  // register access
@@ -45,8 +45,8 @@ module emesh_readback (/*AUTOARG*/
    //# Parse packet
    //#######################################  
 
-   packet2emesh #(.AW(AW),
-		  .PW(PW))
+   enoc_unpack #(.AW(AW),
+		 .PW(PW))
    p2e (/*AUTOINST*/
 	// Outputs
 	.write_in			(write_in),
@@ -88,8 +88,8 @@ module emesh_readback (/*AUTOARG*/
    //# Convert to Packet
    //#######################################  
      
-   emesh2packet #(.AW(AW),
-		  .PW(PW))
+   enoc_pack #(.AW(AW),
+	       .PW(PW))
    e2p (.write_out   (1'b1),
 	/*AUTOINST*/
 	// Outputs

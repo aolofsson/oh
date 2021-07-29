@@ -5,6 +5,8 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
+defparam oh_mult.N =  16;
+
 module oh_mult
   #(parameter N    = 32,        // block width
     parameter SYN  = "TRUE",    // synthesizable

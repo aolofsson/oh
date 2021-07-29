@@ -1,5 +1,6 @@
 #!/bin/bash
 
+common/hdl/*.v
 
 list=(accelerator elink emailbox emmu gpio mio pic spi) 
 

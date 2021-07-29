@@ -74,8 +74,8 @@ module gpio #( parameter integer N = 24,  // number of gpio pins
    //# DECODE LOGIC
    //################################  
 
-   packet2emesh #(.AW(AW),
-		  .PW(PW))
+   enoc_unpack #(.AW(AW),
+		 .PW(PW))
    p2e(
        /*AUTOINST*/
        // Outputs
