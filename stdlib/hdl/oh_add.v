@@ -24,6 +24,8 @@ module oh_add
    generate
       if(SYN == "TRUE")  begin
 	 assign {cout,sum[N-1:0]} = a[N-1:0] + b[N-1:0] + cin;
+	 //TODO: FIX
+	 assign carry = 'b0;
       end
       else begin
 	 asic_add #(.TYPE(TYPE),
