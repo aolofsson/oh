@@ -29,7 +29,8 @@ module oh_padring
     parameter WE_VDDIO   =  8,
     parameter WE_VSSIO   =  8,
     parameter WE_VDD     =  8,
-    parameter WE_VSS     =  8
+    parameter WE_VSS     =  8,
+    parameter TECH_CFG_WIDTH = 16
     )
    (
     //CONTINUOUS GROUND
@@ -43,9 +44,9 @@ module oh_padring
     output [NO_GPIO-1:0]   no_din, // data from pad
     input [NO_GPIO-1:0]  no_dout, // data to pad
     input [NO_GPIO*8-1:0]  no_cfg, // config
-
     input [NO_GPIO-1:0]    no_ie, // input enable
     input [NO_GPIO-1:0]    no_oen, // output enable (bar)
+    input [NO_GPIO*TECH_CFG_WIDTH-1:0] no_tech_cfg,
     //SOUTH
     inout [SO_DOMAINS-1:0] so_vddio,
     inout [SO_DOMAINS-1:0] so_vssio,
@@ -55,6 +56,7 @@ module oh_padring
     input [SO_GPIO*8-1:0]  so_cfg, // config
     input [SO_GPIO-1:0]    so_ie, // input enable
     input [SO_GPIO-1:0]    so_oen, // output enable (bar)
+    input [SO_GPIO*TECH_CFG_WIDTH-1:0] so_tech_cfg,
     //EAST
     inout [EA_DOMAINS-1:0] ea_vddio,
     inout [EA_DOMAINS-1:0] ea_vssio,
@@ -64,6 +66,7 @@ module oh_padring
     input [EA_GPIO*8-1:0]  ea_cfg, // config
     input [EA_GPIO-1:0]    ea_ie, // input enable
     input [EA_GPIO-1:0]    ea_oen, // output enable (bar)
+    input [EA_GPIO*TECH_CFG_WIDTH-1:0] ea_tech_cfg,
     //WEST
     inout [WE_DOMAINS-1:0] we_vddio,
     inout [WE_DOMAINS-1:0] we_vssio,
@@ -72,7 +75,8 @@ module oh_padring
     input [WE_GPIO-1:0]  we_dout, // data to pad
     input [WE_GPIO*8-1:0]  we_cfg, // config
     input [WE_GPIO-1:0]    we_ie, // input enable
-    input [WE_GPIO-1:0]    we_oen // output enable (bar)
+    input [WE_GPIO-1:0]    we_oen, // output enable (bar)
+    input [WE_GPIO*TECH_CFG_WIDTH-1:0] we_tech_cfg
     );
 
 
@@ -100,7 +104,8 @@ module oh_padring
                             .NVSS(NO_VSS),
                             .POC(1),
                             .LEFTCUT(1),
-                            .RIGHTCUT(1))
+                            .RIGHTCUT(1),
+                            .TECH_CFG_WIDTH(TECH_CFG_WIDTH))
            i0 (.vdd     (vdd),
                .vss     (vss),
                // Outputs
@@ -114,7 +119,8 @@ module oh_padring
                .dout	(no_dout[NO_GPIO-1:0]),
                .oen	(no_oen[NO_GPIO-1:0]),
                .ie	(no_ie[NO_GPIO-1:0]),
-               .cfg	(no_cfg[NO_GPIO*8-1:0]));
+               .cfg	(no_cfg[NO_GPIO*8-1:0]),
+               .tech_cfg(no_tech_cfg));
         end
 
       //#############################
@@ -132,7 +138,8 @@ module oh_padring
                             .NVSS(SO_VSS),
                             .POC(1),
                             .LEFTCUT(1),
-                            .RIGHTCUT(1))
+                            .RIGHTCUT(1),
+                            .TECH_CFG_WIDTH(TECH_CFG_WIDTH))
            i0 (.vdd     (vdd),
                .vss     (vss),
                // Outputs
@@ -146,7 +153,8 @@ module oh_padring
                .dout	(so_dout[SO_GPIO-1:0]),
                .oen	(so_oen[SO_GPIO-1:0]),
                .ie	(so_ie[SO_GPIO-1:0]),
-               .cfg	(so_cfg[SO_GPIO*8-1:0]));
+               .cfg	(so_cfg[SO_GPIO*8-1:0]),
+               .tech_cfg(so_tech_cfg));
         end
 
 
@@ -165,7 +173,8 @@ module oh_padring
                             .NVSS(EA_VSS),
                             .POC(1),
                             .LEFTCUT(1),
-                            .RIGHTCUT(1))
+                            .RIGHTCUT(1),
+                            .TECH_CFG_WIDTH(TECH_CFG_WIDTH))
            i0 (.vdd     (vdd),
                .vss     (vss),
                // Outputs
@@ -179,7 +188,8 @@ module oh_padring
                .dout	(ea_dout[EA_GPIO-1:0]),
                .oen	(ea_oen[EA_GPIO-1:0]),
                .ie	(ea_ie[EA_GPIO-1:0]),
-               .cfg	(ea_cfg[EA_GPIO*8-1:0]));
+               .cfg	(ea_cfg[EA_GPIO*8-1:0]),
+               .tech_cfg(ea_tech_cfg));
 
         end
 
@@ -198,7 +208,8 @@ module oh_padring
                             .NVSS(WE_VSS),
                             .POC(1),
                             .LEFTCUT(1),
-                            .RIGHTCUT(1))
+                            .RIGHTCUT(1),
+                            .TECH_CFG_WIDTH(TECH_CFG_WIDTH))
 
            i0 (.vdd     (vdd),
                .vss     (vss),
@@ -213,7 +224,8 @@ module oh_padring
                .dout	(we_dout[WE_GPIO-1:0]),
                .oen	(we_oen[WE_GPIO-1:0]),
                .ie	(we_ie[WE_GPIO-1:0]),
-               .cfg	(we_cfg[WE_GPIO*8-1:0]));
+               .cfg	(we_cfg[WE_GPIO*8-1:0]),
+               .tech_cfg(we_tech_cfg));
 
         end
 
