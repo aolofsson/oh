@@ -30,7 +30,7 @@ module oh_pads_domain
     output [NGPIO-1:0] 	din, // data from pad
     input [NGPIO-1:0] 	oen, // output enable (bar)
     input [NGPIO-1:0] 	ie, // input enable
-    input [NGPIO*8-1:0] cfg // io config
+    input [NGPIO*8-1:0] cfg, // io config
     input [NGPIO*TECH_CFG_WIDTH-1:0] tech_cfg // technology-specific config
     );
       
