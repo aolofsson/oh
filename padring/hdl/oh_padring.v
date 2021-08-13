@@ -30,6 +30,8 @@ module oh_padring
     parameter WE_VSSIO   =  8,
     parameter WE_VDD     =  8,
     parameter WE_VSS     =  8,
+    parameter ENABLE_CUTS = 1,
+    parameter ENABLE_POC  = 1,
     parameter TECH_CFG_WIDTH = 16
     )
    (
@@ -102,9 +104,9 @@ module oh_padring
                             .NVSSIO(NO_VSSIO),
                             .NVDD(NO_VDD),
                             .NVSS(NO_VSS),
-                            .POC(1),
-                            .LEFTCUT(1),
-                            .RIGHTCUT(1),
+                            .POC(ENABLE_POC),
+                            .LEFTCUT(ENABLE_CUT),
+                            .RIGHTCUT(ENABLE_CUT),
                             .TECH_CFG_WIDTH(TECH_CFG_WIDTH))
            i0 (.vdd     (vdd),
                .vss     (vss),
@@ -136,9 +138,9 @@ module oh_padring
                             .NVSSIO(SO_VSSIO),
                             .NVDD(SO_VDD),
                             .NVSS(SO_VSS),
-                            .POC(1),
-                            .LEFTCUT(1),
-                            .RIGHTCUT(1),
+                            .POC(ENABLE_POC),
+                            .LEFTCUT(ENABLE_CUT),
+                            .RIGHTCUT(ENABLE_CUT),
                             .TECH_CFG_WIDTH(TECH_CFG_WIDTH))
            i0 (.vdd     (vdd),
                .vss     (vss),
@@ -171,9 +173,9 @@ module oh_padring
                             .NVSSIO(EA_VSSIO),
                             .NVDD(EA_VDD),
                             .NVSS(EA_VSS),
-                            .POC(1),
-                            .LEFTCUT(1),
-                            .RIGHTCUT(1),
+                            .POC(ENABLE_POC),
+                            .LEFTCUT(ENABLE_CUT),
+                            .RIGHTCUT(ENABLE_CUT),
                             .TECH_CFG_WIDTH(TECH_CFG_WIDTH))
            i0 (.vdd     (vdd),
                .vss     (vss),
@@ -206,9 +208,9 @@ module oh_padring
                             .NVSSIO(WE_VSSIO),
                             .NVDD(WE_VDD),
                             .NVSS(WE_VSS),
-                            .POC(1),
-                            .LEFTCUT(1),
-                            .RIGHTCUT(1),
+                            .POC(ENABLE_POC),
+                            .LEFTCUT(ENABLE_CUT),
+                            .RIGHTCUT(ENABLE_CUT),
                             .TECH_CFG_WIDTH(TECH_CFG_WIDTH))
 
            i0 (.vdd     (vdd),
