@@ -11,6 +11,13 @@ module oh_pads_corner
    inout 	       vdd, // core supply
    inout 	       vss // common ground
    );
+
+   asic_iocorner i0 (
+     .vddio,
+     .vssio,
+     .vdd,
+     .vss
+   );
   
 endmodule // oh_pads_corner
 
