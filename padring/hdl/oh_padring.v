@@ -30,7 +30,7 @@ module oh_padring
     parameter WE_VSSIO   =  8,
     parameter WE_VDD     =  8,
     parameter WE_VSS     =  8,
-    parameter ENABLE_CUTS = 1,
+    parameter ENABLE_CUT = 1,
     parameter ENABLE_POC  = 1,
     parameter TECH_CFG_WIDTH = 16
     )
