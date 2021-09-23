@@ -14,7 +14,8 @@ module oh_pads_domain
     parameter NVSS     =  8,    // total core ground pads
     parameter POC      =  1,    // 1 = place poc cell
     parameter LEFTCUT  =  1,    // 1 = place cut on left (seen from center)
-    parameter RIGHTCUT =  1     // 1 = place cut on right (seen from center
+    parameter RIGHTCUT =  1,    // 1 = place cut on right (seen from center
+    parameter TECH_CFG_WIDTH = 16
     )
    (//pad
     inout [NGPIO-1:0] 	pad, // pad
@@ -29,7 +30,8 @@ module oh_pads_domain
     output [NGPIO-1:0] 	din, // data from pad
     input [NGPIO-1:0] 	oen, // output enable (bar)
     input [NGPIO-1:0] 	ie, // input enable
-    input [NGPIO*8-1:0] cfg // io config
+    input [NGPIO*8-1:0] cfg, // io config
+    input [NGPIO*TECH_CFG_WIDTH-1:0] tech_cfg // technology-specific config
     );
       
    generate
@@ -58,7 +60,9 @@ module oh_pads_domain
 	       .vss    (vss),
 	       .vddio  (vddio),
 	       .vssio  (vssio),
-	       .pad    (pad[i]));
+	       .pad    (pad[i]),
+	       
+	       .tech_cfg(tech_cfg[i*TECH_CFG_WIDTH+:TECH_CFG_WIDTH]));
 	end
 
       //######################
