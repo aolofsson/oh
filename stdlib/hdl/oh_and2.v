@@ -9,12 +9,12 @@ module oh_and2  #(parameter N  = 1,        // block width
 		  parameter SYN  = "TRUE",    // synthesizable
 		  parameter TYPE = "DEFAULT"  // implementation type
 		  )
-   #(parameter N = 1 ) // array width
    (
     input [N-1:0]  a,
     input [N-1:0]  b,
     output [N-1:0] z
     );
+
    generate
       if(SYN == "TRUE")  begin
 	 assign z = a & b;

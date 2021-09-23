@@ -5,10 +5,9 @@
 //# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module ohr_reg0 #(parameter N = 1            // data width
-		  )
-   ( input           nreset, //async active low reset
-     input 	     clk, // clk, latch when clk=0
+module ohr_reg0 #(parameter N = 1)       // data width
+   ( input          nreset, //async active low reset
+     input 	    clk, // clk, latch when clk=0
      input [N-1:0]  in, // input data
      output [N-1:0] out  // output data (stable/latched when clk=1)
      );
