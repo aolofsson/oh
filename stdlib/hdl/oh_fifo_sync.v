@@ -6,10 +6,9 @@
 //#############################################################################
 
 module oh_fifo_sync
-  #(parameter N       = 32,            // FIFO width
-    parameter DEPTH    = 32,           // FIFO depth
+  #(parameter N        = 8,            // FIFO width
+    parameter DEPTH    = 4,            // FIFO depth
     parameter REG      = 1,            // Register fifo output
-    parameter SYNCPIPE = 2,            // depth of synchronization pipeline
     parameter SYN      = "TRUE",       // synthesizable
     parameter TYPE     = "DEFAULT",    // implementation type
     parameter SHAPE    = "SQUARE",     // hard macro shape (square, tall, wide),
@@ -20,9 +19,8 @@ module oh_fifo_sync
     //basic interface
     input 		clk, // clock
     input 		nreset, //async reset
-    input 		clear, //clear fifo (synchronous)
+    input 		clear, //clear fifo statemachine (sync)
     //write port
-    input 		wr_clk,
     input [N-1:0] 	wr_din, // data to write
     input 		wr_en, // write fifo
     output 		wr_full, // fifo full
@@ -30,7 +28,6 @@ module oh_fifo_sync
     output 		wr_prog_full, //programmable full level
     output reg [AW-1:0] wr_count, // pessimistic report of entries from wr side
     //read port
-    input 		rd_clk,
     output [N-1:0] 	rd_dout, // output data (next cycle)
     input 		rd_en, // read fifo
     output 		rd_empty, // fifo is empty
@@ -118,15 +115,15 @@ module oh_fifo_sync
 		  .TYPE(TYPE),
 		  .SHAPE(SHAPE))
    oh_memory_dp(.wr_wem			({(N){1'b1}}),
+		.wr_clk			(clk),
+		.rd_clk			(clk),
 		/*AUTOINST*/
 		// Outputs
 		.rd_dout		(rd_dout[N-1:0]),
 		// Inputs
-		.wr_clk			(wr_clk),
 		.wr_en			(wr_en),
 		.wr_addr		(wr_addr[AW-1:0]),
 		.wr_din			(wr_din[N-1:0]),
-		.rd_clk			(rd_clk),
 		.rd_en			(rd_en),
 		.rd_addr		(rd_addr[AW-1:0]),
 		.bist_en		(bist_en),
