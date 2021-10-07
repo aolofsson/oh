@@ -49,7 +49,7 @@ module oh_padring
     input [NO_GPIO*8-1:0]  no_cfg, // config
     input [NO_GPIO-1:0]    no_ie, // input enable
     input [NO_GPIO-1:0]    no_oen, // output enable (bar)
-    input [NO_GPIO*TECH_CFG_WIDTH-1:0] no_tech_cfg,
+    inout [NO_GPIO*TECH_CFG_WIDTH-1:0] no_tech_cfg,
     //SOUTH
     inout [SO_DOMAINS-1:0] so_vddio,
     inout [SO_DOMAINS-1:0] so_vssio,
@@ -59,7 +59,7 @@ module oh_padring
     input [SO_GPIO*8-1:0]  so_cfg, // config
     input [SO_GPIO-1:0]    so_ie, // input enable
     input [SO_GPIO-1:0]    so_oen, // output enable (bar)
-    input [SO_GPIO*TECH_CFG_WIDTH-1:0] so_tech_cfg,
+    inout [SO_GPIO*TECH_CFG_WIDTH-1:0] so_tech_cfg,
     //EAST
     inout [EA_DOMAINS-1:0] ea_vddio,
     inout [EA_DOMAINS-1:0] ea_vssio,
@@ -69,7 +69,7 @@ module oh_padring
     input [EA_GPIO*8-1:0]  ea_cfg, // config
     input [EA_GPIO-1:0]    ea_ie, // input enable
     input [EA_GPIO-1:0]    ea_oen, // output enable (bar)
-    input [EA_GPIO*TECH_CFG_WIDTH-1:0] ea_tech_cfg,
+    inout [EA_GPIO*TECH_CFG_WIDTH-1:0] ea_tech_cfg,
     //WEST
     inout [WE_DOMAINS-1:0] we_vddio,
     inout [WE_DOMAINS-1:0] we_vssio,
@@ -79,7 +79,7 @@ module oh_padring
     input [WE_GPIO*8-1:0]  we_cfg, // config
     input [WE_GPIO-1:0]    we_ie, // input enable
     input [WE_GPIO-1:0]    we_oen, // output enable (bar)
-    input [WE_GPIO*TECH_CFG_WIDTH-1:0] we_tech_cfg
+    inout [WE_GPIO*TECH_CFG_WIDTH-1:0] we_tech_cfg
     );
 
 
