@@ -48,7 +48,8 @@ module oh_pads_domain
       for(i=0;i<NGPIO;i=i+1)
 	begin : padio
 	   asic_iobuf #(.DIR(DIR),
-			.TYPE(TYPE))
+			.TYPE(TYPE),
+			.TECH_CFG_WIDTH(TECH_CFG_WIDTH))
 	   i0 (// data to core
 	       .din    (din[i]),
 	       // data from core
