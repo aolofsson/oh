@@ -30,9 +30,10 @@ module oh_padring
     parameter WE_VSSIO   =  8,
     parameter WE_VDD     =  8,
     parameter WE_VSS     =  8,
-    parameter ENABLE_CUTS = 1,
+    parameter ENABLE_CUT = 1,
     parameter ENABLE_POC  = 1,
-    parameter TECH_CFG_WIDTH = 16
+    parameter TECH_CFG_WIDTH = 16,
+    parameter TECH_RING_WIDTH = 8
     )
    (
     //CONTINUOUS GROUND
@@ -48,7 +49,7 @@ module oh_padring
     input [NO_GPIO*8-1:0]  no_cfg, // config
     input [NO_GPIO-1:0]    no_ie, // input enable
     input [NO_GPIO-1:0]    no_oen, // output enable (bar)
-    input [NO_GPIO*TECH_CFG_WIDTH-1:0] no_tech_cfg,
+    inout [NO_GPIO*TECH_CFG_WIDTH-1:0] no_tech_cfg,
     //SOUTH
     inout [SO_DOMAINS-1:0] so_vddio,
     inout [SO_DOMAINS-1:0] so_vssio,
@@ -58,7 +59,7 @@ module oh_padring
     input [SO_GPIO*8-1:0]  so_cfg, // config
     input [SO_GPIO-1:0]    so_ie, // input enable
     input [SO_GPIO-1:0]    so_oen, // output enable (bar)
-    input [SO_GPIO*TECH_CFG_WIDTH-1:0] so_tech_cfg,
+    inout [SO_GPIO*TECH_CFG_WIDTH-1:0] so_tech_cfg,
     //EAST
     inout [EA_DOMAINS-1:0] ea_vddio,
     inout [EA_DOMAINS-1:0] ea_vssio,
@@ -68,7 +69,7 @@ module oh_padring
     input [EA_GPIO*8-1:0]  ea_cfg, // config
     input [EA_GPIO-1:0]    ea_ie, // input enable
     input [EA_GPIO-1:0]    ea_oen, // output enable (bar)
-    input [EA_GPIO*TECH_CFG_WIDTH-1:0] ea_tech_cfg,
+    inout [EA_GPIO*TECH_CFG_WIDTH-1:0] ea_tech_cfg,
     //WEST
     inout [WE_DOMAINS-1:0] we_vddio,
     inout [WE_DOMAINS-1:0] we_vssio,
@@ -78,7 +79,7 @@ module oh_padring
     input [WE_GPIO*8-1:0]  we_cfg, // config
     input [WE_GPIO-1:0]    we_ie, // input enable
     input [WE_GPIO-1:0]    we_oen, // output enable (bar)
-    input [WE_GPIO*TECH_CFG_WIDTH-1:0] we_tech_cfg
+    inout [WE_GPIO*TECH_CFG_WIDTH-1:0] we_tech_cfg
     );
 
 
@@ -87,6 +88,8 @@ module oh_padring
    wire [SO_DOMAINS-1:0]   so_poc;
    wire [WE_DOMAINS-1:0]   we_poc;
    wire [EA_DOMAINS-1:0]   ea_poc;
+
+   wire [TECH_RING_WIDTH-1:0] ring;
 
    generate
       genvar 		  i;
@@ -117,6 +120,7 @@ module oh_padring
                .vddio   (no_vddio[i]),
                .vssio	(no_vssio[i]),
                .poc	(no_poc[i]),
+               .ring(ring),
                // Inputs
                .dout	(no_dout[NO_GPIO-1:0]),
                .oen	(no_oen[NO_GPIO-1:0]),
@@ -151,6 +155,7 @@ module oh_padring
                .vddio   (so_vddio[i]),
                .vssio	(so_vssio[i]),
                .poc	(so_poc[i]),
+               .ring(ring),
                // Inputs
                .dout	(so_dout[SO_GPIO-1:0]),
                .oen	(so_oen[SO_GPIO-1:0]),
@@ -186,6 +191,7 @@ module oh_padring
                .vddio   (ea_vddio[i]),
                .vssio	(ea_vssio[i]),
                .poc	(ea_poc[i]),
+               .ring(ring),
                // Inputs
                .dout	(ea_dout[EA_GPIO-1:0]),
                .oen	(ea_oen[EA_GPIO-1:0]),
@@ -222,6 +228,7 @@ module oh_padring
                .vddio   (we_vddio[i]),
                .vssio	(we_vssio[i]),
                .poc	(we_poc[i]),
+               .ring(ring),
                // Inputs
                .dout	(we_dout[WE_GPIO-1:0]),
                .oen	(we_oen[WE_GPIO-1:0]),
