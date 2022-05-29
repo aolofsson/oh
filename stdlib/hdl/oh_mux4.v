@@ -7,10 +7,10 @@
 
 module oh_mux4 #(parameter N = 1 ) // width of mux
    (
-    input 	    sel3,
-    input 	    sel2,
-    input 	    sel1,
-    input 	    sel0,
+    input 	   sel3,
+    input 	   sel2,
+    input 	   sel1,
+    input 	   sel0,
     input [N-1:0]  in3,
     input [N-1:0]  in2,
     input [N-1:0]  in1,
@@ -19,9 +19,9 @@ module oh_mux4 #(parameter N = 1 ) // width of mux
     );
 
    assign out[N-1:0] = ({(N){sel0}} & in0[N-1:0] |
-			 {(N){sel1}} & in1[N-1:0] |
-			 {(N){sel2}} & in2[N-1:0] |
-			 {(N){sel3}} & in3[N-1:0]);
+			{(N){sel1}} & in1[N-1:0] |
+			{(N){sel2}} & in2[N-1:0] |
+			{(N){sel3}} & in3[N-1:0]);
 
 `ifdef TARGET_SIM
    wire 	    error;

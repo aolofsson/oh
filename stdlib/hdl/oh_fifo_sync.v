@@ -62,12 +62,12 @@ module oh_fifo_sync
    // FIFO Control
    //#########################################################
 
-   assign fifo_read   = rd_en & ~rd_empty;
-   assign fifo_write  = wr_en & ~wr_full;
-   assign almost_full = (wr_count[AW-1:0] == PROGFULL);
-   assign ptr_match   = (wr_addr[AW-1:0] == rd_addr[AW-1:0]);
-   assign full        = ptr_match & (wr_addr[AW]==!rd_addr[AW]);
-   assign fifo_empty  = ptr_match & (wr_addr[AW]==rd_addr[AW]);
+   assign fifo_read      = rd_en & ~rd_empty;
+   assign fifo_write     = wr_en & ~wr_full;
+   assign wr_almost_full = (wr_count[AW-1:0] == PROGFULL);
+   assign ptr_match      = (wr_addr[AW-1:0] == rd_addr[AW-1:0]);
+   assign wr_full        = ptr_match & (wr_addr[AW]==!rd_addr[AW]);
+   assign rd_empty       = ptr_match & (wr_addr[AW]==rd_addr[AW]);
 
    always @ (posedge clk or negedge nreset)
      if(~nreset)
