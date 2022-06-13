@@ -37,24 +37,23 @@ module oh_memory_sp
     );
 
    generate
-      if(SYN == "TRUE") begin: soft
-	 //#########################################
-	 // Generic RAM for synthesis
-	 //#########################################
-	 //local variables
-	 reg [N-1:0]        ram    [0:DEPTH-1];
-	 wire [N-1:0] 	     rdata;
-	 integer 	     i;
+
+      if(SYN == "TRUE") begin: rtl
+	 // Generic RTL RAM
+	 reg [N-1:0] 	   ram    [0:DEPTH-1];
+	 wire [N-1:0] 	   rdata;
+	 integer 	   i;
 
 	 //write port
 	 always @(posedge clk)
 	   for (i=0;i<N;i=i+1)
 	     if (en & wem[i])
                ram[addr[AW-1:0]][i] <= din[i];
+
 	 //read port
 	 assign rdata[N-1:0] = ram[addr[AW-1:0]];
 
-	 //Configurable output register
+	 //configurable output register
 	 reg [N-1:0] 	     rd_reg;
 	 always @ (posedge clk)
 	   if(en)
@@ -63,8 +62,9 @@ module oh_memory_sp
 	 //Drive output from register or RAM directly
 	 assign dout[N-1:0] = (REG==1) ? rd_reg[N-1:0] : rdata[N-1:0];
 
-      end
+      end // block: rtl
       else begin: hard
+	 // Hard macro ASIC RAM
 	 asic_memory_sp #(.N(N),
 			  .DEPTH(DEPTH),
 			  .SHAPE(SHAPE),
