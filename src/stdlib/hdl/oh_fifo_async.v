@@ -14,8 +14,7 @@ module oh_fifo_async
     parameter REG      = 1,            // Register fifo output
     parameter AW       = $clog2(DEPTH),// rd_count width (derived)
     parameter SYNCPIPE = 2,            // depth of synchronization pipeline
-    parameter SYN      = "TRUE",       // synthesizable
-    parameter TYPE     = "DEFAULT",    // implementation type
+    parameter TARGET   = "DEFAULT",    // implementation type
     parameter PROGFULL = DEPTH-1,      // programmable almost full level
     parameter SHAPE    = "SQUARE"      // hard macro shape (square, tall, wide)
     )
@@ -63,19 +62,17 @@ module oh_fifo_async
    wire 		rd_nreset;
    wire 		wr_nreset;
 
-
-
    //###########################
    //# Reset synchronizers
    //###########################
 
-   oh_rsync #(.SYN(SYN),
+   oh_rsync #(.TARGET(TARGET),
 	      .SYNCPIPE(SYNCPIPE))
    wr_rsync (.nrst_out (wr_nreset),
 	     .clk      (wr_clk),
 	     .nrst_in  (nreset));
 
-   oh_rsync #(.SYN(SYN),
+   oh_rsync #(.TARGET(TARGET),
 	      .SYNCPIPE(SYNCPIPE))
    rd_rsync (.nrst_out (rd_nreset),
 	     .clk      (rd_clk),
@@ -116,7 +113,7 @@ module oh_fifo_async
 		.in	(wr_addr[AW:0]));
 
    // synchronize to read clock
-   oh_dsync #(.SYN(SYN),
+   oh_dsync #(.TARGET(TARGET),
 	      .SYNCPIPE(SYNCPIPE))
    wr_sync[AW:0] (.dout   (wr_addr_gray_sync[AW:0]),
 		  .clk    (rd_clk),
@@ -132,7 +129,7 @@ module oh_fifo_async
 		.in    (rd_addr[AW:0]));
 
    //synchronize to wr clock
-   oh_dsync  #(.SYN(SYN),
+   oh_dsync  #(.TARGET(TARGET),
 	       .SYNCPIPE(SYNCPIPE))
    rd_sync[AW:0] (.dout   (rd_addr_gray_sync[AW:0]),
 		  .clk    (wr_clk),
@@ -157,7 +154,7 @@ module oh_fifo_async
    oh_memory_dp #(.N(N),
 		  .DEPTH(DEPTH),
 		  .REG(REG),
-		  .SYN(SYN),
+		  .TARGET(TARGET),
 		  .SHAPE(SHAPE))
    oh_memory_dp(.wr_wem			({(N){1'b1}}),
 		.wr_en                  (fifo_write),

@@ -9,8 +9,7 @@ module oh_memory_dp
   #(parameter N       = 32,           // FIFO width
     parameter DEPTH   = 32,           // FIFO depth
     parameter REG     = 1,            // Register fifo output
-    parameter SYN     = "TRUE",       // hard (macro) or soft (rtl)
-    parameter TYPE    = "DEFAULT",    // pass through variable for hard macro
+    parameter TARGET  = "DEFAULT",    // pass through variable for hard macro
     parameter SHAPE   = "SQUARE",     // hard macro shape (square, tall, wide)
     parameter AW      = $clog2(DEPTH) // rd_count width (derived)
     )
@@ -40,7 +39,7 @@ module oh_memory_dp
     );
 
    generate
-      if(SYN == "TRUE") begin
+      if(TARGET == "DEFAULT") begin
 	 //#########################################
 	 // Generic RAM for synthesis
 	 //#########################################

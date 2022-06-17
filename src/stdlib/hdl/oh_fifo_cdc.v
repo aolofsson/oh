@@ -6,11 +6,10 @@
 //#############################################################################
 
 module oh_fifo_cdc
-  #(parameter N     = 32,           // FIFO width
-    parameter DEPTH = 32,           // FIFO depth
-    parameter SYN   = "TRUE",       // true=synthesizable
-    parameter TYPE  = "DEFAULT",    // true=synthesizable
-    parameter AW    = $clog2(DEPTH) // rd_count width (derived)
+  #(parameter N      = 32,           // fifo width
+    parameter DEPTH  = 32,           // fifo depth
+    parameter TARGET = "DEFAULT",    // synthesis/sim target
+    parameter AW     = $clog2(DEPTH) // rd_count width (derived)
     )
    (
     input 	   nreset,     // async active low reset
@@ -36,8 +35,7 @@ module oh_fifo_cdc
    assign ready_out = ~(wr_almost_full | wr_full | wr_prog_full);
 
    //async asser, sync deassert of reset
-   oh_rsync #(.SYN(SYN),
-	      .TYPE(TYPE))
+   oh_rsync #(.TARGET(TARGET))
    sync_reset(.nrst_out  (nreset_out),
               .clk       (clk_out),
               .nrst_in   (nreset));
@@ -50,7 +48,7 @@ module oh_fifo_cdc
        valid_out <= rd_en;
 
    // parametric async fifo
-   oh_fifo_async  #(.SYN(SYN),
+   oh_fifo_async  #(.TARGET(TARGET),
 		    .N(N),
 		    .DEPTH(DEPTH))
    oh_fifo_async (

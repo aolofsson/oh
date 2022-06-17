@@ -8,8 +8,7 @@
 module oh_dsync
   #(parameter SYNCPIPE = 2,        // number of sync stages
     parameter DELAY    = 0,        // random delay
-    parameter SYN      = "TRUE",   // true=synthesizable
-    parameter TYPE     = "DEFAULT" // scell type/size
+    parameter TARGET   = "DEFAULT" // scell type/size
     )
    (
     input  clk, // clock
@@ -19,7 +18,7 @@ module oh_dsync
     );
 
    generate
-      if(SYN == "TRUE")	begin
+      if(TARGET == "DEFAULT")	begin
 	 reg [SYNCPIPE:0] sync_pipe;
 	 always @ (posedge clk or negedge nreset)
 	   if(!nreset)
@@ -32,8 +31,7 @@ module oh_dsync
       end // block: reg
       else
 	begin
-	   asic_dsync  #(.TYPE(TYPE),
-			 .SYN(SYN),
+	   asic_dsync  #(.TARGET(TARGET),
 			 .SYNCPIPE(SYNCPIPE))
 	   asic_dsync (.clk(clk),
 		       .nreset(nreset),
