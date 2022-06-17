@@ -6,11 +6,13 @@
 //#############################################################################
 
 module oh_random
-  #(parameter N    = 32 //width of counter (max value)
+  #(parameter N    = 32,           //width of counter (max value)
+    parameter SEED = 32'haaaaaaaa //non zero number to start with
     )
    (
     input 	   clk,
     input 	   nreset, //async reset
+    input [N-1:0]  mask, //mask output to limit range
     input 	   en, //enable counter
     output [N-1:0] out  //random output pulse
     );
@@ -30,7 +32,7 @@ module oh_random
    // counter
    always @(posedge clk or negedge nreset)
      if(~nreset)
-       lfsr_reg[N-1:0] <= {(N/2){2'b01}};
+       lfsr_reg[N-1:0] <= SEED;
      else if(en)
        lfsr_reg[N-1:0] <= lfsr_in[N-1:0];
 
@@ -42,7 +44,7 @@ module oh_random
      assign lfsr_in[i] = taps_sel[i] ? (lfsr_reg[i-1] ^ feedback) :
 		         lfsr_reg[i-1];
 
-   assign out[N-1:0] = lfsr_reg[N-1:0];
+   assign out[N-1:0] = mask[N-1:0] & lfsr_reg[N-1:0];
 
 
 endmodule // oh_random
