@@ -1,11 +1,11 @@
  //#############################################################################
-//# Function: Single Ported Memory                                            #
+//# Function: RAM (Single Port)
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
-module oh_memory_sp
+module oh_ram
   #(parameter N       = 32,           // FIFO width
     parameter DEPTH   = 32,           // FIFO depth
     parameter REG     = 1,            // Register fifo output

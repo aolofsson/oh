@@ -151,36 +151,33 @@ module oh_fifo_async
    //# Memory Array
    //###########################
 
-   oh_memory_dp #(.N(N),
+   oh_dpram #(.N(N),
 		  .DEPTH(DEPTH),
 		  .REG(REG),
 		  .TARGET(TARGET),
 		  .SHAPE(SHAPE))
-   oh_memory_dp(.wr_wem			({(N){1'b1}}),
-		.wr_en                  (fifo_write),
-		/*AUTOINST*/
-		// Outputs
-		.rd_dout		(rd_dout[N-1:0]),
-		// Inputs
-		.wr_clk			(wr_clk),
-		.wr_addr		(wr_addr[AW-1:0]),
-		.wr_din			(wr_din[N-1:0]),
-		.rd_clk			(rd_clk),
-		.rd_en			(rd_en),
-		.rd_addr		(rd_addr[AW-1:0]),
-		.bist_en		(bist_en),
-		.bist_we		(bist_we),
-		.bist_wem		(bist_wem[N-1:0]),
-		.bist_addr		(bist_addr[AW-1:0]),
-		.bist_din		(bist_din[N-1:0]),
-		.shutdown		(shutdown),
-		.vss			(vss),
-		.vdd			(vdd),
-		.vddio			(vddio),
-		.memconfig		(memconfig[7:0]),
-		.memrepair		(memrepair[7:0]));
+   oh_dpram(.wr_wem			({(N){1'b1}}),
+	    .wr_en                  (fifo_write),
+	    /*AUTOINST*/
+	    // Outputs
+	    .rd_dout			(rd_dout[N-1:0]),
+	    // Inputs
+	    .wr_clk			(wr_clk),
+	    .wr_addr			(wr_addr[AW-1:0]),
+	    .wr_din			(wr_din[N-1:0]),
+	    .rd_clk			(rd_clk),
+	    .rd_en			(rd_en),
+	    .rd_addr			(rd_addr[AW-1:0]),
+	    .bist_en			(bist_en),
+	    .bist_we			(bist_we),
+	    .bist_wem			(bist_wem[N-1:0]),
+	    .bist_addr			(bist_addr[AW-1:0]),
+	    .bist_din			(bist_din[N-1:0]),
+	    .shutdown			(shutdown),
+	    .vss			(vss),
+	    .vdd			(vdd),
+	    .vddio			(vddio),
+	    .memconfig			(memconfig[7:0]),
+	    .memrepair			(memrepair[7:0]));
 
 endmodule // oh_fifo_async
-// Local Variables:
-// verilog-library-directories:("." "../fpga/" "../dv")
-// End:
