@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Function:  ENOC Command Decoder
- * Author:    Andreas Olofsson                                                
+ * Function:  EMESH Command Decoder
+ * Author:    Andreas Olofsson
  * License:   MIT (see LICENSE file in OH! repository)
  *
- * see ./enoc_pack.v
- * 
+ * see ./emesh_pack.v
+ *
  ******************************************************************************/
-module enoc_decode
+module emesh_decode
   (
    //Packet Command
    input [15:0] cmd_in,
@@ -26,15 +26,15 @@ module enoc_decode
    output [2:0] cmd_size,
    output [7:0] cmd_user
    );
-   
+
    //############################################
    // Command Decode
    //############################################
 
    //Writes
-   assign cmd_write        = ~cmd_in[3];   
+   assign cmd_write        = ~cmd_in[3];
    assign cmd_write_stop   = cmd_in[3:0]==1001;
-   
+
    //Reads/atomics
    assign cmd_read         = cmd_in[3:0]==1000;
    assign cmd_atomic_cas   = cmd_in[3:0]==1011;
@@ -48,8 +48,5 @@ module enoc_decode
    assign cmd_length[3:0]  = cmd_in[7:4];
    assign cmd_size[2:0]    = cmd_in[10:8];
    assign cmd_user[7:0]    = cmd_in[15:8];
-   
+
 endmodule // enoc_decode
-
-
-

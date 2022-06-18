@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Function:  Memory Mapped Transaction --> Packet Converter                                     
- * Author:    Andreas Olofsson                                                
+ * Function:  Memory Mapped Transaction --> Packet Converter
+ * Author:    Andreas Olofsson
  * License:   MIT (see LICENSE file in OH! repository)
  *
  * Documentation:
- * 
+ *
  * The following table shows the field mapping for different AW's:
- * 
+ *
  *  | Packet  | AW16    | AW32     | AW64   | AW128   |
  *  |---------|---------|----------|--------|---------|
  *  | 15:0    | DA,CMD  | CMD      | CMD    | CMD     |
@@ -25,17 +25,17 @@
  *  | 335:304 | ****    | ****     | ****   | D5      |
  *  | 367:336 | ****    | ****     | ****   | D6      |
  *  | 399:368 | ****    | ****     | ****   | D7      |
- * 
+ *
  * The following list shows the widths supported for each AW
- * 
+ *
  *  |Packet         | AW16  | AW32   | AW64   | AW128  |
  *  |---------------|-------|--------|--------|--------|
  *  |minimum        | 40    | 72+8   | 136+8  | 264+8  |
  *  |double/atomics | --    | 104+8  | 200+8  | 392+8  |
- * 
+ *
  * The command field has the following options:
- * 
- * 
+ *
+ *
  *  | Command[15:0]   | 15:11     | 10:8      | 7:4      | 3:0  |
  *  |-----------------|-----------|-----------|----------|------|
  *  | WRITE-START     | USER[7:3] | SIZE[2:0] | LEN[3:0] | 0000 |
@@ -55,7 +55,7 @@
  *  | ATOMIC-AND      | USER[7:3] | SIZE[2:0] | LEN[3:0] | 1101 |
  *  | ATOMIC-OR       | USER[7:3] | SIZE[2:0] | LEN[3:0] | 1110 |
  *  | ATOMIC-XOR      | USER[7:3] | SIZE[2:0] | LEN[3:0] | 1111 |
- * 
+ *
  * SIZE DECODE:
  * 000=8b
  * 001=16b
@@ -65,20 +65,20 @@
  * 101=256b
  * 110=512b
  * 111=1024b
- * 
+ *
  * LENGTH DECODE:
  * 0000=1 beat (single transaction)
  * 0001=2 beat
  * ...
  * 1111=16 beats
- * 
+ *
  * AW32/AW64/AW128 formats are compatible
  * AW16 format is a standalone format not compatible with any other
- * All transactions are LSB aligned  
+ * All transactions are LSB aligned
  * No return address for AW16 (point to point)
- * 
+ *
  ******************************************************************************/
-module enoc_pack
+module emesh_pack
   #(parameter AW = 64,
     parameter PW = 144)
    (
@@ -94,19 +94,19 @@ module enoc_pack
     //Output packet
     output [PW-1:0]  packet_out
     );
-   
+
    //############################################
    // Command Field
    //############################################
    wire [15:0] 	     cmd_out;
 
-   assign cmd_out[3:0]   = opcode_in[3:0];   
+   assign cmd_out[3:0]   = opcode_in[3:0];
    assign cmd_out[7:4]   = length_in[3:0];
    assign cmd_out[10:8]  = size_in[2:0];
    assign cmd_out[15:11] = user_in[7:3];
-   
+
    //Decode (only write indicator needed)
-   enoc_decode enoc_decode (//Inputs
+   emesh_decode enoc_decode (//Inputs
 			    .cmd_in		(cmd_out[15:0]),
 			    // Outputs
 			    .cmd_write		(cmd_write),
@@ -121,7 +121,7 @@ module enoc_pack
 			    .cmd_length		(),
 			    .cmd_size		(),
 			    .cmd_user		());
-   
+
    generate
       //############################
       // 16-Bit ("lite/apb like")
@@ -145,13 +145,13 @@ module enoc_pack
 	 if(PW==80) begin: p80
 	    assign packet_out[15:0]   = cmd_out[15:0];
 	    assign packet_out[47:16]  = dstaddr_in[31:0];
-	    assign packet_out[79:48]  = cmd_write ? data_in[31:0] : 
+	    assign packet_out[79:48]  = cmd_write ? data_in[31:0] :
 					            srcaddr_in[31:0];
 	 end
 	 else if(PW==112) begin: p112
 	    assign packet_out[15:0]    = cmd_out[15:0];
 	    assign packet_out[47:16]   = dstaddr_in[31:0];
-	    assign packet_out[79:48]   = cmd_write ? data_in[31:0] : 
+	    assign packet_out[79:48]   = cmd_write ? data_in[31:0] :
 					             srcaddr_in[31:0];
 	    assign packet_out[111:80]  = data_in[63:32];
 	 end
@@ -167,14 +167,14 @@ module enoc_pack
 	 if(PW==144) begin: p144
 	    assign packet_out[15:0]    = cmd_out[15:0];
 	    assign packet_out[47:16]   = dstaddr_in[31:0];
-	    assign packet_out[111:48]  = cmd_write ? data_in[63:0] : 
+	    assign packet_out[111:48]  = cmd_write ? data_in[63:0] :
 					             srcaddr_in[63:0];
 	    assign packet_out[143:112] = dstaddr_in[63:32];
 	 end
 	 else if(PW==208) begin: p208
 	    assign packet_out[15:0]    = cmd_out[15:0];
 	    assign packet_out[47:16]   = dstaddr_in[31:0];
-	    assign packet_out[111:48]  = cmd_write ? data_in[63:0] : 
+	    assign packet_out[111:48]  = cmd_write ? data_in[63:0] :
 					             srcaddr_in[63:0];
 	    assign packet_out[143:112] = dstaddr_in[63:32];
 	    assign packet_out[207:144] = data_in[127:64];
@@ -191,20 +191,20 @@ module enoc_pack
 	 if(PW==272) begin: p272
 	    assign packet_out[15:0]    = cmd_out[15:0];
 	    assign packet_out[47:16]   = dstaddr_in[31:0];
-	    assign packet_out[111:48]  = cmd_write ? data_in[63:0] : 
+	    assign packet_out[111:48]  = cmd_write ? data_in[63:0] :
 					             srcaddr_in[63:0];
 	    assign packet_out[143:112] = dstaddr_in[63:32];
-	    assign packet_out[207:144] = cmd_write ? data_in[127:64] : 
+	    assign packet_out[207:144] = cmd_write ? data_in[127:64] :
 					             srcaddr_in[127:64];
 	    assign packet_out[271:208] = dstaddr_in[127:64];
 	 end
 	 else if(PW==400) begin: p400
 	    assign packet_out[15:0]    = cmd_out[15:0];
 	    assign packet_out[47:16]   = dstaddr_in[31:0];
-	    assign packet_out[111:48]  = cmd_write ? data_in[63:0] : 
+	    assign packet_out[111:48]  = cmd_write ? data_in[63:0] :
 					             srcaddr_in[63:0];
 	    assign packet_out[143:112] = dstaddr_in[63:32];
-	    assign packet_out[207:144] = cmd_write ? data_in[127:64] : 
+	    assign packet_out[207:144] = cmd_write ? data_in[127:64] :
 					             srcaddr_in[127:64];
 	    assign packet_out[271:208] = dstaddr_in[127:64];
 	    assign packet_out[399:272] = data_in[255:128];
@@ -214,6 +214,5 @@ module enoc_pack
 	      $display ("Combo not supported (PW=%ds AW==%ds)", PW,AW);
 	 end
       end // block: aw128
-   endgenerate  
-endmodule // emesh2packet
-
+   endgenerate
+endmodule // emesh_pack

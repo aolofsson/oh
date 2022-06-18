@@ -1,15 +1,15 @@
 /*******************************************************************************
- * Function:  Packet-->Memory Mapped Transaction Converter                                     
- * Author:    Andreas Olofsson                                                
+ * Function:  Packet-->Memory Mapped Transaction Converter
+ * Author:    Andreas Olofsson
  * License:   MIT (see LICENSE file in OH! repository)
  *
  * Documentation:
- * 
- * see ./enoc_pack.v for packet formatting
- * 
+ *
+ * see ./emesh_pack.v for packet formatting
+ *
  ******************************************************************************/
-module enoc_unpack
-  #(parameter AW = 32,   // address width 
+module emesh_unpack
+  #(parameter AW = 32,   // address width
     parameter PW = 104)  // packet width
    (
     //Input packet
@@ -42,21 +42,21 @@ module enoc_unpack
    // Command Decode
    //############################################
 
-   enoc_decode enoc_decode (//Input
-			    .cmd_in		(cmd[15:0]),
-			    // Outputs
-			    .cmd_write		(cmd_write),
-			    .cmd_write_stop	(cmd_write_stop),
-			    .cmd_read		(cmd_read),
-			    .cmd_cas		(cmd_cas),
-			    .cmd_atomic_add	(cmd_atomic_add),
-			    .cmd_atomic_and	(cmd_atomic_and),
-			    .cmd_atomic_or	(cmd_atomic_or),
-			    .cmd_atomic_xor	(cmd_atomic_xor),
-			    .cmd_opcode		(cmd_opcode[3:0]),
-			    .cmd_user		(cmd_user[7:0]),
-			    .cmd_length		(cmd_length[3:0]),
-			    .cmd_size		(cmd_size[2:0]));
+   emesh_decode emesh_decode (//Input
+			      .cmd_in		(cmd[15:0]),
+			      // Outputs
+			      .cmd_write	(cmd_write),
+			      .cmd_write_stop	(cmd_write_stop),
+			      .cmd_read		(cmd_read),
+			      .cmd_cas		(cmd_cas),
+			      .cmd_atomic_add	(cmd_atomic_add),
+			      .cmd_atomic_and	(cmd_atomic_and),
+			      .cmd_atomic_or	(cmd_atomic_or),
+			      .cmd_atomic_xor	(cmd_atomic_xor),
+			      .cmd_opcode	(cmd_opcode[3:0]),
+			      .cmd_user		(cmd_user[7:0]),
+			      .cmd_length	(cmd_length[3:0]),
+			      .cmd_size		(cmd_size[2:0]));
    generate
       //######################
       // 16-Bit ("lite/apb like")
@@ -83,7 +83,7 @@ module enoc_unpack
 	   assign dstaddr[31:0] = packet_in[47:16];
 	   assign srcaddr[31:0] = packet_in[79:48];
 	   assign data[31:0]    = packet_in[79:48];
-	   assign data[63:32]   = 32'b0;	
+	   assign data[63:32]   = 32'b0;
 	end
 	else if(PW==112) begin: p112
 	   assign cmd[15:0]     = packet_in[15:0];
@@ -106,7 +106,7 @@ module enoc_unpack
 	    assign srcaddr[63:0]  = packet_in[111:48];
 	    assign data[127:0]    = packet_in[111:48];
 	    assign dstaddr[63:32] = packet_in[143:112];
-	    assign data[127:64]   = 64'b0;	
+	    assign data[127:64]   = 64'b0;
 	 end
 	 else if(PW==208) begin: p208
 	    assign cmd[15:0]      = packet_in[15:0];
@@ -134,7 +134,7 @@ module enoc_unpack
 	   assign data[127:64]    = packet_in[207:144];
 	   assign srcaddr[127:64] = packet_in[207:144];
 	   assign dstaddr[127:64] = packet_in[271:208];
-	   assign data[255:128]   = 128'b0;	   
+	   assign data[255:128]   = 128'b0;
 	 end
 	else if(PW==400) begin: p400
 	   assign cmd[15:0]       = packet_in[15:0];
@@ -152,10 +152,6 @@ module enoc_unpack
 	     $display ("Combo not supported (PW=%ds AW==%ds)", PW,AW);
 	end
       end // block: aw128
-   endgenerate  
+   endgenerate
 
 endmodule // enoc_unpack
-
-
-
-
