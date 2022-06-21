@@ -19,22 +19,21 @@ module oh_pads_domain
     parameter TECH_RING_WIDTH = 8
     )
    (//pad
-    inout [NGPIO-1:0] 	pad, // pad
+    inout [NGPIO-1:0] 		     pad, // pad
     //feed through signals
-    inout 		vddio, // io supply
-    inout 		vssio, // io ground
-    inout 		vdd, // core supply
-    inout 		vss, // common ground
-    inout 		poc, // power-on-ctrl
-
-    inout [TECH_RING_WIDTH-1:0] ring,
+    inout 			     vddio, // io supply
+    inout 			     vssio, // io ground
+    inout 			     vdd, // core supply
+    inout 			     vss, // common ground
+    inout 			     poc, // power-on-ctrl
+    inout [TECH_RING_WIDTH-1:0]      ring,
 
     //core facing signals
-    input [NGPIO-1:0] 	dout, // data to drive to pad
-    output [NGPIO-1:0] 	din, // data from pad
-    input [NGPIO-1:0] 	oen, // output enable (bar)
-    input [NGPIO-1:0] 	ie, // input enable
-    input [NGPIO*8-1:0] cfg, // io config
+    input [NGPIO-1:0] 		     dout, // data to drive to pad
+    output [NGPIO-1:0] 		     din, // data from pad
+    input [NGPIO-1:0] 		     oen, // output enable (bar)
+    input [NGPIO-1:0] 		     ie, // input enable
+    input [NGPIO*8-1:0] 	     cfg, // io config
     inout [NGPIO*TECH_CFG_WIDTH-1:0] tech_cfg // technology-specific config
     );
 
@@ -179,6 +178,3 @@ endmodule
 // Local Variables:
 // verilog-library-directories:("." )
 // End:
-
-
-

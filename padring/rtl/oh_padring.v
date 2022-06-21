@@ -31,14 +31,13 @@ module oh_padring
     parameter WE_VDD     =  8,
     parameter WE_VSS     =  8,
     parameter ENABLE_CUT = 1,
-    parameter ENABLE_POC  = 1,
-    parameter TECH_CFG_WIDTH = 16,
+    parameter ENABLE_POC = 1,
+    parameter TECH_CFG_WIDTH  = 16,
     parameter TECH_RING_WIDTH = 8
     )
    (
     //CONTINUOUS GROUND
     inout 		   vss,
-
     inout 		   vdd,
     //NORTH
     inout [NO_DOMAINS-1:0] no_vddio,
@@ -81,7 +80,6 @@ module oh_padring
     input [WE_GPIO-1:0]    we_oen, // output enable (bar)
     inout [WE_GPIO*TECH_CFG_WIDTH-1:0] we_tech_cfg
     );
-
 
    //Local wires
    wire [NO_DOMAINS-1:0]   no_poc;
