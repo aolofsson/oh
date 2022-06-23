@@ -29,6 +29,15 @@ module oh_fifo_cdc
     output 	   empty      // fifo is empty
     );
 
+   // wire declarations
+   wire   wr_en;
+   wire   rd_en;
+   wire   rd_empty;
+   wire   wr_almost_full;
+   wire   wr_full;
+   wire   wr_prog_full;
+   wire   nreset_out;
+
    // FIFO control logic
    assign wr_en    = valid_in;
    assign rd_en    = ~empty & ready_in;
@@ -62,8 +71,8 @@ module oh_fifo_cdc
 		  .vddio                (1'b1),
 		  .vdd                  (1'b0),
 		  .vss                  (1'b0),
-		  .bist_en		(bist_en),
-		  .bist_we		(bist_we),
+		  .bist_en		(1'b0),
+		  .bist_we		(1'b0),
 		  .bist_wem		({(N){1'b0}}),
 		  .bist_addr		({(AW){1'b0}}),
 		  .bist_din		({(N){1'b0}}),
