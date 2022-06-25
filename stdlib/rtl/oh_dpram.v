@@ -14,28 +14,28 @@ module oh_dpram
     parameter AW      = $clog2(DEPTH) // rd_count width (derived)
     )
    (// Memory interface (dual port)
-    input 	    wr_clk, //write clock
-    input 	    wr_en, //write enable
+    input 	   wr_clk, //write clock
+    input 	   wr_en, //write enable
     input [N-1:0]  wr_wem, //per bit write enable
-    input [AW-1:0]  wr_addr,//write address
+    input [AW-1:0] wr_addr,//write address
     input [N-1:0]  wr_din, //write data
-    input 	    rd_clk, //read clock
-    input 	    rd_en, //read enable
-    input [AW-1:0]  rd_addr,//read address
+    input 	   rd_clk, //read clock
+    input 	   rd_en, //read enable
+    input [AW-1:0] rd_addr,//read address
     output [N-1:0] rd_dout,//read output data
     // BIST interface
-    input 	    bist_en, // bist enable
-    input 	    bist_we, // write enable global signal
+    input 	   bist_en, // bist enable
+    input 	   bist_we, // write enable global signal
     input [N-1:0]  bist_wem, // write enable vector
-    input [AW-1:0]  bist_addr, // address
+    input [AW-1:0] bist_addr, // address
     input [N-1:0]  bist_din, // data input
     // Power/repair (hard macro only)
-    input 	    shutdown, // shutdown signal
-    input 	    vss, // ground signal
-    input 	    vdd, // memory array power
-    input 	    vddio, // periphery/io power
-    input [7:0]     memconfig, // generic memory config
-    input [7:0]     memrepair // repair vector
+    input 	   shutdown, // shutdown signal
+    input 	   vss, // ground signal
+    input 	   vdd, // memory array power
+    input 	   vddio, // periphery/io power
+    input [7:0]    memconfig, // generic memory config
+    input [7:0]    memrepair // repair vector
     );
 
    generate
@@ -45,8 +45,8 @@ module oh_dpram
 	 //#########################################
 	 //local variables
 	 reg [N-1:0]        ram    [0:DEPTH-1];
-	 wire [N-1:0] 	     rdata;
-	 integer 	     i;
+	 wire [N-1:0] 	    rdata;
+	 integer 	    i;
 
 	 //write port
 	 always @(posedge wr_clk)

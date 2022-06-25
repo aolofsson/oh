@@ -12,7 +12,7 @@ module oh_random
    (
     input 	   clk,
     input 	   nreset, //async reset
-    input [N-1:0]  mask, //mask output to limit range
+    input [N-1:0]  mask, //mask output (1 = active)
     input 	   en, //enable counter
     output [N-1:0] out  //random output pulse
     );
@@ -26,7 +26,6 @@ module oh_random
       case(N)
 	32: assign taps_sel[31:0] = 32'h80000057<<1;
       endcase // case (N)
-
    endgenerate
 
    // counter

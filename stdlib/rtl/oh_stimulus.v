@@ -8,25 +8,25 @@
 // 3. Drive out all valid packets sequentially
 
 module oh_stimulus
-  #( parameter DW        = 64,      // Stimulus packet width
-     parameter DEPTH     = 1024,    // Memory depth
-     parameter CW        = 16,      // bit[0]=valid, [CW-1:1]=timestamp
-     parameter MW        = DW + CW, // Memory width (derived)
-     parameter FILENAME  = "NONE"   // Simulus hexfile for $readmemh
+  #( parameter PW       = 80,        // stimulus packet width
+     parameter CW       = 16,        // bit[0]=valid, [CW-1:1]=timestamp
+     parameter DEPTH    = 8192,      // Memory depth
+     parameter TARGET   = "DEFAULT", // pass through variable for hard macro
+     parameter FILENAME = "NONE"     // Simulus hexfile for $readmemh
      )
    (
     // External stimulus load port
-    input 	    nreset, // async reset
-    input 	    ext_start, // Start driving stimulus
-    input 	    ext_clk,// External clock for write path
-    input 	    ext_valid, // Valid packet for memory
-    input [MW-1:0]  ext_packet, // Packet for memory
+    input 	       nreset, // async reset
+    input 	       go, // Start driving stimulus
+    input 	       ext_clk,// External clock for write path
+    input 	       ext_valid, // Valid packet for memory
+    input [PW-1:0]     ext_packet, // Packet for memory
     // DUT drive port
-    input 	    dut_clk, // DUT side clock
-    input 	    dut_ready, // DUT ready signal
-    output 	    stim_valid, // Packet valid
-    output [DW-1:0] stim_packet, // Packet data
-    output 	    stim_done // Signals that stimulus is done
+    input 	       dut_clk, // DUT side clock
+    input 	       dut_ready, // DUT ready signal
+    output 	       stim_valid, // Packet valid
+    output [PW-CW-1:0] stim_packet, // packet to DUT
+    output 	       stim_done // Signals that stimulus is done
     );
 
    // memory parameters
@@ -39,16 +39,15 @@ module oh_stimulus
    localparam STIM_DONE    = 2'b11;
 
    // Local values
-   reg [MW-1:0]       ram[0:DEPTH-1];
    reg [1:0] 	      rd_state;
    reg [MAW-1:0]      wr_addr;
    reg [MAW-1:0]      rd_addr;
    reg [1:0] 	      sync_pipe;
    reg 		      mem_read;
-   reg [MW-1:0]       mem_data;
    reg [CW:0] 	      rd_delay;
    wire 	      dut_start;
    wire 	      valid_packet;
+   wire [PW-1:0]      mem_data;
 
    //#################################
    // Init memory if configured
@@ -58,7 +57,7 @@ module oh_stimulus
 	initial
 	  begin
 	     $display("Driving stimulus from %s", FILENAME);
-	     $readmemh(FILENAME, ram);
+	     $readmemh(FILENAME, ram.ram);
 	  end
    endgenerate
 
@@ -77,7 +76,7 @@ module oh_stimulus
      if(!nreset)
        sync_pipe[1:0] <= 'b0;
      else
-       sync_pipe[1:0] <= {sync_pipe[0],ext_start};
+       sync_pipe[1:0] <= {sync_pipe[0],go};
 
    assign dut_start = sync_pipe[1];
 
@@ -114,28 +113,47 @@ module oh_stimulus
 	   end
        endcase // case (rd_state[1:0])
 
-   //Output Driver
-   assign stim_done    = (rd_state[1:0] == STIM_DONE);
+   // pipeline to match sram pipeline
+   always @ (posedge dut_clk)
+     mem_read <= (rd_state==STIM_ACTIVE); //mem-cycle adjust
+
+   //  output drivesrs
    assign valid_packet = (CW==0) | mem_data[0];
+   assign stim_done    = (rd_state[1:0] == STIM_DONE);
+   assign stim_valid   = valid_packet & mem_read & ~stim_done;
+   assign stim_packet  = mem_data[PW-1:CW];
 
    //#################################
    // RAM
    //#################################
 
-   //write port
-   always @(posedge ext_clk)
-     if(ext_valid)
-       ram[wr_addr[MAW-1:0]] <= ext_packet[MW-1:0];
+   oh_dpram #(.N(PW),
+	      .DEPTH(DEPTH),
+	      .TARGET(TARGET))
+   ram(
+       // write port
+       .wr_clk		(ext_clk),
+       .wr_en		(ext_valid),
+       .wr_wem		({(PW){1'b1}}),
+       .wr_addr		(wr_addr[MAW-1:0]),
+       .wr_din		(ext_packet[PW-1:0]),
+       // read port
+       .rd_dout		(mem_data[PW-1:0]),
+       // Inputs
+       .rd_clk		(dut_clk),
+       .rd_en		(1'b1),
+       .rd_addr		(rd_addr[MAW-1:0]),
+       // disable asic signals
+       .bist_en		(1'b0),
+       .bist_we		(1'b0),
+       .bist_wem	({(PW){1'b0}}),
+       .bist_addr	({(MAW){1'b0}}),
+       .bist_din	({(PW){1'b0}}),
+       .memconfig	(8'b0),
+       .memrepair	(8'b0),
+       .vss		(1'b0),
+       .vdd		(1'b1),
+       .vddio		(1'b1),
+       .shutdown	(1'b0));
 
-   //read port
-   always @ (posedge dut_clk)
-     begin
-	mem_data[MW-1:0] <= ram[rd_addr[MAW-1:0]];
-	mem_read         <= (rd_state==STIM_ACTIVE); //mem-cycle adjust
-     end
-
-   //Shut off access immediately, but pipeline delay by one cycle
-   assign stim_valid  = valid_packet & mem_read & ~stim_done;
-   assign stim_packet = mem_data[MW-1:CW];
-
-endmodule // stimulus
+endmodule // oh_stimulus
