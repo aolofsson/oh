@@ -1,43 +1,58 @@
-module testbench();
+//#############################################################################
+//# Function: DUT wrapper
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        #
+//#############################################################################
 
-   localparam N = 32;
+module tb_dut
+  #(parameter PW              = 256,      // packet width
+    parameter N               = 32,       // ctrl/status width
+    parameter SEED            = 0,        // random seed
+    parameter TARGET          = "DEFAULT" // physical synthesis/sim target
+    )
+   (// basic test interface
+    input 	    clk, // standard clock used for interface
+    input 	    fastclk, // fast clock (optional for core)
+    input 	    slowclk, // fast clock (optional for core)
+    input 	    nreset, // async active low reset
+    input 	    go, // go dut (if not self-booting)
+    input [N-1:0]   ctrl, // env generic ctrl vector
+    // environment packet interface
+    input 	    valid, // env packet valid signal
+    input [PW-1:0]  packet, // env packet to drive
+    input 	    ready, // env is ready for packet
+    // dut status signals
+    output 	    dut_active, // dut reset sequence done
+    output 	    dut_error, // per cycle error signal
+    output 	    dut_done, // dut is done
+    output [N-1:0]  dut_status, // dut generic status vector
+    // dut response packets
+    output 	    dut_valid, //dut packet valid signal
+    output [PW-1:0] dut_packet, // dut packet to drive
+    output 	    dut_ready // dut is ready for packet
+    );
+
+   // wrapper signals (not used for this one)
+   assign dut_active = 1'b1;
+   assign dut_ready  = 1'b1;
+   assign dut_error  = 1'b0;
+   assign dut_done   = 1'b0;
+   assign dut_valid  = 1'b0;
 
    /*AUTOINPUT*/
    /*AUTOWIRE*/
-   // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			clk1;			// From oh_simctrl of oh_simctrl.v
-   wire			clk2;			// From oh_simctrl of oh_simctrl.v
-   wire			nreset;			// From oh_simctrl of oh_simctrl.v
-   wire [N-1:0]		out;			// From oh_random of oh_random.v
-   wire			start;			// From oh_simctrl of oh_simctrl.v
-   wire			vdd;			// From oh_simctrl of oh_simctrl.v
-   wire			vss;			// From oh_simctrl of oh_simctrl.v
-   // End of automatics
-
-   oh_random #(.N(N))
-   oh_random(.en		(1'b1),
-	     .clk		(clk1),
+   oh_random #(.N(N),
+	       .SEED(SEED))
+   oh_random(.en	(go),
+	     .mask	({(N){1'b1}}),
+	     .out	(dut_status[N-1:0]),
 	     /*AUTOINST*/
-	     // Outputs
-	     .out			(out[N-1:0]),
 	     // Inputs
+	     .clk			(clk),
 	     .nreset			(nreset));
-
-   oh_simctrl oh_simctrl(//TODO: implement
-			.stim_done	(1'b0),
-			.test_done	(1'b0),
-			.test_diff	(1'b0),
-			.dut_active     (1'b1),
-			/*AUTOINST*/
-			 // Outputs
-			 .nreset		(nreset),
-			 .clk1			(clk1),
-			 .clk2			(clk2),
-			 .start			(start),
-			 .vdd			(vdd),
-			 .vss			(vss));
 
 endmodule // tb
 // Local Variables:
-// verilog-library-directories:("." "../hdl")
+// verilog-library-directories:("." "../rtl")
 // End:

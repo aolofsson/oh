@@ -1,24 +1,24 @@
 //#############################################################################
-//# Function: Common testbench to run in Simulator of FPGA                    #
+//# Function: Common testbench for simulator and fpga                         #
 //#############################################################################
 //# Author:   Andreas Olofsson                                                #
 //# License:  MIT (see LICENSE file in OH! repository)                        #
 //#############################################################################
 
 module testbench
-  #(parameter PW              = 256,      // packet width
-    parameter CW              = 16,       // control width
-    parameter N               = 36,       // ctrl/status width
-    parameter PERIOD_CLK      = 10,       // core clock period
-    parameter PERIOD_FASTCLK  = 20,       // fast clock period
-    parameter PERIOD_SLOWCLK  = 20,       // slow clock period
-    parameter TIMEOUT         = 5000,     // timeout value
-    parameter RANDOMIZE       = 0,        // 1=randomize period
-    parameter SIMULATE        = 1,        // 1=VERILOG SIM
-    parameter FILENAME        = "NONE",   // Simulus hexfile for $readmemh
-    parameter DEPTH           = 8192,     // Simulus memory depth
-
-    parameter TARGET          = "DEFAULT" // physical synthesis/sim target
+  #(parameter PW             = 256,         // packet width
+    parameter CW             = 16,         // control width
+    parameter N              = 32,          // ctrl/status width
+    parameter PERIOD_CLK     = 10,          // core clock period
+    parameter PERIOD_FASTCLK = 20,          // fast clock period
+    parameter PERIOD_SLOWCLK = 20,          // slow clock period
+    parameter TIMEOUT        = 5000,        // timeout value
+    parameter RANDOMIZE      = 0,           // 1=randomize period
+    parameter SIMULATE       = 1,           // 1=VERILOG SIM
+    parameter FILENAME       = "NONE",      // Simulus hexfile for $readmemh
+    parameter DEPTH          = 8192,        // simulus memory depth
+    parameter SEED           = 32'haaaaaaaa,// seed for random generation
+    parameter TARGET         = "DEFAULT"    // physical synthesis/sim target
     )
    (
     // control signals to drive
@@ -111,6 +111,7 @@ module testbench
 	  */
    tb_dut #(.PW(PW),
 	    .N(N),
+	    .SEED(SEED),
 	    .TARGET(TARGET))
    tb_dut(.valid		(tb_valid),
 	  .packet		(tb_packet[PW-1:0]),
