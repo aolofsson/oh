@@ -1,143 +1,140 @@
-/* verilator lint_off STMTDLY */
-module oh_simctrl #( parameter CFG_CLK1_PERIOD = 10,
-		     parameter CFG_CLK2_PERIOD = 20,
-		     parameter CFG_TIMEOUT     = 5000
-		     )
+//#############################################################################
+//# Function: Simulation control (clk/reset/go/finish)
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        #
+//#############################################################################
+
+module oh_simctrl
+  #( parameter PERIOD_CLK      = 10,   // core clock period
+     parameter PERIOD_FASTCLK  = 20,   // fast clock period
+     parameter PERIOD_SLOWCLK  = 20,   // slow clock period
+     parameter TIMEOUT         = 5000, // timeout value
+     parameter RANDOMIZE       = 0     // randomize period
+     )
    (
     //control signals to drive
-    output nreset, // async active low reset
-    output clk1, // main clock
-    output clk2, // secondary clock
-    output start, // start test (level)
-    output vdd, // driving vdd
-    output vss, // driving vss
+    output reg nreset, // async active low reset
+    output reg clk, // main clock
+    output reg fastclk, // second(fast) clock
+    output reg slowclk, // third (slow) clock
+    output reg go, // start test (level)
     //input from testbench
-    input  dut_active, // dut  reset sequence is done
-    input  stim_done, // stimulus is done
-    input  test_done, // test is done
-    input  test_diff  // diff between dut and reference
+    input      dut_active, // dut reset sequence is done
+    input      dut_done, // dut/tb signaled done
+    input      dut_error // dut/tb per cycle error
     );
 
-
-   localparam CFG_CLK1_PHASE  = CFG_CLK1_PERIOD/2;
-   localparam CFG_CLK2_PHASE  = CFG_CLK2_PERIOD/2;
-
    //signal declarations
-   reg 	     vdd;
-   reg 	     vss;
-   reg 	     nreset;
-   reg 	     start;
-   reg 	     clk1=0;
-   reg 	     clk2=0;
-   reg [6:0] clk1_phase;
-   reg [6:0] clk2_phase;
-   reg 	     test_fail;
-   integer   seed,r;
-   reg [1023:0] testname;
+   reg [6:0]   clk_phase;
+   reg [6:0]   fastclk_phase;
+   reg [6:0]   slowclk_phase;
+   reg 	       fail;
+   integer     seed,r;
 
    //#################################
    // CONFIGURATION
    //#################################
-   initial
-     begin
-	r=$value$plusargs("TESTNAME=%s", testname[1023:0]);
-	$timeformat(-9, 0, " ns", 20);
-     end
 
-`ifndef VERILATOR
    initial
      begin
+	$timeformat(-9, 0, " ns", 20);
 	$dumpfile("waveform.vcd");
 	$dumpvars(0, testbench);
      end
-`endif
+
 
    //#################################
-   // RANDOM NUMBER GENERATOR
-   // (SEED SUPPLIED EXERNALLY)
-   //#################################
-   initial
-     begin
-	r=$value$plusargs("SEED=%s", seed);
-	//$display("SEED=%d", seed);
-`ifdef CFG_RANDOM
-	clk1_phase = 1 + {$random(seed)}; //generate random values
-	clk2_phase = 1 + {$random(seed)}; //generate random values
-`else
-	clk1_phase = CFG_CLK1_PHASE;
-	clk2_phase = CFG_CLK2_PHASE;
-`endif
-	//$display("clk1_phase=%d clk2_phase=%d", clk1_phase,clk2_phase);
-     end
-
-   //#################################
-   //CLK GENERATORS
-   //#################################
-
-   always
-     #(clk1_phase) clk1 = ~clk1;
-
-   always
-     #(clk2_phase) clk2 = ~clk2;
-
-   //#################################
-   //ASYNC
+   // RESET/STARUP
    //#################################
 
    initial
      begin
 	#(1)
 	nreset   = 'b0;
-	vdd      = 'b0;
-	vss      = 'b0;
-	#(clk1_phase * 10 + 10)   //ramping voltage
-	vdd      = 'bx;
-	#(clk1_phase * 10 + 10)   //voltage is safe
-	vdd      = 'b1;
-	#(clk1_phase * 40 + 10)   //hold reset for 20 clk cycles
+	clk      = 'b0;
+	fastclk  = 'b0;
+	slowclk  = 'b0;
+	#(clk_phase * 40 + 10)   //hold reset a while
 	nreset   = 'b1;
      end
 
    //#################################
-   //SYNCHRONOUS STIMULUS
+   // CLK GENERATORS
    //#################################
 
-   //START TEST
-   always @ (posedge clk1 or negedge nreset)
-     if(!nreset)
-       start <= 1'b0;
-     else if(dut_active & ~start)
-       begin
-	  $display("-------------------");
-	  $display("TEST %0s STARTED", testname);
-	  start <= 1'b1;
-       end
+   generate
+      if (RANDOMIZE) begin
+	 initial
+	   begin
+	      r=$value$plusargs("SEED=%s", seed);
+	      clk_phase = 1 + {$random(seed)}; //generate random values
+	      fastclk_phase = 1 + {$random(seed)}; //generate random values
+	      slowclk_phase = 1 + {$random(seed)}; //generate random values
+	   end
+      end
+      else begin
+	 initial begin
+	    clk_phase     = PERIOD_CLK/2;
+	    fastclk_phase = PERIOD_FASTCLK/2;
+	    slowclk_phase = PERIOD_SLOWCLK/2;
+	 end
+      end
+   endgenerate
 
-   //STOP SIMULATION ON END
-   always @ (posedge clk1 or negedge nreset)
+   always
+     #(clk_phase) clk = ~clk;
+
+   always
+     #(fastclk_phase) fastclk = ~fastclk;
+
+   always
+     #(slowclk_phase) slowclk = ~slowclk;
+
+   //#################################
+   // "GO"
+   //#################################
+
+   // start test
+   always @ (posedge clk or negedge nreset)
      if(!nreset)
-       test_fail <= 1'b0;
-     else if(stim_done & test_done)
+       go <= 1'b0;
+     else if(dut_active & ~go)
+       go <= 1'b1;
+
+   //#################################
+   // STICKY ERROR FLAG
+   //#################################
+
+   always @ (posedge clk or negedge nreset)
+     if(!nreset)
+       fail <= 1'b0;
+     else if (dut_error & dut_active)
+       fail <= 1'b1;
+
+   //#################################
+   // END OF TEST
+   //#################################
+
+   always @ (posedge clk)
+     if(dut_done)
        begin
 	  #500
-	  $display("-------------------");
-	  if(test_fail | test_diff)
-	    $display("TEST %0s FAILED", testname);
-	  else
-	    $display("TEST %0s PASSED", testname);
+	    if(fail)
+	      $display("[OH] DUT FAILED");
+	    else
+	      $display("[OH] DUT PASSED");
 	  $finish;
        end
-     else if (test_diff)
-       test_fail <= 1'b1;
 
    //#################################
    // TIMEOUT
    //#################################
    initial
      begin
-	#(CFG_TIMEOUT)
-	$display("TEST %0s FAILED ON TIMEOUT",testname);
+	#(TIMEOUT)
+	$display("[OH] DUT TIMEOUT");
 	$finish;
      end
 
-endmodule // oh_simctrl
+endmodule
