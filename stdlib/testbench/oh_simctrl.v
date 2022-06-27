@@ -6,31 +6,36 @@
 //#############################################################################
 
 module oh_simctrl
-  #( parameter PERIOD_CLK      = 10,   // core clock period
-     parameter PERIOD_FASTCLK  = 20,   // fast clock period
-     parameter PERIOD_SLOWCLK  = 20,   // slow clock period
-     parameter TIMEOUT         = 5000, // timeout value
-     parameter RANDOMIZE       = 0     // randomize period
-     )
+  #(parameter TIMEOUT         = 5000, // timeout value (cycles)
+    parameter PERIOD_CLK      = 10,   // core clock period
+    parameter PERIOD_FASTCLK  = 20,   // fast clock period
+    parameter PERIOD_SLOWCLK  = 20,   // slow clock period
+    parameter RANDOM_CLK       = 0,   // randomize clock
+    parameter RANDOM_DATA      = 0    // randomize data
+    )
    (
     //control signals to drive
-    output reg nreset, // async active low reset
-    output reg clk, // main clock
-    output reg fastclk, // second(fast) clock
-    output reg slowclk, // third (slow) clock
-    output reg go, // start test (level)
+    output reg 	     nreset, // async active low reset
+    output reg 	     clk, // main clock
+    output reg 	     fastclk, // second(fast) clock
+    output reg 	     slowclk, // third (slow) clock
+    output reg [2:0] mode, //0=idle,1=load,2=go,3=rng,4=bypass
     //input from testbench
-    input      dut_active, // dut reset sequence is done
-    input      dut_done, // dut/tb signaled done
-    input      dut_error // dut/tb per cycle error
+    input 	     dut_fail, // dut fail indicator
+    input 	     dut_done // dut/tb signaled done
     );
+
+   // TODO: parametrize?
+   localparam TIME_RESET = 50;
+   localparam TIME_WAIT  = 50;
+   localparam TIME_LOAD  = 50;
 
    //signal declarations
    reg [6:0]   clk_phase;
    reg [6:0]   fastclk_phase;
    reg [6:0]   slowclk_phase;
-   reg 	       fail;
-   integer     seed,r;
+   integer     seed, r;
+   wire [2:0]  gomode;
 
    //#################################
    // CONFIGURATION
@@ -39,14 +44,17 @@ module oh_simctrl
    initial
      begin
 	$timeformat(-9, 0, " ns", 20);
-	$dumpfile("waveform.vcd");
-	$dumpvars(0, testbench);
      end
 
-
    //#################################
-   // RESET/STARUP
+   // RESET/STARTUP SEQUENCE
    //#################################
+   generate
+      if (RANDOM_DATA)
+	assign gomode = 3'b011;//rng
+      else
+  	assign gomode = 3'b010;//stim data
+   endgenerate
 
    initial
      begin
@@ -55,22 +63,27 @@ module oh_simctrl
 	clk      = 'b0;
 	fastclk  = 'b0;
 	slowclk  = 'b0;
-	#(clk_phase * 40 + 10)   //hold reset a while
+	mode     = 3'b0;
+	#(clk_phase * TIME_RESET)  //hold reset a while
 	nreset   = 'b1;
-     end
+	#(clk_phase * TIME_WAIT)
+	mode     = 3'b001;    // load stimulus
+	#(clk_phase * TIME_LOAD)
+	mode     = gomode;
+     end // initial begin
 
    //#################################
    // CLK GENERATORS
    //#################################
 
    generate
-      if (RANDOMIZE) begin
+      if (RANDOM_CLK) begin
 	 initial
 	   begin
-	      r=$value$plusargs("SEED=%s", seed);
-	      clk_phase = 1 + {$random(seed)}; //generate random values
-	      fastclk_phase = 1 + {$random(seed)}; //generate random values
-	      slowclk_phase = 1 + {$random(seed)}; //generate random values
+	      //TODO: improve
+	      clk_phase     = $urandom_range(50,50);
+	      fastclk_phase = $urandom_range(500,50);
+	      slowclk_phase = $urandom_range(50,1);
 	   end
       end
       else begin
@@ -92,27 +105,6 @@ module oh_simctrl
      #(slowclk_phase) slowclk = ~slowclk;
 
    //#################################
-   // "GO"
-   //#################################
-
-   // start test
-   always @ (posedge clk or negedge nreset)
-     if(!nreset)
-       go <= 1'b0;
-     else if(dut_active & ~go)
-       go <= 1'b1;
-
-   //#################################
-   // STICKY ERROR FLAG
-   //#################################
-
-   always @ (posedge clk or negedge nreset)
-     if(!nreset)
-       fail <= 1'b0;
-     else if (dut_error & dut_active)
-       fail <= 1'b1;
-
-   //#################################
    // END OF TEST
    //#################################
 
@@ -120,10 +112,10 @@ module oh_simctrl
      if(dut_done)
        begin
 	  #500
-	    if(fail)
-	      $display("[OH] DUT FAILED");
+	    if(dut_fail)
+	      $display("[OH] DUT TEST FAILED");
 	    else
-	      $display("[OH] DUT PASSED");
+	      $display("[OH] DUT TEST PASSED");
 	  $finish;
        end
 
@@ -133,7 +125,7 @@ module oh_simctrl
    initial
      begin
 	#(TIMEOUT)
-	$display("[OH] DUT TIMEOUT");
+	$display("[OH] DUT TEST TIMEOUT");
 	$finish;
      end
 
