@@ -83,7 +83,7 @@ module oh_stimulus
 	     .mask	({(PW){1'b1}}),
 	     .taps	({(PW){1'b1}}),
 	     .entaps	(1'b0),
-	     .en	(go),
+	     .en	(stim_valid),
 	     .seed      (seed),
 	     /*AUTOINST*/
 	     // Inputs
