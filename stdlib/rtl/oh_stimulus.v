@@ -1,11 +1,9 @@
-// A stimulus file provides inputs signals to the design under test (DUT).
-// This stimulus module is designed to be compatible with verilog simulators,
-// emulators, and FPGA prototyping. This is akin to a simple test vector generator
-//
-// Test Process:
-// 1. Zero out memory (or write program)
-// 2. Set go signal
-// 3. Drive out all valid packets sequentially
+//#############################################################################
+//# Function: Multimode Stimulus Driver                                       #
+//#############################################################################
+//# Author:   Andreas Olofsson                                                #
+//# License:  MIT (see LICENSE file in OH! repository)                        #
+//#############################################################################
 
 module oh_stimulus
   #( parameter PW       = 80,        // stimulus packet width
@@ -15,28 +13,37 @@ module oh_stimulus
      parameter FILENAME = "NONE"     // Simulus hexfile for $readmemh
      )
    (
-    // External stimulus load port
-    input 	       nreset, // async reset
-    input 	       go, // Start driving stimulus
-    input 	       ext_clk,// External clock for write path
-    input 	       ext_valid, // Valid packet for memory
-    input [PW-1:0]     ext_packet, // Packet for memory
-    // DUT drive port
-    input 	       dut_clk, // DUT side clock
-    input 	       dut_ready, // DUT ready signal
-    output 	       stim_valid, // Packet valid
-    output [PW-CW-1:0] stim_packet, // packet to DUT
-    output 	       stim_done // Signals that stimulus is done
+    // control
+    input 	    nreset, // async reset
+    input [1:0]     mode, // 0=load,1=go,2=rng,3=bypass
+    input [PW-1:0]  seed, // seed for random stimulus
+    // external interface
+    input 	    ext_clk,// External clock for write path
+    input 	    ext_valid, // Valid packet for memory
+    input [PW-1:0]  ext_packet, // Packet for memory
+    // dut feedback
+    input 	    dut_clk, // DUT side clock
+    input 	    dut_ready, // DUT ready signal
+    // stimulus outputs
+    output 	    stim_valid, // Packet valid
+    output [PW-1:0] stim_packet, // packet to DUT
+    output 	    stim_done // Signals that stimulus is done
     );
 
    // memory parameters
-   parameter MAW = $clog2(DEPTH); // Memory address width
+   localparam MAW = $clog2(DEPTH); // Memory address width
 
    // state machine parameters
-   localparam STIM_IDLE    = 2'b00;
-   localparam STIM_ACTIVE  = 2'b01;
-   localparam STIM_PAUSE   = 2'b10;
-   localparam STIM_DONE    = 2'b11;
+   localparam STIM_IDLE   = 2'b00;
+   localparam STIM_ACTIVE = 2'b01;
+   localparam STIM_PAUSE  = 2'b10;
+   localparam STIM_DONE   = 2'b11;
+
+   // state machine parameters
+   localparam MODE_LOAD  = 2'b00;
+   localparam MODE_READ  = 2'b01;
+   localparam MODE_RNG   = 2'b10;
+   localparam MODE_BP    = 2'b11;
 
    // Local values
    reg [1:0] 	      rd_state;
@@ -48,6 +55,40 @@ module oh_stimulus
    wire 	      dut_start;
    wire 	      valid_packet;
    wire [PW-1:0]      mem_data;
+   wire [PW-1:0]      rng_data;
+
+   //#################################
+   // Mode mux
+   //#################################
+
+   assign stim_valid = (mode[1:0]==MODE_READ) ? mem_valid :
+		       (mode[1:0]==MODE_BP)   ? ext_valid :
+		       (mode[1:0]==MODE_RNG)  ? 1'b1      :
+		                                1'b0;
+
+   assign stim_packet = (mode[1:0]==MODE_READ) ? mem_data   :
+		        (mode[1:0]==MODE_BP)   ? ext_packet :
+		        (mode[1:0]==MODE_RNG)  ? rng_data   :
+		                                {(PW){1'b0}};
+
+   assign stim_done = (mode[1:0]==MODE_READ) ? mem_done  : 1'b0;
+
+   //#################################
+   // Random Number Generator
+   //#################################
+
+   oh_random #(.N(PW))
+   oh_random(//outputs
+	     .out	(rng_data[PW-1:0]),
+	     .mask	({(PW){1'b1}}),
+	     .taps	({(PW){1'b1}}),
+	     .entaps	(1'b0),
+	     .en	(go),
+	     .seed      (seed),
+	     /*AUTOINST*/
+	     // Inputs
+	     .clk			(clk),
+	     .nreset			(nreset));
 
    //#################################
    // Init memory if configured
@@ -62,26 +103,26 @@ module oh_stimulus
    endgenerate
 
    //#################################
-   // Write port state machine
+   // Memory write port state machine
    //#################################
 
    always @ (posedge ext_clk or negedge nreset)
      if(!nreset)
        wr_addr[MAW-1:0] <= 'b0;
-     else if(ext_valid)
+     else if(ext_valid & (mode[1:0]==MODE_LOAD))
        wr_addr[MAW-1:0] <= wr_addr[MAW-1:0] + 1;
 
-   //Synchronize ext_start to dut_clk domain
+   //Synchronize mode to dut_clk domain
    always @ (posedge dut_clk or negedge nreset)
      if(!nreset)
        sync_pipe[1:0] <= 'b0;
      else
-       sync_pipe[1:0] <= {sync_pipe[0],go};
+       sync_pipe[1:0] <= {sync_pipe[0],(mode[1:0]==MODE_READ)};
 
    assign dut_start = sync_pipe[1];
 
    //#################################
-   // Read port state machine
+   // Memory read port state machine
    //#################################
    //1. Start on dut_start
    //2. Drive stimulus while dut is ready
@@ -119,12 +160,11 @@ module oh_stimulus
 
    //  output drivesrs
    assign valid_packet = (CW==0) | mem_data[0];
-   assign stim_done    = (rd_state[1:0] == STIM_DONE);
-   assign stim_valid   = valid_packet & mem_read & ~stim_done;
-   assign stim_packet  = mem_data[PW-1:CW];
+   assign mem_done     = (rd_state[1:0] == STIM_DONE);
+   assign mem_valid    = valid_packet & mem_read & ~stim_done;
 
    //#################################
-   // RAM
+   // Stimulus Dual Port RAM
    //#################################
 
    oh_dpram #(.N(PW),
