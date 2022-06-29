@@ -21,7 +21,7 @@ module testbench
     input 	    slowclk, //slow clock
     input [2:0]     mode, //0=load,1=go,2=bypass,3=rng
     input [N-1:0]   ctrl, // generic ctrl vector
-    input [PW-1:0]  seed, // seed(s) for rng
+    input [N-1:0]   seed, // seed(s) for rng
     // external write interface
     input 	    ext_clk, //ext packet clock
     input 	    ext_valid, // ext valid signal
@@ -43,75 +43,28 @@ module testbench
    // LOCAL WIRES
    //#################################
 
-   wire dut_active;
-   wire dut_ready;
-   wire dut_error;
-   wire dut_done;
-   wire dut_valid;
-   wire tb_xrandom;
-
    /*AUTOWIRE*/
-   // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire			stim_done;		// From oh_stimulus of oh_stimulus.v
-   wire [PW-1:0]	stim_packet;		// From oh_stimulus of oh_stimulus.v
-   wire			stim_valid;		// From oh_stimulus of oh_stimulus.v
-   // End of automatics
-
    /*AUTOINPUT*/
 
    //#################################
    // DUT LOGIC
    //#################################
 
-   assign dut_active = 1'b1;
    assign dut_ready  = 1'b1;
    assign dut_error  = 1'b0;
    assign dut_done   = 1'b0;
    assign dut_valid  = 1'b0;
    assign dut_clk    = clk;
 
-   /*oh_random AUTO_TEMPLATE (
-    .en	    (tb_go),
-    .out    (dut_status[N-1:0]),
-    );
-    */
-
-   oh_random #(.N(N))
-   oh_random(.mask	({(N){1'b1}}),
-	     .taps	({(N){1'b1}}),
-	     .entaps	(1'b0),
-	     .en	(tb_go),
-	     .seed      ({(N/4){4'hA}}),
-	     /*AUTOINST*/
-	     // Outputs
-	     .out			(dut_status[N-1:0]),	 // Templated
-	     // Inputs
-	     .clk			(clk),
-	     .nreset			(nreset));
-
-   //#################################
-   // STIMULUS
-   //#################################
-
-   oh_stimulus #(.PW(PW),
-		 .CW(CW),
-		 .DEPTH(DEPTH),
-		 .TARGET(TARGET),
-		 .FILENAME(FILENAME))
-   oh_stimulus(/*AUTOINST*/
-	       // Outputs
-	       .stim_valid		(stim_valid),
-	       .stim_packet		(stim_packet[PW-1:0]),
-	       .stim_done		(stim_done),
-	       // Inputs
-	       .nreset			(nreset),
-	       .mode			(mode[1:0]),
-	       .seed			(seed[PW-1:0]),
-	       .ext_clk			(ext_clk),
-	       .ext_valid		(ext_valid),
-	       .ext_packet		(ext_packet[PW-1:0]),
-	       .dut_clk			(dut_clk),
-	       .dut_ready		(dut_ready));
+   oh_lfsr #(.N(N))
+   oh_lfsr (// outputs
+	    .out      (dut_status[N-1:0] ),
+	    // inputs
+	    .taps     (ctrl[N-1:0]),
+	    .seed     (seed[N-1:0]),
+	    .en	      (1'b1),
+	    .clk      (clk),
+	    .nreset   (nreset));
 
 endmodule // tb
 // Local Variables:

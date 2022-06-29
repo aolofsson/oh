@@ -8,8 +8,8 @@
 module oh_simctrl
   #(parameter TIMEOUT         = 5000, // timeout value (cycles)
     parameter PERIOD_CLK      = 10,   // core clock period
-    parameter PERIOD_FASTCLK  = 20,   // fast clock period
-    parameter PERIOD_SLOWCLK  = 20,   // slow clock period
+    parameter PERIOD_FASTCLK  = 10,   // fast clock period
+    parameter PERIOD_SLOWCLK  = 10,   // slow clock period
     parameter RANDOM_CLK       = 0,   // randomize clock
     parameter RANDOM_DATA      = 0    // randomize data
     )

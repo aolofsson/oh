@@ -25,6 +25,18 @@ module top();
    parameter N  = 32;
 `endif
 
+`ifdef OH_SEED
+   parameter [N-1:0] SEED  = `OH_SEED;
+`else
+   parameter [N-1:0] SEED  = 1;
+`endif
+
+`ifdef OH_CTRL
+   parameter [N-1:0]CTRL  = `OH_CTRL;
+`else
+   parameter [N-1:0] CTRL  = 1;
+`endif
+
 `ifdef OH_CW
    parameter CW  = `OH_CW;
 `else
@@ -85,6 +97,9 @@ module top();
    parameter FILENAME  = "NONE";
 `endif
 
+   wire [N-1:0]	ctrl;			// To testbench of testbench.v
+   wire [N-1:0] seed;			// To testbench of testbench.v
+
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire			clk;			// From oh_simctrl of oh_simctrl.v
@@ -107,11 +122,13 @@ module top();
    // DUT
    //#################################
 
+
+   assign seed[N-1:0] = SEED;
+   assign ctrl[N-1:0] = CTRL;
+
    /*testbench AUTO_TEMPLATE (
     .ext_packet	 ({(PW){1'b0}}),
     .ext_\(.*\)  (1'b0),
-    .ctrl        ({(N){1'b0}}),
-    .seed        ({(PW/4){4'hA}}),
     );
     */
 
@@ -137,8 +154,8 @@ module top();
 	     .fastclk			(fastclk),
 	     .slowclk			(slowclk),
 	     .mode			(mode[2:0]),
-	     .ctrl			({(N){1'b0}}),		 // Templated
-	     .seed			({(PW/4){4'hA}}),	 // Templated
+	     .ctrl			(ctrl[N-1:0]),
+	     .seed			(seed[N-1:0]),
 	     .ext_clk			(1'b0),			 // Templated
 	     .ext_valid			(1'b0),			 // Templated
 	     .ext_packet		({(PW){1'b0}}),		 // Templated

@@ -20,7 +20,7 @@ module testbench
     input 	    slowclk, //slow clock
     input [2:0]     mode, //0=idle,1=load,2=go,3=rng,4=bypass
     input [N-1:0]   ctrl, // generic ctrl vector
-    input [PW-1:0]  seed, // seed(s) for rng
+    input [N-1:0]  seed, // seed(s) for rng
     // external write interface
     input 	    ext_clk, //ext packet clock
     input 	    ext_valid, // ext valid signal
