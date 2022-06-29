@@ -9,9 +9,12 @@
  *   dynamically programming the taps and seed. Shift is from MSB to LSB,
  *   feedback bit is from LSB.
  *
- * - The lsfr updates when enable is set to 1.
+ * - The state is updated when 'en' is high.
  *
  * - Any non-zero seed value is legal.
+ *
+ * - An LSFR of size N can create pseudo random cycles of shorter polynomials
+ *   by zero padding the taps value up to the MSB.
  *
  * - Driving taps externally is only practical with GALOIS configuration,
  *   since the massive xor tree would be prohibitive with FIBONACCI.
