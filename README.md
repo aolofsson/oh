@@ -2,7 +2,7 @@
 
 ## Introduction
 
-!!! WARNING!!!
+<b>!!! WARNING!!!</b>
 * Main branch is Work In Progress (ie broken)
 * For a stable version, seee Tag V1.0
 
