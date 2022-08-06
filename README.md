@@ -13,21 +13,24 @@ OH! is an open-source library of hardware building blocks based on silicon prove
 
 The library is written in standard Verilog (2005) and contains over 25,000 lines of Verilog code, over 150 separate modules. Examples of functionality include: FIFOs, SPI (master/slave), GPIO, high speed links, memories, clock circuits, synchronization primitives,interrupt controller, DMA.    
 
-
-![alt tag](docs/lego.jpg)
+<p>
+  <img  src="docs/lego.jpg"></img>
+  
+  <em>(Alan Chia, <a href=https://creativecommons.org/licenses/by-sa/2.0/deed.en>CC BY-SA 2.0</a> , <a href=https://commons.wikimedia.org/wiki/File:Lego_Color_Bricks.jpg>source</a>)</em>
+</p>
 
 ## Content
 
 1. [Philosophy](#philosophy)
 2. [Modules](#modules)
 3. [How to Simulate](#how-to-simulate)
-5. [How to Build](#how-to-build)
-4. [Design Guide](#design-guide)
-5. [Coding Guide](#coding-guide)
-6. [Documentation Guide](#documentation-guide)
-7. [Design Checklist](#design-checklist)
-7. [Recommended Reading](#recommended-reading)
-8. [License](#license)
+4. [How to Build](#how-to-build)
+5. [Design Guide](#design-guide)
+6. [Coding Guide](#coding-guide)
+7. [Documentation Guide](#documentation-guide)
+8. [Design Checklist](#design-checklist)
+9. [Recommended Reading](#recommended-reading)
+10. [License](#license)
 
 ## Philosophy
 
@@ -205,7 +208,4 @@ TBD
 ## License
 The OH! repository source code is licensed under the MIT license unless otherwise specified. See [LICENSE](LICENSE) for MIT copyright terms. Design specific licenses can be found in the folder root (eg: aes/LICENSE) 
 
-----
-
-[picture-license](https://commons.wikimedia.org/wiki/File:Lego_Color_Bricks.jpg)
 
