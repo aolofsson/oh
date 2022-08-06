@@ -1,4 +1,3 @@
-=======
 # OH! Open Hardware for Chip Designers
 
 ## Introduction
