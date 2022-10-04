@@ -32,7 +32,6 @@ module oh_fifo_cdc
    // wire declarations
    wire   wr_en;
    wire   rd_en;
-   wire   rd_empty;
    wire   wr_almost_full;
    wire   wr_full;
    wire   wr_prog_full;
@@ -79,12 +78,12 @@ module oh_fifo_cdc
 		  .bist_dout		(),
 		  .wr_count		(),
 		  .rd_count		(),
+		  .rd_empty		(empty),
 		  /*AUTOINST*/
 		  // Outputs
 		  .wr_full		(wr_full),
 		  .wr_almost_full	(wr_almost_full),
 		  .wr_prog_full		(wr_prog_full),
-		  .rd_empty		(rd_empty),
 		  // Inputs
 		  .nreset		(nreset),
 		  .wr_en		(wr_en),
