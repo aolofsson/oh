@@ -57,25 +57,12 @@ module oh_fifo_cdc
 
    // parametric async fifo
    oh_fifo_async  #(.TARGET(TARGET),
-		    .N(N),
-		    .DEPTH(DEPTH))
-   oh_fifo_async (
-		  .rd_clk		(clk_out),
+		    .DEPTH(DEPTH),
+		    .N(N))
+   oh_fifo_async (.rd_clk		(clk_out),
 		  .rd_dout		(packet_out[N-1:0]),
 		  .wr_clk		(clk_in),
 		  .wr_din		(packet_in[N-1:0]),
-		  .memconfig		(8'b0),
-		  .memrepair		(8'b0),
-		  .shutdown             (1'b0),
-		  .vddio                (1'b1),
-		  .vdd                  (1'b0),
-		  .vss                  (1'b0),
-		  .bist_en		(1'b0),
-		  .bist_we		(1'b0),
-		  .bist_wem		({(N){1'b0}}),
-		  .bist_addr		({(AW){1'b0}}),
-		  .bist_din		({(N){1'b0}}),
-		  .bist_dout		(),
 		  .wr_count		(),
 		  .rd_count		(),
 		  .rd_empty		(empty),
