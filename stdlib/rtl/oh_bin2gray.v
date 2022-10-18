@@ -13,19 +13,6 @@ module oh_bin2gray
     output [N-1:0] out //gray encoded output
     );
 
-   reg [N-1:0] 	   gray;
-   wire [N-1:0]    bin;
-
-   integer 	   i;
-
-   assign bin[N-1:0]  = in[N-1:0];
-   assign out[N-1:0]  = gray[N-1:0];
-
-   always @*
-     begin
-	gray[N-1] = bin[N-1];
-	for (i=0; i<(N-1); i=i+1)
-	  gray[i] = bin[i] ^ bin[i+1];
-     end
+   assign out[N-1:0] =  in[N-1:0] ^ {1'b0, in[N-1:1]};
 
 endmodule // oh_bin2gray
