@@ -38,8 +38,7 @@ module oh_standby
    //####################################################################
 
    // Synchronizing reset to clock to avoid metastability
-   oh_dsync #(.SYNCPIPE(SYNCPIPE),
-	      .SYN(SYN))
+   oh_dsync #(.SYNCPIPE(SYNCPIPE))
    oh_dsync (//outputs
 	     .dout(sync_reset),
 	     //inputs
