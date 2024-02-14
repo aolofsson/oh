@@ -15,6 +15,8 @@ module oh_lat0
     output [N-1:0] out  // output data
      );
 
+   genvar i;
+
    generate
       if(SYN == "TRUE") begin
 	 reg [N-1:0]      out_reg;
