@@ -192,11 +192,11 @@ int main(int argc, char *argv[]){
     }
 
     //Reading mailbox
-    int pre_stat    = ee_read_esys(0xF0328);
-    int mbox_lo     = ee_read_esys(0xF0320);
-    int mbox_hi     = ee_read_esys(0xF0324);
-    int post_stat   = ee_read_esys(0xF0328);
-    //      post_stat   = ee_read_esys(0xF0304);
+    int pre_stat    = ee_read_esys(0xF0738);
+    int mbox_lo     = ee_read_esys(0xF0730);
+    int mbox_hi     = ee_read_esys(0xF0734);
+    int post_stat   = ee_read_esys(0xF0738);
+    //      post_stat   = ee_read_esys(0xF0738);
 
     printf ("PRE_STAT=%08x POST_STAT=%08x LO=%08x HI=%08x\n", pre_stat, post_stat, mbox_lo, mbox_hi);
 
